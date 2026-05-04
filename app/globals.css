@@ -1,0 +1,146 @@
+@import "tailwindcss";
+
+@theme {
+  /* Brand palette — sampled from Nitchiani logo */
+  --color-brand-bg: #0a1f1f;
+  --color-brand-bg-2: #122e2e;
+  --color-brand-ink: #0d0d0d;
+  --color-brand-cream: #f5efe6;
+  --color-brand-cream-2: #ece4d6;
+  --color-brand-silver: #c8ccd0;
+  --color-brand-silver-2: #8a8e92;
+  --color-brand-maroon: #a14040;
+  --color-brand-maroon-2: #8a3535;
+  --color-brand-maroon-3: #6f2929;
+
+  /* Type scale — editorial-leaning. Latin fonts come first; browser falls through per-glyph
+     to the Georgian Noto fonts when rendering Mkhedruli. The CSS variables are wired by
+     next/font/google in lib/fonts.ts and attached to <html> in app/layout.tsx. */
+  --font-display: var(--font-latin-display), var(--font-georgian-display), serif;
+  --font-sans: var(--font-latin-sans), var(--font-georgian-sans), system-ui, sans-serif;
+
+  /* Radii — minimal, almost-flat */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 14px;
+  --radius-xl: 22px;
+
+  /* Container widths */
+  --container-shop: 1320px;
+
+  /* Animation */
+  --ease-brand: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@layer base {
+  :root {
+    color-scheme: light;
+    --surface: var(--color-brand-cream);
+    --ink: var(--color-brand-ink);
+    --muted: var(--color-brand-silver-2);
+    --accent: var(--color-brand-maroon);
+  }
+
+  html {
+    background: var(--surface);
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    font-feature-settings: "ss01", "cv11";
+    line-height: 1.55;
+  }
+
+  /* Georgian text gets a touch more line-height — Mkhedruli renders dense */
+  :lang(ka) {
+    line-height: 1.7;
+    letter-spacing: 0.005em;
+  }
+
+  /* Editorial display headings */
+  h1, h2, h3, .font-display {
+    font-family: var(--font-display);
+    letter-spacing: -0.01em;
+    line-height: 1.1;
+    font-weight: 400;
+  }
+
+  h1 { font-size: clamp(2rem, 6vw, 3.5rem); }
+  h2 { font-size: clamp(1.5rem, 4vw, 2.25rem); }
+  h3 { font-size: clamp(1.125rem, 2.5vw, 1.5rem); }
+
+  /* Hide scrollbar but keep scrolling — used by horizontal product/category strips */
+  .no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+
+  /* Hide the browser-native clear button on <input type="search"> — we provide our own X. */
+  input[type="search"]::-webkit-search-cancel-button,
+  input[type="search"]::-webkit-search-decoration,
+  input[type="search"]::-webkit-search-results-button,
+  input[type="search"]::-webkit-search-results-decoration {
+    -webkit-appearance: none;
+    appearance: none;
+  }
+  input[type="search"]::-ms-clear,
+  input[type="search"]::-ms-reveal {
+    display: none;
+    width: 0;
+    height: 0;
+  }
+
+  /* Subtle text selection */
+  ::selection {
+    background: var(--color-brand-maroon);
+    color: var(--color-brand-cream);
+  }
+
+  /* Min tap target for mobile */
+  button, a {
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+@layer components {
+  .container-shop {
+    @apply mx-auto w-full px-4 sm:px-6 lg:px-8;
+    max-width: var(--container-shop);
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-md px-5 py-3 text-sm font-medium uppercase tracking-wider transition-colors;
+    background: var(--color-brand-maroon);
+    color: var(--color-brand-cream);
+  }
+  .btn-primary:hover { background: var(--color-brand-maroon-2); }
+
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 rounded-md border px-5 py-3 text-sm font-medium uppercase tracking-wider transition-colors;
+    border-color: var(--color-brand-ink);
+    color: var(--color-brand-ink);
+  }
+  .btn-ghost:hover {
+    background: var(--color-brand-ink);
+    color: var(--color-brand-cream);
+  }
+
+  .label-eyebrow {
+    @apply text-[11px] font-medium uppercase tracking-[0.18em];
+    color: var(--color-brand-silver-2);
+  }
+
+  /* Subtle hairline used as section dividers instead of heavy borders */
+  .hairline { border-color: rgba(13, 13, 13, 0.08); }
+
+  /* Editorial banner overlay scrim */
+  .scrim-bottom {
+    background: linear-gradient(
+      180deg,
+      transparent 30%,
+      rgba(10, 31, 31, 0.85) 100%
+    );
+  }
+}

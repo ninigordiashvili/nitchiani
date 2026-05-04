@@ -1,0 +1,74 @@
+import { getLocale, getTranslations } from "next-intl/server";
+import { StarRating } from "./StarRating";
+import { getReviewSummary, getReviewsForProduct } from "@/lib/reviews";
+import type { Locale } from "@/lib/i18n/config";
+
+export async function Reviews({ handle }: { handle: string }) {
+  const locale = (await getLocale()) as Locale;
+  const t = await getTranslations("reviews");
+  const reviews = getReviewsForProduct(handle, locale);
+  const summary = getReviewSummary(handle);
+
+  if (reviews.length === 0) return null;
+
+  const dateFmt = new Intl.DateTimeFormat(locale === "ka" ? "ka-GE" : "en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
+
+  return (
+    <section
+      id="reviews"
+      className="container-shop mt-16 scroll-mt-20 border-t border-black/10 pt-10"
+    >
+      <header className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <p className="label-eyebrow mb-2">{t("title")}</p>
+          <div className="flex items-center gap-3">
+            <span
+              className="font-display text-3xl tabular-nums sm:text-4xl"
+              style={{ color: "var(--color-brand-ink)" }}
+            >
+              {summary.average.toFixed(1)}
+            </span>
+            <StarRating
+              value={summary.average}
+              size={18}
+              className="text-[var(--color-brand-maroon)]"
+            />
+          </div>
+          <p className="mt-1 text-xs opacity-60">
+            {t("count", { count: summary.count })}
+          </p>
+        </div>
+      </header>
+
+      <ul className="grid gap-6 sm:grid-cols-2">
+        {reviews.map((r) => (
+          <li
+            key={r.id}
+            className="border-l-2 border-[var(--color-brand-maroon)]/30 pl-4"
+          >
+            <div className="mb-2 flex items-center gap-2">
+              <StarRating
+                value={r.rating}
+                size={12}
+                className="text-[var(--color-brand-maroon)]"
+              />
+              <span className="text-xs opacity-60">
+                {dateFmt.format(new Date(r.date))}
+              </span>
+            </div>
+            <p className="text-sm leading-relaxed">{r.body}</p>
+            <p className="mt-3 text-xs opacity-70">
+              <span className="font-medium opacity-100">{r.author}</span>
+              <span className="mx-1 opacity-40">·</span>
+              {r.city}
+            </p>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}

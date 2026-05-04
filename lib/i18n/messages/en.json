@@ -1,0 +1,177 @@
+{
+  "brand": {
+    "name": "Nitchiani",
+    "tagline": "Hand-woven braids. Loc care that lasts."
+  },
+  "nav": {
+    "shop": "Shop",
+    "home": "Home",
+    "bestSellers": "Best Sellers",
+    "newArrivals": "New Arrivals",
+    "bonnets": "Bonnets",
+    "locCare": "Loc Care",
+    "accessories": "Accessories",
+    "extensions": "Extensions",
+    "tools": "Tools",
+    "services": "Services",
+    "about": "About",
+    "contact": "Contact",
+    "search": "Search",
+    "menu": "Menu",
+    "cart": "Cart",
+    "wishlist": "Wishlist",
+    "language": "Language",
+    "currency": "Currency"
+  },
+  "promo": {
+    "shipping": "Free shipping in Tbilisi over ₾150",
+    "newDrop": "New drop every Friday"
+  },
+  "home": {
+    "shopByCategory": "Shop by category",
+    "bestSellers": "Best Sellers",
+    "newArrivals": "New Arrivals",
+    "viewAll": "View all",
+    "newDrop": "The New Drop",
+    "newDropSubtitle": "Limited collection · made by hand",
+    "shopNow": "Shop now",
+    "bookSession": "Book a session",
+    "bookSessionDesc": "Braids, locs and consultations at our Tbilisi studio",
+    "instagram": "@nitchiani on Instagram",
+    "instagramDesc": "Our latest moments",
+    "follow": "Follow",
+    "services": "Our Services",
+    "servicesDesc": "Hand-crafted styling — book your visit",
+    "trust": {
+      "shipping": "Shipping in Georgia",
+      "shippingDesc": "1–3 business days",
+      "returns": "14-day returns",
+      "returnsDesc": "Even on opened items",
+      "payment": "Secure checkout",
+      "paymentDesc": "BOG · TBC · Bank transfer"
+    }
+  },
+  "categories": {
+    "bonnets": "Bonnets",
+    "locCare": "Loc Care",
+    "accessories": "Accessories",
+    "extensions": "Extensions",
+    "tools": "Tools"
+  },
+  "product": {
+    "addToBag": "Add to bag",
+    "outOfStock": "Out of stock",
+    "selectOption": "Select an option",
+    "quantity": "Quantity",
+    "description": "Description",
+    "howToUse": "How to use",
+    "whatsInside": "What's inside",
+    "details": "Details",
+    "shipping": "Shipping",
+    "related": "You may also like",
+    "freeShipping": "Free shipping over ₾150",
+    "secureCheckout": "Secure checkout",
+    "badgeBestSeller": "Best Seller",
+    "badgeNew": "New",
+    "badgeSale": "Sale",
+    "quickView": "Quick view"
+  },
+  "cart": {
+    "empty": "Your bag is empty",
+    "emptyDesc": "Start adding pieces you love",
+    "continueShopping": "Continue shopping",
+    "recommendationsHeader": "Best sellers — what others are loving",
+    "subtotal": "Subtotal",
+    "shipping": "Shipping",
+    "shippingNote": "Calculated at checkout",
+    "total": "Total",
+    "checkout": "Checkout",
+    "remove": "Remove"
+  },
+  "checkout": {
+    "title": "Checkout",
+    "shipping": "Shipping address",
+    "firstName": "First name",
+    "lastName": "Last name",
+    "phone": "Phone",
+    "email": "Email",
+    "address": "Address",
+    "city": "City",
+    "postalCode": "Postal code",
+    "notes": "Notes (optional)",
+    "paymentMethod": "Payment method",
+    "bankTransfer": "Bank transfer",
+    "bankTransferDesc": "Transfer and send us the receipt",
+    "cod": "Cash on delivery",
+    "codDesc": "Pay the courier in Tbilisi",
+    "bogCard": "Bank card (BOG)",
+    "bogCardDesc": "Visa / Mastercard · secure checkout via Bank of Georgia",
+    "tbcCard": "Bank card (TBC)",
+    "tbcCardDesc": "Visa / Mastercard · secure checkout via TBC Bank",
+    "redirecting": "Redirecting to payment page...",
+    "failedTitle": "Payment failed",
+    "failedDesc": "No charge was made. Try again or choose another payment method.",
+    "placeOrder": "Place order",
+    "successTitle": "Order received",
+    "successDesc": "We'll reach out by WhatsApp or email shortly"
+  },
+  "services": {
+    "title": "Our Services",
+    "subtitle": "Hand-crafted braids, locs and consultations",
+    "book": "Book",
+    "duration": "Duration",
+    "price": "Price",
+    "from": "from"
+  },
+  "footer": {
+    "shop": "Shop",
+    "help": "Help",
+    "company": "Company",
+    "newsletter": "Subscribe",
+    "newsletterDesc": "New drops and exclusive offers",
+    "emailPlaceholder": "Your email",
+    "subscribe": "Subscribe",
+    "rights": "All rights reserved",
+    "tbilisi": "Tbilisi, Georgia"
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "tryAgain": "Try again"
+  },
+  "shop": {
+    "sortLabel": "Sort",
+    "sortFeatured": "Featured",
+    "sortNew": "New arrivals",
+    "sortPriceAsc": "Price: low to high",
+    "sortPriceDesc": "Price: high to low",
+    "filterOnSale": "On sale",
+    "filterAvailable": "In stock",
+    "clearAll": "Clear",
+    "countAll": "{count} products",
+    "countFiltered": "{visible} of {total}",
+    "noResultsTitle": "No results",
+    "noResultsDesc": "Try a different filter combination, or browse the whole catalog",
+    "browseAll": "Browse all"
+  },
+  "reviews": {
+    "title": "Reviews",
+    "count": "{count, plural, one {# review} other {# reviews}}"
+  },
+  "wishlist": {
+    "title": "Wishlist",
+    "empty": "Your wishlist is empty",
+    "emptyDesc": "Save pieces with the heart button — they'll be here when you're ready",
+    "addAria": "Add to wishlist",
+    "removeAria": "Remove from wishlist",
+    "browseShop": "Browse the shop"
+  },
+  "search": {
+    "placeholder": "Search products...",
+    "noResults": "No results for \"{query}\"",
+    "noResultsCta": "Browse the whole shop",
+    "popularEyebrow": "Popular",
+    "closeAria": "Close search",
+    "clearAria": "Clear search"
+  }
+}

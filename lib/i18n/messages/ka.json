@@ -1,0 +1,177 @@
+{
+  "brand": {
+    "name": "Nitchiani",
+    "tagline": "ხელნაქსოვი ფრჩხები. ლოკსების მზრუნველობა."
+  },
+  "nav": {
+    "shop": "მაღაზია",
+    "home": "მთავარი",
+    "bestSellers": "ბესტსელერები",
+    "newArrivals": "ახალი ჩამოსვლა",
+    "bonnets": "ბონნეტები",
+    "locCare": "ლოკსების მზრუნველობა",
+    "accessories": "აქსესუარები",
+    "extensions": "ექსტენშენები",
+    "tools": "ხელსაწყოები",
+    "services": "სერვისები",
+    "about": "ჩვენ შესახებ",
+    "contact": "კონტაქტი",
+    "search": "ძიება",
+    "menu": "მენიუ",
+    "cart": "კალათა",
+    "wishlist": "ფავორიტები",
+    "language": "ენა",
+    "currency": "ვალუტა"
+  },
+  "promo": {
+    "shipping": "უფასო მიწოდება თბილისში ₾150-დან",
+    "newDrop": "ახალი კოლექცია ყოველ პარასკევს"
+  },
+  "home": {
+    "shopByCategory": "კატეგორიების მიხედვით",
+    "bestSellers": "ბესტსელერები",
+    "newArrivals": "ახალი ჩამოსვლა",
+    "viewAll": "ყველას ნახვა",
+    "newDrop": "ახალი კოლექცია",
+    "newDropSubtitle": "მინიმალისტური კოლექცია · ხელით დამზადებული",
+    "shopNow": "შეიძინე ახლავე",
+    "bookSession": "დაჯავშნე სესია",
+    "bookSessionDesc": "ფრჩხები, ლოკსები და კონსულტაციები ჩვენს სტუდიოში",
+    "instagram": "@nitchiani-ზე",
+    "instagramDesc": "ჩვენი უახლესი მომენტები",
+    "follow": "გამოგვყევი",
+    "services": "ჩვენი სერვისები",
+    "servicesDesc": "ხელით დამზადებული სტილი — დაჯავშნე ვიზიტი",
+    "trust": {
+      "shipping": "მიწოდება საქართველოში",
+      "shippingDesc": "1–3 სამუშაო დღე",
+      "returns": "14-დღიანი დაბრუნება",
+      "returnsDesc": "გახსნილი პროდუქტისთვისაც",
+      "payment": "უსაფრთხო გადახდა",
+      "paymentDesc": "BOG · TBC · ბანკით"
+    }
+  },
+  "categories": {
+    "bonnets": "ბონნეტები",
+    "locCare": "ლოკსების მზრუნველობა",
+    "accessories": "აქსესუარები",
+    "extensions": "ექსტენშენები",
+    "tools": "ხელსაწყოები"
+  },
+  "product": {
+    "addToBag": "კალათაში დამატება",
+    "outOfStock": "გაყიდულია",
+    "selectOption": "აირჩიე ვარიანტი",
+    "quantity": "რაოდენობა",
+    "description": "აღწერა",
+    "howToUse": "როგორ გამოვიყენო",
+    "whatsInside": "შემადგენლობა",
+    "details": "დეტალები",
+    "shipping": "მიწოდება",
+    "related": "მსგავსი პროდუქტები",
+    "freeShipping": "უფასო მიწოდება ₾150-დან",
+    "secureCheckout": "უსაფრთხო შეკვეთა",
+    "badgeBestSeller": "ბესტსელერი",
+    "badgeNew": "ახალი",
+    "badgeSale": "ფასდაკლება",
+    "quickView": "სწრაფი ნახვა"
+  },
+  "cart": {
+    "empty": "შენი კალათა ცარიელია",
+    "emptyDesc": "დაიწყე საყვარელი პროდუქტების ჩამატება",
+    "continueShopping": "გაგრძელება",
+    "recommendationsHeader": "ბესტსელერები — რას ირჩევენ სხვები",
+    "subtotal": "ჯამი",
+    "shipping": "მიწოდება",
+    "shippingNote": "გათვლილი შეკვეთისას",
+    "total": "სრული თანხა",
+    "checkout": "გაფორმება",
+    "remove": "წაშლა"
+  },
+  "checkout": {
+    "title": "შეკვეთის გაფორმება",
+    "shipping": "მიწოდების მისამართი",
+    "firstName": "სახელი",
+    "lastName": "გვარი",
+    "phone": "ტელეფონი",
+    "email": "ელ-ფოსტა",
+    "address": "მისამართი",
+    "city": "ქალაქი",
+    "postalCode": "საფოსტო ინდექსი",
+    "notes": "შენიშვნა (არასავალდებულო)",
+    "paymentMethod": "გადახდის მეთოდი",
+    "bankTransfer": "საბანკო გადარიცხვა",
+    "bankTransferDesc": "გადარიცხე და მიგვითითე გადარიცხვის ქვითარი",
+    "cod": "გადახდა მიწოდებისას",
+    "codDesc": "გადაიხადე კურიერთან თბილისში",
+    "bogCard": "ბანკის ბარათი (BOG)",
+    "bogCardDesc": "Visa / Mastercard · უსაფრთხო გადახდა Bank of Georgia-ს მეშვეობით",
+    "tbcCard": "ბანკის ბარათი (TBC)",
+    "tbcCardDesc": "Visa / Mastercard · უსაფრთხო გადახდა TBC Bank-ის მეშვეობით",
+    "redirecting": "გადამისამართება გადახდის გვერდზე...",
+    "failedTitle": "გადახდა ვერ შესრულდა",
+    "failedDesc": "თანხა არ ჩამოგეჭრა. სცადე თავიდან ან აირჩიე სხვა გადახდის მეთოდი.",
+    "placeOrder": "შეკვეთის გაფორმება",
+    "successTitle": "შეკვეთა მიღებულია",
+    "successDesc": "მალე დაგიკავშირდებით WhatsApp-ით ან ელ-ფოსტით"
+  },
+  "services": {
+    "title": "ჩვენი სერვისები",
+    "subtitle": "ხელით ნაკეთი ფრჩხები, ლოკსები და კონსულტაციები",
+    "book": "დაჯავშნე",
+    "duration": "ხანგრძლივობა",
+    "price": "ფასი",
+    "from": "დან"
+  },
+  "footer": {
+    "shop": "მაღაზია",
+    "help": "დახმარება",
+    "company": "კომპანია",
+    "newsletter": "გამოიწერე",
+    "newsletterDesc": "ახალი ჩამოსვლები და ექსკლუზიური შეთავაზებები",
+    "emailPlaceholder": "შენი ელ-ფოსტა",
+    "subscribe": "გამოწერა",
+    "rights": "ყველა უფლება დაცულია",
+    "tbilisi": "თბილისი, საქართველო"
+  },
+  "common": {
+    "loading": "იტვირთება...",
+    "error": "შეცდომა",
+    "tryAgain": "სცადე თავიდან"
+  },
+  "shop": {
+    "sortLabel": "დახარისხება",
+    "sortFeatured": "რეკომენდებული",
+    "sortNew": "ახალი ჩამოსვლა",
+    "sortPriceAsc": "ფასი: ზრდადობით",
+    "sortPriceDesc": "ფასი: კლებადობით",
+    "filterOnSale": "ფასდაკლება",
+    "filterAvailable": "მარაგშია",
+    "clearAll": "გასუფთავება",
+    "countAll": "{count} პროდუქტი",
+    "countFiltered": "{visible} {total}-დან",
+    "noResultsTitle": "შედეგი ვერ მოიძებნა",
+    "noResultsDesc": "სცადე ფილტრების შეცვლა ან ნახე მთლიანი კოლექცია",
+    "browseAll": "ნახე ყველა"
+  },
+  "reviews": {
+    "title": "მიმოხილვები",
+    "count": "{count, plural, one {# მიმოხილვა} other {# მიმოხილვა}}"
+  },
+  "wishlist": {
+    "title": "ფავორიტები",
+    "empty": "შენი ფავორიტების სია ცარიელია",
+    "emptyDesc": "შემოინახე ნივთები გულის ღილაკით — დაბრუნდი მოგვიანებით",
+    "addAria": "ფავორიტებში დამატება",
+    "removeAria": "ფავორიტებიდან წაშლა",
+    "browseShop": "ნახე მაღაზია"
+  },
+  "search": {
+    "placeholder": "მოძებნე პროდუქტი...",
+    "noResults": "ვერაფერი მოიძებნა \"{query}\"-ისთვის",
+    "noResultsCta": "ნახე მთლიანი მაღაზია",
+    "popularEyebrow": "პოპულარული",
+    "closeAria": "ძიების დახურვა",
+    "clearAria": "ძიების გასუფთავება"
+  }
+}
