@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { Link } from "@/lib/i18n/routing";
+import { BLUR_DATA_URL } from "@/lib/images";
 
 const CARDS = [
   {
@@ -41,6 +42,8 @@ export function CategoryCardGrid() {
             alt={t(c.labelKey)}
             fill
             sizes="(min-width: 1024px) 25vw, 50vw"
+            placeholder="blur"
+            blurDataURL={BLUR_DATA_URL}
             className="object-cover transition-transform duration-500 ease-[var(--ease-brand)] group-hover:scale-105"
           />
           <div className="absolute inset-0 scrim-bottom" />

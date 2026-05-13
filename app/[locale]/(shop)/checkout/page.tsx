@@ -2,22 +2,37 @@
 
 import { useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Banknote, CreditCard, Wallet } from "lucide-react";
+import {
+  AlertCircle,
+  ArrowLeft,
+  ArrowRight,
+  Banknote,
+  Check,
+  CreditCard,
+  Loader2,
+  ShieldCheck,
+  Wallet,
+} from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "@/lib/i18n/routing";
 import { useCart } from "@/lib/cart/store";
 import { formatPrice } from "@/lib/money";
 import type { Locale } from "@/lib/i18n/config";
 import { cn } from "@/lib/utils";
-import { safeImageSrc } from "@/lib/images";
+import { BLUR_DATA_URL, safeImageSrc } from "@/lib/images";
+import { CouponField } from "@/components/cart/CouponField";
+import { HowItWorksButton } from "@/components/cart/HowItWorksButton";
+import { PhoneInput } from "@/components/commerce/PhoneInput";
 
 const checkoutSchema = z.object({
   firstName: z.string().min(1),
   lastName: z.string().min(1),
-  phone: z.string().min(6),
+  // Canonical E.164-shaped GE mobile: +995 followed by 9 digits. The PhoneInput component
+  // only emits values in this shape (or empty), so a regex is enough.
+  phone: z.string().regex(/^\+995\d{9}$/, "Enter a valid Georgian mobile number"),
   email: z.string().email(),
   address: z.string().min(3),
   city: z.string().min(1),
@@ -36,10 +51,17 @@ export default function CheckoutPage() {
   const cart = useCart();
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  // Mobile-only two-step flow: 1 = contact/shipping, 2 = payment + place order.
+  // Desktop ignores `step` entirely because both fieldsets are rendered side-by-side via
+  // the existing `lg:grid-cols-[1fr_360px]` layout.
+  const [step, setStep] = useState<1 | 2>(1);
 
   const {
+    control,
     register,
     handleSubmit,
+    trigger,
     watch,
     setValue,
     formState: { errors },
@@ -61,8 +83,29 @@ export default function CheckoutPage() {
     );
   }
 
+  const advanceToPayment = async () => {
+    const ok = await trigger([
+      "firstName",
+      "lastName",
+      "phone",
+      "email",
+      "address",
+      "city",
+    ]);
+    if (ok) {
+      setStep(2);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  };
+
+  const backToShipping = () => {
+    setStep(1);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
   const onSubmit = async (values: CheckoutInput) => {
     setSubmitting(true);
+    setSubmitError(null);
     try {
       const res = await fetch("/api/checkout/initiate", {
         method: "POST",
@@ -79,6 +122,9 @@ export default function CheckoutPage() {
             quantity: l.quantity,
           })),
           subtotal: cart.subtotal,
+          couponCode: cart.coupon?.code ?? null,
+          discount: cart.discount,
+          total: cart.total,
         }),
       });
       const data = (await res.json()) as {
@@ -86,7 +132,7 @@ export default function CheckoutPage() {
         redirectUrl?: string;
         error?: string;
       };
-      if (!res.ok) throw new Error(data.error ?? "Order failed");
+      if (!res.ok) throw new Error(data.error ?? t("checkout.orderFailed"));
 
       if (data.redirectUrl) {
         // BOG hosted payment page — clear cart only after payment confirms via webhook,
@@ -95,11 +141,11 @@ export default function CheckoutPage() {
         return;
       }
 
-      if (!data.orderId) throw new Error("Order failed");
+      if (!data.orderId) throw new Error(t("checkout.orderFailed"));
       cart.clear();
       router.push(`/checkout/success?order=${data.orderId}`);
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Order failed");
+      setSubmitError(err instanceof Error ? err.message : t("checkout.orderFailed"));
     } finally {
       setSubmitting(false);
     }
@@ -107,16 +153,90 @@ export default function CheckoutPage() {
 
   return (
     <div className="container-shop py-8 sm:py-12">
-      <h1 className="font-display mb-8 text-3xl tracking-tight sm:text-4xl">
+      <h1 className="font-display mb-6 text-3xl tracking-tight sm:mb-8 sm:text-4xl">
         {t("checkout.title")}
       </h1>
+
+      {/* Express checkout row — quick payment-method picker at the top of the page. Decoratively
+          doubles as a "we accept these" trust strip; functionally pre-selects in the radio
+          group below so the user doesn't have to scroll to choose. */}
+      <div className="mb-8 border-b border-black/10 pb-6">
+        <p className="label-eyebrow mb-3">{t("checkout.expressCheckout")}</p>
+        <div className="flex flex-wrap gap-2">
+          {BOG_ENABLED ? (
+            <ExpressPill
+              active={paymentMethod === "bog_card"}
+              onClick={() => setValue("paymentMethod", "bog_card")}
+              icon={<CreditCard size={14} />}
+              label={t("checkout.bogCard")}
+            />
+          ) : null}
+          {TBC_ENABLED ? (
+            <ExpressPill
+              active={paymentMethod === "tbc_card"}
+              onClick={() => setValue("paymentMethod", "tbc_card")}
+              icon={<CreditCard size={14} />}
+              label={t("checkout.tbcCard")}
+            />
+          ) : null}
+          <ExpressPill
+            active={paymentMethod === "bank_transfer"}
+            onClick={() => setValue("paymentMethod", "bank_transfer")}
+            icon={<Banknote size={14} />}
+            label={t("checkout.bankTransfer")}
+          />
+          <ExpressPill
+            active={paymentMethod === "cod"}
+            onClick={() => setValue("paymentMethod", "cod")}
+            icon={<Wallet size={14} />}
+            label={t("checkout.cod")}
+          />
+        </div>
+      </div>
+
+      {/* Mobile step indicator. Desktop has both fieldsets visible at once so the indicator
+          is irrelevant there — `sm:hidden` removes it from the wider layout entirely. */}
+      <div className="mb-6 flex items-center gap-2 sm:hidden">
+        <StepBadge num={1} state={step === 1 ? "active" : "done"} />
+        <span
+          className={cn(
+            "text-xs",
+            step === 1 ? "font-medium" : "opacity-70",
+          )}
+        >
+          {t("checkout.stepContact")}
+        </span>
+        <span className="mx-1 h-px flex-1 bg-black/10" />
+        <StepBadge num={2} state={step === 2 ? "active" : "future"} />
+        <span
+          className={cn(
+            "text-xs",
+            step === 2 ? "font-medium" : "opacity-70",
+          )}
+        >
+          {t("checkout.stepPayment")}
+        </span>
+      </div>
 
       <form
         onSubmit={handleSubmit(onSubmit)}
         className="grid gap-10 lg:grid-cols-[1fr_360px]"
       >
         <div>
-          <fieldset className="mb-8">
+          {/* "Back to shipping" link — visible only on mobile step 2. */}
+          {step === 2 ? (
+            <button
+              type="button"
+              onClick={backToShipping}
+              className="-ml-1 mb-4 inline-flex cursor-pointer items-center gap-1.5 text-xs underline-offset-2 opacity-80 hover:underline hover:opacity-100 sm:hidden"
+            >
+              <ArrowLeft size={14} />
+              {t("checkout.backToShipping")}
+            </button>
+          ) : null}
+
+          {/* Shipping fieldset — hidden on mobile step 2; always visible on sm+. */}
+          <fieldset className={cn("mb-8", step === 2 && "hidden sm:block")}>
             <legend className="font-display mb-4 text-xl">{t("checkout.shipping")}</legend>
             <div className="grid gap-3 sm:grid-cols-2">
               <Field label={t("checkout.firstName")} error={errors.firstName?.message}>
@@ -126,7 +246,18 @@ export default function CheckoutPage() {
                 <input className={inputCls} {...register("lastName")} />
               </Field>
               <Field label={t("checkout.phone")} error={errors.phone?.message}>
-                <input className={inputCls} type="tel" {...register("phone")} />
+                <Controller
+                  control={control}
+                  name="phone"
+                  render={({ field }) => (
+                    <PhoneInput
+                      value={field.value}
+                      onChange={field.onChange}
+                      onBlur={field.onBlur}
+                      aria-invalid={errors.phone ? true : undefined}
+                    />
+                  )}
+                />
               </Field>
               <Field label={t("checkout.email")} error={errors.email?.message}>
                 <input className={inputCls} type="email" {...register("email")} />
@@ -146,7 +277,7 @@ export default function CheckoutPage() {
             </div>
           </fieldset>
 
-          <fieldset>
+          <fieldset className={cn(step === 1 && "hidden sm:block")}>
             <legend className="font-display mb-4 text-xl">{t("checkout.paymentMethod")}</legend>
             <div className="space-y-3">
               {BOG_ENABLED ? (
@@ -191,7 +322,15 @@ export default function CheckoutPage() {
             {cart.lines.map((l) => (
               <li key={l.variantId} className="flex gap-3">
                 <div className="relative h-14 w-12 flex-shrink-0 overflow-hidden bg-black/5">
-                  <Image src={safeImageSrc(l.image.url)} alt={l.image.altText} fill sizes="48px" className="object-cover" />
+                  <Image
+                    src={safeImageSrc(l.image.url)}
+                    alt={l.image.altText}
+                    fill
+                    sizes="48px"
+                    placeholder="blur"
+                    blurDataURL={BLUR_DATA_URL}
+                    className="object-cover"
+                  />
                 </div>
                 <div className="flex flex-1 flex-col">
                   <span className="line-clamp-1 text-sm">{l.productTitle}</span>
@@ -209,17 +348,83 @@ export default function CheckoutPage() {
               </li>
             ))}
           </ul>
-          <div className="mt-4 flex items-center justify-between">
-            <span className="font-medium">{t("cart.total")}</span>
-            <span className="font-display text-xl">{formatPrice(cart.subtotal, locale)}</span>
+          <div className="mt-4">
+            <CouponField />
           </div>
+          <div className="flex items-center justify-between text-sm">
+            <span className="opacity-70">{t("cart.subtotal")}</span>
+            <span className="tabular-nums">{formatPrice(cart.subtotal, locale)}</span>
+          </div>
+          {cart.coupon && Number.parseFloat(cart.discount.amount) > 0 ? (
+            <div
+              className="mt-1 flex items-center justify-between text-sm"
+              style={{ color: "var(--color-brand-maroon)" }}
+            >
+              <span className="opacity-80">
+                {t("cart.discount")} · {cart.coupon.code}
+              </span>
+              <span className="tabular-nums">−{formatPrice(cart.discount, locale)}</span>
+            </div>
+          ) : null}
+          <div className="mt-3 flex items-center justify-between border-t border-black/10 pt-3">
+            <span className="font-medium">{t("cart.total")}</span>
+            <span className="font-display text-xl tabular-nums">
+              {formatPrice(cart.total, locale)}
+            </span>
+          </div>
+          {submitError ? (
+            <div
+              role="alert"
+              aria-live="polite"
+              className="mt-4 flex items-start gap-2 rounded-md px-3 py-2.5 text-xs"
+              style={{
+                background: "color-mix(in oklab, var(--color-brand-maroon) 10%, transparent)",
+                color: "var(--color-brand-maroon-3)",
+                border: "1px solid color-mix(in oklab, var(--color-brand-maroon) 30%, transparent)",
+              }}
+            >
+              <AlertCircle size={14} className="mt-0.5 flex-shrink-0" />
+              <span>{submitError}</span>
+            </div>
+          ) : null}
+          {/* Mobile step 1: "Continue to payment" advances to step 2 (no submission). */}
+          <button
+            type="button"
+            onClick={advanceToPayment}
+            className={cn(
+              "btn-primary mt-5 w-full",
+              step === 1 ? "sm:hidden" : "hidden",
+            )}
+          >
+            {t("checkout.continueToPayment")}
+            <ArrowRight size={16} />
+          </button>
+
+          {/* Mobile step 2 + desktop: real submit. */}
           <button
             type="submit"
             disabled={submitting}
-            className={cn("btn-primary mt-5 w-full", submitting && "opacity-60")}
+            className={cn(
+              "btn-primary mt-5 w-full",
+              submitting && "opacity-60",
+              step === 1 && "hidden sm:inline-flex",
+            )}
           >
-            {submitting ? t("common.loading") : t("checkout.placeOrder")}
+            {submitting ? (
+              <>
+                <Loader2 size={16} className="animate-spin" />
+                {t("common.loading")}
+              </>
+            ) : (
+              t("checkout.placeOrder")
+            )}
           </button>
+
+          <PaymentTrust />
+
+          <div className="mt-4 flex justify-center">
+            <HowItWorksButton />
+          </div>
         </aside>
       </form>
     </div>
@@ -242,10 +447,103 @@ function Field({
 }) {
   return (
     <label className={cn("block", className)}>
-      <span className="label-eyebrow mb-1.5 block">{label}</span>
+      {/* Sentence-case 13px form label — the editorial `label-eyebrow` (11px tracked uppercase)
+          looks great as a section eyebrow but is hard to scan on a mobile form. Keep the
+          eyebrow style for section headings; forms get this calmer treatment. */}
+      <span className="mb-1.5 block text-[13px] font-medium text-[var(--color-brand-ink)]">
+        {label}
+      </span>
       {children}
       {error ? <span className="mt-1 block text-xs text-[var(--color-brand-maroon)]">{error}</span> : null}
     </label>
+  );
+}
+
+/**
+ * Trust strip under the Place Order button. Card-brand pills only render when at least one
+ * card processor is enabled — otherwise BOG/TBC/Visa/Mastercard would be misleading next to a
+ * bank-transfer-only flow. The shield + "Secure checkout" line always renders.
+ */
+function PaymentTrust() {
+  const t = useTranslations("product");
+  const cardMethods: string[] = [];
+  if (BOG_ENABLED) cardMethods.push("BOG");
+  if (TBC_ENABLED) cardMethods.push("TBC");
+  if (cardMethods.length > 0) cardMethods.push("VISA", "MASTERCARD");
+
+  return (
+    <div className="mt-3 space-y-1.5">
+      {cardMethods.length > 0 ? (
+        <div className="flex flex-wrap items-center justify-center gap-1.5">
+          {cardMethods.map((label) => (
+            <span
+              key={label}
+              className="rounded border border-black/15 px-2 py-0.5 text-[10px] font-medium tracking-[0.14em]"
+            >
+              {label}
+            </span>
+          ))}
+        </div>
+      ) : null}
+      <div className="flex items-center justify-center gap-1.5 text-[11px] opacity-60">
+        <ShieldCheck size={12} />
+        <span>{t("secureCheckout")}</span>
+      </div>
+    </div>
+  );
+}
+
+function ExpressPill({
+  active,
+  onClick,
+  icon,
+  label,
+}: {
+  active: boolean;
+  onClick: () => void;
+  icon: React.ReactNode;
+  label: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={active}
+      className={cn(
+        "inline-flex cursor-pointer items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs transition-colors",
+        active
+          ? "border-[var(--color-brand-ink)] bg-[var(--color-brand-ink)] text-[var(--color-brand-cream)]"
+          : "border-black/15 hover:border-black/40",
+      )}
+    >
+      {icon}
+      <span>{label}</span>
+    </button>
+  );
+}
+
+function StepBadge({
+  num,
+  state,
+}: {
+  num: number;
+  state: "active" | "done" | "future";
+}) {
+  return (
+    <span
+      className={cn(
+        "flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full text-[11px] font-medium tabular-nums",
+        state === "active" &&
+          "bg-[var(--color-brand-maroon)] text-[var(--color-brand-cream)]",
+        state === "done" &&
+          "border border-[var(--color-brand-maroon)] text-[var(--color-brand-maroon)]",
+        state === "future" &&
+          "border border-black/20 text-[var(--color-brand-ink)] opacity-60",
+      )}
+      aria-hidden="true"
+    >
+      {state === "done" ? <Check size={12} strokeWidth={2.5} /> : num}
+    </span>
   );
 }
 

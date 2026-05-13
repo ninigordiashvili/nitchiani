@@ -3,11 +3,16 @@ import { CategoryChips } from "@/components/homepage/CategoryChips";
 import { SectionHeader } from "@/components/homepage/SectionHeader";
 import { EditorialBanner } from "@/components/homepage/EditorialBanner";
 import { CategoryCardGrid } from "@/components/homepage/CategoryCardGrid";
+import { HomepageReviews } from "@/components/homepage/HomepageReviews";
 import { InstagramStrip } from "@/components/homepage/InstagramStrip";
 import { ServicesTeaser } from "@/components/homepage/ServicesTeaser";
 import { ProductGrid } from "@/components/commerce/ProductGrid";
-import { getBestSellers, getNewArrivals } from "@/lib/shopify/client";
+import { RecentlyViewedRail } from "@/components/commerce/RecentlyViewedRail";
+import { BundleUpsell } from "@/components/homepage/BundleUpsell";
+import { getFeaturedBundle } from "@/lib/bundles";
+import { getBestSellers, getNewArrivals, getProductByHandle } from "@/lib/shopify/client";
 import type { Locale } from "@/lib/i18n/config";
+import type { Product } from "@/lib/shopify/types";
 
 export default async function HomePage({
   params,
@@ -23,10 +28,28 @@ export default async function HomePage({
     getTranslations("home"),
   ]);
 
+  // Pre-fetch the featured bundle's products server-side so the BundleUpsell can render
+  // without a client-side loading state. Hide the section entirely if any product is missing.
+  const featuredBundle = getFeaturedBundle();
+  const bundleProducts = featuredBundle
+    ? (
+        await Promise.all(
+          featuredBundle.handles.map((h) => getProductByHandle(h, locale)),
+        )
+      ).filter((p): p is Product => Boolean(p))
+    : [];
+  const showBundle =
+    featuredBundle != null && bundleProducts.length === featuredBundle.handles.length;
+
   return (
     <div className="pb-12">
       {/* 1 — Category chips */}
       <CategoryChips />
+
+      {/* 1.5 — Recently viewed (renders only when the user has visited PDPs before) */}
+      <section className="container-shop mt-4">
+        <RecentlyViewedRail />
+      </section>
 
       {/* 2 — Best sellers */}
       <section className="container-shop mt-4">
@@ -37,6 +60,13 @@ export default async function HomePage({
         />
         <ProductGrid products={bestSellers} priorityFirst={4} />
       </section>
+
+      {/* 2.5 — Featured bundle */}
+      {showBundle && featuredBundle ? (
+        <section className="container-shop mt-12">
+          <BundleUpsell bundle={featuredBundle} products={bundleProducts} />
+        </section>
+      ) : null}
 
       {/* 3 — Editorial banner #1 (full-bleed image, text inside container) */}
       <section className="mt-12">
@@ -57,7 +87,12 @@ export default async function HomePage({
         <ProductGrid products={newArrivals} />
       </section>
 
-      {/* 5 — Visual category cards */}
+      {/* 5 — Customer testimonials */}
+      <section className="container-shop mt-12">
+        <HomepageReviews locale={locale} />
+      </section>
+
+      {/* 6 — Visual category cards */}
       <section className="container-shop mt-12">
         <SectionHeader title={t("shopByCategory")} />
         <CategoryCardGrid />

@@ -1,36 +1,29 @@
-"use client";
+import { Truck } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 
-import { useEffect, useState } from "react";
-import { useTranslations } from "next-intl";
-
-export function PromoStrip() {
-  const t = useTranslations("promo");
-  const messages = [t("shipping"), t("newDrop")];
-  const [idx, setIdx] = useState(0);
-
-  useEffect(() => {
-    const id = setInterval(() => setIdx((i) => (i + 1) % messages.length), 4500);
-    return () => clearInterval(id);
-  }, [messages.length]);
+/**
+ * Single-message promo strip above the header. Used to cross-fade between two messages
+ * every 4.5s, but two strings can't justify a carousel — users either read it on the first
+ * paint or never. Now: static, server-rendered, slightly taller for comfortable mobile
+ * reading, with a truck glyph anchoring the brand's shipping promise.
+ *
+ * The `promo.newDrop` translation key still exists in the dictionary for future use
+ * (seasonal campaigns, sale weeks, etc.) — swap `t("shipping")` for whatever's active.
+ */
+export async function PromoStrip() {
+  const t = await getTranslations("promo");
 
   return (
     <div
-      className="w-full text-center text-[11px] tracking-[0.18em] uppercase"
+      className="w-full"
       style={{
         background: "var(--color-brand-bg)",
         color: "var(--color-brand-cream)",
       }}
     >
-      <div className="container-shop relative h-7 overflow-hidden">
-        {messages.map((m, i) => (
-          <span
-            key={m}
-            className="absolute inset-0 flex items-center justify-center transition-opacity duration-500"
-            style={{ opacity: i === idx ? 1 : 0 }}
-          >
-            {m}
-          </span>
-        ))}
+      <div className="container-shop flex h-8 items-center justify-center gap-2 text-[11px] tracking-[0.18em] uppercase">
+        <Truck size={12} className="opacity-80" />
+        <span>{t("shipping")}</span>
       </div>
     </div>
   );

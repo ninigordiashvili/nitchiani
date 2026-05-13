@@ -13,13 +13,20 @@ import { createContext, useContext, useMemo, useState } from "react";
 type OverlaysState = {
   searchOpen: boolean;
   setSearchOpen: (open: boolean) => void;
+  /** True while the mobile PDP sticky Add-to-bag bar is visible; BottomNav hides itself to avoid stacking two bars. */
+  pdpCtaActive: boolean;
+  setPdpCtaActive: (active: boolean) => void;
 };
 
 const OverlaysContext = createContext<OverlaysState | null>(null);
 
 export function OverlaysProvider({ children }: { children: React.ReactNode }) {
   const [searchOpen, setSearchOpen] = useState(false);
-  const value = useMemo(() => ({ searchOpen, setSearchOpen }), [searchOpen]);
+  const [pdpCtaActive, setPdpCtaActive] = useState(false);
+  const value = useMemo(
+    () => ({ searchOpen, setSearchOpen, pdpCtaActive, setPdpCtaActive }),
+    [searchOpen, pdpCtaActive],
+  );
   return <OverlaysContext.Provider value={value}>{children}</OverlaysContext.Provider>;
 }
 

@@ -1,12 +1,10 @@
 "use client";
 
 import { X } from "lucide-react";
-import { useLocale, useTranslations } from "next-intl";
+import { useTranslations } from "next-intl";
 import { useEffect } from "react";
 import { Link } from "@/lib/i18n/routing";
-import { LanguageToggle } from "./LanguageToggle";
-import { CurrencyToggle } from "./CurrencyToggle";
-import type { Locale } from "@/lib/i18n/config";
+import { getWhatsAppNumber, WhatsAppIcon } from "@/components/brand/WhatsAppIcon";
 
 const SHOP_LINKS = [
   { href: "/shop/best-sellers", labelKey: "bestSellers" as const },
@@ -32,7 +30,7 @@ export function MobileMenuDrawer({
   onClose: () => void;
 }) {
   const t = useTranslations("nav");
-  const locale = useLocale() as Locale;
+  const whatsappNumber = getWhatsAppNumber();
 
   useEffect(() => {
     if (!open) return;
@@ -54,7 +52,7 @@ export function MobileMenuDrawer({
         onClick={onClose}
       />
       <aside
-        className="absolute top-0 left-0 flex h-full w-[88%] max-w-sm flex-col transition-transform duration-300"
+        className="absolute top-0 left-0 flex h-full w-[88%] max-w-sm flex-col transition-transform duration-200"
         style={{
           background: "var(--color-brand-cream)",
           transform: open ? "translateX(0)" : "translateX(-100%)",
@@ -102,17 +100,25 @@ export function MobileMenuDrawer({
             ))}
           </ul>
 
-          {/* Language + currency switchers — only inside the drawer on mobile (header shows them on sm+). */}
-          <div className="mt-8 space-y-4 border-t border-black/10 pt-5 sm:hidden">
-            <div>
-              <p className="label-eyebrow mb-2">{t("language")}</p>
-              <LanguageToggle locale={locale} />
-            </div>
-            <div>
-              <p className="label-eyebrow mb-2">{t("currency")}</p>
-              <CurrencyToggle />
-            </div>
+          <div className="mt-6 border-t border-black/10 pt-5">
+            <p className="label-eyebrow mb-3">{t("needHelp")}</p>
+            <a
+              href={`https://wa.me/${whatsappNumber}`}
+              target="_blank"
+              rel="noreferrer noopener"
+              onClick={onClose}
+              className="flex items-center gap-3 rounded-md border border-black/10 px-3 py-2.5 transition-colors hover:border-black/30"
+            >
+              <span
+                className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full"
+                style={{ background: "#25D366", color: "white" }}
+              >
+                <WhatsAppIcon size={16} />
+              </span>
+              <span className="text-sm font-medium">{t("chatWhatsApp")}</span>
+            </a>
           </div>
+
         </nav>
       </aside>
     </div>

@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { useEffect } from "react";
 import { Link } from "@/lib/i18n/routing";
+import { BLUR_DATA_URL } from "@/lib/images";
 import { useQuickView } from "@/lib/ui/quick-view";
 import { ProductPurchase } from "./ProductPurchase";
 
@@ -49,7 +50,7 @@ export function QuickViewModal() {
         role="dialog"
         aria-modal="true"
         aria-label={product?.title}
-        className="absolute right-0 bottom-0 left-0 max-h-[88dvh] overflow-y-auto rounded-t-2xl transition-transform duration-300 ease-[var(--ease-brand)] sm:right-1/2 sm:bottom-1/2 sm:left-1/2 sm:max-h-[80dvh] sm:w-[min(900px,90vw)] sm:translate-x-[-50%] sm:translate-y-[50%] sm:rounded-2xl"
+        className="absolute right-0 bottom-0 left-0 max-h-[88dvh] overflow-y-auto rounded-t-2xl transition-transform duration-200 ease-[var(--ease-brand)] sm:right-1/2 sm:bottom-1/2 sm:left-1/2 sm:max-h-[80dvh] sm:w-[min(900px,90vw)] sm:translate-x-[-50%] sm:translate-y-[50%] sm:rounded-2xl"
         style={{
           background: "var(--color-brand-cream)",
           transform: open ? undefined : "translateY(100%)",
@@ -64,6 +65,8 @@ export function QuickViewModal() {
                 alt={product.featuredImage.altText}
                 fill
                 sizes="(min-width: 640px) 50vw, 100vw"
+                placeholder="blur"
+                blurDataURL={BLUR_DATA_URL}
                 className="object-cover sm:rounded-l-2xl"
               />
               <button

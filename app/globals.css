@@ -61,6 +61,17 @@
     letter-spacing: 0.005em;
   }
 
+  /* Georgian titles in Mtavruli (the all-caps companion of Mkhedruli). Modern browsers
+     convert Mkhedruli ↔ Mtavruli via `text-transform: uppercase`. Mtavruli is the standard
+     editorial choice for Georgian headings — comparable to using small-caps in Latin
+     editorial layouts. Letter-spacing nudged off the tight Latin display tracking so the
+     wider Mtavruli glyphs don't crowd each other. */
+  :lang(ka) :is(h1, h2, h3),
+  :lang(ka) .font-display {
+    text-transform: uppercase;
+    letter-spacing: 0.01em;
+  }
+
   /* Editorial display headings */
   h1, h2, h3, .font-display {
     font-family: var(--font-display);
@@ -110,12 +121,15 @@
     max-width: var(--container-shop);
   }
 
+  /* Ink-on-cream for primary CTAs — highest editorial contrast against the cream surface.
+     Maroon now hovers in as a brand reveal (and stays the colour of badges, prices,
+     progress bars, etc.), keeping it precious instead of muted by overuse on every button. */
   .btn-primary {
     @apply inline-flex items-center justify-center gap-2 rounded-md px-5 py-3 text-sm font-medium uppercase tracking-wider transition-colors;
-    background: var(--color-brand-maroon);
+    background: var(--color-brand-ink);
     color: var(--color-brand-cream);
   }
-  .btn-primary:hover { background: var(--color-brand-maroon-2); }
+  .btn-primary:hover { background: var(--color-brand-maroon); }
 
   .btn-ghost {
     @apply inline-flex items-center justify-center gap-2 rounded-md border px-5 py-3 text-sm font-medium uppercase tracking-wider transition-colors;
@@ -143,4 +157,36 @@
       rgba(10, 31, 31, 0.85) 100%
     );
   }
+}
+
+/* Wishlist celebration — small radial burst of maroon dots fired from the heart's centre
+   on add. `--burst-deg` is set per-dot inline to spread them across 360°. */
+@keyframes wishlist-burst {
+  0% {
+    transform: translate(-50%, -50%) rotate(var(--burst-deg, 0deg)) translateY(-2px) scale(0.5);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -50%) rotate(var(--burst-deg, 0deg)) translateY(-22px) scale(0);
+    opacity: 0;
+  }
+}
+
+.burst-dot {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 4px;
+  height: 4px;
+  background: var(--color-brand-maroon);
+  border-radius: 9999px;
+  animation: wishlist-burst 0.55s var(--ease-brand) forwards;
+}
+
+/* Soft pop used on the heart icon at the moment of save, and on the count badges
+   in the header / bottom nav when their value goes up. */
+@keyframes count-pop {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.35); }
+  100% { transform: scale(1); }
 }

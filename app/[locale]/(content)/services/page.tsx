@@ -2,6 +2,7 @@ import Image from "next/image";
 import { setRequestLocale, getTranslations } from "next-intl/server";
 import { ArrowRight } from "lucide-react";
 import { Link } from "@/lib/i18n/routing";
+import { BLUR_DATA_URL } from "@/lib/images";
 import { SERVICES } from "@/lib/services";
 import type { Locale } from "@/lib/i18n/config";
 
@@ -35,6 +36,8 @@ export default async function ServicesPage({
                   alt={locale === "ka" ? s.titleKa : s.titleEn}
                   fill
                   sizes="(min-width: 1024px) 33vw, 100vw"
+                  placeholder="blur"
+                  blurDataURL={BLUR_DATA_URL}
                   className="object-cover transition-transform duration-500 ease-[var(--ease-brand)] group-hover:scale-105"
                 />
               </div>

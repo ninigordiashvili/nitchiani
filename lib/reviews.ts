@@ -226,6 +226,35 @@ export function getReviewsForProduct(handle: string, locale: Locale): LocalizedR
     }));
 }
 
+export type HomepageReview = LocalizedReview & { productHandle: string };
+
+/**
+ * Top reviews across the catalogue for the homepage testimonial rail. Filters to 5-star
+ * reviews so the highlight reel actually highlights, then orders by date desc.
+ *
+ * Note: not deduplicated by author or product — if two of our best testimonials are for the
+ * same SKU, both still show. The fix is more reviews, not a filter.
+ */
+export function getTopReviews(locale: Locale, limit = 6): HomepageReview[] {
+  const flattened: Array<Review & { productHandle: string }> = [];
+  for (const [handle, reviews] of Object.entries(REVIEWS_BY_HANDLE)) {
+    for (const r of reviews) flattened.push({ ...r, productHandle: handle });
+  }
+  return flattened
+    .filter((r) => r.rating === 5)
+    .sort((a, b) => (a.date < b.date ? 1 : -1))
+    .slice(0, limit)
+    .map((r) => ({
+      id: r.id,
+      author: r.author,
+      city: r.city,
+      date: r.date,
+      rating: r.rating,
+      body: locale === "ka" ? r.bodyKa : r.bodyEn,
+      productHandle: r.productHandle,
+    }));
+}
+
 export function getReviewSummary(handle: string): { count: number; average: number } {
   const reviews = REVIEWS_BY_HANDLE[handle] ?? [];
   if (reviews.length === 0) return { count: 0, average: 0 };

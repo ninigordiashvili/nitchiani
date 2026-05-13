@@ -16,13 +16,19 @@ export type ProductFilters = {
   onSale: boolean;
   /** Hide products whose every variant is out of stock. */
   availableOnly: boolean;
+  /** Maximum price in GEL (inclusive). `null` = no cap. Compared against `priceRange.min`. */
+  maxPrice: number | null;
 };
 
 export const EMPTY_FILTERS: ProductFilters = {
   colors: [],
   onSale: false,
   availableOnly: false,
+  maxPrice: null,
 };
+
+/** Preset price-tier chips shown in the toolbar. Edit here to add/remove tiers. */
+export const PRICE_TIERS = [50] as const;
 
 /**
  * Returns the unique color values present across the given products. Reads the option group
@@ -65,6 +71,7 @@ export function applyFilters(products: Product[], filters: ProductFilters): Prod
     }
     if (filters.onSale && !productOnSale(p)) return false;
     if (filters.availableOnly && !productHasAvailableVariant(p)) return false;
+    if (filters.maxPrice !== null && minPrice(p) > filters.maxPrice) return false;
     return true;
   });
 }

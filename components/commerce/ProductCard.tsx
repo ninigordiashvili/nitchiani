@@ -2,6 +2,8 @@ import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { Link } from "@/lib/i18n/routing";
 import type { Product } from "@/lib/shopify/types";
+import { BLUR_DATA_URL } from "@/lib/images";
+import { discountPercent } from "@/lib/money";
 import { getReviewSummary } from "@/lib/reviews";
 import { PriceDisplay } from "./PriceDisplay";
 import { QuickViewButton } from "./QuickViewButton";
@@ -12,6 +14,7 @@ export function ProductCard({ product, priority = false }: { product: Product; p
   const t = useTranslations("product");
   const variant = product.variants[0];
   const compareAt = variant?.compareAtPrice;
+  const offPercent = discountPercent(variant?.price ?? product.priceRange.min, compareAt);
   const summary = getReviewSummary(product.handle);
 
   return (
@@ -27,13 +30,15 @@ export function ProductCard({ product, priority = false }: { product: Product; p
           fill
           sizes="(min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw"
           priority={priority}
-          className="object-cover transition-transform duration-700 ease-[var(--ease-brand)] group-hover:scale-105"
+          placeholder="blur"
+          blurDataURL={BLUR_DATA_URL}
+          className="object-cover transition-transform duration-[400ms] ease-[var(--ease-brand)] group-hover:scale-105"
         />
-        {(product.isNew || product.isBestSeller || compareAt) && (
+        {(product.isNew || product.isBestSeller || offPercent !== null) && (
           <div className="absolute top-2 left-2 flex flex-col gap-1">
+            {offPercent !== null && <Badge tone="maroon">−{offPercent}%</Badge>}
             {product.isBestSeller && <Badge>{t("badgeBestSeller")}</Badge>}
             {product.isNew && <Badge>{t("badgeNew")}</Badge>}
-            {compareAt && <Badge tone="maroon">{t("badgeSale")}</Badge>}
           </div>
         )}
         <div className="absolute top-2 right-2">

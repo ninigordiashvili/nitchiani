@@ -7,8 +7,11 @@ import { Link } from "@/lib/i18n/routing";
 import { useCart } from "@/lib/cart/store";
 import { formatPrice } from "@/lib/money";
 import type { Locale } from "@/lib/i18n/config";
-import { safeImageSrc } from "@/lib/images";
+import { BLUR_DATA_URL, safeImageSrc } from "@/lib/images";
+import { CartUpsellRow } from "@/components/cart/CartUpsellRow";
+import { CouponField } from "@/components/cart/CouponField";
 import { EmptyCartRecommendations } from "@/components/cart/EmptyCartRecommendations";
+import { HowItWorksButton } from "@/components/cart/HowItWorksButton";
 
 export default function CartPage() {
   const t = useTranslations();
@@ -39,6 +42,8 @@ export default function CartPage() {
                   alt={line.image.altText}
                   fill
                   sizes="112px"
+                  placeholder="blur"
+                  blurDataURL={BLUR_DATA_URL}
                   className="object-cover"
                 />
               </div>
@@ -105,10 +110,22 @@ export default function CartPage() {
 
         <aside className="h-fit border border-black/10 p-6 lg:sticky lg:top-20">
           <h2 className="font-display mb-4 text-xl">{t("cart.subtotal")}</h2>
+          <CouponField />
           <div className="flex items-center justify-between text-sm">
             <span className="opacity-70">{t("cart.subtotal")}</span>
-            <span className="font-medium">{formatPrice(cart.subtotal, locale)}</span>
+            <span className="tabular-nums">{formatPrice(cart.subtotal, locale)}</span>
           </div>
+          {cart.coupon && Number.parseFloat(cart.discount.amount) > 0 ? (
+            <div
+              className="mt-1 flex items-center justify-between text-sm"
+              style={{ color: "var(--color-brand-maroon)" }}
+            >
+              <span className="opacity-80">
+                {t("cart.discount")} · {cart.coupon.code}
+              </span>
+              <span className="tabular-nums">−{formatPrice(cart.discount, locale)}</span>
+            </div>
+          ) : null}
           <div className="mt-2 flex items-center justify-between text-sm">
             <span className="opacity-70">{t("cart.shipping")}</span>
             <span className="opacity-60">{t("cart.shippingNote")}</span>
@@ -116,15 +133,20 @@ export default function CartPage() {
           <div className="my-4 border-t border-black/10" />
           <div className="flex items-center justify-between">
             <span className="font-medium">{t("cart.total")}</span>
-            <span className="font-display text-xl">
-              {formatPrice(cart.subtotal, locale)}
+            <span className="font-display text-xl tabular-nums">
+              {formatPrice(cart.total, locale)}
             </span>
           </div>
           <Link href="/checkout" className="btn-primary mt-6 w-full">
             {t("cart.checkout")}
           </Link>
+          <div className="mt-3 flex justify-center">
+            <HowItWorksButton />
+          </div>
         </aside>
       </div>
+
+      <CartUpsellRow variant="page" />
     </div>
   );
 }

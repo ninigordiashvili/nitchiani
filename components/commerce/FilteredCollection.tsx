@@ -33,10 +33,13 @@ export function FilteredCollection({ products }: { products: Product[] }) {
 
   const filters: ProductFilters = useMemo(() => {
     const colorParam = searchParams.get("color");
+    const maxPriceRaw = searchParams.get("maxPrice");
+    const maxPriceNum = maxPriceRaw ? Number.parseInt(maxPriceRaw, 10) : NaN;
     return {
       colors: colorParam ? colorParam.split(",").filter(Boolean) : EMPTY_FILTERS.colors,
       onSale: searchParams.get("onSale") === "1",
       availableOnly: searchParams.get("available") === "1",
+      maxPrice: Number.isFinite(maxPriceNum) && maxPriceNum > 0 ? maxPriceNum : null,
     };
   }, [searchParams]);
 
