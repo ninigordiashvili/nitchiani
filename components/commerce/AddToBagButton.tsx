@@ -10,10 +10,12 @@ import { cn } from "@/lib/utils";
 export function AddToBagButton({
   product,
   variant,
+  quantity = 1,
   className,
 }: {
   product: Product;
   variant: ProductVariant;
+  quantity?: number;
   className?: string;
 }) {
   const t = useTranslations("product");
@@ -34,6 +36,7 @@ export function AddToBagButton({
           variantTitle: variant.title,
           image: product.featuredImage,
           unitPrice: variant.price,
+          quantity,
         });
         setJustAdded(true);
         setTimeout(() => setJustAdded(false), 1400);

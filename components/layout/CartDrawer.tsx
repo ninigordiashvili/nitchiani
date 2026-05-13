@@ -8,8 +8,12 @@ import { Link } from "@/lib/i18n/routing";
 import { useCart } from "@/lib/cart/store";
 import type { Locale } from "@/lib/i18n/config";
 import { formatPrice } from "@/lib/money";
-import { safeImageSrc } from "@/lib/images";
+import { BLUR_DATA_URL, safeImageSrc } from "@/lib/images";
+import { CartUpsellRow } from "@/components/cart/CartUpsellRow";
+import { CouponField } from "@/components/cart/CouponField";
 import { EmptyCartRecommendations } from "@/components/cart/EmptyCartRecommendations";
+import { FreeShippingProgress } from "@/components/cart/FreeShippingProgress";
+import { HowItWorksButton } from "@/components/cart/HowItWorksButton";
 
 export function CartDrawer({ locale }: { locale: Locale }) {
   const t = useTranslations();
@@ -36,7 +40,7 @@ export function CartDrawer({ locale }: { locale: Locale }) {
         onClick={() => cart.setOpen(false)}
       />
       <aside
-        className="absolute top-0 right-0 flex h-full w-full max-w-md flex-col transition-transform duration-300"
+        className="absolute top-0 right-0 flex h-full w-full max-w-md flex-col transition-transform duration-200"
         style={{
           background: "var(--color-brand-cream)",
           transform: open ? "translateX(0)" : "translateX(100%)",
@@ -63,70 +67,95 @@ export function CartDrawer({ locale }: { locale: Locale }) {
           </div>
         ) : (
           <>
-            <ul className="flex-1 overflow-y-auto px-4 py-4">
-              {cart.lines.map((line) => (
-                <li key={line.variantId} className="flex gap-3 border-b border-black/5 py-4">
-                  <div className="relative h-24 w-20 flex-shrink-0 overflow-hidden rounded-md bg-black/5">
-                    <Image
-                      src={safeImageSrc(line.image.url)}
-                      alt={line.image.altText}
-                      fill
-                      sizes="80px"
-                      className="object-cover"
-                    />
-                  </div>
-                  <div className="flex flex-1 flex-col justify-between">
-                    <div>
-                      <p className="text-sm font-medium leading-tight">{line.productTitle}</p>
-                      <p className="text-xs opacity-60">{line.variantTitle}</p>
+            <div className="flex-1 overflow-y-auto">
+              <ul className="px-4 py-4">
+                {cart.lines.map((line) => (
+                  <li key={line.variantId} className="flex gap-3 border-b border-black/5 py-4">
+                    <div className="relative h-24 w-20 flex-shrink-0 overflow-hidden rounded-md bg-black/5">
+                      <Image
+                        src={safeImageSrc(line.image.url)}
+                        alt={line.image.altText}
+                        fill
+                        sizes="80px"
+                        placeholder="blur"
+                        blurDataURL={BLUR_DATA_URL}
+                        className="object-cover"
+                      />
                     </div>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2 rounded-md border border-black/10">
-                        <button
-                          type="button"
-                          aria-label="Decrease"
-                          onClick={() =>
-                            cart.updateQuantity(line.variantId, line.quantity - 1)
-                          }
-                          className="flex h-8 w-8 items-center justify-center"
-                        >
-                          <Minus size={14} />
-                        </button>
-                        <span className="w-6 text-center text-sm">{line.quantity}</span>
-                        <button
-                          type="button"
-                          aria-label="Increase"
-                          onClick={() =>
-                            cart.updateQuantity(line.variantId, line.quantity + 1)
-                          }
-                          className="flex h-8 w-8 items-center justify-center"
-                        >
-                          <Plus size={14} />
-                        </button>
+                    <div className="flex flex-1 flex-col justify-between">
+                      <div>
+                        <p className="text-sm font-medium leading-tight">{line.productTitle}</p>
+                        <p className="text-xs opacity-60">{line.variantTitle}</p>
                       </div>
-                      <span className="text-sm font-medium">
-                        {formatPrice(
-                          {
-                            amount: (
-                              Number.parseFloat(line.unitPrice.amount) * line.quantity
-                            ).toFixed(2),
-                            currencyCode: line.unitPrice.currencyCode,
-                          },
-                          locale,
-                        )}
-                      </span>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2 rounded-md border border-black/10">
+                          <button
+                            type="button"
+                            aria-label="Decrease"
+                            onClick={() =>
+                              cart.updateQuantity(line.variantId, line.quantity - 1)
+                            }
+                            className="flex h-8 w-8 items-center justify-center"
+                          >
+                            <Minus size={14} />
+                          </button>
+                          <span className="w-6 text-center text-sm">{line.quantity}</span>
+                          <button
+                            type="button"
+                            aria-label="Increase"
+                            onClick={() =>
+                              cart.updateQuantity(line.variantId, line.quantity + 1)
+                            }
+                            className="flex h-8 w-8 items-center justify-center"
+                          >
+                            <Plus size={14} />
+                          </button>
+                        </div>
+                        <span className="text-sm font-medium">
+                          {formatPrice(
+                            {
+                              amount: (
+                                Number.parseFloat(line.unitPrice.amount) * line.quantity
+                              ).toFixed(2),
+                              currencyCode: line.unitPrice.currencyCode,
+                            },
+                            locale,
+                          )}
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                </li>
-              ))}
-            </ul>
+                  </li>
+                ))}
+              </ul>
+              <CartUpsellRow variant="drawer" />
+            </div>
 
             <div className="border-t border-black/10 px-4 py-4">
-              <div className="mb-3 flex items-center justify-between text-sm">
+              <FreeShippingProgress subtotal={cart.subtotal} />
+              <CouponField />
+              <div className="mb-1 flex items-center justify-between text-sm">
                 <span className="opacity-70">{t("cart.subtotal")}</span>
-                <span className="font-medium">{formatPrice(cart.subtotal, locale)}</span>
+                <span className="tabular-nums">{formatPrice(cart.subtotal, locale)}</span>
               </div>
-              <p className="mb-4 text-xs opacity-60">{t("cart.shippingNote")}</p>
+              {cart.coupon && Number.parseFloat(cart.discount.amount) > 0 ? (
+                <div
+                  className="mb-1 flex items-center justify-between text-sm"
+                  style={{ color: "var(--color-brand-maroon)" }}
+                >
+                  <span className="opacity-80">
+                    {t("cart.discount")} · {cart.coupon.code}
+                  </span>
+                  <span className="tabular-nums">
+                    −{formatPrice(cart.discount, locale)}
+                  </span>
+                </div>
+              ) : null}
+              <div className="mt-2 mb-4 flex items-center justify-between border-t border-black/5 pt-2 text-sm">
+                <span className="font-medium">{t("cart.total")}</span>
+                <span className="font-medium tabular-nums">
+                  {formatPrice(cart.total, locale)}
+                </span>
+              </div>
               <Link
                 href="/checkout"
                 onClick={() => cart.setOpen(false)}
@@ -134,6 +163,9 @@ export function CartDrawer({ locale }: { locale: Locale }) {
               >
                 {t("cart.checkout")}
               </Link>
+              <div className="mt-3 flex justify-center">
+                <HowItWorksButton />
+              </div>
             </div>
           </>
         )}

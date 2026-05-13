@@ -8,10 +8,12 @@ import { CartDrawer } from "@/components/layout/CartDrawer";
 import { BottomNav } from "@/components/layout/BottomNav";
 import { WhatsAppFloater } from "@/components/layout/WhatsAppFloater";
 import { InstagramFloater } from "@/components/layout/InstagramFloater";
+import { WelcomePopup } from "@/components/layout/WelcomePopup";
 import { SearchOverlay } from "@/components/search/SearchOverlay";
 import { QuickViewModal } from "@/components/commerce/QuickViewModal";
 import { CartProvider } from "@/lib/cart/store";
 import { CurrencyProvider } from "@/lib/currency/store";
+import { RecentlyViewedProvider } from "@/lib/recently-viewed/store";
 import { OverlaysProvider } from "@/lib/ui/overlays";
 import { QuickViewProvider } from "@/lib/ui/quick-view";
 import { WishlistProvider } from "@/lib/wishlist/store";
@@ -37,9 +39,10 @@ export default async function LocaleLayout({
     <NextIntlClientProvider locale={locale} messages={messages}>
       <CurrencyProvider>
         <WishlistProvider>
-          <CartProvider>
-            <QuickViewProvider>
-              <OverlaysProvider>
+          <RecentlyViewedProvider>
+            <CartProvider>
+              <QuickViewProvider>
+                <OverlaysProvider>
                 <div lang={locale} className="flex min-h-dvh flex-col">
                   <PromoStrip />
                   <Header locale={locale as Locale} />
@@ -52,10 +55,12 @@ export default async function LocaleLayout({
                   <BottomNav />
                   <WhatsAppFloater />
                   <InstagramFloater />
+                  <WelcomePopup />
                 </div>
-              </OverlaysProvider>
-            </QuickViewProvider>
-          </CartProvider>
+                </OverlaysProvider>
+              </QuickViewProvider>
+            </CartProvider>
+          </RecentlyViewedProvider>
         </WishlistProvider>
       </CurrencyProvider>
     </NextIntlClientProvider>

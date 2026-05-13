@@ -4,7 +4,13 @@ import { X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useMemo } from "react";
-import { type ProductFilters, type SortKey, SORT_KEYS, isSortKey } from "@/lib/products/filter";
+import {
+  type ProductFilters,
+  type SortKey,
+  PRICE_TIERS,
+  SORT_KEYS,
+  isSortKey,
+} from "@/lib/products/filter";
 import { cn } from "@/lib/utils";
 
 /**
@@ -56,10 +62,12 @@ export function CollectionToolbar({
   const activeFilterCount =
     filters.colors.length +
     (filters.onSale ? 1 : 0) +
-    (filters.availableOnly ? 1 : 0);
+    (filters.availableOnly ? 1 : 0) +
+    (filters.maxPrice !== null ? 1 : 0);
 
   const clearAll = useCallback(
-    () => updateParam({ color: null, onSale: null, available: null }),
+    () =>
+      updateParam({ color: null, onSale: null, available: null, maxPrice: null }),
     [updateParam],
   );
 
@@ -119,6 +127,19 @@ export function CollectionToolbar({
             >
               {color}
             </button>
+          );
+        })}
+        {PRICE_TIERS.map((tier) => {
+          const active = filters.maxPrice === tier;
+          return (
+            <Toggle
+              key={tier}
+              active={active}
+              onClick={() =>
+                updateParam({ maxPrice: active ? null : String(tier) })
+              }
+              label={t("filterUnderPrice", { amount: `₾${tier}` })}
+            />
           );
         })}
         <Toggle

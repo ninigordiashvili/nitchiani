@@ -1,0 +1,142 @@
+"use client";
+
+import { Plus } from "lucide-react";
+import Image from "next/image";
+import { useEffect, useState } from "react";
+import { useLocale, useTranslations } from "next-intl";
+import { getBestSellersAction } from "@/app/actions/recommendations";
+import { PriceDisplay } from "@/components/commerce/PriceDisplay";
+import { Link } from "@/lib/i18n/routing";
+import { useCart } from "@/lib/cart/store";
+import type { Locale } from "@/lib/i18n/config";
+import { BLUR_DATA_URL, safeImageSrc } from "@/lib/images";
+import type { Product } from "@/lib/shopify/types";
+import { cn } from "@/lib/utils";
+
+/**
+ * "You might also like" rail shown when the cart has items.
+ *
+ * - `variant="drawer"` → compact horizontal scroller used inside the cart drawer.
+ *   Cards are ~120px wide; user swipes through them.
+ * - `variant="page"`   → responsive grid (2 → 4 cols) used on the standalone `/cart` page.
+ *
+ * Source is `getBestSellersAction` (same as EmptyCartRecommendations). We fetch 8, filter out
+ * anything already in the cart, and render up to 4. If nothing remains, the row is hidden.
+ *
+ * The whole card links to the PDP; the floating `+` button adds the first available variant
+ * directly, with a brief flash so the user knows it landed.
+ */
+export function CartUpsellRow({ variant }: { variant: "drawer" | "page" }) {
+  const t = useTranslations("cart");
+  const locale = useLocale() as Locale;
+  const cart = useCart();
+  const [products, setProducts] = useState<Product[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    getBestSellersAction(locale, 8).then((result) => {
+      if (!cancelled) setProducts(result);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [locale]);
+
+  const cartHandles = new Set(cart.lines.map((l) => l.productHandle));
+  const candidates = products.filter((p) => !cartHandles.has(p.handle)).slice(0, 4);
+
+  if (candidates.length === 0) return null;
+
+  const isDrawer = variant === "drawer";
+
+  return (
+    <div className={cn(isDrawer ? "border-t border-black/10 px-4 py-4" : "mt-12")}>
+      <p className="label-eyebrow mb-3">{t("upsellHeader")}</p>
+      <ul
+        className={cn(
+          isDrawer
+            ? "no-scrollbar -mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-1"
+            : "grid grid-cols-2 gap-x-3 gap-y-5 sm:grid-cols-4",
+        )}
+      >
+        {candidates.map((p) => (
+          <UpsellCard key={p.id} product={p} compact={isDrawer} />
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function UpsellCard({ product, compact }: { product: Product; compact: boolean }) {
+  const t = useTranslations("product");
+  const cart = useCart();
+  const variant = product.variants.find((v) => v.availableForSale) ?? product.variants[0];
+  const [justAdded, setJustAdded] = useState(false);
+
+  const onAdd = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!variant?.availableForSale) return;
+    cart.addLine({
+      variantId: variant.id,
+      productHandle: product.handle,
+      productTitle: product.title,
+      variantTitle: variant.title,
+      image: product.featuredImage,
+      unitPrice: variant.price,
+    });
+    setJustAdded(true);
+    setTimeout(() => setJustAdded(false), 1200);
+  };
+
+  return (
+    <li className={cn(compact && "w-[120px] flex-shrink-0 snap-start")}>
+      <Link href={`/products/${product.handle}`} className="group block">
+        <div className="relative aspect-square overflow-hidden bg-black/5">
+          <Image
+            src={safeImageSrc(product.featuredImage.url)}
+            alt={product.featuredImage.altText}
+            fill
+            sizes={compact ? "120px" : "(min-width: 640px) 25vw, 50vw"}
+            placeholder="blur"
+            blurDataURL={BLUR_DATA_URL}
+            className="object-cover transition-transform duration-500 ease-[var(--ease-brand)] group-hover:scale-105"
+          />
+          <button
+            type="button"
+            onClick={onAdd}
+            aria-label={t("addToBag")}
+            disabled={!variant?.availableForSale}
+            className={cn(
+              "absolute right-1.5 bottom-1.5 flex h-7 w-7 cursor-pointer items-center justify-center rounded-full transition-all",
+              !variant?.availableForSale && "cursor-not-allowed opacity-40",
+            )}
+            style={{
+              background: justAdded
+                ? "var(--color-brand-maroon)"
+                : "var(--color-brand-ink)",
+              color: "var(--color-brand-cream)",
+              transform: justAdded ? "scale(1.1)" : "scale(1)",
+            }}
+          >
+            <Plus
+              size={14}
+              style={{
+                transform: justAdded ? "rotate(45deg)" : "rotate(0deg)",
+                transition: "transform 0.2s var(--ease-brand)",
+              }}
+            />
+          </button>
+        </div>
+        <p className="mt-2 line-clamp-2 text-xs leading-tight">{product.title}</p>
+        <div className="mt-1">
+          <PriceDisplay
+            price={variant?.price ?? product.priceRange.min}
+            compareAt={variant?.compareAtPrice}
+            size="sm"
+          />
+        </div>
+      </Link>
+    </li>
+  );
+}

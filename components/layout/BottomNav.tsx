@@ -1,27 +1,29 @@
 "use client";
 
-import { Heart, Home, Search, ShoppingBag, Store } from "lucide-react";
+import { Heart, Home, Search, ShoppingBag } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useEffect, useRef, useState } from "react";
 import { Link, usePathname } from "@/lib/i18n/routing";
 import { useCart } from "@/lib/cart/store";
 import { useOverlays } from "@/lib/ui/overlays";
 import { useWishlist } from "@/lib/wishlist/store";
 import { cn } from "@/lib/utils";
+import { CountBadge } from "./CountBadge";
 
 /**
- * Sticky bottom nav for mobile/tablet. Hidden on `sm:` and up — desktop has the full header
+ * Permanent bottom nav for mobile/tablet. Hidden on `sm:` and up — desktop has the full header
  * controls already.
  *
- * Auto-hide behavior: slides off-screen on scroll-down (let the user read), slides back on
- * scroll-up (commitment to navigate), and is always visible near the top of the page.
+ * Always anchored to the bottom of the viewport on mobile so the primary navigation is one
+ * thumb-tap away at all times. The mobile Header auto-hides on scroll-down instead, which
+ * gives back vertical space without taking the nav with it.
  *
- * Shop/Home/Wishlist are real navigation links (active state via current path).
- * Search opens the shared SearchOverlay; Bag opens the cart drawer.
+ * Only exception: on a PDP, the sticky Add-to-bag bar takes over this slot via
+ * `overlays.pdpCtaActive` so the user doesn't see two stacked bars.
+ *
+ * Four slots: Home + Wishlist are nav links (active state via current path); Search opens
+ * the shared overlay; Bag opens the cart drawer. The previous `/shop` slot was dropped —
+ * Home + the category chips on the homepage + the menu drawer all cover that intent.
  */
-const SHOW_AT_TOP_BELOW = 50; // px from top — always visible above this
-const SCROLL_DELTA_THRESHOLD = 8; // px — ignore micro-scrolls (jitter / momentum settle)
-
 export function BottomNav() {
   const t = useTranslations("nav");
   const pathname = usePathname();
@@ -29,37 +31,7 @@ export function BottomNav() {
   const wishlist = useWishlist();
   const overlays = useOverlays();
 
-  const [hidden, setHidden] = useState(false);
-  const lastY = useRef(0);
-  const ticking = useRef(false);
-
-  useEffect(() => {
-    lastY.current = window.scrollY;
-    const onScroll = () => {
-      if (ticking.current) return;
-      ticking.current = true;
-      requestAnimationFrame(() => {
-        const currentY = window.scrollY;
-        const delta = currentY - lastY.current;
-
-        if (currentY < SHOW_AT_TOP_BELOW) {
-          setHidden(false);
-        } else if (delta > SCROLL_DELTA_THRESHOLD) {
-          // Scrolling down → hide
-          setHidden(true);
-        } else if (delta < -SCROLL_DELTA_THRESHOLD) {
-          // Scrolling up → show
-          setHidden(false);
-        }
-
-        lastY.current = currentY;
-        ticking.current = false;
-      });
-    };
-
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
+  const effectiveHidden = overlays.pdpCtaActive;
 
   const isActive = (href: string) =>
     href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(`${href}/`);
@@ -67,7 +39,7 @@ export function BottomNav() {
   return (
     <nav
       aria-label={t("menu")}
-      aria-hidden={hidden}
+      aria-hidden={effectiveHidden}
       className="sm:hidden"
       style={{
         position: "fixed",
@@ -80,23 +52,17 @@ export function BottomNav() {
         background: "color-mix(in oklab, var(--color-brand-cream) 96%, transparent)",
         backdropFilter: "blur(8px)",
         borderTop: "1px solid rgba(13,13,13,0.08)",
-        transform: hidden ? "translateY(100%)" : "translateY(0)",
+        transform: effectiveHidden ? "translateY(100%)" : "translateY(0)",
         transition: "transform 0.25s var(--ease-brand)",
         willChange: "transform",
       }}
     >
-      <ul className="grid grid-cols-5">
+      <ul className="grid grid-cols-4">
         <NavItem
           href="/"
           icon={<Home size={20} />}
           label={t("home")}
           active={isActive("/")}
-        />
-        <NavItem
-          href="/shop"
-          icon={<Store size={20} />}
-          label={t("shop")}
-          active={isActive("/shop")}
         />
         <li>
           <button
@@ -125,7 +91,9 @@ export function BottomNav() {
           >
             <span className="relative">
               <ShoppingBag size={20} />
-              {cart.totalQuantity > 0 ? <Badge count={cart.totalQuantity} /> : null}
+              {cart.totalQuantity > 0 ? (
+                <CountBadge count={cart.totalQuantity} className="-top-1.5 -right-2" />
+              ) : null}
             </span>
             <span className="text-[10px] tracking-[0.05em]">{t("cart")}</span>
           </button>
@@ -160,7 +128,9 @@ function NavItem({
       >
         <span className="relative">
           {icon}
-          {badge && badge > 0 ? <Badge count={badge} /> : null}
+          {badge && badge > 0 ? (
+            <CountBadge count={badge} className="-top-1.5 -right-2" />
+          ) : null}
         </span>
         <span className="text-[10px] tracking-[0.05em]">{label}</span>
       </Link>
@@ -168,13 +138,3 @@ function NavItem({
   );
 }
 
-function Badge({ count }: { count: number }) {
-  return (
-    <span
-      className="absolute -top-1.5 -right-2 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-semibold"
-      style={{ background: "var(--color-brand-maroon)", color: "var(--color-brand-cream)" }}
-    >
-      {count}
-    </span>
-  );
-}

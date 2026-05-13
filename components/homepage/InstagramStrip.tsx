@@ -1,5 +1,6 @@
 import Image from "next/image";
 import { getTranslations } from "next-intl/server";
+import { BLUR_DATA_URL } from "@/lib/images";
 import { getInstagramFeed } from "@/lib/instagram";
 
 function IgGlyph({ size = 14 }: { size?: number }) {
@@ -54,6 +55,8 @@ export async function InstagramStrip() {
                 alt={post.caption ? post.caption.slice(0, 120) : `Instagram post ${i + 1}`}
                 fill
                 sizes="(min-width: 640px) 16vw, 42vw"
+                placeholder="blur"
+                blurDataURL={BLUR_DATA_URL}
                 className="object-cover transition-transform duration-500 ease-[var(--ease-brand)] group-hover:scale-105"
                 unoptimized={post.imageUrl.startsWith("https://scontent") || post.imageUrl.startsWith("https://instagram.f")}
               />

@@ -1,10 +1,14 @@
 import { notFound } from "next/navigation";
 import { setRequestLocale, getTranslations } from "next-intl/server";
+import { FrequentlyBoughtTogether } from "@/components/commerce/FrequentlyBoughtTogether";
 import { ProductGallery } from "@/components/commerce/ProductGallery";
+import { ProductHelpCard } from "@/components/commerce/ProductHelpCard";
 import { ProductPurchase } from "@/components/commerce/ProductPurchase";
+import { RecentlyViewedRail } from "@/components/commerce/RecentlyViewedRail";
 import { RelatedProducts } from "@/components/commerce/RelatedProducts";
 import { Reviews } from "@/components/commerce/Reviews";
 import { StarRating } from "@/components/commerce/StarRating";
+import { TrackRecentlyViewed } from "@/components/commerce/TrackRecentlyViewed";
 import { TrustStrip } from "@/components/homepage/TrustStrip";
 import { getProductByHandle, getRelatedProducts } from "@/lib/shopify/client";
 import { getReviewSummary } from "@/lib/reviews";
@@ -72,11 +76,21 @@ export default async function ProductPage({
           <div className="mt-6">
             <TrustStrip layout="column" />
           </div>
+
+          <ProductHelpCard productTitle={product.title} />
         </div>
       </div>
 
+      <FrequentlyBoughtTogether product={product} related={related} />
+
       <Reviews handle={handle} />
       <RelatedProducts products={related} />
+
+      <div className="container-shop mt-12">
+        <RecentlyViewedRail excludeHandle={handle} />
+      </div>
+
+      <TrackRecentlyViewed product={product} />
     </article>
   );
 }

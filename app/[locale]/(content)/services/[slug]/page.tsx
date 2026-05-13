@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { setRequestLocale, getTranslations } from "next-intl/server";
 import { Clock, Tag } from "lucide-react";
 import { CalEmbed } from "@/components/booking/CalEmbed";
+import { BLUR_DATA_URL } from "@/lib/images";
 import { getServiceBySlug, SERVICES } from "@/lib/services";
 import type { Locale } from "@/lib/i18n/config";
 
@@ -36,6 +37,8 @@ export default async function ServiceDetail({
               fill
               sizes="(min-width: 1024px) 50vw, 100vw"
               priority
+              placeholder="blur"
+              blurDataURL={BLUR_DATA_URL}
               className="object-cover"
             />
           </div>

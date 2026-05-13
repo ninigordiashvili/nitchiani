@@ -86,7 +86,7 @@ export function SearchOverlay() {
         onClick={onClose}
       />
       <aside
-        className="absolute top-0 right-0 left-0 max-h-[90dvh] overflow-y-auto transition-transform duration-300 ease-[var(--ease-brand)]"
+        className="absolute top-0 right-0 left-0 max-h-[90dvh] overflow-y-auto transition-transform duration-200 ease-[var(--ease-brand)]"
         style={{
           background: "var(--color-brand-cream)",
           transform: open ? "translateY(0)" : "translateY(-100%)",

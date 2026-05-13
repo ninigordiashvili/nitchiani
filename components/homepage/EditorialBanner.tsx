@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { ArrowRight } from "lucide-react";
 import { Link } from "@/lib/i18n/routing";
+import { BLUR_DATA_URL } from "@/lib/images";
 
 export function EditorialBanner({
   imageUrl,
@@ -26,7 +27,9 @@ export function EditorialBanner({
         alt={imageAlt}
         fill
         sizes="100vw"
-        className="object-cover transition-transform duration-700 ease-[var(--ease-brand)] hover:scale-[1.03]"
+        placeholder="blur"
+        blurDataURL={BLUR_DATA_URL}
+        className="object-cover transition-transform duration-[400ms] ease-[var(--ease-brand)] hover:scale-[1.03]"
       />
       <div className="absolute inset-0 scrim-bottom" />
       <div className="absolute right-0 bottom-0 left-0 text-[var(--color-brand-cream)]">
