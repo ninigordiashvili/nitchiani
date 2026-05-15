@@ -20,10 +20,13 @@ export function Footer() {
 
   return (
     <footer
-      className="mt-16"
+      className="mt-6 sm:mt-16"
       style={{ background: "var(--color-brand-bg)", color: "var(--color-brand-cream)" }}
     >
-      <div className="container-shop pt-10 pb-12">
+      {/* Mobile only: reserve room below the copyright line so the fixed BottomNav
+          (~64px content + iOS safe-area inset) doesn't cover the bottom of the footer.
+          `sm:pb-12` resets this on desktop where BottomNav is hidden. */}
+      <div className="container-shop pt-10 pb-[calc(6rem+env(safe-area-inset-bottom))] sm:pb-12">
         <NewsletterForm />
         <div className="my-10 border-t border-white/10" />
         <TrustStrip tone="dark" />
@@ -95,6 +98,7 @@ export function Footer() {
               <li><Link href="/services">{t("nav.services")}</Link></li>
               <li><Link href="/about">{t("nav.about")}</Link></li>
               <li><Link href="/contact">{t("nav.contact")}</Link></li>
+              <li><Link href="/order-status">{t("nav.orderStatus")}</Link></li>
             </ul>
           </div>
         </div>

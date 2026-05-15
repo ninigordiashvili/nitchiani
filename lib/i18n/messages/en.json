@@ -23,7 +23,8 @@
     "language": "Language",
     "currency": "Currency",
     "needHelp": "Need help?",
-    "chatWhatsApp": "Chat on WhatsApp"
+    "chatWhatsApp": "Chat on WhatsApp",
+    "orderStatus": "Order status"
   },
   "promo": {
     "shipping": "Free shipping in Tbilisi over ₾150",
@@ -41,6 +42,7 @@
     "bookSessionDesc": "Braids, locs and consultations at our Tbilisi studio",
     "instagram": "@nitchiani on Instagram",
     "instagramDesc": "Our latest moments",
+    "instagramTag": "Tag {handle} in your photo and we'll feature you here.",
     "reviewsEyebrow": "Loved in Tbilisi",
     "reviewsTitle": "What customers are saying",
     "recentlyViewed": "Recently viewed",
@@ -85,6 +87,8 @@
     "badgeSale": "Sale",
     "quickView": "Quick view",
     "viewFullDetails": "View full details",
+    "share": "Share",
+    "shareCopied": "Link copied",
     "shipsIn": "Ships from Tbilisi · 1–3 business days",
     "askQuestion": "Questions about this?",
     "askQuestionDesc": "Message us on WhatsApp — we usually reply in minutes.",
@@ -174,7 +178,9 @@
     "stepPayment": "Payment",
     "expressCheckout": "Express checkout",
     "successTitle": "Order received",
-    "successDesc": "We'll reach out by WhatsApp or email shortly"
+    "successDesc": "We'll reach out by WhatsApp or email shortly",
+    "orderNumber": "Order #{id}",
+    "trackOrder": "Track your order"
   },
   "services": {
     "title": "Our Services",
@@ -204,6 +210,14 @@
     "loading": "Loading...",
     "error": "Error",
     "tryAgain": "Try again"
+  },
+  "notFound": {
+    "title": "Page not found",
+    "desc": "The page you're looking for doesn't exist, or it's been moved. Try the shop or head home."
+  },
+  "errorPage": {
+    "title": "Something went wrong",
+    "desc": "We've logged it. Try reloading, or head back home and pick up where you left off."
   },
   "shop": {
     "sortLabel": "Sort",
@@ -240,6 +254,15 @@
     "popularEyebrow": "Popular",
     "closeAria": "Close search",
     "clearAria": "Clear search"
+  },
+  "orderStatus": {
+    "eyebrow": "Order status",
+    "title": "Track your order",
+    "intro": "Tracking goes out via WhatsApp or email within a few hours of your order. If you can't find it, message us and we'll resend.",
+    "contactEyebrow": "Get help",
+    "contactTitle": "Message us about your order",
+    "contactDesc": "We reply within working hours — usually in minutes. Mention your order number if you have it.",
+    "openWhatsApp": "Open WhatsApp"
   },
   "welcome": {
     "eyebrow": "Welcome offer",

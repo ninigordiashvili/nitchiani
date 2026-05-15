@@ -69,6 +69,26 @@ export async function getProductByHandle(
   return raw ? localizeProduct(raw, locale) : null;
 }
 
+/**
+ * Batch-fetch products by handle. Returns only matched products, preserving the input
+ * order — so a caller passing wishlist handles in add-order gets them back in add-order.
+ * Empty input → empty output (no Shopify call when wired to the real backend).
+ */
+export async function getProductsByHandles(
+  handles: string[],
+  locale: Locale = defaultLocale,
+): Promise<Product[]> {
+  if (handles.length === 0) return [];
+  const handleSet = new Set(handles);
+  const byHandle = new Map<string, Product>();
+  for (const raw of DUMMY_RAW_PRODUCTS) {
+    if (handleSet.has(raw.handle)) {
+      byHandle.set(raw.handle, localizeProduct(raw, locale));
+    }
+  }
+  return handles.map((h) => byHandle.get(h)).filter((p): p is Product => p !== undefined);
+}
+
 export async function getCollections(locale: Locale = defaultLocale): Promise<Collection[]> {
   return DUMMY_RAW_COLLECTIONS.map((c) => localizeCollection(c, locale));
 }

@@ -7,6 +7,7 @@ import { useEffect } from "react";
 import { Link } from "@/lib/i18n/routing";
 import { BLUR_DATA_URL } from "@/lib/images";
 import { useQuickView } from "@/lib/ui/quick-view";
+import { useSwipeDismiss } from "@/lib/ui/use-swipe-dismiss";
 import { ProductPurchase } from "./ProductPurchase";
 
 /**
@@ -20,6 +21,12 @@ export function QuickViewModal() {
   const quickView = useQuickView();
   const product = quickView.product;
   const open = product !== null;
+  const { dragOffset, handlers } = useSwipeDismiss({
+    direction: "down",
+    onDismiss: quickView.close,
+    // Centred on sm+; only the bottom-sheet variant on mobile is swipe-dismissable.
+    maxViewportWidth: 640,
+  });
 
   // Body scroll lock + ESC handler.
   useEffect(() => {
@@ -47,13 +54,19 @@ export function QuickViewModal() {
         onClick={quickView.close}
       />
       <aside
+        {...handlers}
         role="dialog"
         aria-modal="true"
         aria-label={product?.title}
         className="absolute right-0 bottom-0 left-0 max-h-[88dvh] overflow-y-auto rounded-t-2xl transition-transform duration-200 ease-[var(--ease-brand)] sm:right-1/2 sm:bottom-1/2 sm:left-1/2 sm:max-h-[80dvh] sm:w-[min(900px,90vw)] sm:translate-x-[-50%] sm:translate-y-[50%] sm:rounded-2xl"
         style={{
           background: "var(--color-brand-cream)",
-          transform: open ? undefined : "translateY(100%)",
+          transform: open
+            ? dragOffset > 0
+              ? `translateY(${dragOffset}px)`
+              : undefined
+            : "translateY(100%)",
+          ...(dragOffset > 0 ? { transition: "none" } : {}),
         }}
       >
         {product ? (

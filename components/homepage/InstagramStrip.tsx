@@ -26,12 +26,15 @@ export async function InstagramStrip() {
           <h2 className="font-display text-2xl tracking-tight sm:text-3xl">
             {t("instagram")}
           </h2>
+          <p className="mt-2 max-w-md text-sm opacity-70">
+            {t("instagramTag", { handle: `@${handle}` })}
+          </p>
         </div>
         <a
           href={`https://instagram.com/${handle}`}
           target="_blank"
           rel="noreferrer noopener"
-          className="inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-[0.16em]"
+          className="inline-flex flex-shrink-0 items-center gap-1.5 text-xs font-medium uppercase tracking-[0.16em]"
         >
           <IgGlyph />
           {handle}

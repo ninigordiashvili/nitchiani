@@ -6,6 +6,7 @@ import { BLUR_DATA_URL } from "@/lib/images";
 import { discountPercent } from "@/lib/money";
 import { getReviewSummary } from "@/lib/reviews";
 import { PriceDisplay } from "./PriceDisplay";
+import { QuickAddButton } from "./QuickAddButton";
 import { QuickViewButton } from "./QuickViewButton";
 import { StarRating } from "./StarRating";
 import { WishlistButton } from "./WishlistButton";
@@ -16,6 +17,12 @@ export function ProductCard({ product, priority = false }: { product: Product; p
   const compareAt = variant?.compareAtPrice;
   const offPercent = discountPercent(variant?.price ?? product.priceRange.min, compareAt);
   const summary = getReviewSummary(product.handle);
+
+  // Single-SKU = no variant choice for the user to make → safe to quick-add the only variant.
+  // Multi-variant products keep the QuickView modal so the user can pick size/color/etc.
+  const isSingleSku =
+    product.options.length === 0 ||
+    (product.options.length === 1 && product.options[0].values.length <= 1);
 
   return (
     <Link
@@ -45,7 +52,11 @@ export function ProductCard({ product, priority = false }: { product: Product; p
           <WishlistButton handle={product.handle} />
         </div>
         <div className="absolute right-2 bottom-2">
-          <QuickViewButton product={product} />
+          {isSingleSku ? (
+            <QuickAddButton product={product} />
+          ) : (
+            <QuickViewButton product={product} />
+          )}
         </div>
       </div>
       <div className="pt-3 pb-1">

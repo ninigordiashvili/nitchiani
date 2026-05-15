@@ -34,7 +34,7 @@ export type RawProductVariant = {
 
 export type RawProduct = Omit<
   Product,
-  "title" | "description" | "productType" | "featuredImage" | "images" | "options" | "variants" | "priceRange"
+  "title" | "description" | "productType" | "productTypeHandle" | "featuredImage" | "images" | "options" | "variants" | "priceRange"
 > & {
   titleKa: string;
   titleEn: string;
@@ -110,6 +110,9 @@ export function localizeProduct(p: RawProduct, locale: Locale): Product {
     howToUse: ka ? p.howToUseKa : p.howToUseEn,
     whatsInside: ka ? p.whatsInsideKa : p.whatsInsideEn,
     productType: ka ? p.productTypeKa : p.productTypeEn,
+    // Slug-form English type — used as the breadcrumb category link target. Stable
+    // across locales so URLs stay consistent regardless of viewer language.
+    productTypeHandle: p.productTypeEn.toLowerCase().replace(/\s+/g, "-"),
     tags: p.tags,
     vendor: p.vendor,
     featuredImage: p.featuredImage,

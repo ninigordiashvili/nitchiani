@@ -6,6 +6,7 @@ import { Footer } from "@/components/layout/Footer";
 import { PromoStrip } from "@/components/layout/PromoStrip";
 import { CartDrawer } from "@/components/layout/CartDrawer";
 import { BottomNav } from "@/components/layout/BottomNav";
+import { LocalePrompt } from "@/components/layout/LocalePrompt";
 import { WhatsAppFloater } from "@/components/layout/WhatsAppFloater";
 import { InstagramFloater } from "@/components/layout/InstagramFloater";
 import { WelcomePopup } from "@/components/layout/WelcomePopup";
@@ -45,6 +46,7 @@ export default async function LocaleLayout({
                 <OverlaysProvider>
                 <div lang={locale} className="flex min-h-dvh flex-col">
                   <PromoStrip />
+                  <LocalePrompt />
                   <Header locale={locale as Locale} />
                   {/* pb-20 reserves space for the mobile BottomNav (hidden on sm+) */}
                   <main className="flex-1 pb-20 sm:pb-0">{children}</main>

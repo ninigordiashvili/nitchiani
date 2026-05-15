@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { useCart } from "@/lib/cart/store";
 import { usePathname } from "@/lib/i18n/routing";
+import { useSwipeDismiss } from "@/lib/ui/use-swipe-dismiss";
 
 /**
  * First-visit welcome popup. Fires once after 15s of activity, offers the WELCOME10 code,
@@ -24,6 +25,11 @@ export function WelcomePopup() {
   const cart = useCart();
   const pathname = usePathname();
   const [visible, setVisible] = useState(false);
+  const { dragOffset, handlers } = useSwipeDismiss({
+    direction: "down",
+    onDismiss: () => dismiss(),
+    maxViewportWidth: 640,
+  });
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -33,8 +39,27 @@ export function WelcomePopup() {
     } catch {
       // ignore — if storage is blocked, just behave as first-visit
     }
-    const id = setTimeout(() => setVisible(true), DELAY_MS);
-    return () => clearTimeout(id);
+
+    let pendingId: number | undefined;
+
+    // Every modal/drawer in the app locks `body.style.overflow = "hidden"` on open. If the
+    // user has another modal up (cart drawer, size guide, search overlay, "How it works",
+    // etc.) when the 15s timer fires, we'd stack the welcome popup on top — which looks
+    // broken and burns the once-per-customer dismissal flag on an invisible appearance.
+    // Defer until the body lock clears.
+    const tryShow = () => {
+      if (document.body.style.overflow === "hidden") {
+        pendingId = window.setTimeout(tryShow, 1000);
+        return;
+      }
+      setVisible(true);
+    };
+
+    pendingId = window.setTimeout(tryShow, DELAY_MS);
+
+    return () => {
+      if (pendingId !== undefined) clearTimeout(pendingId);
+    };
   }, [pathname]);
 
   useEffect(() => {
@@ -80,13 +105,19 @@ export function WelcomePopup() {
         onClick={dismiss}
       />
       <div
+        {...handlers}
         role="dialog"
         aria-modal="true"
         aria-label={t("title")}
         className="absolute right-0 bottom-0 left-0 rounded-t-2xl transition-transform duration-200 ease-[var(--ease-brand)] sm:right-1/2 sm:bottom-1/2 sm:left-1/2 sm:w-[min(440px,92vw)] sm:translate-x-[-50%] sm:translate-y-[50%] sm:rounded-2xl"
         style={{
           background: "var(--color-brand-cream)",
-          transform: visible ? undefined : "translateY(100%)",
+          transform: visible
+            ? dragOffset > 0
+              ? `translateY(${dragOffset}px)`
+              : undefined
+            : "translateY(100%)",
+          ...(dragOffset > 0 ? { transition: "none" } : {}),
         }}
       >
         <button

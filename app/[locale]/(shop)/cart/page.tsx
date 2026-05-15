@@ -36,7 +36,7 @@ export default function CartPage() {
         <ul className="divide-y divide-black/10">
           {cart.lines.map((line) => (
             <li key={line.variantId} className="flex gap-4 py-5">
-              <div className="relative h-32 w-28 flex-shrink-0 overflow-hidden bg-black/5">
+              <div className="relative aspect-[4/5] w-28 flex-shrink-0 overflow-hidden bg-black/5">
                 <Image
                   src={safeImageSrc(line.image.url)}
                   alt={line.image.altText}

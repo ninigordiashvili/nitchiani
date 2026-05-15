@@ -42,6 +42,12 @@ export type Product = {
   priceRange: { min: Money; max: Money };
   isNew?: boolean;
   isBestSeller?: boolean;
+  /**
+   * Locale-stable slug derived from the English product type. Used for breadcrumb links
+   * and category navigation — `productType` itself is localized (e.g. `ბონნეტები`) and
+   * can't be used as a URL fragment.
+   */
+  productTypeHandle: string;
 };
 
 export type Collection = {

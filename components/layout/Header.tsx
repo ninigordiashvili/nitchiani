@@ -83,7 +83,7 @@ export function Header({ locale }: { locale: Locale }) {
           willChange: "transform",
         }}
       >
-        <div className="container-shop flex h-14 items-center justify-between gap-3">
+        <div className="container-shop relative flex h-14 items-center gap-3">
           <div className="flex items-center gap-2">
             <button
               type="button"
@@ -95,11 +95,22 @@ export function Header({ locale }: { locale: Locale }) {
             </button>
           </div>
 
-          <Link href="/" className="flex-1 text-center" aria-label="Nitchiani — Home">
-            <Logo variant="text" />
-          </Link>
+          {/* Logo absolutely centred within the container so asymmetric left/right chrome
+              (1 menu button vs LocaleSwitcher + Search + maybe wishlist/bag on sm+) can't
+              push the wordmark off-axis. `pointer-events-none` on the wrapper keeps the
+              inner Link tappable while letting taps in the surrounding empty space fall
+              through to whatever's beneath. */}
+          <div className="pointer-events-none absolute inset-x-0 flex justify-center">
+            <Link
+              href="/"
+              className="pointer-events-auto"
+              aria-label="Nitchiani — Home"
+            >
+              <Logo variant="text" />
+            </Link>
+          </div>
 
-          <div className="flex items-center gap-1">
+          <div className="ml-auto flex items-center gap-1">
             {/* Single dropdown trigger for currency + language. Replaces the previous inline pair
                 so the centred logo actually centres on mobile. */}
             <LocaleSwitcher locale={locale} />

@@ -72,6 +72,19 @@
     letter-spacing: 0.01em;
   }
 
+  /* iOS Safari pinch-zooms the viewport when a user focuses an input with `font-size < 16px`.
+     Tailwind's `text-sm` (14px) on form inputs triggers this everywhere — checkout, coupon
+     field, newsletter, search. Force 16px on mobile across all editable elements; the
+     existing utility classes determine sizing at sm+ where iOS zoom isn't a concern.
+     `!important` is intentional — overrides Tailwind's higher class specificity. */
+  @media (max-width: 639px) {
+    input,
+    textarea,
+    select {
+      font-size: 16px !important;
+    }
+  }
+
   /* Editorial display headings */
   h1, h2, h3, .font-display {
     font-family: var(--font-display);

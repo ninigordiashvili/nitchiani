@@ -1,24 +1,55 @@
 "use client";
 
-import { useTranslations } from "next-intl";
-import { useMemo } from "react";
-import { Link } from "@/lib/i18n/routing";
-import { useWishlist } from "@/lib/wishlist/store";
+import { useEffect, useState } from "react";
+import { useLocale, useTranslations } from "next-intl";
+import { getWishlistProductsAction } from "@/app/actions/wishlist";
 import { ProductGrid } from "@/components/commerce/ProductGrid";
+import { Link } from "@/lib/i18n/routing";
+import type { Locale } from "@/lib/i18n/config";
 import type { Product } from "@/lib/shopify/types";
+import { useWishlist } from "@/lib/wishlist/store";
 
 /**
- * Renders the wishlist by filtering the full product set down to the user's saved handles.
- * Server-fetched products keep us SEO-friendly; client-side filter reads localStorage.
+ * Renders the user's wishlist. Reads the saved handles from `useWishlist` (localStorage)
+ * and fetches only those products via a server action — no more 50-product over-fetch.
+ *
+ * Three states:
+ *  - `products === null` → first render, server action in flight → skeleton grid
+ *  - `products.length === 0` → empty wishlist → friendly empty state
+ *  - otherwise → ProductGrid
+ *
+ * Re-fetches whenever the handles array changes (add/remove from another tab/page).
  */
-export function WishlistList({ allProducts }: { allProducts: Product[] }) {
+export function WishlistList() {
   const t = useTranslations("wishlist");
-  const wishlist = useWishlist();
+  const locale = useLocale() as Locale;
+  const { handles } = useWishlist();
+  const [products, setProducts] = useState<Product[] | null>(null);
 
-  const products = useMemo(() => {
-    const handleSet = new Set(wishlist.handles);
-    return allProducts.filter((p) => handleSet.has(p.handle));
-  }, [allProducts, wishlist.handles]);
+  useEffect(() => {
+    if (handles.length === 0) {
+      setProducts([]);
+      return;
+    }
+    let cancelled = false;
+    setProducts(null);
+    getWishlistProductsAction(handles, locale).then((res) => {
+      if (!cancelled) setProducts(res);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [handles, locale]);
+
+  if (products === null) {
+    return (
+      <div className="grid grid-cols-2 gap-x-2 gap-y-4 sm:grid-cols-3 lg:grid-cols-4">
+        {Array.from({ length: 4 }, (_, i) => (
+          <div key={i} className="aspect-[4/5] animate-pulse bg-black/5" />
+        ))}
+      </div>
+    );
+  }
 
   if (products.length === 0) {
     return (

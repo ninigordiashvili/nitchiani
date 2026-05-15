@@ -1,11 +1,22 @@
 import { notFound } from "next/navigation";
 import { setRequestLocale } from "next-intl/server";
 import { Suspense } from "react";
+import { CampaignView } from "@/components/commerce/CampaignView";
 import { FilteredCollection } from "@/components/commerce/FilteredCollection";
 import { CategoryChips } from "@/components/homepage/CategoryChips";
-import { getCollectionByHandle } from "@/lib/shopify/client";
+import { getCampaignBySlug } from "@/lib/campaigns";
+import { getCollectionByHandle, getProductsByHandles } from "@/lib/shopify/client";
 import type { Locale } from "@/lib/i18n/config";
 
+/**
+ * Catch-all for `/shop/<slug>`. Branches on the slug:
+ *   1. Campaign? → render the curated landing page (hero + tagline + grid).
+ *   2. Otherwise → standard collection page (chips + filter toolbar + grid).
+ *   3. Neither → 404.
+ *
+ * Campaign slugs are kept distinct from collection handles by convention (see
+ * `lib/campaigns.ts`) — collisions would silently shadow a collection.
+ */
 export default async function CollectionPage({
   params,
 }: {
@@ -13,6 +24,13 @@ export default async function CollectionPage({
 }) {
   const { locale, collection: handle } = await params;
   setRequestLocale(locale);
+
+  const campaign = getCampaignBySlug(handle);
+  if (campaign) {
+    const products = await getProductsByHandles(campaign.handles, locale);
+    if (products.length === 0) notFound();
+    return <CampaignView campaign={campaign} products={products} locale={locale} />;
+  }
 
   const collection = await getCollectionByHandle(handle, locale);
   if (!collection) notFound();

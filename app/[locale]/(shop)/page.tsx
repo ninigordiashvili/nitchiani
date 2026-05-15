@@ -8,8 +8,8 @@ import { InstagramStrip } from "@/components/homepage/InstagramStrip";
 import { ServicesTeaser } from "@/components/homepage/ServicesTeaser";
 import { ProductGrid } from "@/components/commerce/ProductGrid";
 import { RecentlyViewedRail } from "@/components/commerce/RecentlyViewedRail";
-import { BundleUpsell } from "@/components/homepage/BundleUpsell";
-import { getFeaturedBundle } from "@/lib/bundles";
+import { BundleUpsellPicker } from "@/components/homepage/BundleUpsellPicker";
+import { BUNDLES, type Bundle } from "@/lib/bundles";
 import { getBestSellers, getNewArrivals, getProductByHandle } from "@/lib/shopify/client";
 import type { Locale } from "@/lib/i18n/config";
 import type { Product } from "@/lib/shopify/types";
@@ -28,21 +28,31 @@ export default async function HomePage({
     getTranslations("home"),
   ]);
 
-  // Pre-fetch the featured bundle's products server-side so the BundleUpsell can render
-  // without a client-side loading state. Hide the section entirely if any product is missing.
-  const featuredBundle = getFeaturedBundle();
-  const bundleProducts = featuredBundle
-    ? (
-        await Promise.all(
-          featuredBundle.handles.map((h) => getProductByHandle(h, locale)),
-        )
-      ).filter((p): p is Product => Boolean(p))
-    : [];
-  const showBundle =
-    featuredBundle != null && bundleProducts.length === featuredBundle.handles.length;
+  // Pre-fetch every candidate bundle's products in parallel server-side. The client picker
+  // then selects the best fit from these based on the user's recently-viewed history,
+  // without any extra round-trips. Bundles whose products are all unresolved drop out.
+  const allBundleHandles = Array.from(
+    new Set(BUNDLES.flatMap((b) => b.handles)),
+  );
+  const fetchedProducts = await Promise.all(
+    allBundleHandles.map((h) => getProductByHandle(h, locale)),
+  );
+  const productByHandle = new Map<string, Product>();
+  allBundleHandles.forEach((h, i) => {
+    const p = fetchedProducts[i];
+    if (p) productByHandle.set(h, p);
+  });
+  const bundlesWithProducts: { bundle: Bundle; products: Product[] }[] = BUNDLES
+    .map((bundle) => ({
+      bundle,
+      products: bundle.handles
+        .map((h) => productByHandle.get(h))
+        .filter((p): p is Product => Boolean(p)),
+    }))
+    .filter((bp) => bp.products.length === bp.bundle.handles.length);
 
   return (
-    <div className="pb-12">
+    <div className="pb-0 sm:pb-12">
       {/* 1 — Category chips */}
       <CategoryChips />
 
@@ -61,10 +71,10 @@ export default async function HomePage({
         <ProductGrid products={bestSellers} priorityFirst={4} />
       </section>
 
-      {/* 2.5 — Featured bundle */}
-      {showBundle && featuredBundle ? (
+      {/* 2.5 — Featured bundle (picked client-side to match recent browsing) */}
+      {bundlesWithProducts.length > 0 ? (
         <section className="container-shop mt-12">
-          <BundleUpsell bundle={featuredBundle} products={bundleProducts} />
+          <BundleUpsellPicker bundlesWithProducts={bundlesWithProducts} />
         </section>
       ) : null}
 
@@ -104,7 +114,7 @@ export default async function HomePage({
       </section>
 
       {/* 7 — Instagram strip (last homepage section — trust signals now live in the footer) */}
-      <section className="container-shop mt-12">
+      <section className="container-shop mt-8 sm:mt-12">
         <InstagramStrip />
       </section>
     </div>

@@ -23,6 +23,12 @@ export type RecentlyViewedItem = {
   title: string;
   image: ImageRef;
   price: Money;
+  /**
+   * Locale-stable category slug (matches `Product.productTypeHandle`). Optional because
+   * older localStorage entries written before this field existed don't carry it — the
+   * homepage bundle picker treats `undefined` as "no signal" rather than crashing.
+   */
+  productTypeHandle?: string;
 };
 
 type RecentlyViewedState = {

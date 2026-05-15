@@ -14,11 +14,16 @@ import { CouponField } from "@/components/cart/CouponField";
 import { EmptyCartRecommendations } from "@/components/cart/EmptyCartRecommendations";
 import { FreeShippingProgress } from "@/components/cart/FreeShippingProgress";
 import { HowItWorksButton } from "@/components/cart/HowItWorksButton";
+import { useSwipeDismiss } from "@/lib/ui/use-swipe-dismiss";
 
 export function CartDrawer({ locale }: { locale: Locale }) {
   const t = useTranslations();
   const cart = useCart();
   const open = cart.open;
+  const { dragOffset, handlers } = useSwipeDismiss({
+    direction: "right",
+    onDismiss: () => cart.setOpen(false),
+  });
 
   useEffect(() => {
     if (!open) return;
@@ -40,10 +45,18 @@ export function CartDrawer({ locale }: { locale: Locale }) {
         onClick={() => cart.setOpen(false)}
       />
       <aside
+        {...handlers}
         className="absolute top-0 right-0 flex h-full w-full max-w-md flex-col transition-transform duration-200"
         style={{
           background: "var(--color-brand-cream)",
-          transform: open ? "translateX(0)" : "translateX(100%)",
+          transform: open
+            ? dragOffset > 0
+              ? `translateX(${dragOffset}px)`
+              : "translateX(0)"
+            : "translateX(100%)",
+          // While dragging, disable the CSS transition so the drawer tracks the finger 1:1.
+          // Releasing snaps it back via the original `transition-transform duration-200`.
+          ...(dragOffset > 0 ? { transition: "none" } : {}),
         }}
       >
         <div className="flex h-14 items-center justify-between border-b border-black/10 px-4">
@@ -71,7 +84,7 @@ export function CartDrawer({ locale }: { locale: Locale }) {
               <ul className="px-4 py-4">
                 {cart.lines.map((line) => (
                   <li key={line.variantId} className="flex gap-3 border-b border-black/5 py-4">
-                    <div className="relative h-24 w-20 flex-shrink-0 overflow-hidden rounded-md bg-black/5">
+                    <div className="relative aspect-[4/5] w-20 flex-shrink-0 overflow-hidden rounded-md bg-black/5">
                       <Image
                         src={safeImageSrc(line.image.url)}
                         alt={line.image.altText}

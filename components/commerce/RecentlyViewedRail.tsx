@@ -8,13 +8,24 @@ import { BLUR_DATA_URL, safeImageSrc } from "@/lib/images";
 import { useRecentlyViewed } from "@/lib/recently-viewed/store";
 
 /**
- * Horizontal scroll rail of the user's recently viewed products. Hides itself when there's
- * nothing to show — first-time visitors never see an empty rail.
+ * Horizontal scroll rail of the user's recently viewed products. Hides itself when there
+ * aren't enough items to feel like a legitimate "recall" surface.
  *
- * `excludeHandle` lets the PDP suppress the product currently being viewed; on the homepage
- * just leave it undefined.
+ * `minItems` defaults to 3 — a single-card or two-card rail reads as a glitchy duplicate
+ * of the product the user just looked at, especially on the PDP where the *current*
+ * product is excluded. Three items signals "you've actually browsed". Override per call
+ * (e.g. empty-cart fallback might want a lower threshold).
+ *
+ * `excludeHandle` suppresses the product currently being viewed on the PDP; the homepage
+ * leaves it undefined.
  */
-export function RecentlyViewedRail({ excludeHandle }: { excludeHandle?: string } = {}) {
+export function RecentlyViewedRail({
+  excludeHandle,
+  minItems = 3,
+}: {
+  excludeHandle?: string;
+  minItems?: number;
+} = {}) {
   const t = useTranslations("home");
   const { items } = useRecentlyViewed();
 
@@ -22,7 +33,7 @@ export function RecentlyViewedRail({ excludeHandle }: { excludeHandle?: string }
     ? items.filter((i) => i.handle !== excludeHandle)
     : items;
 
-  if (visible.length === 0) return null;
+  if (visible.length < minItems) return null;
 
   return (
     <section>

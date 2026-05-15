@@ -277,6 +277,20 @@ export default function CheckoutPage() {
             </div>
           </fieldset>
 
+          {/* Inline "Continue to payment" on mobile step 1. The aside (which holds the
+              other copy of this CTA) stacks below the form on mobile — surfacing a
+              button right under the shipping fields saves the user a long scroll. */}
+          {step === 1 ? (
+            <button
+              type="button"
+              onClick={advanceToPayment}
+              className="btn-primary mb-8 w-full sm:hidden"
+            >
+              {t("checkout.continueToPayment")}
+              <ArrowRight size={16} />
+            </button>
+          ) : null}
+
           <fieldset className={cn(step === 1 && "hidden sm:block")}>
             <legend className="font-display mb-4 text-xl">{t("checkout.paymentMethod")}</legend>
             <div className="space-y-3">
@@ -321,7 +335,7 @@ export default function CheckoutPage() {
           <ul className="space-y-3 border-b border-black/10 pb-4">
             {cart.lines.map((l) => (
               <li key={l.variantId} className="flex gap-3">
-                <div className="relative h-14 w-12 flex-shrink-0 overflow-hidden bg-black/5">
+                <div className="relative aspect-[4/5] w-12 flex-shrink-0 overflow-hidden bg-black/5">
                   <Image
                     src={safeImageSrc(l.image.url)}
                     alt={l.image.altText}

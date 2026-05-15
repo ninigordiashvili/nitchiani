@@ -21,8 +21,9 @@ const COUPONS: Coupon[] = [
   { code: "WELCOME10", type: "percent", value: 10 },
   { code: "GEORGIA20", type: "amount", value: 20, minSubtotal: 100 },
   { code: "FRIDAY15", type: "percent", value: 15, minSubtotal: 80 },
-  // Auto-applied by the homepage Loc starter kit bundle CTA. Paired with `lib/bundles.ts`.
+  // Auto-applied by the homepage bundle CTAs. Paired with `lib/bundles.ts`.
   { code: "LOCSTART15", type: "percent", value: 15 },
+  { code: "OVERNIGHT15", type: "percent", value: 15 },
 ];
 
 /** Case-insensitive lookup. Returns null if no match. */
