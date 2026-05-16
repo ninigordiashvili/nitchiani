@@ -115,7 +115,7 @@ export function CartDrawer({ locale }: { locale: Locale }) {
                             onClick={() =>
                               cart.updateQuantity(line.variantId, line.quantity - 1)
                             }
-                            className="flex h-8 w-8 items-center justify-center"
+                            className="flex h-8 w-8 cursor-pointer items-center justify-center"
                           >
                             <Minus size={14} />
                           </button>
@@ -126,7 +126,7 @@ export function CartDrawer({ locale }: { locale: Locale }) {
                             onClick={() =>
                               cart.updateQuantity(line.variantId, line.quantity + 1)
                             }
-                            className="flex h-8 w-8 items-center justify-center"
+                            className="flex h-8 w-8 cursor-pointer items-center justify-center"
                           >
                             <Plus size={14} />
                           </button>

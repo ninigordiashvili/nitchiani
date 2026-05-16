@@ -42,7 +42,15 @@ export function ProductGallery({ images, title }: { images: ImageRef[]; title: s
         </ul>
       ) : null}
 
-      <div className="relative order-1 aspect-[4/5] w-full overflow-hidden bg-black/5 lg:order-2 lg:flex-1">
+      <div
+        className="relative order-1 aspect-[4/5] w-full self-start overflow-hidden bg-black/5 lg:order-2 lg:flex-1"
+        style={{
+          // `contain: layout style` isolates this subtree from external reflows so opening
+          // a modal / dropdown anywhere on the page can't trigger a re-layout of the gallery.
+          // Belt-and-braces with the `scrollbar-gutter: stable` rule on `<html>`.
+          contain: "layout style",
+        }}
+      >
         <Image
           src={current.url}
           alt={current.altText || title}

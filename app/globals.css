@@ -47,6 +47,12 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
+    /* Always reserve scrollbar space, even when no scrollbar is rendered. Otherwise opening
+       a modal (which locks `body.style.overflow = "hidden"`) removes the scrollbar and the
+       layout reflows by ~15px — the PDP gallery's `object-cover` image re-crops into the
+       new width, which reads visually as "zooming and shifting". `scrollbar-gutter: stable`
+       eliminates the shift entirely on Chrome 94+, Safari 16+, Firefox 97+. */
+    scrollbar-gutter: stable;
   }
 
   body {

@@ -65,7 +65,7 @@ export default function CartPage() {
                         cart.updateQuantity(line.variantId, line.quantity - 1)
                       }
                       aria-label="Decrease"
-                      className="flex h-9 w-9 items-center justify-center"
+                      className="flex h-9 w-9 cursor-pointer items-center justify-center"
                     >
                       <Minus size={14} />
                     </button>
@@ -76,7 +76,7 @@ export default function CartPage() {
                         cart.updateQuantity(line.variantId, line.quantity + 1)
                       }
                       aria-label="Increase"
-                      className="flex h-9 w-9 items-center justify-center"
+                      className="flex h-9 w-9 cursor-pointer items-center justify-center"
                     >
                       <Plus size={14} />
                     </button>
