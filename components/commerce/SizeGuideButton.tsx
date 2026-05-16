@@ -1,8 +1,9 @@
 "use client";
 
 import { Ruler, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
+import { useFocusTrap } from "@/lib/ui/use-focus-trap";
 import { useSwipeDismiss } from "@/lib/ui/use-swipe-dismiss";
 
 /**
@@ -22,6 +23,8 @@ export function SizeGuideButton() {
     onDismiss: () => setOpen(false),
     maxViewportWidth: 640,
   });
+  const modalRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(modalRef, open);
 
   useEffect(() => {
     if (!open) return;
@@ -58,6 +61,7 @@ export function SizeGuideButton() {
           onClick={() => setOpen(false)}
         />
         <div
+          ref={modalRef}
           {...handlers}
           role="dialog"
           aria-modal="true"

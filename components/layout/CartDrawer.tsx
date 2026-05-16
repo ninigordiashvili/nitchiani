@@ -3,7 +3,7 @@
 import { Minus, Plus, X } from "lucide-react";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { Link } from "@/lib/i18n/routing";
 import { useCart } from "@/lib/cart/store";
 import type { Locale } from "@/lib/i18n/config";
@@ -14,6 +14,7 @@ import { CouponField } from "@/components/cart/CouponField";
 import { EmptyCartRecommendations } from "@/components/cart/EmptyCartRecommendations";
 import { FreeShippingProgress } from "@/components/cart/FreeShippingProgress";
 import { HowItWorksButton } from "@/components/cart/HowItWorksButton";
+import { useFocusTrap } from "@/lib/ui/use-focus-trap";
 import { useSwipeDismiss } from "@/lib/ui/use-swipe-dismiss";
 
 export function CartDrawer({ locale }: { locale: Locale }) {
@@ -24,6 +25,8 @@ export function CartDrawer({ locale }: { locale: Locale }) {
     direction: "right",
     onDismiss: () => cart.setOpen(false),
   });
+  const drawerRef = useRef<HTMLElement>(null);
+  useFocusTrap(drawerRef, open);
 
   useEffect(() => {
     if (!open) return;
@@ -45,7 +48,11 @@ export function CartDrawer({ locale }: { locale: Locale }) {
         onClick={() => cart.setOpen(false)}
       />
       <aside
+        ref={drawerRef}
         {...handlers}
+        role="dialog"
+        aria-modal="true"
+        aria-label={t("nav.cart")}
         className="absolute top-0 right-0 flex h-full w-full max-w-md flex-col transition-transform duration-200"
         style={{
           background: "var(--color-brand-cream)",

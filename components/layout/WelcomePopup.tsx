@@ -1,10 +1,11 @@
 "use client";
 
 import { Sparkles, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { useCart } from "@/lib/cart/store";
 import { usePathname } from "@/lib/i18n/routing";
+import { useFocusTrap } from "@/lib/ui/use-focus-trap";
 import { useSwipeDismiss } from "@/lib/ui/use-swipe-dismiss";
 
 /**
@@ -30,6 +31,8 @@ export function WelcomePopup() {
     onDismiss: () => dismiss(),
     maxViewportWidth: 640,
   });
+  const modalRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(modalRef, visible);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -105,6 +108,7 @@ export function WelcomePopup() {
         onClick={dismiss}
       />
       <div
+        ref={modalRef}
         {...handlers}
         role="dialog"
         aria-modal="true"

@@ -8,6 +8,7 @@ import { ProductGrid } from "@/components/commerce/ProductGrid";
 import type { Locale } from "@/lib/i18n/config";
 import { Link } from "@/lib/i18n/routing";
 import type { Product } from "@/lib/shopify/types";
+import { useFocusTrap } from "@/lib/ui/use-focus-trap";
 import { useOverlays } from "@/lib/ui/overlays";
 import { useSwipeDismiss } from "@/lib/ui/use-swipe-dismiss";
 
@@ -32,6 +33,8 @@ export function SearchOverlay() {
     direction: "up",
     onDismiss: onClose,
   });
+  const overlayRef = useRef<HTMLElement>(null);
+  useFocusTrap(overlayRef, open);
 
   // Body scroll lock + focus the input on open. Reset on close.
   useEffect(() => {
@@ -91,7 +94,11 @@ export function SearchOverlay() {
         onClick={onClose}
       />
       <aside
+        ref={overlayRef}
         {...handlers}
+        role="dialog"
+        aria-modal="true"
+        aria-label={t("search.placeholder")}
         className="absolute top-0 right-0 left-0 max-h-[90dvh] overflow-y-auto transition-transform duration-200 ease-[var(--ease-brand)]"
         style={{
           background: "var(--color-brand-cream)",

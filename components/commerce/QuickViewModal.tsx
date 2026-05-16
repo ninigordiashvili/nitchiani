@@ -3,9 +3,10 @@
 import { ArrowRight, X } from "lucide-react";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { Link } from "@/lib/i18n/routing";
 import { BLUR_DATA_URL } from "@/lib/images";
+import { useFocusTrap } from "@/lib/ui/use-focus-trap";
 import { useQuickView } from "@/lib/ui/quick-view";
 import { useSwipeDismiss } from "@/lib/ui/use-swipe-dismiss";
 import { ProductPurchase } from "./ProductPurchase";
@@ -27,6 +28,8 @@ export function QuickViewModal() {
     // Centred on sm+; only the bottom-sheet variant on mobile is swipe-dismissable.
     maxViewportWidth: 640,
   });
+  const modalRef = useRef<HTMLElement>(null);
+  useFocusTrap(modalRef, open);
 
   // Body scroll lock + ESC handler.
   useEffect(() => {
@@ -54,6 +57,7 @@ export function QuickViewModal() {
         onClick={quickView.close}
       />
       <aside
+        ref={modalRef}
         {...handlers}
         role="dialog"
         aria-modal="true"

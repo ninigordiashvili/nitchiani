@@ -2,9 +2,10 @@
 
 import { X } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { Link } from "@/lib/i18n/routing";
 import { getWhatsAppNumber, WhatsAppIcon } from "@/components/brand/WhatsAppIcon";
+import { useFocusTrap } from "@/lib/ui/use-focus-trap";
 import { useSwipeDismiss } from "@/lib/ui/use-swipe-dismiss";
 
 const SHOP_LINKS = [
@@ -36,6 +37,8 @@ export function MobileMenuDrawer({
     direction: "left",
     onDismiss: onClose,
   });
+  const drawerRef = useRef<HTMLElement>(null);
+  useFocusTrap(drawerRef, open);
 
   useEffect(() => {
     if (!open) return;
@@ -57,7 +60,11 @@ export function MobileMenuDrawer({
         onClick={onClose}
       />
       <aside
+        ref={drawerRef}
         {...handlers}
+        role="dialog"
+        aria-modal="true"
+        aria-label={t("menu")}
         className="absolute top-0 left-0 flex h-full w-[88%] max-w-sm flex-col transition-transform duration-200"
         style={{
           background: "var(--color-brand-cream)",

@@ -24,7 +24,8 @@
     "currency": "Currency",
     "needHelp": "Need help?",
     "chatWhatsApp": "Chat on WhatsApp",
-    "orderStatus": "Order status"
+    "orderStatus": "Order status",
+    "skipToContent": "Skip to content"
   },
   "promo": {
     "shipping": "Free shipping in Tbilisi over ₾150",

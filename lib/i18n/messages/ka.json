@@ -24,7 +24,8 @@
     "currency": "ვალუტა",
     "needHelp": "გჭირდება დახმარება?",
     "chatWhatsApp": "მოგვწერე WhatsApp-ით",
-    "orderStatus": "შეკვეთის სტატუსი"
+    "orderStatus": "შეკვეთის სტატუსი",
+    "skipToContent": "გადადი კონტენტზე"
   },
   "promo": {
     "shipping": "უფასო მიწოდება თბილისში ₾150-დან",
