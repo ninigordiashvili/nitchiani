@@ -49,7 +49,7 @@ export function BottomNav() {
         zIndex: 30,
         // Respect iOS safe area on devices with a home indicator
         paddingBottom: "env(safe-area-inset-bottom)",
-        background: "color-mix(in oklab, var(--color-brand-cream) 96%, transparent)",
+        background: "color-mix(in oklab, var(--surface) 96%, transparent)",
         backdropFilter: "blur(8px)",
         borderTop: "1px solid rgba(13,13,13,0.08)",
         transform: effectiveHidden ? "translateY(100%)" : "translateY(0)",

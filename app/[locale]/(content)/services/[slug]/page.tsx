@@ -27,7 +27,7 @@ export default async function ServiceDetail({
   const calLink = `${calUsername}/${service.calEventType}`;
 
   return (
-    <article className="container-shop py-8 sm:py-12">
+    <article className="container-shop pb-8 sm:pb-12">
       <div className="grid gap-8 lg:grid-cols-2 lg:gap-12">
         <div>
           <div className="relative aspect-[4/3] w-full overflow-hidden">

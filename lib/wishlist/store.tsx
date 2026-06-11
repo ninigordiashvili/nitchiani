@@ -43,6 +43,25 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(handles));
   }, [handles, hydrated]);
 
+  // Cross-tab sync — a heart tap in Tab A updates Tab B's count and filled state without
+  // requiring a refresh. The `storage` event only fires in OTHER tabs, so there's no echo
+  // loop from this tab's own writes.
+  useEffect(() => {
+    const onStorage = (e: StorageEvent) => {
+      if (e.storageArea !== localStorage || e.key !== STORAGE_KEY) return;
+      try {
+        const parsed = e.newValue ? (JSON.parse(e.newValue) as unknown) : [];
+        if (Array.isArray(parsed)) {
+          setHandles(parsed.filter((h): h is string => typeof h === "string"));
+        }
+      } catch {
+        // ignore corrupted/foreign payloads
+      }
+    };
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, []);
+
   const has = useCallback((handle: string) => handles.includes(handle), [handles]);
 
   const add = useCallback((handle: string) => {

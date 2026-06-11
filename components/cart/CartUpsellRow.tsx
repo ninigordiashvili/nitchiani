@@ -49,14 +49,32 @@ export function CartUpsellRow({ variant }: { variant: "drawer" | "page" }) {
 
   const isDrawer = variant === "drawer";
 
+  // Drawer column count is content-driven: pick a grid that fills the drawer width
+  // exactly so cards never leave dead space on either edge. Four cards go 2×2 (more
+  // editorial than 4×1 in a 448px container); three sit in one row; two split the row;
+  // one fills the row alone.
+  const drawerColsClass = (() => {
+    switch (candidates.length) {
+      case 1:
+        return "grid-cols-1";
+      case 2:
+        return "grid-cols-2";
+      case 3:
+        return "grid-cols-3";
+      default:
+        return "grid-cols-2";
+    }
+  })();
+
   return (
-    <div className={cn(isDrawer ? "border-t border-black/10 px-4 py-4" : "mt-12")}>
+    <div className={cn(isDrawer ? "mx-4 border-t border-black/10 py-4" : "mt-12")}>
       <p className="label-eyebrow mb-3">{t("upsellHeader")}</p>
       <ul
         className={cn(
+          "grid gap-3",
           isDrawer
-            ? "no-scrollbar -mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-1"
-            : "grid grid-cols-2 gap-x-3 gap-y-5 sm:grid-cols-4",
+            ? drawerColsClass
+            : "grid-cols-2 gap-x-3 gap-y-5 sm:grid-cols-4",
         )}
       >
         {candidates.map((p) => (
@@ -90,14 +108,14 @@ function UpsellCard({ product, compact }: { product: Product; compact: boolean }
   };
 
   return (
-    <li className={cn(compact && "w-[120px] flex-shrink-0 snap-start")}>
+    <li>
       <Link href={`/products/${product.handle}`} className="group block">
         <div className="relative aspect-square overflow-hidden bg-black/5">
           <Image
             src={safeImageSrc(product.featuredImage.url)}
             alt={product.featuredImage.altText}
             fill
-            sizes={compact ? "120px" : "(min-width: 640px) 25vw, 50vw"}
+            sizes={compact ? "200px" : "(min-width: 640px) 25vw, 50vw"}
             placeholder="blur"
             blurDataURL={BLUR_DATA_URL}
             className="object-cover transition-transform duration-500 ease-[var(--ease-brand)] group-hover:scale-105"

@@ -101,7 +101,7 @@ export function SearchOverlay() {
         aria-label={t("search.placeholder")}
         className="absolute top-0 right-0 left-0 max-h-[90dvh] overflow-y-auto transition-transform duration-200 ease-[var(--ease-brand)]"
         style={{
-          background: "var(--color-brand-cream)",
+          background: "var(--surface)",
           transform: open
             ? dragOffset < 0
               ? `translateY(${dragOffset}px)`
@@ -150,7 +150,7 @@ export function SearchOverlay() {
                       key={p.handle}
                       href={`/shop/${p.handle}`}
                       onClick={onClose}
-                      className="rounded-full border border-black/15 px-4 py-2 text-xs font-medium uppercase tracking-[0.14em] transition-colors hover:bg-[var(--color-brand-ink)] hover:text-[var(--color-brand-cream)]"
+                      className="rounded-full border border-black/15 px-4 py-2 text-xs font-medium uppercase tracking-[0.14em] transition-colors hover:bg-[var(--text-primary)] hover:text-[var(--surface)]"
                     >
                       {t(`nav.${p.labelKey}`)}
                     </Link>

@@ -32,6 +32,9 @@ export type Product = {
   howToUse?: string;
   /** Optional ingredient/material copy — rendered as the "What's inside" PDP section. */
   whatsInside?: string;
+  /** Optional aftercare instructions — rendered as the "Aftercare" PDP section. Primarily
+   *  used for piercings, but the field is generic so any product type can populate it. */
+  aftercare?: string;
   tags: string[];
   vendor: string;
   productType: string;
@@ -48,6 +51,11 @@ export type Product = {
    * can't be used as a URL fragment.
    */
   productTypeHandle: string;
+  /**
+   * Optional handle into the piercing-material registry (`lib/piercings.ts`). Only set
+   * for products in the Piercings category — drives the `MaterialTrust` panel on the PDP.
+   */
+  material?: string;
 };
 
 export type Collection = {

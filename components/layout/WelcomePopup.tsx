@@ -18,11 +18,12 @@ import { useSwipeDismiss } from "@/lib/ui/use-swipe-dismiss";
  */
 
 const STORAGE_KEY = "nitchiani:welcome:dismissed:v1";
-const DELAY_MS = 15000;
+const DELAY_MS = 1500;
 const CODE = "WELCOME10";
 
 export function WelcomePopup() {
   const t = useTranslations("welcome");
+  const tNav = useTranslations("nav");
   const cart = useCart();
   const pathname = usePathname();
   const [visible, setVisible] = useState(false);
@@ -115,7 +116,7 @@ export function WelcomePopup() {
         aria-label={t("title")}
         className="absolute right-0 bottom-0 left-0 rounded-t-2xl transition-transform duration-200 ease-[var(--ease-brand)] sm:right-1/2 sm:bottom-1/2 sm:left-1/2 sm:w-[min(440px,92vw)] sm:translate-x-[-50%] sm:translate-y-[50%] sm:rounded-2xl"
         style={{
-          background: "var(--color-brand-cream)",
+          background: "var(--surface)",
           transform: visible
             ? dragOffset > 0
               ? `translateY(${dragOffset}px)`
@@ -127,7 +128,7 @@ export function WelcomePopup() {
         <button
           type="button"
           onClick={dismiss}
-          aria-label="Close"
+          aria-label={tNav("close")}
           className="absolute top-3 right-3 flex h-9 w-9 cursor-pointer items-center justify-center"
         >
           <X size={18} />

@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 import { CAMPAIGNS } from "@/lib/campaigns";
 import { locales } from "@/lib/i18n/config";
+import { JOURNAL_POSTS } from "@/lib/journal";
 import { SERVICES } from "@/lib/services";
 import { getProducts } from "@/lib/shopify/client";
 
@@ -24,6 +25,7 @@ const COLLECTIONS = [
   "extensions",
   "accessories",
   "tools",
+  "piercings",
 ];
 
 const STATIC_PATHS = [
@@ -32,7 +34,11 @@ const STATIC_PATHS = [
   "/about",
   "/contact",
   "/services",
+  "/journal",
   "/order-status",
+  "/terms",
+  "/privacy",
+  "/refund",
 ];
 
 function getBaseUrl(): string {
@@ -78,6 +84,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }
   for (const s of SERVICES) {
     entries.push(buildEntry(baseUrl, `/services/${s.slug}`, 0.6));
+  }
+  for (const post of JOURNAL_POSTS) {
+    entries.push(buildEntry(baseUrl, `/journal/${post.slug}`, 0.6));
   }
   for (const p of products) {
     entries.push(buildEntry(baseUrl, `/products/${p.handle}`, 0.8));

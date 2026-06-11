@@ -121,7 +121,7 @@ export function CollectionToolbar({
               className={cn(
                 "cursor-pointer rounded-full border px-3 py-1.5 text-xs transition-colors",
                 active
-                  ? "border-[var(--color-brand-ink)] bg-[var(--color-brand-ink)] text-[var(--color-brand-cream)]"
+                  ? "border-[var(--text-primary)] bg-[var(--text-primary)] text-[var(--surface)]"
                   : "border-black/15 hover:border-black/40",
               )}
             >

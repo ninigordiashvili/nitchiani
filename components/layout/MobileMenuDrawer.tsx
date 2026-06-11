@@ -67,7 +67,7 @@ export function MobileMenuDrawer({
         aria-label={t("menu")}
         className="absolute top-0 left-0 flex h-full w-[88%] max-w-sm flex-col transition-transform duration-200"
         style={{
-          background: "var(--color-brand-cream)",
+          background: "var(--surface)",
           transform: open
             ? dragOffset < 0
               ? `translateX(${dragOffset}px)`
@@ -83,7 +83,7 @@ export function MobileMenuDrawer({
           <button
             type="button"
             onClick={onClose}
-            aria-label="Close menu"
+            aria-label={t("close")}
             className="-mr-2 flex h-10 w-10 items-center justify-center"
           >
             <X size={20} />

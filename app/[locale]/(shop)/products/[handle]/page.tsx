@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { setRequestLocale, getTranslations } from "next-intl/server";
 import { FrequentlyBoughtTogether } from "@/components/commerce/FrequentlyBoughtTogether";
+import { MaterialTrust } from "@/components/commerce/MaterialTrust";
 import { PdpAssurance } from "@/components/commerce/PdpAssurance";
 import { ProductAccordion } from "@/components/commerce/ProductAccordion";
 import { ProductBreadcrumb } from "@/components/commerce/ProductBreadcrumb";
@@ -38,7 +39,7 @@ export default async function ProductPage({
   return (
     <article className="pb-12">
       <ProductJsonLd product={product} locale={locale} />
-      <div className="container-shop pt-4 sm:grid sm:grid-cols-2 sm:gap-10 sm:pt-8">
+      <div className="container-shop sm:grid sm:grid-cols-2 sm:gap-10">
         <ProductGallery images={product.images} title={product.title} />
 
         <div className="mt-6 sm:mt-0">
@@ -75,6 +76,11 @@ export default async function ProductPage({
             <ProductPurchase product={product} />
           </div>
 
+          {/* Piercing-only — renders nothing for hair products since their `material` field
+              is undefined. Sits between purchase and description so safety info reaches the
+              buyer at the moment they're choosing variants. */}
+          <MaterialTrust materialHandle={product.material} locale={locale} />
+
           <div className="mt-8 border-t border-black/10 pt-6">
             {/* Description stays plain — it's the primary product copy, shouldn't require a tap. */}
             <p className="label-eyebrow mb-2">{tProduct("description")}</p>
@@ -83,7 +89,7 @@ export default async function ProductPage({
             </p>
 
             {/* Secondary details collapse to keep the PDP scannable. */}
-            {product.howToUse || product.whatsInside ? (
+            {product.howToUse || product.whatsInside || product.aftercare ? (
               <div className="mt-6 border-t border-black/10">
                 {product.howToUse ? (
                   <ProductAccordion title={tProduct("howToUse")}>
@@ -96,6 +102,13 @@ export default async function ProductPage({
                   <ProductAccordion title={tProduct("whatsInside")}>
                     <p className="max-w-prose text-sm leading-relaxed opacity-85">
                       {product.whatsInside}
+                    </p>
+                  </ProductAccordion>
+                ) : null}
+                {product.aftercare ? (
+                  <ProductAccordion title={tProduct("aftercare")}>
+                    <p className="max-w-prose text-sm leading-relaxed opacity-85">
+                      {product.aftercare}
                     </p>
                   </ProductAccordion>
                 ) : null}

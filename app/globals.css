@@ -35,15 +35,34 @@
 @layer base {
   :root {
     color-scheme: light;
-    --surface: var(--color-brand-cream);
-    --ink: var(--color-brand-ink);
-    --muted: var(--color-brand-silver-2);
+
+    /* Semantic surface tokens — these are the only colours that flip with theme. Components
+       should pull from these for "the page bg / card bg / divider / body text" instead of
+       reaching for `--color-brand-cream` and `--color-brand-ink` directly, which are kept
+       as literals (so cream-as-text on dark sections like ServicesTeaser/Footer stays cream
+       in dark mode). */
+    --surface: #f5efe6;            /* page background — same warm cream */
+    --surface-elevated: #ffffff;   /* lifted cards/inputs sitting on the surface */
+    --surface-inverse: #0a1f1f;    /* sections that stay dark in both modes (footer, services) */
+
+    --text-primary: #0d0d0d;       /* body text on light surface */
+    --text-muted: #8a8e92;         /* secondary / eyebrows */
+    --text-inverse: #f5efe6;       /* text on always-dark surfaces — never flips */
+
+    --border-soft: rgba(13, 13, 13, 0.08);
+    --border-base: rgba(13, 13, 13, 0.15);
+    --border-strong: rgba(13, 13, 13, 0.5);
+
+    /* Legacy aliases — keep the originals working while we migrate. */
+    --ink: var(--text-primary);
+    --muted: var(--text-muted);
     --accent: var(--color-brand-maroon);
+    --hairline: var(--border-soft);
   }
 
   html {
     background: var(--surface);
-    color: var(--ink);
+    color: var(--text-primary);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
@@ -145,19 +164,22 @@
      progress bars, etc.), keeping it precious instead of muted by overuse on every button. */
   .btn-primary {
     @apply inline-flex items-center justify-center gap-2 rounded-md px-5 py-3 text-sm font-medium uppercase tracking-wider transition-colors;
-    background: var(--color-brand-ink);
+    background: var(--text-primary);
+    color: var(--surface);
+  }
+  .btn-primary:hover {
+    background: var(--color-brand-maroon);
     color: var(--color-brand-cream);
   }
-  .btn-primary:hover { background: var(--color-brand-maroon); }
 
   .btn-ghost {
     @apply inline-flex items-center justify-center gap-2 rounded-md border px-5 py-3 text-sm font-medium uppercase tracking-wider transition-colors;
-    border-color: var(--color-brand-ink);
-    color: var(--color-brand-ink);
+    border-color: var(--text-primary);
+    color: var(--text-primary);
   }
   .btn-ghost:hover {
-    background: var(--color-brand-ink);
-    color: var(--color-brand-cream);
+    background: var(--text-primary);
+    color: var(--surface);
   }
 
   .label-eyebrow {
@@ -166,7 +188,15 @@
   }
 
   /* Subtle hairline used as section dividers instead of heavy borders */
-  .hairline { border-color: rgba(13, 13, 13, 0.08); }
+  .hairline { border-color: var(--border-soft); }
+
+  /* Translucent surface pill used by the wishlist heart that sits on top of product images. */
+  .wishlist-btn {
+    background: color-mix(in srgb, var(--surface) 80%, transparent);
+  }
+  .wishlist-btn:hover {
+    background: var(--surface);
+  }
 
   /* Editorial banner overlay scrim */
   .scrim-bottom {

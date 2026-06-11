@@ -48,14 +48,13 @@ export function WishlistButton({
       aria-label={saved ? t("removeAria") : t("addAria")}
       aria-pressed={saved}
       className={cn(
-        "relative flex h-9 w-9 cursor-pointer items-center justify-center rounded-full backdrop-blur-sm transition-colors",
-        "bg-[var(--color-brand-cream)]/80 hover:bg-[var(--color-brand-cream)]",
+        "wishlist-btn relative flex h-9 w-9 cursor-pointer items-center justify-center rounded-full backdrop-blur-sm transition-colors",
         className,
       )}
     >
       {burstKey > 0 ? (
         <span
-          key={burstKey}
+          key={`burst-${burstKey}`}
           aria-hidden="true"
           className="pointer-events-none absolute inset-0"
         >
@@ -69,7 +68,7 @@ export function WishlistButton({
         </span>
       ) : null}
       <svg
-        key={burstKey}
+        key={`heart-${burstKey}`}
         width={size}
         height={size}
         viewBox="0 0 24 24"

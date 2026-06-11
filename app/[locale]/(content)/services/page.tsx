@@ -16,7 +16,7 @@ export default async function ServicesPage({
   const t = await getTranslations("services");
 
   return (
-    <div className="container-shop py-8 sm:py-12">
+    <div className="container-shop pb-8 sm:pb-12">
       <header className="mb-8">
         <p className="label-eyebrow mb-1.5">Tbilisi studio</p>
         <h1 className="font-display text-3xl tracking-tight sm:text-4xl">{t("title")}</h1>

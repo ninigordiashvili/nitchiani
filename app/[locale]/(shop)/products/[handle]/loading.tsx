@@ -9,7 +9,7 @@
 export default function ProductLoading() {
   return (
     <article className="pb-12">
-      <div className="container-shop pt-4 sm:grid sm:grid-cols-2 sm:gap-10 sm:pt-8">
+      <div className="container-shop sm:grid sm:grid-cols-2 sm:gap-10">
         {/* Gallery placeholder — matches the real ProductGallery's main image aspect. */}
         <div className="aspect-[4/5] w-full animate-pulse bg-black/5" />
 

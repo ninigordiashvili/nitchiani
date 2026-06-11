@@ -18,8 +18,15 @@ import { VariantPicker } from "./VariantPicker";
  *
  * Picker self-hides for single-SKU products (the price + qty + Add to bag still render).
  */
-export function ProductPurchase({ product }: { product: Product }) {
+export function ProductPurchase({
+  product,
+  showSizeGuide = true,
+}: {
+  product: Product;
+  showSizeGuide?: boolean;
+}) {
   const t = useTranslations("product");
+  const tNav = useTranslations("nav");
   const [selected, setSelected] = useState(
     product.variants.find((v) => v.availableForSale) ?? product.variants[0],
   );
@@ -38,13 +45,14 @@ export function ProductPurchase({ product }: { product: Product }) {
         product={product}
         selectedVariant={selected}
         onSelect={setSelected}
+        showSizeGuide={showSizeGuide}
       />
 
       <div ref={inlineCtaRef} className="flex items-stretch gap-3">
         <div className="flex items-center rounded-md border border-black/15">
           <button
             type="button"
-            aria-label="Decrease quantity"
+            aria-label={tNav("decreaseQuantity")}
             disabled={quantity <= 1}
             onClick={() => setQuantity((q) => Math.max(1, q - 1))}
             className="flex h-full cursor-pointer items-center justify-center px-3 disabled:cursor-not-allowed disabled:opacity-30"
@@ -56,7 +64,7 @@ export function ProductPurchase({ product }: { product: Product }) {
           </span>
           <button
             type="button"
-            aria-label="Increase quantity"
+            aria-label={tNav("increaseQuantity")}
             onClick={() => setQuantity((q) => q + 1)}
             className="flex h-full cursor-pointer items-center justify-center px-3"
           >

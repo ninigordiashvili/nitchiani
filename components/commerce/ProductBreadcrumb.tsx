@@ -52,7 +52,7 @@ export async function ProductBreadcrumb({
   return (
     <>
       <nav
-        aria-label="Breadcrumb"
+        aria-label={t("breadcrumb")}
         className="mb-3 flex items-center gap-1.5 text-[11px] opacity-70"
       >
         {items.map((it, i) => (

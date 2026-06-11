@@ -1,17 +1,23 @@
-import { ClipboardCheck, Package, RotateCcw, Truck } from "lucide-react";
+import { Check, ClipboardCheck, ExternalLink, Package, RotateCcw, Truck } from "lucide-react";
 import { setRequestLocale, getTranslations } from "next-intl/server";
 import { WhatsAppIcon, getWhatsAppNumber } from "@/components/brand/WhatsAppIcon";
+import { getOrderByName, type OrderTracking } from "@/lib/shopify/orders";
 import type { Locale } from "@/lib/i18n/config";
 
 /**
- * Static order-tracking explainer. The studio doesn't ship live shipment-status data yet
- * (tracking is communicated via WhatsApp / email by the merchant), so this page exists as
- * a trust anchor: a Georgian shopper who's bought once knows there's a real URL to find
- * the answer to "where's my order?" without rummaging through emails.
+ * Order tracking page. Two render paths:
  *
- * When real shipment tracking lands (Shopify Order API + courier webhooks), this page
- * becomes the surface for the live status — the layout stays, the static timeline becomes
- * dynamic.
+ *   1. Static explainer — when there's no `?order=X` query or Shopify Admin isn't
+ *      configured (local/dev), shows the same trust-anchor timeline + WhatsApp CTA
+ *      this page has always had.
+ *
+ *   2. Live tracking — when the order resolves via `getOrderByName`, shows the
+ *      derived current step (1-of-4 highlighted), the actual line items, and the
+ *      carrier + tracking number + tracking URL when the fulfillment has them.
+ *
+ * The 4-step model matches the "How it works" modal vocabulary, so a buyer who saw
+ * that on the PDP recognises the timeline here. Steps:
+ *   01 Order placed → 02 Payment confirmed → 03 Hand-prepared in Tbilisi → 04 On its way
  */
 export default async function OrderStatusPage({
   params,
@@ -21,74 +27,48 @@ export default async function OrderStatusPage({
   searchParams: Promise<{ order?: string }>;
 }) {
   const { locale } = await params;
-  const { order } = await searchParams;
+  const { order: orderParam } = await searchParams;
   setRequestLocale(locale);
 
-  const [t, tCart, tCheckout] = await Promise.all([
+  const [t, tCart, tCheckout, tWa] = await Promise.all([
     getTranslations("orderStatus"),
     getTranslations("cart"),
     getTranslations("checkout"),
+    getTranslations("whatsapp"),
   ]);
 
   const whatsappNumber = getWhatsAppNumber();
-  const message = order
-    ? `Hi — checking on order #${order}`
-    : "Hi — checking on my order";
+
+  // Attempt the live lookup only when an order param was supplied.
+  const order = orderParam ? await getOrderByName(orderParam).catch(() => null) : null;
+
+  const message = orderParam
+    ? tWa("orderMessage", { id: orderParam })
+    : tWa("orderMessageGeneric");
   const whatsappHref = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
 
-  const steps = [
-    { icon: ClipboardCheck, text: tCart("howItWorksStep1Title") },
-    { icon: Package, text: tCart("howItWorksStep2Title") },
-    { icon: Truck, text: tCart("howItWorksStep3Title") },
-    { icon: RotateCcw, text: tCart("howItWorksStep4Title") },
-  ];
-
   return (
-    <div className="container-shop py-8 sm:py-12">
+    <div className="container-shop pb-8 sm:pb-12">
       <header className="mb-8 max-w-2xl">
         <p className="label-eyebrow mb-2">{t("eyebrow")}</p>
-        {order ? (
+        {orderParam ? (
           <p className="mb-3 text-xs tabular-nums opacity-60">
-            {tCheckout("orderNumber", { id: order })}
+            {tCheckout("orderNumber", { id: orderParam })}
           </p>
         ) : null}
         <h1 className="font-display text-3xl leading-tight tracking-tight sm:text-4xl">
-          {t("title")}
+          {order ? t("liveTitle") : t("title")}
         </h1>
-        <p className="mt-4 text-sm opacity-80 sm:text-base">{t("intro")}</p>
+        <p className="mt-4 text-sm opacity-80 sm:text-base">
+          {order ? t("liveIntro") : t("intro")}
+        </p>
       </header>
 
-      {/* Static timeline — same vocabulary as the "How it works" modal */}
-      <ol className="mb-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {steps.map((step, i) => (
-          <li
-            key={i}
-            className="flex items-start gap-3 rounded-md border border-black/10 p-4"
-          >
-            <span
-              className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full"
-              style={{
-                background:
-                  "color-mix(in oklab, var(--color-brand-maroon) 10%, transparent)",
-                color: "var(--color-brand-maroon)",
-              }}
-            >
-              <step.icon size={16} />
-            </span>
-            <div>
-              <p className="text-[11px] tabular-nums opacity-50">0{i + 1}</p>
-              <p className="text-sm font-medium leading-tight">{step.text}</p>
-            </div>
-          </li>
-        ))}
-      </ol>
+      {order ? <LiveTracking order={order} locale={locale} /> : <StaticTimeline tCart={tCart} />}
 
-      {/* WhatsApp CTA — the actual "track my order" path until a live tracking system lands */}
       <div className="rounded-lg border border-black/10 p-5 sm:p-6">
         <p className="label-eyebrow mb-2">{t("contactEyebrow")}</p>
-        <p className="font-display text-xl tracking-tight sm:text-2xl">
-          {t("contactTitle")}
-        </p>
+        <p className="font-display text-xl tracking-tight sm:text-2xl">{t("contactTitle")}</p>
         <p className="mt-2 max-w-md text-sm opacity-75">{t("contactDesc")}</p>
         <a
           href={whatsappHref}
@@ -99,6 +79,163 @@ export default async function OrderStatusPage({
           <WhatsAppIcon size={16} />
           {t("openWhatsApp")}
         </a>
+      </div>
+    </div>
+  );
+}
+
+/** Static 4-step explainer — the page's original behaviour, kept as a fallback. */
+function StaticTimeline({
+  tCart,
+}: {
+  tCart: Awaited<ReturnType<typeof getTranslations<"cart">>>;
+}) {
+  const steps = [
+    { icon: ClipboardCheck, text: tCart("howItWorksStep1Title") },
+    { icon: Package, text: tCart("howItWorksStep2Title") },
+    { icon: Truck, text: tCart("howItWorksStep3Title") },
+    { icon: RotateCcw, text: tCart("howItWorksStep4Title") },
+  ];
+  return (
+    <ol className="mb-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      {steps.map((step, i) => (
+        <li
+          key={i}
+          className="flex items-start gap-3 rounded-md border border-black/10 p-4"
+        >
+          <span
+            className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full"
+            style={{
+              background: "color-mix(in oklab, var(--color-brand-maroon) 10%, transparent)",
+              color: "var(--color-brand-maroon)",
+            }}
+          >
+            <step.icon size={16} />
+          </span>
+          <div>
+            <p className="text-[11px] tabular-nums opacity-50">0{i + 1}</p>
+            <p className="text-sm font-medium leading-tight">{step.text}</p>
+          </div>
+        </li>
+      ))}
+    </ol>
+  );
+}
+
+/** Real-order timeline — current step highlighted, completed steps checked, future steps muted. */
+async function LiveTracking({
+  order,
+  locale,
+}: {
+  order: OrderTracking;
+  locale: Locale;
+}) {
+  const t = await getTranslations("orderStatus");
+
+  const stepCopy = [
+    t("step1"),
+    t("step2"),
+    t("step3"),
+    t("step4"),
+  ];
+
+  const placedAt = order.createdAt
+    ? new Intl.DateTimeFormat(locale === "ka" ? "ka-GE" : "en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      }).format(new Date(order.createdAt))
+    : null;
+
+  return (
+    <div className="mb-10 space-y-8">
+      {/* Step timeline */}
+      <ol className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        {stepCopy.map((label, idx) => {
+          const stepNumber = (idx + 1) as 1 | 2 | 3 | 4;
+          const completed = stepNumber < order.step;
+          const current = stepNumber === order.step;
+          return (
+            <li
+              key={idx}
+              aria-current={current ? "step" : undefined}
+              className={`flex items-start gap-3 rounded-md border p-4 transition-colors ${
+                current
+                  ? "border-[var(--color-brand-maroon)]"
+                  : completed
+                    ? "border-black/15"
+                    : "border-black/10 opacity-60"
+              }`}
+            >
+              <span
+                className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full text-xs font-medium tabular-nums"
+                style={{
+                  background:
+                    completed || current
+                      ? "color-mix(in oklab, var(--color-brand-maroon) 10%, transparent)"
+                      : "color-mix(in oklab, var(--color-brand-ink) 5%, transparent)",
+                  color:
+                    completed || current
+                      ? "var(--color-brand-maroon)"
+                      : "var(--color-brand-ink)",
+                }}
+              >
+                {completed ? <Check size={16} /> : `0${stepNumber}`}
+              </span>
+              <div>
+                <p className="text-[11px] tabular-nums opacity-50">0{stepNumber}</p>
+                <p className="text-sm font-medium leading-tight">{label}</p>
+              </div>
+            </li>
+          );
+        })}
+      </ol>
+
+      {/* Tracking number + carrier — only when fulfillment has it */}
+      {order.tracking?.number ? (
+        <div className="rounded-md border border-black/10 p-4 sm:p-5">
+          <p className="label-eyebrow mb-2">{t("trackingLabel")}</p>
+          <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 text-sm">
+            {order.tracking.company ? (
+              <span className="font-medium">{order.tracking.company}</span>
+            ) : null}
+            <span className="font-mono tabular-nums opacity-90">{order.tracking.number}</span>
+          </div>
+          {order.tracking.url ? (
+            <a
+              href={order.tracking.url}
+              target="_blank"
+              rel="noreferrer noopener"
+              className="mt-3 inline-flex items-center gap-1.5 text-xs font-medium tracking-[0.16em] uppercase opacity-80 hover:opacity-100"
+            >
+              {t("trackingCta")}
+              <ExternalLink size={12} />
+            </a>
+          ) : null}
+        </div>
+      ) : null}
+
+      {/* Order summary: items + placement date */}
+      <div className="rounded-md border border-black/10 p-4 sm:p-5">
+        <div className="mb-3 flex items-baseline justify-between gap-3">
+          <p className="label-eyebrow">{t("orderItems")}</p>
+          {placedAt ? (
+            <p className="text-[11px] tabular-nums opacity-60">{placedAt}</p>
+          ) : null}
+        </div>
+        <ul className="space-y-2 text-sm">
+          {order.lines.map((line, i) => (
+            <li key={i} className="flex items-baseline justify-between gap-3">
+              <span className="min-w-0 truncate">
+                {line.title}
+                {line.variantTitle ? (
+                  <span className="opacity-60"> · {line.variantTitle}</span>
+                ) : null}
+              </span>
+              <span className="flex-shrink-0 tabular-nums opacity-70">× {line.quantity}</span>
+            </li>
+          ))}
+        </ul>
       </div>
     </div>
   );

@@ -30,6 +30,7 @@ export function HowItWorksButton({
   tone?: "light" | "dark";
 } = {}) {
   const t = useTranslations("cart");
+  const tNav = useTranslations("nav");
   const [open, setOpen] = useState(false);
   const { dragOffset, handlers } = useSwipeDismiss({
     direction: "down",
@@ -107,9 +108,9 @@ export function HowItWorksButton({
           role="dialog"
           aria-modal="true"
           aria-label={t("howItWorks")}
-          className="absolute right-0 bottom-0 left-0 max-h-[88dvh] overflow-y-auto rounded-t-2xl transition-transform duration-200 ease-[var(--ease-brand)] sm:right-1/2 sm:bottom-1/2 sm:left-1/2 sm:max-h-[80dvh] sm:w-[min(520px,92vw)] sm:translate-x-[-50%] sm:translate-y-[50%] sm:rounded-2xl"
+          className="absolute right-0 bottom-0 left-0 max-h-[88dvh] overflow-y-auto rounded-t-2xl transition-transform duration-200 ease-[var(--ease-brand)] sm:right-1/2 sm:bottom-1/2 sm:left-1/2 sm:max-h-[80dvh] sm:w-[min(28rem,92vw)] sm:translate-x-[-50%] sm:translate-y-[50%] sm:rounded-2xl"
           style={{
-            background: "var(--color-brand-cream)",
+            background: "var(--surface)",
             transform: open
               ? dragOffset > 0
                 ? `translateY(${dragOffset}px)`
@@ -118,21 +119,21 @@ export function HowItWorksButton({
             ...(dragOffset > 0 ? { transition: "none" } : {}),
           }}
         >
-          <div className="flex items-center justify-between border-b border-black/10 px-5 py-4">
+          <div className="flex items-center justify-between border-b border-black/10 px-4 py-3">
             <p className="font-display text-xl">{t("howItWorks")}</p>
             <button
               type="button"
               onClick={() => setOpen(false)}
-              aria-label="Close"
+              aria-label={tNav("close")}
               className="-mr-2 flex h-9 w-9 cursor-pointer items-center justify-center"
             >
               <X size={18} />
             </button>
           </div>
 
-          <ol className="space-y-5 p-5 sm:p-6">
+          <ol className="space-y-4 p-4">
             {steps.map((step, i) => (
-              <li key={i} className="flex items-start gap-4">
+              <li key={i} className="flex items-start gap-3">
                 <span
                   className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full"
                   style={{

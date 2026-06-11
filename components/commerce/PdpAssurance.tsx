@@ -16,8 +16,11 @@ import { getWhatsAppNumber, WhatsAppIcon } from "@/components/brand/WhatsAppIcon
 export function PdpAssurance({ productTitle }: { productTitle: string }) {
   const tTrust = useTranslations("home.trust");
   const tProduct = useTranslations("product");
+  const tWa = useTranslations("whatsapp");
   const number = getWhatsAppNumber();
-  const message = encodeURIComponent(`Hi! I have a question about: ${productTitle}`);
+  // Locale-aware prefilled message — Georgian customers shouldn't open a chat with a
+  // pre-typed English greeting.
+  const message = encodeURIComponent(tWa("productMessage", { title: productTitle }));
   const whatsappHref = `https://wa.me/${number}?text=${message}`;
 
   const items = [
@@ -45,7 +48,7 @@ export function PdpAssurance({ productTitle }: { productTitle: string }) {
           <li key={i} className="flex items-center gap-3 p-4">
             <span
               className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full"
-              style={{ background: "var(--color-brand-cream-2)" }}
+              style={{ background: "var(--surface-elevated)" }}
             >
               {item.icon}
             </span>

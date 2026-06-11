@@ -2,11 +2,13 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import { useTranslations } from "next-intl";
 import { BLUR_DATA_URL } from "@/lib/images";
 import type { ImageRef } from "@/lib/shopify/types";
 import { cn } from "@/lib/utils";
 
 export function ProductGallery({ images, title }: { images: ImageRef[]; title: string }) {
+  const t = useTranslations("nav");
   const [active, setActive] = useState(0);
   const current = images[active] ?? images[0];
 
@@ -19,7 +21,7 @@ export function ProductGallery({ images, title }: { images: ImageRef[]; title: s
               <button
                 type="button"
                 onClick={() => setActive(i)}
-                aria-label={`Show image ${i + 1}`}
+                aria-label={t("showImage", { n: i + 1 })}
                 className={cn(
                   "relative h-16 w-16 flex-shrink-0 overflow-hidden border transition-colors",
                   i === active

@@ -2,7 +2,7 @@
 
 import { ChevronDown, Tag, X } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useCart } from "@/lib/cart/store";
 import { couponLabel } from "@/lib/cart/coupons";
 import type { Locale } from "@/lib/i18n/config";
@@ -89,6 +89,46 @@ export function CouponField({ tone = "light" }: { tone?: "light" | "dark" } = {}
     );
   }
 
+  return <CouponEditor tone={tone} draft={draft} setDraft={setDraft} onClose={() => setOpen(false)} />;
+}
+
+/**
+ * Active editor — extracted so the autofocus + escape handlers only mount when actually open,
+ * which keeps the cleanup logic predictable.
+ */
+function CouponEditor({
+  tone,
+  draft,
+  setDraft,
+  onClose,
+}: {
+  tone: "light" | "dark";
+  draft: string;
+  setDraft: (value: string) => void;
+  onClose: () => void;
+}) {
+  const t = useTranslations("cart");
+  const cart = useCart();
+  const inputRef = useRef<HTMLInputElement>(null);
+  const isDark = tone === "dark";
+  const labelColor = isDark
+    ? "text-[var(--color-brand-cream)]"
+    : "text-[var(--color-brand-ink)]";
+
+  // Focus the input on mount and clear any stale error from a previous open/close cycle so
+  // the user doesn't reopen the field to an error they've already mentally moved past.
+  useEffect(() => {
+    inputRef.current?.focus();
+    if (cart.couponError) cart.clearCouponError();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const close = () => {
+    setDraft("");
+    cart.clearCouponError();
+    onClose();
+  };
+
   // Plain handler — no `<form>` wrapper because the CouponField is rendered inside the
   // checkout's outer form and nested forms are invalid HTML (the inner one collapses, and
   // an inner submit button would fire the outer form's onSubmit — i.e. accidentally
@@ -102,8 +142,31 @@ export function CouponField({ tone = "light" }: { tone?: "light" | "dark" } = {}
 
   return (
     <div className="mb-4">
-      <div className="flex gap-2">
+      <div className="mb-2 flex items-center justify-between">
+        <span className={cn("label-eyebrow inline-flex items-center gap-1.5", isDark && labelColor)}>
+          <Tag size={12} />
+          {t("promoCode")}
+        </span>
+        <button
+          type="button"
+          onClick={close}
+          aria-label={t("close")}
+          className={cn(
+            "-mr-1 flex h-6 w-6 cursor-pointer items-center justify-center rounded-full opacity-50 transition-opacity hover:opacity-100",
+            isDark ? "text-[var(--color-brand-cream)]" : "text-[var(--color-brand-ink)]",
+          )}
+        >
+          <X size={14} />
+        </button>
+      </div>
+      <div
+        className={cn(
+          "flex items-stretch overflow-hidden rounded-md border transition-colors focus-within:border-[var(--color-brand-ink)]",
+          isDark ? "border-white/20 bg-white/5" : "border-black/15 bg-white/60",
+        )}
+      >
         <input
+          ref={inputRef}
           type="text"
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
@@ -112,6 +175,10 @@ export function CouponField({ tone = "light" }: { tone?: "light" | "dark" } = {}
               e.preventDefault();
               e.stopPropagation();
               apply();
+            } else if (e.key === "Escape") {
+              e.preventDefault();
+              e.stopPropagation();
+              close();
             }
           }}
           placeholder={t("promoCodePlaceholder")}
@@ -120,10 +187,10 @@ export function CouponField({ tone = "light" }: { tone?: "light" | "dark" } = {}
           autoComplete="off"
           spellCheck={false}
           className={cn(
-            "flex-1 rounded-md border px-3 py-2 text-sm uppercase tracking-wider tabular-nums focus:outline-none",
+            "min-w-0 flex-1 bg-transparent px-3 py-2.5 text-sm uppercase tracking-wider tabular-nums focus:outline-none",
             isDark
-              ? "border-white/15 bg-white/5 text-[var(--color-brand-cream)] focus:border-white/40 placeholder:text-white/40"
-              : "border-black/15 bg-white/60 focus:border-[var(--color-brand-ink)] placeholder:text-black/30",
+              ? "text-[var(--color-brand-cream)] placeholder:text-white/40"
+              : "placeholder:text-black/30",
           )}
         />
         <button
@@ -131,11 +198,12 @@ export function CouponField({ tone = "light" }: { tone?: "light" | "dark" } = {}
           onClick={apply}
           disabled={draft.trim().length === 0}
           className={cn(
-            "rounded-md px-4 text-xs font-medium uppercase tracking-wider transition-colors disabled:cursor-not-allowed disabled:opacity-40",
+            "label-eyebrow flex-shrink-0 border-l px-4 transition-colors disabled:cursor-not-allowed disabled:opacity-30",
             isDark
-              ? "border border-white/40 text-[var(--color-brand-cream)] hover:bg-white/10"
-              : "border border-black text-[var(--color-brand-ink)] hover:bg-[var(--color-brand-ink)] hover:text-[var(--color-brand-cream)]",
+              ? "border-white/15 text-[var(--color-brand-cream)] hover:bg-white/10"
+              : "border-black/10 text-[var(--color-brand-ink)] hover:bg-black/5",
           )}
+          style={isDark ? undefined : { color: "var(--color-brand-ink)" }}
         >
           {t("applyCode")}
         </button>

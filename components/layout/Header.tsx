@@ -76,7 +76,7 @@ export function Header({ locale }: { locale: Locale }) {
         aria-hidden={hidden}
         className="sticky top-0 z-40 backdrop-blur-md"
         style={{
-          background: "color-mix(in oklab, var(--color-brand-cream) 92%, transparent)",
+          background: "color-mix(in oklab, var(--surface) 92%, transparent)",
           borderBottom: "1px solid rgba(13,13,13,0.08)",
           transform: hidden ? "translateY(-100%)" : "translateY(0)",
           transition: "transform 0.25s var(--ease-brand)",
@@ -104,7 +104,7 @@ export function Header({ locale }: { locale: Locale }) {
             <Link
               href="/"
               className="pointer-events-auto"
-              aria-label="Nitchiani — Home"
+              aria-label={`Nitchiani — ${t("home")}`}
             >
               <Logo variant="text" />
             </Link>

@@ -15,9 +15,10 @@ export default async function ContactPage({
   const ig = process.env.NEXT_PUBLIC_INSTAGRAM_HANDLE ?? "nitchiani";
 
   return (
-    <div className="container-shop max-w-2xl py-12">
-      <h1 className="font-display text-3xl tracking-tight sm:text-5xl">{t("contact")}</h1>
-      <ul className="mt-8 space-y-4 text-sm">
+    <div className="container-shop pb-12">
+      <div className="max-w-2xl">
+        <h1 className="font-display text-3xl tracking-tight sm:text-5xl">{t("contact")}</h1>
+        <ul className="mt-8 space-y-4 text-sm">
         <li className="flex items-center gap-3">
           <MapPin size={18} className="opacity-60" />
           {locale === "ka" ? "თბილისი, საქართველო" : "Tbilisi, Georgia"}
@@ -44,7 +45,8 @@ export default async function ContactPage({
             hello@nitchiani.com
           </a>
         </li>
-      </ul>
+        </ul>
+      </div>
     </div>
   );
 }

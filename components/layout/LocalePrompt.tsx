@@ -90,7 +90,7 @@ export function LocalePrompt() {
       role="region"
       aria-label={copy.availableIn}
       className="relative border-b border-black/10"
-      style={{ background: "var(--color-brand-cream)" }}
+      style={{ background: "var(--surface)" }}
     >
       <div className="container-shop flex items-center justify-center gap-3 py-2 pr-9 text-center text-xs sm:pr-12">
         <span className="opacity-80">{copy.availableIn}</span>

@@ -9,6 +9,7 @@ import { formatPrice } from "@/lib/money";
 import type { Locale } from "@/lib/i18n/config";
 import { BLUR_DATA_URL, safeImageSrc } from "@/lib/images";
 import { CartUpsellRow } from "@/components/cart/CartUpsellRow";
+import { ClearCartButton } from "@/components/cart/ClearCartButton";
 import { CouponField } from "@/components/cart/CouponField";
 import { EmptyCartRecommendations } from "@/components/cart/EmptyCartRecommendations";
 import { HowItWorksButton } from "@/components/cart/HowItWorksButton";
@@ -28,9 +29,12 @@ export default function CartPage() {
 
   return (
     <div className="container-shop py-8 sm:py-12">
-      <h1 className="font-display mb-6 text-3xl tracking-tight sm:text-4xl">
-        {t("nav.cart")}
-      </h1>
+      <div className="mb-6 flex items-end justify-between gap-4">
+        <h1 className="font-display text-3xl tracking-tight sm:text-4xl">
+          {t("nav.cart")}
+        </h1>
+        <ClearCartButton />
+      </div>
 
       <div className="grid gap-10 lg:grid-cols-[1fr_360px]">
         <ul className="divide-y divide-black/10">
@@ -64,7 +68,7 @@ export default function CartPage() {
                       onClick={() =>
                         cart.updateQuantity(line.variantId, line.quantity - 1)
                       }
-                      aria-label="Decrease"
+                      aria-label={t("nav.decreaseQuantity")}
                       className="flex h-9 w-9 cursor-pointer items-center justify-center"
                     >
                       <Minus size={14} />
@@ -75,7 +79,7 @@ export default function CartPage() {
                       onClick={() =>
                         cart.updateQuantity(line.variantId, line.quantity + 1)
                       }
-                      aria-label="Increase"
+                      aria-label={t("nav.increaseQuantity")}
                       className="flex h-9 w-9 cursor-pointer items-center justify-center"
                     >
                       <Plus size={14} />

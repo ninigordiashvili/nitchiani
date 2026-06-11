@@ -107,7 +107,7 @@ export function FrequentlyBoughtTogether({
                   className={cn(
                     "flex h-5 w-5 flex-shrink-0 cursor-pointer items-center justify-center rounded border transition-colors",
                     isSelected
-                      ? "border-[var(--color-brand-ink)] bg-[var(--color-brand-ink)] text-[var(--color-brand-cream)]"
+                      ? "border-[var(--text-primary)] bg-[var(--text-primary)] text-[var(--surface)]"
                       : "border-black/30 hover:border-black/60",
                   )}
                 >

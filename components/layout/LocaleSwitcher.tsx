@@ -77,8 +77,8 @@ export function LocaleSwitcher({ locale }: { locale: Locale }) {
           role="menu"
           className="absolute top-full right-0 z-50 mt-2 w-56 overflow-hidden rounded-lg"
           style={{
-            background: "var(--color-brand-cream)",
-            boxShadow: "0 4px 24px rgba(13, 13, 13, 0.08), 0 0 0 1px rgba(13, 13, 13, 0.06)",
+            background: "var(--surface-elevated)",
+            boxShadow: "0 4px 24px var(--border-soft), 0 0 0 1px var(--border-soft)",
           }}
         >
           <Section label={t("language")}>

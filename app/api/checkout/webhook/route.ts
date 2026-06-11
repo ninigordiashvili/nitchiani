@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
+import { sendOrderConfirmation } from "@/lib/email/order-confirmation";
 import { verifyBogCallback } from "@/lib/payments/bog";
-import { markOrderPaid } from "@/lib/shopify/orders";
+import { getOrderForConfirmation, markOrderPaid } from "@/lib/shopify/orders";
 
 /**
  * Async callback from BOG. The body is signed with BOG's private key — we verify with the public
@@ -62,6 +63,21 @@ export async function POST(req: Request) {
     console.error("[webhook/bog] markOrderPaid threw:", err);
     return false;
   });
+
+  // Fire the confirmation email once the gateway has confirmed payment. We `void` the
+  // chain so a slow/failed Shopify-Admin fetch or email-provider hiccup doesn't make BOG
+  // think the webhook failed (which would trigger retries we don't need).
+  if (ok) {
+    void getOrderForConfirmation(numericId)
+      .then((order) => {
+        if (order) return sendOrderConfirmation(order);
+        console.warn("[webhook/bog] order not retrievable for confirmation email:", numericId);
+        return false;
+      })
+      .catch((err) => {
+        console.error("[webhook/bog] confirmation email threw:", err);
+      });
+  }
 
   return NextResponse.json({ ok });
 }
