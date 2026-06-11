@@ -1,5 +1,5 @@
 import { setRequestLocale, getTranslations } from "next-intl/server";
-import { CheckCircle2 } from "lucide-react";
+import { ArrowLeft, CheckCircle2 } from "lucide-react";
 import { Link } from "@/lib/i18n/routing";
 import type { Locale } from "@/lib/i18n/config";
 
@@ -13,7 +13,10 @@ export default async function CheckoutSuccess({
   const { locale } = await params;
   const { order } = await searchParams;
   setRequestLocale(locale);
-  const t = await getTranslations("checkout");
+  const [t, tCart] = await Promise.all([
+    getTranslations("checkout"),
+    getTranslations("cart"),
+  ]);
 
   return (
     <div className="container-shop flex min-h-[60vh] flex-col items-center justify-center gap-4 py-12 text-center">
@@ -22,10 +25,19 @@ export default async function CheckoutSuccess({
         {t("successTitle")}
       </h1>
       <p className="max-w-sm text-sm opacity-70">{t("successDesc")}</p>
-      {order ? <p className="label-eyebrow">Order {order}</p> : null}
-      <Link href="/" className="btn-ghost mt-3">
-        ←
-      </Link>
+      {order ? <p className="label-eyebrow tabular-nums">{t("orderNumber", { id: order })}</p> : null}
+      <div className="mt-3 flex flex-wrap justify-center gap-3">
+        <Link
+          href={order ? `/order-status?order=${order}` : "/order-status"}
+          className="btn-primary"
+        >
+          {t("trackOrder")}
+        </Link>
+        <Link href="/" className="btn-ghost">
+          <ArrowLeft size={14} />
+          {tCart("continueShopping")}
+        </Link>
+      </div>
     </div>
   );
 }

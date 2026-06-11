@@ -2,9 +2,11 @@
 
 import { X } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { Link } from "@/lib/i18n/routing";
 import { getWhatsAppNumber, WhatsAppIcon } from "@/components/brand/WhatsAppIcon";
+import { useFocusTrap } from "@/lib/ui/use-focus-trap";
+import { useSwipeDismiss } from "@/lib/ui/use-swipe-dismiss";
 
 const SHOP_LINKS = [
   { href: "/shop/best-sellers", labelKey: "bestSellers" as const },
@@ -31,6 +33,12 @@ export function MobileMenuDrawer({
 }) {
   const t = useTranslations("nav");
   const whatsappNumber = getWhatsAppNumber();
+  const { dragOffset, handlers } = useSwipeDismiss({
+    direction: "left",
+    onDismiss: onClose,
+  });
+  const drawerRef = useRef<HTMLElement>(null);
+  useFocusTrap(drawerRef, open);
 
   useEffect(() => {
     if (!open) return;
@@ -52,10 +60,22 @@ export function MobileMenuDrawer({
         onClick={onClose}
       />
       <aside
+        ref={drawerRef}
+        {...handlers}
+        role="dialog"
+        aria-modal="true"
+        aria-label={t("menu")}
         className="absolute top-0 left-0 flex h-full w-[88%] max-w-sm flex-col transition-transform duration-200"
         style={{
-          background: "var(--color-brand-cream)",
-          transform: open ? "translateX(0)" : "translateX(-100%)",
+          background: "var(--surface)",
+          transform: open
+            ? dragOffset < 0
+              ? `translateX(${dragOffset}px)`
+              : "translateX(0)"
+            : "translateX(-100%)",
+          // Match the cart drawer: disable transition during drag so the drawer tracks
+          // the finger 1:1, then snap back via the original transition on release.
+          ...(dragOffset < 0 ? { transition: "none" } : {}),
         }}
       >
         <div className="flex h-14 items-center justify-between border-b border-black/10 px-4">
@@ -63,7 +83,7 @@ export function MobileMenuDrawer({
           <button
             type="button"
             onClick={onClose}
-            aria-label="Close menu"
+            aria-label={t("close")}
             className="-mr-2 flex h-10 w-10 items-center justify-center"
           >
             <X size={20} />

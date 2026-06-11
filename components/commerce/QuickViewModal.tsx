@@ -3,10 +3,12 @@
 import { ArrowRight, X } from "lucide-react";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { Link } from "@/lib/i18n/routing";
 import { BLUR_DATA_URL } from "@/lib/images";
+import { useFocusTrap } from "@/lib/ui/use-focus-trap";
 import { useQuickView } from "@/lib/ui/quick-view";
+import { useSwipeDismiss } from "@/lib/ui/use-swipe-dismiss";
 import { ProductPurchase } from "./ProductPurchase";
 
 /**
@@ -20,6 +22,14 @@ export function QuickViewModal() {
   const quickView = useQuickView();
   const product = quickView.product;
   const open = product !== null;
+  const { dragOffset, handlers } = useSwipeDismiss({
+    direction: "down",
+    onDismiss: quickView.close,
+    // Centred on sm+; only the bottom-sheet variant on mobile is swipe-dismissable.
+    maxViewportWidth: 640,
+  });
+  const modalRef = useRef<HTMLElement>(null);
+  useFocusTrap(modalRef, open);
 
   // Body scroll lock + ESC handler.
   useEffect(() => {
@@ -47,13 +57,20 @@ export function QuickViewModal() {
         onClick={quickView.close}
       />
       <aside
+        ref={modalRef}
+        {...handlers}
         role="dialog"
         aria-modal="true"
         aria-label={product?.title}
-        className="absolute right-0 bottom-0 left-0 max-h-[88dvh] overflow-y-auto rounded-t-2xl transition-transform duration-200 ease-[var(--ease-brand)] sm:right-1/2 sm:bottom-1/2 sm:left-1/2 sm:max-h-[80dvh] sm:w-[min(900px,90vw)] sm:translate-x-[-50%] sm:translate-y-[50%] sm:rounded-2xl"
+        className="absolute right-0 bottom-0 left-0 max-h-[88dvh] overflow-y-auto rounded-t-2xl transition-transform duration-200 ease-[var(--ease-brand)] sm:right-1/2 sm:bottom-1/2 sm:left-1/2 sm:max-h-none sm:w-[min(900px,90vw)] sm:translate-x-[-50%] sm:translate-y-[50%] sm:overflow-hidden sm:rounded-2xl"
         style={{
-          background: "var(--color-brand-cream)",
-          transform: open ? undefined : "translateY(100%)",
+          background: "var(--surface)",
+          transform: open
+            ? dragOffset > 0
+              ? `translateY(${dragOffset}px)`
+              : undefined
+            : "translateY(100%)",
+          ...(dragOffset > 0 ? { transition: "none" } : {}),
         }}
       >
         {product ? (
@@ -73,14 +90,15 @@ export function QuickViewModal() {
                 type="button"
                 onClick={quickView.close}
                 aria-label={t("search.closeAria")}
-                className="absolute top-3 right-3 flex h-9 w-9 cursor-pointer items-center justify-center rounded-full bg-[var(--color-brand-cream)]/90 backdrop-blur-sm sm:hidden"
+                className="absolute top-3 right-3 flex h-9 w-9 cursor-pointer items-center justify-center rounded-full backdrop-blur-sm sm:hidden"
+                style={{ background: "color-mix(in srgb, var(--surface) 90%, transparent)" }}
               >
                 <X size={18} />
               </button>
             </div>
 
             {/* Details */}
-            <div className="relative p-5 sm:p-7">
+            <div className="relative flex flex-col p-5 sm:p-7">
               <button
                 type="button"
                 onClick={quickView.close}
@@ -96,13 +114,13 @@ export function QuickViewModal() {
               </h2>
 
               <div className="mt-5">
-                <ProductPurchase product={product} />
+                <ProductPurchase product={product} showSizeGuide={false} />
               </div>
 
               <Link
                 href={`/products/${product.handle}`}
                 onClick={quickView.close}
-                className="mt-6 inline-flex items-center gap-1 text-xs font-medium tracking-[0.16em] uppercase opacity-80 hover:opacity-100"
+                className="mt-auto inline-flex items-center gap-1 self-center pt-6 text-xs font-medium tracking-[0.16em] uppercase opacity-80 hover:opacity-100"
               >
                 {t("product.viewFullDetails")}
                 <ArrowRight size={14} />

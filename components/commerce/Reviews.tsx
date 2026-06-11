@@ -1,4 +1,5 @@
 import { getLocale, getTranslations } from "next-intl/server";
+import { Monogram } from "./Monogram";
 import { StarRating } from "./StarRating";
 import { getReviewSummary, getReviewsForProduct } from "@/lib/reviews";
 import type { Locale } from "@/lib/i18n/config";
@@ -61,11 +62,14 @@ export async function Reviews({ handle }: { handle: string }) {
               </span>
             </div>
             <p className="text-sm leading-relaxed">{r.body}</p>
-            <p className="mt-3 text-xs opacity-70">
-              <span className="font-medium opacity-100">{r.author}</span>
-              <span className="mx-1 opacity-40">·</span>
-              {r.city}
-            </p>
+            <div className="mt-3 flex items-center gap-2.5 text-xs">
+              <Monogram name={r.author} size={28} />
+              <p className="opacity-70">
+                <span className="font-medium opacity-100">{r.author}</span>
+                <span className="mx-1 opacity-40">·</span>
+                {r.city}
+              </p>
+            </div>
           </li>
         ))}
       </ul>

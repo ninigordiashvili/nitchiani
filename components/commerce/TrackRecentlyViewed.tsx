@@ -18,8 +18,17 @@ export function TrackRecentlyViewed({ product }: { product: Product }) {
       title: product.title,
       image: product.featuredImage,
       price: product.variants[0]?.price ?? product.priceRange.min,
+      productTypeHandle: product.productTypeHandle,
     });
-  }, [product.handle, product.title, product.featuredImage, product.variants, product.priceRange.min, add]);
+  }, [
+    product.handle,
+    product.title,
+    product.featuredImage,
+    product.variants,
+    product.priceRange.min,
+    product.productTypeHandle,
+    add,
+  ]);
 
   return null;
 }

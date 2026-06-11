@@ -8,7 +8,9 @@ import { ProductGrid } from "@/components/commerce/ProductGrid";
 import type { Locale } from "@/lib/i18n/config";
 import { Link } from "@/lib/i18n/routing";
 import type { Product } from "@/lib/shopify/types";
+import { useFocusTrap } from "@/lib/ui/use-focus-trap";
 import { useOverlays } from "@/lib/ui/overlays";
+import { useSwipeDismiss } from "@/lib/ui/use-swipe-dismiss";
 
 const POPULAR = [
   { handle: "best-sellers", labelKey: "bestSellers" as const },
@@ -27,6 +29,12 @@ export function SearchOverlay() {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<Product[]>([]);
   const [isPending, startTransition] = useTransition();
+  const { dragOffset, handlers } = useSwipeDismiss({
+    direction: "up",
+    onDismiss: onClose,
+  });
+  const overlayRef = useRef<HTMLElement>(null);
+  useFocusTrap(overlayRef, open);
 
   // Body scroll lock + focus the input on open. Reset on close.
   useEffect(() => {
@@ -86,10 +94,20 @@ export function SearchOverlay() {
         onClick={onClose}
       />
       <aside
+        ref={overlayRef}
+        {...handlers}
+        role="dialog"
+        aria-modal="true"
+        aria-label={t("search.placeholder")}
         className="absolute top-0 right-0 left-0 max-h-[90dvh] overflow-y-auto transition-transform duration-200 ease-[var(--ease-brand)]"
         style={{
-          background: "var(--color-brand-cream)",
-          transform: open ? "translateY(0)" : "translateY(-100%)",
+          background: "var(--surface)",
+          transform: open
+            ? dragOffset < 0
+              ? `translateY(${dragOffset}px)`
+              : "translateY(0)"
+            : "translateY(-100%)",
+          ...(dragOffset < 0 ? { transition: "none" } : {}),
         }}
       >
         <div className="container-shop py-4">
@@ -132,7 +150,7 @@ export function SearchOverlay() {
                       key={p.handle}
                       href={`/shop/${p.handle}`}
                       onClick={onClose}
-                      className="rounded-full border border-black/15 px-4 py-2 text-xs font-medium uppercase tracking-[0.14em] transition-colors hover:bg-[var(--color-brand-ink)] hover:text-[var(--color-brand-cream)]"
+                      className="rounded-full border border-black/15 px-4 py-2 text-xs font-medium uppercase tracking-[0.14em] transition-colors hover:bg-[var(--text-primary)] hover:text-[var(--surface)]"
                     >
                       {t(`nav.${p.labelKey}`)}
                     </Link>

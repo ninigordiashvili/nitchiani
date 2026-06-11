@@ -1,8 +1,10 @@
 "use client";
 
 import { Ruler, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
+import { useFocusTrap } from "@/lib/ui/use-focus-trap";
+import { useSwipeDismiss } from "@/lib/ui/use-swipe-dismiss";
 
 /**
  * Inline "Size guide" link + modal. Self-contained — owns its own open state, scroll lock,
@@ -15,7 +17,15 @@ import { useTranslations } from "next-intl";
  */
 export function SizeGuideButton() {
   const t = useTranslations("product");
+  const tNav = useTranslations("nav");
   const [open, setOpen] = useState(false);
+  const { dragOffset, handlers } = useSwipeDismiss({
+    direction: "down",
+    onDismiss: () => setOpen(false),
+    maxViewportWidth: 640,
+  });
+  const modalRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(modalRef, open);
 
   useEffect(() => {
     if (!open) return;
@@ -52,13 +62,20 @@ export function SizeGuideButton() {
           onClick={() => setOpen(false)}
         />
         <div
+          ref={modalRef}
+          {...handlers}
           role="dialog"
           aria-modal="true"
           aria-label={t("sizeGuide")}
           className="absolute right-0 bottom-0 left-0 max-h-[88dvh] overflow-y-auto rounded-t-2xl transition-transform duration-200 ease-[var(--ease-brand)] sm:right-1/2 sm:bottom-1/2 sm:left-1/2 sm:max-h-[80dvh] sm:w-[min(560px,90vw)] sm:translate-x-[-50%] sm:translate-y-[50%] sm:rounded-2xl"
           style={{
-            background: "var(--color-brand-cream)",
-            transform: open ? undefined : "translateY(100%)",
+            background: "var(--surface)",
+            transform: open
+              ? dragOffset > 0
+                ? `translateY(${dragOffset}px)`
+                : undefined
+              : "translateY(100%)",
+            ...(dragOffset > 0 ? { transition: "none" } : {}),
           }}
         >
           <div className="flex items-center justify-between border-b border-black/10 px-5 py-4">
@@ -66,7 +83,7 @@ export function SizeGuideButton() {
             <button
               type="button"
               onClick={() => setOpen(false)}
-              aria-label="Close"
+              aria-label={tNav("close")}
               className="-mr-2 flex h-9 w-9 cursor-pointer items-center justify-center"
             >
               <X size={18} />

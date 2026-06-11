@@ -10,6 +10,8 @@ import {
 } from "@/components/brand/WhatsAppIcon";
 import { Logo } from "@/components/brand/Logo";
 import { TrustStrip } from "@/components/homepage/TrustStrip";
+import { BUSINESS } from "@/lib/business";
+import { useCookieConsent } from "@/lib/ui/cookie-consent";
 import { NewsletterForm } from "./NewsletterForm";
 
 export function Footer() {
@@ -17,13 +19,17 @@ export function Footer() {
   const year = new Date().getFullYear();
   const whatsappNumber = getWhatsAppNumber();
   const phoneDisplay = formatWhatsAppNumber(whatsappNumber);
+  const { reset: resetCookieConsent } = useCookieConsent();
 
   return (
     <footer
-      className="mt-16"
+      className="mt-6 sm:mt-16"
       style={{ background: "var(--color-brand-bg)", color: "var(--color-brand-cream)" }}
     >
-      <div className="container-shop pt-10 pb-12">
+      {/* Mobile only: reserve room below the copyright line so the fixed BottomNav
+          (~64px content + iOS safe-area inset) doesn't cover the bottom of the footer.
+          `sm:pb-12` resets this on desktop where BottomNav is hidden. */}
+      <div className="container-shop pt-10 pb-[calc(6rem+env(safe-area-inset-bottom))] sm:pb-12">
         <NewsletterForm />
         <div className="my-10 border-t border-white/10" />
         <TrustStrip tone="dark" />
@@ -84,6 +90,7 @@ export function Footer() {
               <li><Link href="/shop/bonnets">{t("nav.bonnets")}</Link></li>
               <li><Link href="/shop/loc-care">{t("nav.locCare")}</Link></li>
               <li><Link href="/shop/extensions">{t("nav.extensions")}</Link></li>
+              <li><Link href="/shop/piercings">{t("nav.piercings")}</Link></li>
             </ul>
           </div>
 
@@ -93,13 +100,48 @@ export function Footer() {
             </p>
             <ul className="space-y-2 text-sm opacity-80">
               <li><Link href="/services">{t("nav.services")}</Link></li>
+              <li><Link href="/journal">{t("nav.journal")}</Link></li>
               <li><Link href="/about">{t("nav.about")}</Link></li>
               <li><Link href="/contact">{t("nav.contact")}</Link></li>
+              <li><Link href="/order-status">{t("nav.orderStatus")}</Link></li>
+              <li><Link href="/terms">{t("nav.terms")}</Link></li>
+              <li><Link href="/privacy">{t("nav.privacy")}</Link></li>
+              <li><Link href="/refund">{t("nav.refund")}</Link></li>
+              <li>
+                <button
+                  type="button"
+                  onClick={resetCookieConsent}
+                  className="cursor-pointer text-left hover:opacity-100"
+                >
+                  {t("nav.cookiePreferences")}
+                </button>
+              </li>
             </ul>
           </div>
         </div>
 
-        <div className="mt-12 flex flex-col items-start justify-between gap-3 border-t border-white/10 pt-6 text-xs opacity-60 sm:flex-row sm:items-center">
+        {/* Business identification — required for Georgian e-commerce (legal entity name,
+            registration ID, address, contact email). Pulled from `lib/business.ts`. */}
+        <div className="mt-10 border-t border-white/10 pt-6 text-[11px] leading-relaxed opacity-55 sm:text-xs">
+          <p className="font-medium opacity-90">{BUSINESS.legalName}</p>
+          <p>
+            {t("footer.regId")}: <span className="tabular-nums">{BUSINESS.registrationId}</span>
+            {BUSINESS.vatId ? (
+              <>
+                {" · "}
+                {t("footer.vatId")}: <span className="tabular-nums">{BUSINESS.vatId}</span>
+              </>
+            ) : null}
+          </p>
+          <p>{BUSINESS.address}</p>
+          <p>
+            <a href={`mailto:${BUSINESS.email}`} className="underline-offset-2 hover:underline">
+              {BUSINESS.email}
+            </a>
+          </p>
+        </div>
+
+        <div className="mt-6 flex flex-col items-start justify-between gap-3 border-t border-white/10 pt-6 text-xs opacity-60 sm:flex-row sm:items-center">
           <p>© {year} Nitchiani. {t("footer.rights")}.</p>
           <p>BOG · TBC · Bank transfer</p>
         </div>

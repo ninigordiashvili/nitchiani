@@ -3,6 +3,7 @@
 import { ChevronLeft, ChevronRight, Quote } from "lucide-react";
 import { useRef } from "react";
 import { useTranslations } from "next-intl";
+import { Monogram } from "@/components/commerce/Monogram";
 import { StarRating } from "@/components/commerce/StarRating";
 import { Link } from "@/lib/i18n/routing";
 import type { HomepageReview } from "@/lib/reviews";
@@ -18,6 +19,7 @@ import { cn } from "@/lib/utils";
  */
 export function ReviewsRail({ reviews }: { reviews: HomepageReview[] }) {
   const t = useTranslations("home");
+  const tNav = useTranslations("nav");
   const railRef = useRef<HTMLUListElement>(null);
 
   const scroll = (direction: 1 | -1) => {
@@ -25,8 +27,8 @@ export function ReviewsRail({ reviews }: { reviews: HomepageReview[] }) {
     if (!el) return;
     const firstCard = el.firstElementChild as HTMLElement | null;
     const cardWidth = firstCard?.getBoundingClientRect().width ?? 280;
-    // Card width + 12px gap (matches the `gap-3` on the rail).
-    el.scrollBy({ left: direction * (cardWidth + 12), behavior: "smooth" });
+    // Card width + 4px gap (matches the `gap-1` on the rail).
+    el.scrollBy({ left: direction * (cardWidth + 4), behavior: "smooth" });
   };
 
   return (
@@ -39,10 +41,10 @@ export function ReviewsRail({ reviews }: { reviews: HomepageReview[] }) {
           </h2>
         </div>
         <div className="hidden flex-shrink-0 gap-2 sm:flex">
-          <RailButton onClick={() => scroll(-1)} aria-label="Previous">
+          <RailButton onClick={() => scroll(-1)} aria-label={tNav("previous")}>
             <ChevronLeft size={16} />
           </RailButton>
-          <RailButton onClick={() => scroll(1)} aria-label="Next">
+          <RailButton onClick={() => scroll(1)} aria-label={tNav("next")}>
             <ChevronRight size={16} />
           </RailButton>
         </div>
@@ -50,12 +52,12 @@ export function ReviewsRail({ reviews }: { reviews: HomepageReview[] }) {
 
       <ul
         ref={railRef}
-        className="no-scrollbar -mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 sm:mx-0 sm:gap-4 sm:px-0"
+        className="no-scrollbar -mx-4 flex snap-x snap-mandatory items-stretch gap-1 overflow-x-auto px-4 sm:mx-0 sm:gap-1.5 sm:px-0"
       >
         {reviews.map((r) => (
           <li
             key={r.id}
-            className="w-[280px] flex-shrink-0 snap-start sm:w-[320px]"
+            className="flex w-[280px] flex-shrink-0 snap-start sm:w-[320px]"
           >
             <ReviewCard review={r} />
           </li>
@@ -79,7 +81,7 @@ function RailButton({
       onClick={onClick}
       className={cn(
         "flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border border-black/15 transition-colors",
-        "hover:border-[var(--color-brand-ink)] hover:bg-[var(--color-brand-ink)] hover:text-[var(--color-brand-cream)]",
+        "hover:border-[var(--text-primary)] hover:bg-[var(--text-primary)] hover:text-[var(--surface)]",
       )}
       {...rest}
     >
@@ -92,8 +94,8 @@ function ReviewCard({ review }: { review: HomepageReview }) {
   return (
     <Link
       href={`/products/${review.productHandle}`}
-      className="group flex h-full flex-col rounded-lg border border-black/10 p-5 transition-colors hover:border-black/30"
-      style={{ background: "color-mix(in oklab, var(--color-brand-cream) 60%, white 40%)" }}
+      className="group flex w-full flex-col rounded-lg border border-black/10 p-5 transition-colors hover:border-black/30"
+      style={{ background: "var(--surface-elevated)" }}
     >
       <div className="flex items-center justify-between">
         <StarRating
@@ -103,12 +105,15 @@ function ReviewCard({ review }: { review: HomepageReview }) {
         />
         <Quote size={16} className="opacity-25" />
       </div>
-      <p className="mt-3 line-clamp-5 text-sm leading-relaxed opacity-90">
+      <p className="mt-3 line-clamp-2 text-sm leading-relaxed opacity-90">
         “{review.body}”
       </p>
-      <div className="mt-4 border-t border-black/10 pt-3 text-xs">
-        <p className="font-medium">{review.author}</p>
-        <p className="opacity-60">{review.city}</p>
+      <div className="mt-auto flex items-center gap-2.5 border-t border-black/10 pt-3 text-xs">
+        <Monogram name={review.author} size={28} />
+        <div className="min-w-0">
+          <p className="truncate font-medium">{review.author}</p>
+          <p className="truncate opacity-60">{review.city}</p>
+        </div>
       </div>
     </Link>
   );

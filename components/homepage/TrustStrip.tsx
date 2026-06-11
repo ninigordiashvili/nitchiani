@@ -42,7 +42,7 @@ export function TrustStrip({
             style={
               isDark
                 ? { background: "rgba(255,255,255,0.08)", color: "var(--color-brand-cream)" }
-                : { background: "var(--color-brand-cream-2)" }
+                : { background: "var(--surface-elevated)" }
             }
           >
             {it.icon}

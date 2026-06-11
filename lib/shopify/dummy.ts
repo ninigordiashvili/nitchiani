@@ -34,7 +34,7 @@ export type RawProductVariant = {
 
 export type RawProduct = Omit<
   Product,
-  "title" | "description" | "productType" | "featuredImage" | "images" | "options" | "variants" | "priceRange"
+  "title" | "description" | "productType" | "productTypeHandle" | "featuredImage" | "images" | "options" | "variants" | "priceRange" | "material" | "aftercare"
 > & {
   titleKa: string;
   titleEn: string;
@@ -45,8 +45,12 @@ export type RawProduct = Omit<
   howToUseEn?: string;
   whatsInsideKa?: string;
   whatsInsideEn?: string;
+  aftercareKa?: string;
+  aftercareEn?: string;
   productTypeKa: string;
   productTypeEn: string;
+  /** Optional — handle from `lib/piercings.ts` materials registry. Only set on piercings. */
+  material?: string;
   featuredImage: Product["featuredImage"];
   images: Product["images"];
   basePrice: number;
@@ -109,7 +113,12 @@ export function localizeProduct(p: RawProduct, locale: Locale): Product {
     description: ka ? p.descriptionKa : p.descriptionEn,
     howToUse: ka ? p.howToUseKa : p.howToUseEn,
     whatsInside: ka ? p.whatsInsideKa : p.whatsInsideEn,
+    aftercare: ka ? p.aftercareKa : p.aftercareEn,
+    material: p.material,
     productType: ka ? p.productTypeKa : p.productTypeEn,
+    // Slug-form English type — used as the breadcrumb category link target. Stable
+    // across locales so URLs stay consistent regardless of viewer language.
+    productTypeHandle: p.productTypeEn.toLowerCase().replace(/\s+/g, "-"),
     tags: p.tags,
     vendor: p.vendor,
     featuredImage: p.featuredImage,
@@ -147,6 +156,8 @@ function makeProduct(p: {
   howToUseEn?: string;
   whatsInsideKa?: string;
   whatsInsideEn?: string;
+  aftercareKa?: string;
+  aftercareEn?: string;
   productTypeKa: string;
   productTypeEn: string;
   /** Base price (GEL). Each variant can override via priceDelta. */
@@ -163,6 +174,8 @@ function makeProduct(p: {
   options?: RawProductOption[];
   /** Variant rows. Omit for a single-SKU product (defaults to one variant with no options). */
   variants?: RawProductVariant[];
+  /** Optional material handle (lib/piercings.ts). Drives the `MaterialTrust` PDP panel. */
+  material?: string;
 }): RawProduct {
   return {
     id: `gid://nitchiani/Product/${p.handle}`,
@@ -175,6 +188,8 @@ function makeProduct(p: {
     howToUseEn: p.howToUseEn,
     whatsInsideKa: p.whatsInsideKa,
     whatsInsideEn: p.whatsInsideEn,
+    aftercareKa: p.aftercareKa,
+    aftercareEn: p.aftercareEn,
     productTypeKa: p.productTypeKa,
     productTypeEn: p.productTypeEn,
     tags: p.tags ?? [],
@@ -190,6 +205,7 @@ function makeProduct(p: {
     rawVariants: p.variants ?? [{ optionValues: [], available: true }],
     isNew: p.isNew,
     isBestSeller: p.isBestSeller,
+    material: p.material,
   };
 }
 
@@ -634,6 +650,100 @@ export const DUMMY_RAW_PRODUCTS: RawProduct[] = [
       { optionValues: ["Maroon"] },
     ],
   }),
+  // — Piercings — sample SKU so the MaterialTrust panel and PiercingSizeGuide light up.
+  // Add more entries with `productTypeEn: "Piercings"` to populate the collection.
+  makeProduct({
+    handle: "titanium-helix-stud",
+    titleEn: "Titanium Helix Stud",
+    titleKa: "ტიტანის ჰელიქსის საყურე",
+    descriptionEn:
+      "A single implant-grade titanium flat-back stud — the same alloy a piercer uses to start a new piercing. Threaded post, hand-polished bezel, comes in three gauges to fit lobe, helix or tragus placement.",
+    descriptionKa:
+      "ერთჯერი იმპლანტ-კლასის ტიტანის ბრტყელზურგიანი საყურე — იგივე შენადნობი, რომელსაც პროფესიონალი იყენებს ახალი პირსინგისთვის. ჭანჭკით ჩასახრახნი, ხელით გაპრიალებული ბეზელით, სამი გეიჯით — ფურცლის, ჰელიქსისა და ტრაგუსისთვის.",
+    howToUseEn:
+      "Sterilise hands and the piercing site with saline before each rotation. Insert the threaded post gently — never force. New piercings: leave in place for the full healing window (6–12 months for cartilage) and clean with saline twice daily.",
+    howToUseKa:
+      "ხელები და ჩასვმის ადგილი დაასუფთავე ფიზიოლოგიური ხსნარით ყოველი მოძრაობის წინ. ჭანჭიკიანი ღერო ფრთხილად ჩასვი — ძალით არ აიძულო. ახალი პირსინგი: დატოვე სრული შემხორცების პერიოდის განმავლობაში (6-12 თვე ხრტილისთვის) და დაასუფთავე ფიზიოლოგიური ხსნარით დღეში ორჯერ.",
+    whatsInsideEn:
+      "Implant-grade titanium (ASTM F-136, ISO 5832-3) · threaded post + flat back · 3mm round bezel. Ships in a recyclable card. Lifetime polish service in our Tbilisi studio.",
+    whatsInsideKa:
+      "იმპლანტ-კლასის ტიტანი (ASTM F-136, ISO 5832-3) · ჭანჭიკიანი ღერო + ბრტყელი ზურგი · 3მმ მრგვალი ბეზელი. იგზავნება გადამუშავებად ბარათში. სამუდამო გაპრიალების სერვისი ჩვენს თბილისის სტუდიოში.",
+    aftercareEn:
+      "Clean twice a day with sterile saline — morning and evening. Soak a cotton round, hold against the front and back of the piercing for 30 seconds each, then air-dry. Do not rotate the jewelry, do not use alcohol or hydrogen peroxide, do not apply creams, makeup or hair products around the piercing during healing. Sleep on a clean satin pillowcase to reduce friction. Approximate healing windows — lobe: 6–8 weeks · helix / tragus: 6–12 months · nostril: 4–6 months · septum: 6–8 weeks. Contact a professional piercer if you see green or yellow discharge, persistent swelling beyond two weeks, or develop a fever.",
+    aftercareKa:
+      "გაასუფთავე დღეში ორჯერ სტერილური ფიზიოლოგიური ხსნარით — დილით და საღამოს. ჩაასველე ბამბის დისკი, დაიჭირე პირსინგზე წინა და უკანა მხრიდან თითო 30 წამი, შემდეგ გააშრე ჰაერზე. არ ატრიალო საყურე, არ გამოიყენო სპირტი ან წყალბადის ზეჟანგი, არ წაიცხო კრემი, კოსმეტიკა ან თმის პროდუქტი პირსინგის ირგვლივ შემხორცების პერიოდში. იძინე სუფთა სატენის ბალიშზე ხახუნის შესამცირებლად. შემხორცების სავარაუდო პერიოდი — ფურცელი: 6-8 კვირა · ჰელიქსი / ტრაგუსი: 6-12 თვე · ნესტო: 4-6 თვე · სეპტუმი: 6-8 კვირა. დაუკავშირდი პროფესიონალ პირსერს, თუ შენიშნე მწვანე ან ყვითელი გამონადენი, ხანგრძლივი შეშუპება ორ კვირაზე მეტი ხნის განმავლობაში ან გაგიჩნდა ცხელება.",
+    productTypeEn: "Piercings",
+    productTypeKa: "პირსინგი",
+    price: 145,
+    image: "/products/titanium-helix-stud.png",
+    isNew: true,
+    tags: ["piercings", "titanium", "new"],
+    material: "implant-titanium",
+    options: [
+      {
+        nameEn: "Gauge",
+        nameKa: "გეიჯი",
+        values: [
+          { en: "16G", ka: "16G" },
+          { en: "18G", ka: "18G" },
+          { en: "20G", ka: "20G" },
+        ],
+      },
+    ],
+    variants: [
+      { optionValues: ["16G"] },
+      { optionValues: ["18G"] },
+      { optionValues: ["20G"] },
+    ],
+  }),
+  // Second piercing — a 14k gold huggie hoop. Uses the `Diameter` option (instead of `Gauge`)
+  // so the PiercingSizeGuide trigger gets exercised on both label paths. The 14k-gold material
+  // also flips on the "healed piercings only" warning in MaterialTrust since gold isn't
+  // recommended for actively healing tissue.
+  makeProduct({
+    handle: "gold-huggie-hoop",
+    titleEn: "14k Gold Huggie Hoop",
+    titleKa: "14 კარატის ოქროს Huggie რგოლი",
+    descriptionEn:
+      "A close-fitting hoop in solid 14k gold — the everyday hoop you stop noticing because it never catches on a sweater. Snap-clasp closure, hand-finished bezel, three diameters to fit lobe through helix.",
+    descriptionKa:
+      "მჭიდრო რგოლი მთლიანი 14 კარატის ოქროდან — ყოველდღიური რგოლი, რომელიც ისე იცვამ, რომ ვერ ამჩნევ — სვიტერზე არ ეჭიდება. სამაგრის სისტემით, ხელით გაპრიალებული ბეზელით, სამი დიამეტრით — ფურცლიდან ჰელიქსამდე.",
+    howToUseEn:
+      "Open the snap clasp gently from the hinge. Slide into the piercing, then click closed — you should hear a soft snap. For new piercings, wait until fully healed before switching to gold.",
+    howToUseKa:
+      "სამაგრი ფრთხილად გახსენი ჩიხის მხრიდან. გაატარე პირსინგში და დააწკაპუნე — გაიგონებ მსუბუქ ბგერას. ახალი პირსინგების შემთხვევაში დაელოდე სრულ შემხორცებას ოქროზე გადასვლამდე.",
+    whatsInsideEn:
+      "Solid 14k yellow gold (not plated) · snap-clasp closure · 1mm wire (18G) · 6 / 8 / 10mm inner diameters. Gift-wrapped in our Tbilisi studio.",
+    whatsInsideKa:
+      "მთლიანი 14 კარატის ყვითელი ოქრო (არა საფარი) · სამაგრის სისტემა · 1მმ მავთული (18G) · 6 / 8 / 10მმ შიდა დიამეტრები. შეფუთული ჩვენს თბილისის სტუდიოში.",
+    aftercareEn:
+      "Wear in fully healed piercings only — gold isn't recommended during active healing. To clean: wipe with a soft microfiber cloth (no chemicals, no harsh polishing). For deeper care, soak briefly in warm soapy water, rinse, pat dry. Avoid contact with perfume, hairspray and chlorine — they dull the polish over time. Store separately in a dry pouch so it doesn't scratch other pieces. Lifetime polish service available in our Tbilisi studio whenever the shine fades.",
+    aftercareKa:
+      "ატარე მხოლოდ სრულად შემხორცებად პირსინგებში — ოქრო არ ვარგა აქტიური შემხორცების პერიოდში. გასუფთავება: გაატარე რბილი მიკროფიბრის ნაჭრით (ქიმიური საშუალებების და მკაცრი გაპრიალების გარეშე). უფრო ღრმა მოვლისთვის ჩაუშვი თბილ საპონ წყალში, ჩამოიბანე, შრე გააშრე. მოარიდე საყურეს სუნამოს, თმის ლაქის და ქლორის შეხებას — ეს დროთა განმავლობაში აყუჩებს ბზინვარებას. შეინახე ცალკე მშრალ ჩანთაში, რომ სხვა ნივთებთან არ გაიკვრას. სამუდამო გაპრიალების სერვისი ხელმისაწვდომია ჩვენს თბილისის სტუდიოში, როდესაც ბზინვა შემცირდება.",
+    productTypeEn: "Piercings",
+    productTypeKa: "პირსინგი",
+    price: 320,
+    image: "/products/gold-huggie-hoop.png",
+    isBestSeller: true,
+    tags: ["piercings", "gold", "best-seller"],
+    material: "14k-gold",
+    options: [
+      {
+        nameEn: "Diameter",
+        nameKa: "დიამეტრი",
+        values: [
+          { en: "6mm", ka: "6მმ" },
+          { en: "8mm", ka: "8მმ" },
+          { en: "10mm", ka: "10მმ" },
+        ],
+      },
+    ],
+    variants: [
+      { optionValues: ["6mm"] },
+      { optionValues: ["8mm"] },
+      { optionValues: ["10mm"], available: false },
+    ],
+  }),
 ];
 
 const productsByEnglishType = (englishType: string) =>
@@ -707,5 +817,17 @@ export const DUMMY_RAW_COLLECTIONS: RawCollection[] = [
     descriptionKa: "პიკები, სავარცხლები და სტილისტური ხელსაწყოები.",
     image: { url: "https://picsum.photos/seed/nitchiani-tools/1200/900", altText: "Tools" },
     products: productsByEnglishType("Tools"),
+  },
+  {
+    // Piercing accessories — scaffolded empty for now. Add products with `productType: "Piercings"`
+    // (and the matching localised type via `productTypeHandle: "piercings"`) when the line launches.
+    id: "gid://nitchiani/Collection/piercings",
+    handle: "piercings",
+    titleEn: "Piercings",
+    titleKa: "პირსინგი",
+    descriptionEn: "Hand-finished studs, hoops and cuffs — the same Tbilisi-studio craft as our hair pieces.",
+    descriptionKa: "ხელით დამზადებული საყურეები, რგოლები და მანჟეტები — იგივე თბილისური სტუდიური ხელობა, რაც ჩვენი თმის ნივთები.",
+    image: { url: "/categories/piercings.png", altText: "Piercings" },
+    products: productsByEnglishType("Piercings"),
   },
 ];

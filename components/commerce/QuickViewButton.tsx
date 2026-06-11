@@ -7,9 +7,9 @@ import type { Product } from "@/lib/shopify/types";
 import { cn } from "@/lib/utils";
 
 /**
- * Plus-icon button that pops the quick-view sheet for a product. Sits in the bottom-right of
- * the product image, intentionally subtle so it doesn't fight the wishlist heart (top-right) or
- * the badges (top-left).
+ * Plus-icon button on product cards. Opens the quick-view sheet for the product — applies to
+ * every product card regardless of variant count so the funnel is uniform: card click → quick
+ * view → user decides between "Add to bag" and "View full details".
  *
  * stopPropagation + preventDefault so tapping doesn't navigate to the PDP that the parent Link
  * would otherwise trigger.
@@ -34,8 +34,8 @@ export function QuickViewButton({
       }}
       aria-label={t("quickView")}
       className={cn(
-        "flex h-9 w-9 cursor-pointer items-center justify-center rounded-full backdrop-blur-sm transition-colors",
-        "bg-[var(--color-brand-cream)]/80 hover:bg-[var(--color-brand-cream)] text-[var(--color-brand-ink)]",
+        "flex h-9 w-9 cursor-pointer items-center justify-center rounded-full transition-transform",
+        "bg-[var(--color-brand-ink)] text-[var(--color-brand-cream)] hover:scale-105",
         className,
       )}
     >

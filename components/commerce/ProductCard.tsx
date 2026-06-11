@@ -1,3 +1,5 @@
+"use client";
+
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { Link } from "@/lib/i18n/routing";
@@ -5,6 +7,7 @@ import type { Product } from "@/lib/shopify/types";
 import { BLUR_DATA_URL } from "@/lib/images";
 import { discountPercent } from "@/lib/money";
 import { getReviewSummary } from "@/lib/reviews";
+import { useQuickView } from "@/lib/ui/quick-view";
 import { PriceDisplay } from "./PriceDisplay";
 import { QuickViewButton } from "./QuickViewButton";
 import { StarRating } from "./StarRating";
@@ -12,14 +15,26 @@ import { WishlistButton } from "./WishlistButton";
 
 export function ProductCard({ product, priority = false }: { product: Product; priority?: boolean }) {
   const t = useTranslations("product");
+  const quickView = useQuickView();
   const variant = product.variants[0];
   const compareAt = variant?.compareAtPrice;
   const offPercent = discountPercent(variant?.price ?? product.priceRange.min, compareAt);
   const summary = getReviewSummary(product.handle);
 
+  // Funnel rule: clicking the card (image, title, price) opens the quick view first; the
+  // PDP is reached from inside the modal. We keep the `<Link>` so cmd-/middle-click still
+  // opens the PDP in a new tab, and crawlers continue to follow the href for SEO.
+  const onCardClick = (e: React.MouseEvent) => {
+    // Honour modifier-/middle-clicks → let the browser take the link.
+    if (e.defaultPrevented || e.metaKey || e.ctrlKey || e.shiftKey || e.button === 1) return;
+    e.preventDefault();
+    quickView.open(product);
+  };
+
   return (
     <Link
       href={`/products/${product.handle}`}
+      onClick={onCardClick}
       className="group block"
       aria-label={product.title}
     >
@@ -85,9 +100,17 @@ function Badge({
         ? { background: "var(--color-brand-cream)", color: "var(--color-brand-ink)" }
         : { background: "var(--color-brand-ink)", color: "var(--color-brand-cream)" };
 
+  // Maroon = `-15%` style pill: tighter horizontal padding + no letter-tracking so the
+  // background hugs the digits instead of looking like a wide promo bar.
+  const isPercent = tone === "maroon";
+
   return (
     <span
-      className="px-2 py-0.5 text-[10px] font-medium uppercase tracking-[0.14em]"
+      className={
+        isPercent
+          ? "px-1 py-0.5 text-[10px] font-medium"
+          : "px-2 py-0.5 text-[10px] font-medium uppercase tracking-[0.14em]"
+      }
       style={styles}
     >
       {children}

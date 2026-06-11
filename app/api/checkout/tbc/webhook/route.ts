@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
+import { sendOrderConfirmation } from "@/lib/email/order-confirmation";
 import { getTbcPayment } from "@/lib/payments/tbc";
-import { markOrderPaid } from "@/lib/shopify/orders";
+import { getOrderForConfirmation, markOrderPaid } from "@/lib/shopify/orders";
 
 /**
  * TBC server-to-server callback. Body is NOT cryptographically signed by TBC, so we never trust the
@@ -55,6 +56,21 @@ export async function POST(req: Request) {
     console.error("[tbc/webhook] markOrderPaid threw:", err);
     return false;
   });
+
+  // Fire the confirmation email once TBC has confirmed payment. Same pattern as the BOG
+  // webhook — fire-and-forget so a slow Shopify-Admin fetch or email-provider hiccup
+  // doesn't cause TBC to retry the webhook.
+  if (ok) {
+    void getOrderForConfirmation(numericId)
+      .then((order) => {
+        if (order) return sendOrderConfirmation(order);
+        console.warn("[tbc/webhook] order not retrievable for confirmation email:", numericId);
+        return false;
+      })
+      .catch((err) => {
+        console.error("[tbc/webhook] confirmation email threw:", err);
+      });
+  }
 
   return NextResponse.json({ ok });
 }

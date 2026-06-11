@@ -6,6 +6,8 @@
   "nav": {
     "shop": "Shop",
     "home": "Home",
+    "allProducts": "All Products",
+    "allProductsDesc": "Every Nitchiani piece — bonnets, loc care, tools and extensions — in one place.",
     "bestSellers": "Best Sellers",
     "newArrivals": "New Arrivals",
     "bonnets": "Bonnets",
@@ -13,9 +15,15 @@
     "accessories": "Accessories",
     "extensions": "Extensions",
     "tools": "Tools",
+    "piercings": "Piercings",
     "services": "Services",
+    "journal": "Journal",
     "about": "About",
     "contact": "Contact",
+    "terms": "Terms & Conditions",
+    "privacy": "Privacy Policy",
+    "refund": "Refund & Returns",
+    "cookiePreferences": "Cookie preferences",
     "search": "Search",
     "menu": "Menu",
     "cart": "Cart",
@@ -23,15 +31,28 @@
     "language": "Language",
     "currency": "Currency",
     "needHelp": "Need help?",
-    "chatWhatsApp": "Chat on WhatsApp"
+    "chatWhatsApp": "Chat on WhatsApp",
+    "orderStatus": "Order status",
+    "skipToContent": "Skip to content",
+    "back": "Back",
+    "close": "Close",
+    "previous": "Previous",
+    "next": "Next",
+    "browseCategories": "Browse categories",
+    "decreaseQuantity": "Decrease quantity",
+    "increaseQuantity": "Increase quantity",
+    "breadcrumb": "Breadcrumb",
+    "showImage": "Show image {n}"
   },
   "promo": {
     "shipping": "Free shipping in Tbilisi over ₾150",
     "newDrop": "New drop every Friday"
   },
   "home": {
+    "uvp": "Shop for Braiders and Piercers",
     "shopByCategory": "Shop by category",
     "bestSellers": "Best Sellers",
+    "allProducts": "All Products",
     "newArrivals": "New Arrivals",
     "viewAll": "View all",
     "newDrop": "The New Drop",
@@ -41,6 +62,7 @@
     "bookSessionDesc": "Braids, locs and consultations at our Tbilisi studio",
     "instagram": "@nitchiani on Instagram",
     "instagramDesc": "Our latest moments",
+    "instagramTag": "Tag {handle} in your photo and we'll feature you here.",
     "reviewsEyebrow": "Loved in Tbilisi",
     "reviewsTitle": "What customers are saying",
     "recentlyViewed": "Recently viewed",
@@ -65,7 +87,8 @@
     "locCare": "Loc Care",
     "accessories": "Accessories",
     "extensions": "Extensions",
-    "tools": "Tools"
+    "tools": "Tools",
+    "piercings": "Piercings"
   },
   "product": {
     "addToBag": "Add to bag",
@@ -75,6 +98,7 @@
     "description": "Description",
     "howToUse": "How to use",
     "whatsInside": "What's inside",
+    "aftercare": "Aftercare",
     "details": "Details",
     "shipping": "Shipping",
     "related": "You may also like",
@@ -85,6 +109,8 @@
     "badgeSale": "Sale",
     "quickView": "Quick view",
     "viewFullDetails": "View full details",
+    "share": "Share",
+    "shareCopied": "Link copied",
     "shipsIn": "Ships from Tbilisi · 1–3 business days",
     "askQuestion": "Questions about this?",
     "askQuestionDesc": "Message us on WhatsApp — we usually reply in minutes.",
@@ -114,6 +140,10 @@
     "empty": "Your bag is empty",
     "emptyDesc": "Start adding pieces you love",
     "continueShopping": "Continue shopping",
+    "clearCart": "Clear cart",
+    "clearCartConfirm": "Remove everything?",
+    "clearCartYes": "Yes",
+    "clearCartCancel": "No",
     "recommendationsHeader": "Best sellers — what others are loving",
     "subtotal": "Subtotal",
     "shipping": "Shipping",
@@ -123,6 +153,7 @@
     "upsellHeader": "You might also like",
     "havePromoCode": "Have a promo code?",
     "promoCode": "Promo code",
+    "close": "Close",
     "promoCodePlaceholder": "Enter code",
     "applyCode": "Apply",
     "removeCode": "Remove promo code",
@@ -174,7 +205,9 @@
     "stepPayment": "Payment",
     "expressCheckout": "Express checkout",
     "successTitle": "Order received",
-    "successDesc": "We'll reach out by WhatsApp or email shortly"
+    "successDesc": "We'll reach out by WhatsApp or email shortly",
+    "orderNumber": "Order #{id}",
+    "trackOrder": "Track your order"
   },
   "services": {
     "title": "Our Services",
@@ -183,6 +216,79 @@
     "duration": "Duration",
     "price": "Price",
     "from": "from"
+  },
+  "journal": {
+    "eyebrow": "From the studio",
+    "title": "Journal",
+    "subtitle": "Field notes on routines, materials and the things we make. Long enough to be useful, short enough to read with a coffee.",
+    "readPost": "Read",
+    "readingMinutes": "{n} min read",
+    "byline": "By {author}",
+    "more": "More from the journal",
+    "metaTitle": "Journal — Nitchiani",
+    "metaDescription": "Routines, materials and notes from the Nitchiani studio in Tbilisi."
+  },
+  "piercings": {
+    "materialEyebrow": "Material",
+    "materialPanelAria": "Material and safety information",
+    "healedOnly": "Recommended for fully healed piercings only.",
+    "gaugeGuide": "Gauge guide",
+    "close": "Close",
+    "gaugeTableLabel": "Gauge ↔ millimetres",
+    "gaugeTableDesc": "Gauge describes the wire thickness. The smaller the number, the thicker the post.",
+    "gaugeCol": "Gauge",
+    "mmCol": "Diameter",
+    "placementCol": "Typical placement",
+    "hoopTableLabel": "Hoop inner diameter",
+    "hoopTableDesc": "Diameter measured edge-to-edge across the inner opening. Starting points — fit depends on your anatomy.",
+    "diameterCol": "Diameter",
+    "fitCol": "Best for",
+    "notSureLabel": "Not sure?",
+    "notSureBody": "Message us with a photo on WhatsApp and we'll help you pick the right gauge and diameter — most fittings take under a minute."
+  },
+  "terms": {
+    "eyebrow": "Legal",
+    "title": "Terms & Conditions",
+    "lastUpdated": "Last updated {date}",
+    "intro": "These terms govern your use of nitchiani.com and any order you place with us. Please read them carefully before purchasing — placing an order means you accept them.",
+    "metaTitle": "Terms & Conditions",
+    "metaDescription": "The terms that govern orders placed on nitchiani.com, including delivery, returns and the 14-day right of withdrawal."
+  },
+  "whatsapp": {
+    "productMessage": "Hi — I have a question about: {title}",
+    "orderMessage": "Hi — checking on order {id}",
+    "orderMessageGeneric": "Hi — checking on my order"
+  },
+  "contact": {
+    "title": "Get in touch",
+    "open": "Open contact options",
+    "close": "Close contact options",
+    "whatsappLabel": "WhatsApp",
+    "whatsappDesc": "Replies within the hour",
+    "instagramLabel": "Instagram",
+    "emailLabel": "Email"
+  },
+  "cookies": {
+    "title": "Cookies",
+    "body": "We use a few essential cookies to make the site work — cart, language, currency. Anything optional (analytics, marketing) only runs if you accept. <link>Read our Privacy Policy</link>.",
+    "acceptAll": "Accept all",
+    "rejectAll": "Essential only"
+  },
+  "privacy": {
+    "eyebrow": "Legal",
+    "title": "Privacy Policy",
+    "lastUpdated": "Last updated {date}",
+    "intro": "How we collect, use and protect your personal data when you use nitchiani.com. Written so a reasonable person can actually read it.",
+    "metaTitle": "Privacy Policy",
+    "metaDescription": "How Nitchiani collects, uses and protects personal data — under the Georgian Personal Data Protection Act."
+  },
+  "refund": {
+    "eyebrow": "Legal",
+    "title": "Refund & Returns Policy",
+    "lastUpdated": "Last updated {date}",
+    "intro": "How returns and refunds work — your 14-day right of withdrawal, what's excluded for hygiene reasons, and how to get money back into your account.",
+    "metaTitle": "Refund & Returns Policy",
+    "metaDescription": "Return and refund terms for orders placed on nitchiani.com, including the 14-day right of withdrawal and hygiene exceptions."
   },
   "footer": {
     "shop": "Shop",
@@ -193,7 +299,11 @@
     "emailPlaceholder": "Your email",
     "subscribe": "Subscribe",
     "newsletterSuccess": "Thanks — you're on the list.",
+    "newsletterConsent": "By subscribing you agree to receive emails from Nitchiani. Unsubscribe at any time. See our <link>Privacy Policy</link>.",
+    "newsletterError": "Couldn't subscribe — please try again or message us.",
     "rights": "All rights reserved",
+    "regId": "Reg. ID",
+    "vatId": "VAT ID",
     "tbilisi": "Tbilisi, Georgia",
     "contact": "Contact",
     "address": "Marjanishvili St 5, Tbilisi",
@@ -204,6 +314,14 @@
     "loading": "Loading...",
     "error": "Error",
     "tryAgain": "Try again"
+  },
+  "notFound": {
+    "title": "Page not found",
+    "desc": "The page you're looking for doesn't exist, or it's been moved. Try the shop or head home."
+  },
+  "errorPage": {
+    "title": "Something went wrong",
+    "desc": "We've logged it. Try reloading, or head back home and pick up where you left off."
   },
   "shop": {
     "sortLabel": "Sort",
@@ -240,6 +358,24 @@
     "popularEyebrow": "Popular",
     "closeAria": "Close search",
     "clearAria": "Clear search"
+  },
+  "orderStatus": {
+    "eyebrow": "Order status",
+    "title": "Track your order",
+    "liveTitle": "Your order",
+    "intro": "Tracking goes out via WhatsApp or email within a few hours of your order. If you can't find it, message us and we'll resend.",
+    "liveIntro": "Live status pulled from our studio system. The highlighted step is where your order is right now.",
+    "step1": "Order placed",
+    "step2": "Payment confirmed",
+    "step3": "Hand-prepared in Tbilisi",
+    "step4": "On its way",
+    "trackingLabel": "Tracking",
+    "trackingCta": "Open in carrier",
+    "orderItems": "Items",
+    "contactEyebrow": "Get help",
+    "contactTitle": "Message us about your order",
+    "contactDesc": "We reply within working hours — usually in minutes. Mention your order number if you have it.",
+    "openWhatsApp": "Open WhatsApp"
   },
   "welcome": {
     "eyebrow": "Welcome offer",

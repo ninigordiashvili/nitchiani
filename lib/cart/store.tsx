@@ -44,6 +44,7 @@ type CartActions = {
   clear: () => void;
   applyCoupon: (code: string) => boolean;
   removeCoupon: () => void;
+  clearCouponError: () => void;
   open: boolean;
   setOpen: (open: boolean) => void;
 };
@@ -100,6 +101,30 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     if (couponCode) localStorage.setItem(COUPON_STORAGE_KEY, couponCode);
     else localStorage.removeItem(COUPON_STORAGE_KEY);
   }, [couponCode, hydrated]);
+
+  // Cross-tab sync. `storage` events fire on every tab EXCEPT the one that triggered the
+  // change — so when a user adds an item in Tab A, this listener picks it up in Tab B and
+  // updates state without a refresh. Same for the coupon code.
+  useEffect(() => {
+    const onStorage = (e: StorageEvent) => {
+      if (e.storageArea !== localStorage) return;
+      if (e.key === STORAGE_KEY) {
+        try {
+          const next = e.newValue ? (JSON.parse(e.newValue) as LocalCartLine[]) : [];
+          setLines(next);
+        } catch {
+          // ignore corrupted/foreign payloads
+        }
+      } else if (e.key === COUPON_STORAGE_KEY) {
+        setCouponCode(e.newValue);
+        // Clear any stale validation error inherited from this tab; the other tab is now
+        // the source of truth on whether a coupon is applied.
+        setCouponError(null);
+      }
+    };
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, []);
 
   const addLine = useCallback(
     (line: Omit<LocalCartLine, "quantity"> & { quantity?: number }) => {
@@ -175,6 +200,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     setCouponError(null);
   }, []);
 
+  const clearCouponError = useCallback(() => setCouponError(null), []);
+
   const value = useMemo(
     () => ({
       lines,
@@ -189,6 +216,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       clear,
       applyCoupon,
       removeCoupon,
+      clearCouponError,
       open,
       setOpen,
     }),
@@ -205,6 +233,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       clear,
       applyCoupon,
       removeCoupon,
+      clearCouponError,
       open,
     ],
   );

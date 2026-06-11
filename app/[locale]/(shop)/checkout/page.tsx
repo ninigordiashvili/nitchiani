@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { loadSavedContact, saveContact } from "@/lib/checkout/saved-contact";
 import {
   AlertCircle,
   ArrowLeft,
@@ -30,13 +31,22 @@ import { PhoneInput } from "@/components/commerce/PhoneInput";
 const checkoutSchema = z.object({
   firstName: z.string().min(1),
   lastName: z.string().min(1),
-  // Canonical E.164-shaped GE mobile: +995 followed by 9 digits. The PhoneInput component
-  // only emits values in this shape (or empty), so a regex is enough.
-  phone: z.string().regex(/^\+995\d{9}$/, "Enter a valid Georgian mobile number"),
+  // Canonical E.164 phone. `+` followed by 7–15 digits, leading digit 1–9. The PhoneInput
+  // component now accepts diaspora numbers (US/UK/DE/IL/TR/FR/IT/ES/RU) in addition to
+  // Georgia (+995), so the schema is loosened to the generic E.164 shape. The PhoneInput
+  // itself clamps each country's local digits length, so an obviously-broken value can't
+  // get this far.
+  phone: z.string().regex(/^\+[1-9]\d{6,14}$/, "Enter a valid phone number"),
   email: z.string().email(),
   address: z.string().min(3),
   city: z.string().min(1),
-  postalCode: z.string().optional(),
+  // Georgian post codes are 4 digits; the input strips non-digits so we only need to allow
+  // an empty string (optional) or the 4-digit canonical form.
+  postalCode: z
+    .string()
+    .regex(/^\d{4}$/, "Enter a 4-digit postal code")
+    .optional()
+    .or(z.literal("")),
   notes: z.string().optional(),
   paymentMethod: z.enum(["bank_transfer", "cod", "bog_card", "tbc_card"]),
 });
@@ -64,13 +74,27 @@ export default function CheckoutPage() {
     trigger,
     watch,
     setValue,
+    reset,
     formState: { errors },
   } = useForm<CheckoutInput>({
     resolver: zodResolver(checkoutSchema),
     defaultValues: {
+      city: "Tbilisi",
       paymentMethod: BOG_ENABLED ? "bog_card" : TBC_ENABLED ? "tbc_card" : "bank_transfer",
     },
   });
+
+  // Pre-fill the form from saved contact (set by a previous successful checkout). Runs on
+  // mount so we don't mismatch SSR; `reset` is RHF's way to swap defaults without losing
+  // the form's other state (errors, dirty flags reset cleanly).
+  useEffect(() => {
+    const saved = loadSavedContact();
+    if (!saved) return;
+    reset({
+      ...saved,
+      paymentMethod: BOG_ENABLED ? "bog_card" : TBC_ENABLED ? "tbc_card" : "bank_transfer",
+    });
+  }, [reset]);
 
   const paymentMethod = watch("paymentMethod");
 
@@ -134,6 +158,19 @@ export default function CheckoutPage() {
       };
       if (!res.ok) throw new Error(data.error ?? t("checkout.orderFailed"));
 
+      // Persist the contact + shipping fields for the next checkout. We save BEFORE the
+      // redirect so card-payment users (who leave the site to BOG/TBC) still benefit on
+      // their next visit even though we never reach the success page handler here.
+      saveContact({
+        firstName: values.firstName,
+        lastName: values.lastName,
+        email: values.email,
+        phone: values.phone,
+        address: values.address,
+        city: values.city,
+        postalCode: values.postalCode,
+      });
+
       if (data.redirectUrl) {
         // BOG hosted payment page — clear cart only after payment confirms via webhook,
         // but redirect now so the customer can complete payment.
@@ -152,7 +189,7 @@ export default function CheckoutPage() {
   };
 
   return (
-    <div className="container-shop py-8 sm:py-12">
+    <div className="container-shop pb-8 sm:pb-12">
       <h1 className="font-display mb-6 text-3xl tracking-tight sm:mb-8 sm:text-4xl">
         {t("checkout.title")}
       </h1>
@@ -266,16 +303,46 @@ export default function CheckoutPage() {
                 <input className={inputCls} {...register("address")} />
               </Field>
               <Field label={t("checkout.city")} error={errors.city?.message}>
-                <input className={inputCls} {...register("city")} defaultValue="Tbilisi" />
+                <input className={inputCls} {...register("city")} />
               </Field>
               <Field label={t("checkout.postalCode")} error={errors.postalCode?.message}>
-                <input className={inputCls} {...register("postalCode")} />
+                {(() => {
+                  const field = register("postalCode");
+                  return (
+                    <input
+                      className={inputCls}
+                      inputMode="numeric"
+                      pattern="\d*"
+                      maxLength={4}
+                      autoComplete="postal-code"
+                      {...field}
+                      onChange={(e) => {
+                        e.target.value = e.target.value.replace(/\D/g, "").slice(0, 4);
+                        field.onChange(e);
+                      }}
+                    />
+                  );
+                })()}
               </Field>
               <Field label={t("checkout.notes")} error={errors.notes?.message} className="sm:col-span-2">
                 <textarea className={cn(inputCls, "min-h-20 resize-y")} {...register("notes")} />
               </Field>
             </div>
           </fieldset>
+
+          {/* Inline "Continue to payment" on mobile step 1. The aside (which holds the
+              other copy of this CTA) stacks below the form on mobile — surfacing a
+              button right under the shipping fields saves the user a long scroll. */}
+          {step === 1 ? (
+            <button
+              type="button"
+              onClick={advanceToPayment}
+              className="btn-primary mb-8 w-full sm:hidden"
+            >
+              {t("checkout.continueToPayment")}
+              <ArrowRight size={16} />
+            </button>
+          ) : null}
 
           <fieldset className={cn(step === 1 && "hidden sm:block")}>
             <legend className="font-display mb-4 text-xl">{t("checkout.paymentMethod")}</legend>
@@ -321,7 +388,7 @@ export default function CheckoutPage() {
           <ul className="space-y-3 border-b border-black/10 pb-4">
             {cart.lines.map((l) => (
               <li key={l.variantId} className="flex gap-3">
-                <div className="relative h-14 w-12 flex-shrink-0 overflow-hidden bg-black/5">
+                <div className="relative aspect-[4/5] w-12 flex-shrink-0 overflow-hidden bg-black/5">
                   <Image
                     src={safeImageSrc(l.image.url)}
                     alt={l.image.altText}
@@ -512,7 +579,7 @@ function ExpressPill({
       className={cn(
         "inline-flex cursor-pointer items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs transition-colors",
         active
-          ? "border-[var(--color-brand-ink)] bg-[var(--color-brand-ink)] text-[var(--color-brand-cream)]"
+          ? "border-[var(--text-primary)] bg-[var(--text-primary)] text-[var(--surface)]"
           : "border-black/15 hover:border-black/40",
       )}
     >

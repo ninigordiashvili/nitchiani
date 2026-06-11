@@ -24,13 +24,18 @@ const CARDS = [
     labelKey: "accessories" as const,
     image: "/categories/accessories.png",
   },
+  {
+    handle: "piercings",
+    labelKey: "piercings" as const,
+    image: "/categories/piercings.png",
+  },
 ];
 
 export function CategoryCardGrid() {
   const t = useTranslations("categories");
 
   return (
-    <div className="grid grid-cols-2 gap-2 sm:gap-4 lg:grid-cols-4">
+    <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-4 lg:grid-cols-5">
       {CARDS.map((c) => (
         <Link
           key={c.handle}

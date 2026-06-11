@@ -22,9 +22,14 @@ export default async function ShopPage({
     <div className="pb-12">
       <CategoryChips />
       <section className="container-shop mt-4">
-        <h1 className="font-display mb-6 text-3xl tracking-tight sm:text-4xl">
-          {t("shop")}
-        </h1>
+        <header className="mb-6">
+          <h1 className="font-display text-3xl tracking-tight sm:text-4xl">
+            {t("allProducts")}
+          </h1>
+          <p className="mt-2 max-w-prose text-sm opacity-70">
+            {t("allProductsDesc")}
+          </p>
+        </header>
         <Suspense>
           <FilteredCollection products={products} />
         </Suspense>
