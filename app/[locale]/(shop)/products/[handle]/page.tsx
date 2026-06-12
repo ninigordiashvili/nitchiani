@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { setRequestLocale, getTranslations } from "next-intl/server";
 import { FrequentlyBoughtTogether } from "@/components/commerce/FrequentlyBoughtTogether";
@@ -16,7 +17,38 @@ import { StarRating } from "@/components/commerce/StarRating";
 import { TrackRecentlyViewed } from "@/components/commerce/TrackRecentlyViewed";
 import { getProductByHandle, getRelatedProducts } from "@/lib/shopify/client";
 import { getReviewSummary } from "@/lib/reviews";
+import { localeAlternates, ogLocale } from "@/lib/seo";
 import type { Locale } from "@/lib/i18n/config";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: Locale; handle: string }>;
+}): Promise<Metadata> {
+  const { locale, handle } = await params;
+  const product = await getProductByHandle(handle, locale);
+  if (!product) return {};
+
+  // Trim the description to a SERP-friendly length; fall back to a branded line so a
+  // product with an empty description still ships a unique, non-template meta description.
+  const description = product.description
+    ? product.description.replace(/\s+/g, " ").trim().slice(0, 160)
+    : `${product.title} — premium braids, locs & haircare from the Nitchiani studio in Tbilisi.`;
+  const image = product.featuredImage?.url ?? product.images[0]?.url;
+
+  return {
+    title: product.title,
+    description,
+    alternates: localeAlternates(locale, `/products/${handle}`),
+    openGraph: {
+      ...ogLocale(locale),
+      type: "website",
+      title: product.title,
+      description,
+      ...(image ? { images: [{ url: image, alt: product.title }] } : {}),
+    },
+  };
+}
 
 export default async function ProductPage({
   params,

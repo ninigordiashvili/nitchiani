@@ -1,10 +1,26 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import { setRequestLocale, getTranslations } from "next-intl/server";
 import { ArrowRight } from "lucide-react";
 import { Link } from "@/lib/i18n/routing";
 import { BLUR_DATA_URL } from "@/lib/images";
 import { SERVICES } from "@/lib/services";
+import { localeAlternates } from "@/lib/seo";
 import type { Locale } from "@/lib/i18n/config";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: Locale }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "services" });
+  return {
+    title: t("title"),
+    description: t("subtitle"),
+    alternates: localeAlternates(locale, "/services"),
+  };
+}
 
 export default async function ServicesPage({
   params,

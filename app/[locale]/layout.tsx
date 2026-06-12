@@ -1,6 +1,10 @@
+import type { Metadata } from "next";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
+import { manrope, notoSansGeorgian, notoSerifGeorgian, tenorSans } from "@/lib/fonts";
+import { SiteJsonLd } from "@/components/seo/SiteJsonLd";
+import { ogLocale } from "@/lib/seo";
 import { BackButton } from "@/components/layout/BackButton";
 import { CookieConsentBanner } from "@/components/layout/CookieConsentBanner";
 import { Header } from "@/components/layout/Header";
@@ -27,6 +31,18 @@ export function generateStaticParams() {
   return locales.map((locale) => ({ locale }));
 }
 
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  if (!isLocale(locale)) return {};
+  // Default og:locale for every page. Pages that set their own `openGraph` re-spread
+  // `ogLocale(locale)` (Next picks the deepest openGraph, it does not deep-merge).
+  return { openGraph: ogLocale(locale) };
+}
+
 export default async function LocaleLayout({
   children,
   params,
@@ -40,15 +56,21 @@ export default async function LocaleLayout({
   const messages = await getMessages();
 
   return (
-    <NextIntlClientProvider locale={locale} messages={messages}>
-      <CookieConsentProvider>
+    <html
+      lang={locale}
+      className={`${manrope.variable} ${tenorSans.variable} ${notoSansGeorgian.variable} ${notoSerifGeorgian.variable}`}
+    >
+      <body>
+        <SiteJsonLd locale={locale as Locale} />
+        <NextIntlClientProvider locale={locale} messages={messages}>
+          <CookieConsentProvider>
       <CurrencyProvider>
         <WishlistProvider>
           <RecentlyViewedProvider>
             <CartProvider>
               <QuickViewProvider>
                 <OverlaysProvider>
-                <div lang={locale} className="flex min-h-dvh flex-col">
+                <div className="flex min-h-dvh flex-col">
                   <SkipToContent />
                   <PromoStrip />
                   <LocalePrompt />
@@ -79,7 +101,9 @@ export default async function LocaleLayout({
           </RecentlyViewedProvider>
         </WishlistProvider>
       </CurrencyProvider>
-      </CookieConsentProvider>
-    </NextIntlClientProvider>
+          </CookieConsentProvider>
+        </NextIntlClientProvider>
+      </body>
+    </html>
   );
 }
