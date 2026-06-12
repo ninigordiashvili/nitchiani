@@ -1,6 +1,13 @@
+import type { Metadata } from "next";
 import { setRequestLocale, getTranslations } from "next-intl/server";
 import { WishlistList } from "@/components/wishlist/WishlistList";
 import type { Locale } from "@/lib/i18n/config";
+
+// Personal, localStorage-backed surface with no search value — robots.txt disallows it and
+// this `noindex` is defense-in-depth.
+export const metadata: Metadata = {
+  robots: { index: false, follow: true },
+};
 
 export default async function WishlistPage({
   params,

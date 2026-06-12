@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import { setRequestLocale, getTranslations } from "next-intl/server";
 import { CategoryChips } from "@/components/homepage/CategoryChips";
@@ -14,6 +15,23 @@ import { BUNDLES, type Bundle } from "@/lib/bundles";
 import { getBestSellers, getProductByHandle, getProducts } from "@/lib/shopify/client";
 import type { Locale } from "@/lib/i18n/config";
 import type { Product } from "@/lib/shopify/types";
+import { localeAlternates } from "@/lib/seo";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: Locale }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  // `absolute` so the home page keeps the full brand title instead of the "%s · Nitchiani"
+  // template; only the canonical/hreflang differ from the site defaults.
+  return {
+    title: {
+      absolute: "Nitchiani — Premium braids, locs & haircare · Tbilisi",
+    },
+    alternates: localeAlternates(locale, ""),
+  };
+}
 
 export default async function HomePage({
   params,

@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import { setRequestLocale, getTranslations } from "next-intl/server";
@@ -5,10 +6,34 @@ import { Clock, Tag } from "lucide-react";
 import { CalEmbed } from "@/components/booking/CalEmbed";
 import { BLUR_DATA_URL } from "@/lib/images";
 import { getServiceBySlug, SERVICES } from "@/lib/services";
+import { localeAlternates, ogLocale, SITE_URL } from "@/lib/seo";
 import type { Locale } from "@/lib/i18n/config";
 
 export function generateStaticParams() {
   return SERVICES.map((s) => ({ slug: s.slug }));
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: Locale; slug: string }>;
+}): Promise<Metadata> {
+  const { locale, slug } = await params;
+  const service = getServiceBySlug(slug);
+  if (!service) return {};
+  const title = locale === "ka" ? service.titleKa : service.titleEn;
+  const description = locale === "ka" ? service.descKa : service.descEn;
+  return {
+    title,
+    description,
+    alternates: localeAlternates(locale, `/services/${slug}`),
+    openGraph: {
+      ...ogLocale(locale),
+      title,
+      description,
+      images: [{ url: service.image, alt: title }],
+    },
+  };
 }
 
 export default async function ServiceDetail({
@@ -26,8 +51,33 @@ export default async function ServiceDetail({
   const calUsername = process.env.NEXT_PUBLIC_CAL_USERNAME ?? "nitchiani";
   const calLink = `${calUsername}/${service.calEventType}`;
 
+  const url = `${SITE_URL}/${locale}/services/${slug}`;
+  // Service structured data — surfaces the offering (price, provider, area) and ties the
+  // service back to the studio's LocalBusiness node (`#business`) emitted in SiteJsonLd.
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Service",
+    name: locale === "ka" ? service.titleKa : service.titleEn,
+    serviceType: service.titleEn,
+    description: locale === "ka" ? service.descKa : service.descEn,
+    image: `${SITE_URL}${service.image}`,
+    url,
+    areaServed: "Tbilisi",
+    provider: { "@id": `${SITE_URL}/#business` },
+    offers: {
+      "@type": "Offer",
+      price: service.priceFrom,
+      priceCurrency: "GEL",
+      url,
+    },
+  };
+
   return (
     <article className="container-shop pb-8 sm:pb-12">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <div className="grid gap-8 lg:grid-cols-2 lg:gap-12">
         <div>
           <div className="relative aspect-[4/3] w-full overflow-hidden">

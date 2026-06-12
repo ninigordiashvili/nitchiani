@@ -1,8 +1,28 @@
+import type { Metadata } from "next";
 import { Check, ClipboardCheck, ExternalLink, Package, RotateCcw, Truck } from "lucide-react";
 import { setRequestLocale, getTranslations } from "next-intl/server";
 import { WhatsAppIcon, getWhatsAppNumber } from "@/components/brand/WhatsAppIcon";
 import { getOrderByName, type OrderTracking } from "@/lib/shopify/orders";
+import { localeAlternates } from "@/lib/seo";
 import type { Locale } from "@/lib/i18n/config";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: Locale }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const title = locale === "ka" ? "შეკვეთის სტატუსი" : "Order status";
+  const description =
+    locale === "ka"
+      ? "თვალი ადევნეთ თქვენს Nitchiani შეკვეთას — გადახდიდან მიწოდებამდე."
+      : "Track your Nitchiani order — from payment confirmation to delivery.";
+  return {
+    title,
+    description,
+    alternates: localeAlternates(locale, "/order-status"),
+  };
+}
 
 /**
  * Order tracking page. Two render paths:

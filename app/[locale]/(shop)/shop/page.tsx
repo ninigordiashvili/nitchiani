@@ -1,9 +1,25 @@
+import type { Metadata } from "next";
 import { setRequestLocale, getTranslations } from "next-intl/server";
 import { Suspense } from "react";
 import { FilteredCollection } from "@/components/commerce/FilteredCollection";
 import { CategoryChips } from "@/components/homepage/CategoryChips";
 import { getProducts } from "@/lib/shopify/client";
+import { localeAlternates } from "@/lib/seo";
 import type { Locale } from "@/lib/i18n/config";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: Locale }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "nav" });
+  return {
+    title: t("allProducts"),
+    description: t("allProductsDesc"),
+    alternates: localeAlternates(locale, "/shop"),
+  };
+}
 
 export default async function ShopPage({
   params,

@@ -1,5 +1,25 @@
+import type { Metadata } from "next";
 import { setRequestLocale } from "next-intl/server";
+import { localeAlternates } from "@/lib/seo";
 import type { Locale } from "@/lib/i18n/config";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: Locale }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const title = locale === "ka" ? "ჩვენ შესახებ" : "About";
+  const description =
+    locale === "ka"
+      ? "Nitchiani — თბილისში დაფუძნებული ბრენდი ხელით ნაკეთი ფრჩხების, ლოკსებისა და თმის მოვლის პროდუქტებისთვის."
+      : "Nitchiani is a Tbilisi-based brand for hand-crafted braids, dreadlocks and loc-care essentials — premium quality in a minimalist, editorial aesthetic.";
+  return {
+    title,
+    description,
+    alternates: localeAlternates(locale, "/about"),
+  };
+}
 
 export default async function AboutPage({
   params,

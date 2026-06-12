@@ -1,6 +1,26 @@
+import type { Metadata } from "next";
 import { setRequestLocale, getTranslations } from "next-intl/server";
 import { Instagram, MessageCircle, Mail, MapPin } from "lucide-react";
+import { localeAlternates } from "@/lib/seo";
 import type { Locale } from "@/lib/i18n/config";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: Locale }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "nav" });
+  const description =
+    locale === "ka"
+      ? "დაგვიკავშირდით — WhatsApp, Instagram ან ელფოსტა. თბილისი, საქართველო."
+      : "Get in touch with the Nitchiani studio — WhatsApp, Instagram or email. Tbilisi, Georgia.";
+  return {
+    title: t("contact"),
+    description,
+    alternates: localeAlternates(locale, "/contact"),
+  };
+}
 
 export default async function ContactPage({
   params,

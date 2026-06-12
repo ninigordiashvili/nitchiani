@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { setRequestLocale } from "next-intl/server";
 import { Suspense } from "react";
@@ -6,7 +7,47 @@ import { FilteredCollection } from "@/components/commerce/FilteredCollection";
 import { CategoryChips } from "@/components/homepage/CategoryChips";
 import { getCampaignBySlug } from "@/lib/campaigns";
 import { getCollectionByHandle, getProductsByHandles } from "@/lib/shopify/client";
+import { localeAlternates, ogLocale } from "@/lib/seo";
 import type { Locale } from "@/lib/i18n/config";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: Locale; collection: string }>;
+}): Promise<Metadata> {
+  const { locale, collection: handle } = await params;
+  const alternates = localeAlternates(locale, `/shop/${handle}`);
+
+  // Same branch order as the page: campaign first, then collection.
+  const campaign = getCampaignBySlug(handle);
+  if (campaign) {
+    return {
+      title: locale === "ka" ? campaign.titleKa : campaign.titleEn,
+      description: locale === "ka" ? campaign.taglineKa : campaign.taglineEn,
+      alternates,
+      openGraph: {
+        ...ogLocale(locale),
+        title: locale === "ka" ? campaign.titleKa : campaign.titleEn,
+        description: locale === "ka" ? campaign.taglineKa : campaign.taglineEn,
+        images: [{ url: campaign.bannerImage }],
+      },
+    };
+  }
+
+  const collection = await getCollectionByHandle(handle, locale);
+  if (!collection) return {};
+  return {
+    title: collection.title,
+    description:
+      collection.description ||
+      `Shop ${collection.title} at Nitchiani — premium braids, locs & haircare from Tbilisi.`,
+    alternates,
+    openGraph: {
+      ...ogLocale(locale),
+      ...(collection.image ? { images: [{ url: collection.image.url }] } : {}),
+    },
+  };
+}
 
 /**
  * Catch-all for `/shop/<slug>`. Branches on the slug:
