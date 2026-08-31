@@ -138,7 +138,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         }
         return [...prev, { ...line, quantity: qty }];
       });
-      setOpen(true);
+      // Deliberately does NOT open the drawer. Interrupting the browse flow to show a
+      // cart the user didn't ask for costs more than it confirms; the count badge nudging
+      // in the header / bottom nav carries the acknowledgement instead.
     },
     [],
   );

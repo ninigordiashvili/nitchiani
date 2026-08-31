@@ -15,8 +15,8 @@ import type { Locale } from "@/lib/i18n/config";
  * Both render as non-hydrating server `<script>` tags (no client cost).
  */
 export function SiteJsonLd({ locale }: { locale: Locale }) {
-  const instagram = process.env.NEXT_PUBLIC_INSTAGRAM_HANDLE ?? "nitchiani";
-  const whatsapp = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? "995555000000";
+  const instagram = process.env.NEXT_PUBLIC_INSTAGRAM_HANDLE ?? "Nitchiani.shop";
+  const whatsapp = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? "995579370374";
 
   // Only assert a street address once the placeholder in lib/business.ts has been replaced;
   // locality + country are always safe. Add `geo` coordinates here once the real address lands.
@@ -40,7 +40,7 @@ export function SiteJsonLd({ locale }: { locale: Locale }) {
       ...(hasStreet ? { streetAddress: BUSINESS.address } : {}),
     },
     areaServed: "Tbilisi",
-    sameAs: [`https://instagram.com/${instagram}`],
+    sameAs: [`https://instagram.com/${instagram}`, BUSINESS.facebookUrl],
   };
 
   const website = {

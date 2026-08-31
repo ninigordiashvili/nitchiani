@@ -38,7 +38,7 @@ export function ProductCard({ product, priority = false }: { product: Product; p
       className="group block"
       aria-label={product.title}
     >
-      <div className="relative aspect-[4/5] overflow-hidden bg-black/5">
+      <div className="relative aspect-[4/5] overflow-hidden bg-white">
         <Image
           src={product.featuredImage.url}
           alt={product.featuredImage.altText}
@@ -47,7 +47,7 @@ export function ProductCard({ product, priority = false }: { product: Product; p
           priority={priority}
           placeholder="blur"
           blurDataURL={BLUR_DATA_URL}
-          className="object-cover transition-transform duration-[400ms] ease-[var(--ease-brand)] group-hover:scale-105"
+          className="object-contain transition-transform duration-[400ms] ease-[var(--ease-brand)] group-hover:scale-105"
         />
         {(product.isNew || product.isBestSeller || offPercent !== null) && (
           <div className="absolute top-2 left-2 flex flex-col gap-1">

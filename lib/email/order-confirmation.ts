@@ -18,7 +18,7 @@ export type OrderConfirmationInput = ManualOrderInput & {
 };
 
 const WHATSAPP_NUMBER =
-  process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? "995555000000";
+  process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? "995579370374";
 
 const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ??
@@ -234,7 +234,7 @@ function buildHtml(input: OrderConfirmationInput): string {
                   <td style="padding-right:16px;vertical-align:top;width:50%;">
                     <p style="margin:0 0 6px;font-size:12px;letter-spacing:0.18em;text-transform:uppercase;color:${COLORS.silver};">${escapeHtml(c.shippingHeader)}</p>
                     <p style="margin:0;font-size:14px;line-height:1.5;color:${COLORS.ink};">
-                      ${escapeHtml(`${input.firstName} ${input.lastName}`)}<br/>
+                      ${escapeHtml(`${input.firstName} ${input.lastName}`.trim())}<br/>
                       ${escapeHtml(input.address)}<br/>
                       ${escapeHtml(input.city)}${input.postalCode ? `, ${escapeHtml(input.postalCode)}` : ""}<br/>
                       ${escapeHtml(input.phone)}
@@ -316,7 +316,7 @@ function buildText(input: OrderConfirmationInput): string {
     `${c.paymentHeader}: ${c.paymentByMethod[input.paymentMethod]}`,
     "",
     `${c.shippingHeader}:`,
-    `${input.firstName} ${input.lastName}`,
+    `${input.firstName} ${input.lastName}`.trim(),
     input.address,
     `${input.city}${input.postalCode ? `, ${input.postalCode}` : ""}`,
     input.phone,
@@ -340,6 +340,14 @@ function escapeHtml(s: string): string {
 }
 
 export async function sendOrderConfirmation(input: OrderConfirmationInput): Promise<boolean> {
+  // Email is optional at checkout — a customer can order with just a name and a phone
+  // number. Nothing to send to, and no error either: the studio still follows up on
+  // WhatsApp, which is what the confirmation copy itself promises.
+  if (!input.email) {
+    console.warn("[email/order-confirmation] no email on order — skipping", input.orderId);
+    return false;
+  }
+
   const c = copyFor(input.locale, input.firstName, input.orderId);
   return sendEmail({
     to: input.email,

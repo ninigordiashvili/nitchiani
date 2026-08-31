@@ -39,7 +39,7 @@ const PLACEHOLDER_POSTS: InstagramPost[] = [
 ].map((seed, i) => ({
   id: `placeholder-${i}`,
   imageUrl: `https://picsum.photos/seed/nitchiani-${seed}/600/600`,
-  permalink: "https://instagram.com/nitchiani",
+  permalink: "https://instagram.com/Nitchiani.shop",
   isVideo: false,
 }));
 
@@ -109,7 +109,7 @@ async function readLocalImages(limit: number): Promise<InstagramPost[]> {
   }
 
   const imageExt = /\.(jpe?g|png|webp|avif)$/i;
-  const handle = process.env.NEXT_PUBLIC_INSTAGRAM_HANDLE ?? "nitchiani";
+  const handle = process.env.NEXT_PUBLIC_INSTAGRAM_HANDLE ?? "Nitchiani.shop";
   return entries
     .filter((f) => imageExt.test(f))
     .sort()

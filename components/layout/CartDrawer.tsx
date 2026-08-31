@@ -79,7 +79,7 @@ export function CartDrawer({ locale }: { locale: Locale }) {
             {t("nav.cart")} · {cart.totalQuantity}
           </span>
           <div className="flex items-center gap-3">
-            <ClearCartButton />
+            <ClearCartButton contained />
             <button
               type="button"
               onClick={() => cart.setOpen(false)}
@@ -105,7 +105,7 @@ export function CartDrawer({ locale }: { locale: Locale }) {
               <ul className="py-4">
                 {cart.lines.map((line) => (
                   <li key={line.variantId} className="mx-4 flex gap-3 border-b border-black/5 py-4 last:border-b-0">
-                    <div className="relative aspect-[4/5] w-20 flex-shrink-0 overflow-hidden rounded-md bg-black/5">
+                    <div className="relative aspect-[4/5] w-20 flex-shrink-0 overflow-hidden rounded-md bg-white">
                       <Image
                         src={safeImageSrc(line.image.url)}
                         alt={line.image.altText}
@@ -113,7 +113,7 @@ export function CartDrawer({ locale }: { locale: Locale }) {
                         sizes="80px"
                         placeholder="blur"
                         blurDataURL={BLUR_DATA_URL}
-                        className="object-cover"
+                        className="object-contain"
                       />
                     </div>
                     <div className="flex flex-1 flex-col justify-between">

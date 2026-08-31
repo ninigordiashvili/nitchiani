@@ -105,7 +105,11 @@ function ReviewCard({ review }: { review: HomepageReview }) {
         />
         <Quote size={16} className="opacity-25" />
       </div>
-      <p className="mt-3 line-clamp-2 text-sm leading-relaxed opacity-90">
+      {/* `mb-3` mirrors the footer's `pt-3` so the rule sits centred in its own gap.
+          It can't live on the footer as a margin: `mt-auto` is what pins the block to
+          the bottom of a stretched card, and would overwrite it. Any leftover height
+          still lands above the rule, which is what keeps footers aligned across the rail. */}
+      <p className="mt-3 mb-3 line-clamp-2 text-sm leading-relaxed opacity-90">
         “{review.body}”
       </p>
       <div className="mt-auto flex items-center gap-2.5 border-t border-black/10 pt-3 text-xs">

@@ -35,9 +35,9 @@ export const TERMS_SECTIONS: LegalSection[] = [
     headingEn: "1. Acceptance of these terms",
     headingKa: "1. ამ პირობების მიღება",
     bodyEn:
-      "By browsing, placing an order on, or otherwise using nitchiani.com (the \"Site\"), you confirm that you have read, understood and accepted these Terms & Conditions. If you do not accept them, please do not use the Site. We may update these terms from time to time; the version in force at the moment of your order is the one that applies to that order.",
+      "By browsing, placing an order on, or otherwise using nitchiani.shop (the \"Site\"), you confirm that you have read, understood and accepted these Terms & Conditions. If you do not accept them, please do not use the Site. We may update these terms from time to time; the version in force at the moment of your order is the one that applies to that order.",
     bodyKa:
-      "nitchiani.com-ის (\"საიტი\") გვერდის გადახედვით, შეკვეთის განთავსებით ან ნებისმიერი სხვა გამოყენებით თქვენ ადასტურებთ, რომ წაიკითხეთ, გაიგეთ და მიიღეთ წინამდებარე წესები და პირობები. თუ არ ეთანხმებით, გთხოვთ, არ ისარგებლოთ საიტით. ჩვენ შესაძლოა პერიოდულად განვაახლოთ ეს პირობები — შეკვეთის განთავსების მომენტისთვის მოქმედი ვერსია არის ის, რომელიც გავრცელდება მოცემულ შეკვეთაზე.",
+      "nitchiani.shop-ის (\"საიტი\") გვერდის გადახედვით, შეკვეთის განთავსებით ან ნებისმიერი სხვა გამოყენებით თქვენ ადასტურებთ, რომ წაიკითხეთ, გაიგეთ და მიიღეთ წინამდებარე წესები და პირობები. თუ არ ეთანხმებით, გთხოვთ, არ ისარგებლოთ საიტით. ჩვენ შესაძლოა პერიოდულად განვაახლოთ ეს პირობები — შეკვეთის განთავსების მომენტისთვის მოქმედი ვერსია არის ის, რომელიც გავრცელდება მოცემულ შეკვეთაზე.",
   },
   {
     headingEn: "2. About us",
@@ -88,12 +88,12 @@ export const TERMS_SECTIONS: LegalSection[] = [
       "შეკვეთები მზადდება ხელით ჩვენს თბილისის სტუდიოში და იგზავნება 1-3 სამუშაო დღეში. სტანდარტული მიწოდება თბილისში ხდება 1-3 სამუშაო დღეში; სხვა რეგიონებში მიწოდება — 3-7 სამუშაო დღეში. საერთაშორისო შეკვეთები (სადაც ხელმისაწვდომია) იანგარიშება ცალკე. დაკარგვის რისკი თქვენზე გადადის ნივთის ჩაბარების მომენტში მითითებულ მისამართზე. თუ მისამართზე არავინ იქნება, კურიერი იმოქმედებს თავისი წესების შესაბამისად — შემდგომში შეკვეთა შესაძლოა დაბრუნდეს ჩვენთან.",
   },
   {
-    headingEn: "8. Right of withdrawal (14 days)",
-    headingKa: "8. უარის თქმის უფლება (14 დღე)",
+    headingEn: "8. Right of withdrawal (24 hours)",
+    headingKa: "8. უარის თქმის უფლება (24 საათი)",
     bodyEn:
-      "Under the consumer protection legislation of Georgia, if you are a consumer (not buying for business purposes) you may withdraw from a distance-selling contract within 14 calendar days of receiving the goods, without giving any reason. To exercise this right, notify us by email at hello@nitchiani.com or WhatsApp before the 14-day window closes, and return the item in its original, unused, resaleable condition with all packaging. Return shipping is the customer's responsibility unless the item arrived defective. Once we receive the returned item we issue the refund using the original payment method within 14 days. Hygiene-sensitive items (e.g., opened hair-care bottles, used hair tools) are not eligible for return for hygiene reasons; this exception is allowed under the same legislation.",
+      `Under the consumer protection legislation of Georgia, if you are a consumer (not buying for business purposes) you may withdraw from a distance-selling contract within 24 hours of receiving the goods, without giving any reason. To exercise this right, notify us by email at ${BUSINESS.email} or WhatsApp before the 24-hour window closes, and return the item in its original, unused, resaleable condition with all packaging. Return shipping is the customer's responsibility unless the item arrived defective. Once we receive the returned item we issue the refund using the original payment method within 14 days. Hygiene-sensitive items (e.g., opened hair-care bottles, used hair tools) are not eligible for return for hygiene reasons; this exception is allowed under the same legislation.`,
     bodyKa:
-      "საქართველოს მომხმარებლის უფლებების დაცვის შესახებ კანონმდებლობის შესაბამისად, თუ თქვენ ხართ მომხმარებელი (არ ყიდულობთ კომერციული მიზნებისთვის), შეგიძლიათ უარი თქვათ დისტანციური ნასყიდობის ხელშეკრულებაზე ნივთის მიღებიდან 14 კალენდარული დღის განმავლობაში, მიზეზის მითითების გარეშე. ამ უფლების გამოყენებისთვის გვაცნობეთ ფოსტით hello@nitchiani.com ან WhatsApp-ით 14-დღიანი ვადის გასვლამდე და დააბრუნეთ ნივთი თავდაპირველ, გამოუყენებელ, გასაყიდი მდგომარეობით, ყველა შესაფუთი ნივთით ერთად. დაბრუნების ღირებულება ეკისრება მომხმარებელს, გარდა იმ შემთხვევებისა, როდესაც ნივთი ჩამოვიდა დეფექტით. დაბრუნებული ნივთის მიღების შემდეგ ანაზღაურებას ვაუვადებთ თავდაპირველი გადახდის მეთოდით 14 დღის განმავლობაში. ჰიგიენისადმი მგრძნობიარე ნივთები (მაგ., გახსნილი თმის მოვლის ფლაკონები, გამოყენებული ხელსაწყოები) არ ექვემდებარება დაბრუნებას ჰიგიენური მიზეზებიდან გამომდინარე — ეს გამონაკლისი ნებადართულია იმავე კანონმდებლობით.",
+      `საქართველოს მომხმარებლის უფლებების დაცვის შესახებ კანონმდებლობის შესაბამისად, თუ თქვენ ხართ მომხმარებელი (არ ყიდულობთ კომერციული მიზნებისთვის), შეგიძლიათ უარი თქვათ დისტანციური ნასყიდობის ხელშეკრულებაზე ნივთის მიღებიდან 24 საათის განმავლობაში, მიზეზის მითითების გარეშე. ამ უფლების გამოყენებისთვის გვაცნობეთ ფოსტით ${BUSINESS.email} ან WhatsApp-ით 24-საათიანი ვადის გასვლამდე და დააბრუნეთ ნივთი თავდაპირველ, გამოუყენებელ, გასაყიდი მდგომარეობით, ყველა შესაფუთი ნივთით ერთად. დაბრუნების ღირებულება ეკისრება მომხმარებელს, გარდა იმ შემთხვევებისა, როდესაც ნივთი ჩამოვიდა დეფექტით. დაბრუნებული ნივთის მიღების შემდეგ ანაზღაურებას ვაუვადებთ თავდაპირველი გადახდის მეთოდით 14 დღის განმავლობაში. ჰიგიენისადმი მგრძნობიარე ნივთები (მაგ., გახსნილი თმის მოვლის ფლაკონები, გამოყენებული ხელსაწყოები) არ ექვემდებარება დაბრუნებას ჰიგიენური მიზეზებიდან გამომდინარე — ეს გამონაკლისი ნებადართულია იმავე კანონმდებლობით.`,
   },
   {
     headingEn: "9. Defective or incorrect items",
@@ -139,9 +139,9 @@ export const TERMS_SECTIONS: LegalSection[] = [
     headingEn: "14. Contact",
     headingKa: "14. კონტაქტი",
     bodyEn:
-      "Questions about these terms or about your order are welcome at hello@nitchiani.com or via WhatsApp using the number in the footer. We usually respond within a few hours during studio working days.",
+      `Questions about these terms or about your order are welcome at ${BUSINESS.email} or via WhatsApp using the number in the footer. We usually respond within a few hours during studio working days.`,
     bodyKa:
-      "კითხვები ამ პირობებთან ან თქვენს შეკვეთასთან დაკავშირებით — hello@nitchiani.com ან WhatsApp ფუტერში მითითებული ნომრით. ჩვეულებრივ ვპასუხობთ რამდენიმე საათში სამუშაო დღეების განმავლობაში.",
+      `კითხვები ამ პირობებთან ან თქვენს შეკვეთასთან დაკავშირებით — ${BUSINESS.email} ან WhatsApp ფუტერში მითითებული ნომრით. ჩვეულებრივ ვპასუხობთ რამდენიმე საათში სამუშაო დღეების განმავლობაში.`,
   },
 ];
 
@@ -152,9 +152,9 @@ export const PRIVACY_SECTIONS: LegalSection[] = [
     headingEn: "1. Who we are",
     headingKa: "1. ვინ ვართ",
     bodyEn:
-      `This Privacy Policy explains how Nitchiani — operated by ${BUSINESS.legalName}, registered in Georgia under ID ${BUSINESS.registrationId}, with its registered address at ${BUSINESS.address} — collects, uses and protects the personal data you provide when you use nitchiani.com (the "Site"). We are the data controller for the data described below. For questions reach us at ${BUSINESS.email}.`,
+      `This Privacy Policy explains how Nitchiani — operated by ${BUSINESS.legalName}, registered in Georgia under ID ${BUSINESS.registrationId}, with its registered address at ${BUSINESS.address} — collects, uses and protects the personal data you provide when you use nitchiani.shop (the "Site"). We are the data controller for the data described below. For questions reach us at ${BUSINESS.email}.`,
     bodyKa:
-      `ეს კონფიდენციალურობის პოლიტიკა განმარტავს, როგორ აგროვებს, იყენებს და იცავს Nitchiani — ოპერირებული ${BUSINESS.legalName}-ის მიერ, რეგისტრირებული საქართველოში ნომრით ${BUSINESS.registrationId}, მისამართით ${BUSINESS.address} — იმ პერსონალურ მონაცემებს, რომელსაც გვაწვდი nitchiani.com-ის ("საიტი") გამოყენებისას. ჩვენ ვართ ქვემოთ აღწერილი მონაცემების მაკონტროლებელი. შეკითხვებზე — ${BUSINESS.email}.`,
+      `ეს კონფიდენციალურობის პოლიტიკა განმარტავს, როგორ აგროვებს, იყენებს და იცავს Nitchiani — ოპერირებული ${BUSINESS.legalName}-ის მიერ, რეგისტრირებული საქართველოში ნომრით ${BUSINESS.registrationId}, მისამართით ${BUSINESS.address} — იმ პერსონალურ მონაცემებს, რომელსაც გვაწვდი nitchiani.shop-ის ("საიტი") გამოყენებისას. ჩვენ ვართ ქვემოთ აღწერილი მონაცემების მაკონტროლებელი. შეკითხვებზე — ${BUSINESS.email}.`,
   },
   {
     headingEn: "2. What data we collect",
@@ -216,9 +216,9 @@ export const PRIVACY_SECTIONS: LegalSection[] = [
     headingEn: "9. Your rights",
     headingKa: "9. შენი უფლებები",
     bodyEn:
-      "Under the Georgian Personal Data Protection Act you have the right to: access the data we hold about you; correct anything that's inaccurate; ask us to delete data we no longer need; restrict or object to processing for marketing or legitimate-interest purposes; receive your data in a portable format; withdraw any consent you've given (without affecting prior processing); and lodge a complaint with the Georgian Personal Data Protection Service. To exercise any of these, email hello@nitchiani.com — we respond within 30 days, usually much sooner.",
+      `Under the Georgian Personal Data Protection Act you have the right to: access the data we hold about you; correct anything that's inaccurate; ask us to delete data we no longer need; restrict or object to processing for marketing or legitimate-interest purposes; receive your data in a portable format; withdraw any consent you've given (without affecting prior processing); and lodge a complaint with the Georgian Personal Data Protection Service. To exercise any of these, email ${BUSINESS.email} — we respond within 30 days, usually much sooner.`,
     bodyKa:
-      "საქართველოს პერსონალურ მონაცემთა დაცვის შესახებ კანონის შესაბამისად, შენ გაქვს უფლება: წვდომა შენი მონაცემებზე; გაასწორო არასწორი მონაცემები; მოითხოვო წაშლა, თუ მონაცემები აღარ გვჭირდება; შეზღუდო ან გააპროტესტო დამუშავება მარკეტინგის ან ლეგიტიმური ინტერესისთვის; მიიღო შენი მონაცემები გადატანად ფორმატში; გააუქმო შენ მიერ მოცემული თანხმობა (წინა დამუშავებაზე გავლენის გარეშე); და შეიტანო საჩივარი საქართველოს პერსონალურ მონაცემთა დაცვის სამსახურში. რომელიმე უფლების გამოსაყენებლად — hello@nitchiani.com; ვპასუხობთ 30 დღეში, ჩვეულებრივ ბევრად ადრე.",
+      `საქართველოს პერსონალურ მონაცემთა დაცვის შესახებ კანონის შესაბამისად, შენ გაქვს უფლება: წვდომა შენი მონაცემებზე; გაასწორო არასწორი მონაცემები; მოითხოვო წაშლა, თუ მონაცემები აღარ გვჭირდება; შეზღუდო ან გააპროტესტო დამუშავება მარკეტინგის ან ლეგიტიმური ინტერესისთვის; მიიღო შენი მონაცემები გადატანად ფორმატში; გააუქმო შენ მიერ მოცემული თანხმობა (წინა დამუშავებაზე გავლენის გარეშე); და შეიტანო საჩივარი საქართველოს პერსონალურ მონაცემთა დაცვის სამსახურში. რომელიმე უფლების გამოსაყენებლად — ${BUSINESS.email}; ვპასუხობთ 30 დღეში, ჩვეულებრივ ბევრად ადრე.`,
   },
   {
     headingEn: "10. Children",
@@ -240,9 +240,9 @@ export const PRIVACY_SECTIONS: LegalSection[] = [
     headingEn: "12. Contact",
     headingKa: "12. კონტაქტი",
     bodyEn:
-      "Privacy questions and rights requests are welcome at hello@nitchiani.com or via WhatsApp using the number in the footer. We answer most within a few hours during studio working days; rights requests get a written reply within 30 days.",
+      `Privacy questions and rights requests are welcome at ${BUSINESS.email} or via WhatsApp using the number in the footer. We answer most within a few hours during studio working days; rights requests get a written reply within 30 days.`,
     bodyKa:
-      "კონფიდენციალურობასთან დაკავშირებული შეკითხვები და უფლებების მოთხოვნები — hello@nitchiani.com ან WhatsApp ფუტერში მითითებული ნომრით. უმეტესობას ვპასუხობთ რამდენიმე საათში სამუშაო დღეებში; უფლებების მოთხოვნებზე — წერილობით 30 დღის განმავლობაში.",
+      `კონფიდენციალურობასთან დაკავშირებული შეკითხვები და უფლებების მოთხოვნები — ${BUSINESS.email} ან WhatsApp ფუტერში მითითებული ნომრით. უმეტესობას ვპასუხობთ რამდენიმე საათში სამუშაო დღეებში; უფლებების მოთხოვნებზე — წერილობით 30 დღის განმავლობაში.`,
   },
 ];
 
@@ -250,20 +250,20 @@ export const REFUND_LAST_UPDATED = "2026-05-20";
 
 export const REFUND_SECTIONS: LegalSection[] = [
   {
-    headingEn: "1. 14-day right of withdrawal",
-    headingKa: "1. 14-დღიანი უარის თქმის უფლება",
+    headingEn: "1. 24-hour right of withdrawal",
+    headingKa: "1. 24-საათიანი უარის თქმის უფლება",
     bodyEn:
-      "Under the consumer protection legislation of Georgia, if you bought from us as a consumer (not for business purposes) you may return your order within 14 calendar days of receiving it, without giving any reason. This window starts on the day the last item in your order is delivered. To exercise this right, notify us by email at hello@nitchiani.com or WhatsApp before the 14 days are up — sending the package back without notifying us first slows things down on both sides.",
+      `Under the consumer protection legislation of Georgia, if you bought from us as a consumer (not for business purposes) you may return your order within 24 hours of receiving it, without giving any reason. This window starts on the day the last item in your order is delivered. To exercise this right, notify us by email at ${BUSINESS.email} or WhatsApp before the 24 hours are up — sending the package back without notifying us first slows things down on both sides.`,
     bodyKa:
-      "საქართველოს მომხმარებლის უფლებების შესახებ კანონმდებლობის შესაბამისად, თუ მომხმარებლის სტატუსით შეიძინე ჩვენგან (არა კომერციული მიზნით), შეგიძლია დააბრუნო შეკვეთა მისი მიღებიდან 14 კალენდარული დღის განმავლობაში, მიზეზის მითითების გარეშე. ვადა იწყება შენი შეკვეთის უკანასკნელი ნივთის ჩაბარების დღიდან. ამ უფლების გამოყენებისთვის გვაცნობე ფოსტით hello@nitchiani.com ან WhatsApp-ით 14 დღის გასვლამდე — გაცნობების გარეშე გამოგზავნა ანელებს პროცესს ორივე მხრიდან.",
+      `საქართველოს მომხმარებლის უფლებების შესახებ კანონმდებლობის შესაბამისად, თუ მომხმარებლის სტატუსით შეიძინე ჩვენგან (არა კომერციული მიზნით), შეგიძლია დააბრუნო შეკვეთა მისი მიღებიდან 24 საათის განმავლობაში, მიზეზის მითითების გარეშე. ვადა იწყება შენი შეკვეთის უკანასკნელი ნივთის ჩაბარების დღიდან. ამ უფლების გამოყენებისთვის გვაცნობე ფოსტით ${BUSINESS.email} ან WhatsApp-ით 24 საათის გასვლამდე — გაცნობების გარეშე გამოგზავნა ანელებს პროცესს ორივე მხრიდან.`,
   },
   {
     headingEn: "2. Items that can't be returned",
     headingKa: "2. ნივთები, რომლებიც ვერ დაბრუნდება",
     bodyEn:
-      "For hygiene reasons, the following are excluded from the 14-day withdrawal right once they've been opened or used: opened hair-care liquids (oils, rinses, gels); used hair tools (combs, picks, brushes); body jewellery / piercings that have been worn or have left their sealed sterile packaging; and any custom or made-to-order piece. The unopened versions of the first three categories remain returnable. This exception is allowed under the same Georgian consumer-protection statute that gives you the right.",
+      "For hygiene reasons, the following are excluded from the 24-hour withdrawal right once they've been opened or used: opened hair-care liquids (oils, rinses, gels); used hair tools (combs, picks, brushes); body jewellery / piercings that have been worn or have left their sealed sterile packaging; and any custom or made-to-order piece. The unopened versions of the first three categories remain returnable. This exception is allowed under the same Georgian consumer-protection statute that gives you the right.",
     bodyKa:
-      "ჰიგიენური მიზეზებიდან გამომდინარე, შემდეგი ნივთები არ ექვემდებარება 14-დღიან დაბრუნებას, თუ გახსნილია ან გამოყენებულია: გახსნილი თმის მოვლის სითხეები (ზეთები, ჩამოსარეცხები, გელები); გამოყენებული ხელსაწყოები (სავარცხლები, პიკები, ფუნჯები); ნახმარი ან სტერილური შეფუთვიდან ამოღებული პირსინგი/საყურეები; ნებისმიერი ინდივიდუალურად დამზადებული ნივთი. პირველი სამი კატეგორიის გახსნელი ვერსიები კვლავ ექვემდებარება დაბრუნებას. ეს გამონაკლისი ნებადართულია იმავე ქართული კანონმდებლობით, რომელიც დაბრუნების უფლებას გვაძლევს.",
+      "ჰიგიენური მიზეზებიდან გამომდინარე, შემდეგი ნივთები არ ექვემდებარება 24-საათიან დაბრუნებას, თუ გახსნილია ან გამოყენებულია: გახსნილი თმის მოვლის სითხეები (ზეთები, ჩამოსარეცხები, გელები); გამოყენებული ხელსაწყოები (სავარცხლები, პიკები, ფუნჯები); ნახმარი ან სტერილური შეფუთვიდან ამოღებული პირსინგი/საყურეები; ნებისმიერი ინდივიდუალურად დამზადებული ნივთი. პირველი სამი კატეგორიის გახსნელი ვერსიები კვლავ ექვემდებარება დაბრუნებას. ეს გამონაკლისი ნებადართულია იმავე ქართული კანონმდებლობით, რომელიც დაბრუნების უფლებას გვაძლევს.",
   },
   {
     headingEn: "3. Condition we need it in",
@@ -277,9 +277,9 @@ export const REFUND_SECTIONS: LegalSection[] = [
     headingEn: "4. How to start a return",
     headingKa: "4. როგორ დავიწყო დაბრუნება",
     bodyEn:
-      "Email hello@nitchiani.com or WhatsApp us with your order number and which items you want to return. We'll send back a confirmation and the return address within a few hours during studio working days. Once you've shipped the package, send us the courier tracking number so we can keep an eye on it.",
+      `Email ${BUSINESS.email} or WhatsApp us with your order number and which items you want to return. We'll send back a confirmation and the return address within a few hours during studio working days. Once you've shipped the package, send us the courier tracking number so we can keep an eye on it.`,
     bodyKa:
-      "მოგვწერე hello@nitchiani.com-ზე ან WhatsApp-ით შეკვეთის ნომრით და მიუთითე რომელი ნივთები გსურს დააბრუნო. რამდენიმე საათში სამუშაო დღეებში მიიღებ დადასტურებას და დაბრუნების მისამართს. გაგზავნის შემდეგ გაგვიგზავნე ტრეკინგის ნომერი, რომ შევძლოთ თვალყურის დევნება.",
+      `მოგვწერე ${BUSINESS.email}-ზე ან WhatsApp-ით შეკვეთის ნომრით და მიუთითე რომელი ნივთები გსურს დააბრუნო. რამდენიმე საათში სამუშაო დღეებში მიიღებ დადასტურებას და დაბრუნების მისამართს. გაგზავნის შემდეგ გაგვიგზავნე ტრეკინგის ნომერი, რომ შევძლოთ თვალყურის დევნება.`,
   },
   {
     headingEn: "5. Return shipping",
@@ -317,16 +317,16 @@ export const REFUND_SECTIONS: LegalSection[] = [
     headingEn: "9. International returns",
     headingKa: "9. საერთაშორისო დაბრუნებები",
     bodyEn:
-      "International orders follow the same 14-day window. The customer covers return shipping (including any customs duties on the return leg) for change-of-mind returns. For defective international items, contact us first — depending on the issue we may issue a refund without requiring you to ship the item back.",
+      "International orders follow the same 24-hour window. The customer covers return shipping (including any customs duties on the return leg) for change-of-mind returns. For defective international items, contact us first — depending on the issue we may issue a refund without requiring you to ship the item back.",
     bodyKa:
-      "საერთაშორისო შეკვეთები ექვემდებარება იმავე 14-დღიან ვადას. გადაწყვეტილების შეცვლის შემთხვევაში მომხმარებელი ფარავს დაბრუნების ხარჯს (გადასახადების ჩათვლით დაბრუნების მიმართულებით). დეფექტიანი საერთაშორისო ნივთის შემთხვევაში ჯერ დაგვიკავშირდი — შესაძლოა ანაზღაურება გავცეთ ნივთის უკან გაგზავნის გარეშე.",
+      "საერთაშორისო შეკვეთები ექვემდებარება იმავე 24-საათიან ვადას. გადაწყვეტილების შეცვლის შემთხვევაში მომხმარებელი ფარავს დაბრუნების ხარჯს (გადასახადების ჩათვლით დაბრუნების მიმართულებით). დეფექტიანი საერთაშორისო ნივთის შემთხვევაში ჯერ დაგვიკავშირდი — შესაძლოა ანაზღაურება გავცეთ ნივთის უკან გაგზავნის გარეშე.",
   },
   {
     headingEn: "10. Contact",
     headingKa: "10. კონტაქტი",
     bodyEn:
-      "Return questions are welcome at hello@nitchiani.com or via WhatsApp using the number in the footer. We answer most within a few hours during studio working days.",
+      `Return questions are welcome at ${BUSINESS.email} or via WhatsApp using the number in the footer. We answer most within a few hours during studio working days.`,
     bodyKa:
-      "დაბრუნებასთან დაკავშირებული შეკითხვები — hello@nitchiani.com ან WhatsApp ფუტერში მითითებული ნომრით. უმეტესობას ვპასუხობთ რამდენიმე საათში სამუშაო დღეებში.",
+      `დაბრუნებასთან დაკავშირებული შეკითხვები — ${BUSINESS.email} ან WhatsApp ფუტერში მითითებული ნომრით. უმეტესობას ვპასუხობთ რამდენიმე საათში სამუშაო დღეებში.`,
   },
 ];

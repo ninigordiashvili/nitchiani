@@ -30,14 +30,17 @@ import { PhoneInput } from "@/components/commerce/PhoneInput";
 
 const checkoutSchema = z.object({
   firstName: z.string().min(1),
-  lastName: z.string().min(1),
+  // Surname and email are optional — plenty of Georgian customers order with a first
+  // name and a phone number alone. Email still has to be well-formed if given, so a
+  // typo can't silently swallow the order confirmation.
+  lastName: z.string().optional(),
   // Canonical E.164 phone. `+` followed by 7–15 digits, leading digit 1–9. The PhoneInput
   // component now accepts diaspora numbers (US/UK/DE/IL/TR/FR/IT/ES/RU) in addition to
   // Georgia (+995), so the schema is loosened to the generic E.164 shape. The PhoneInput
   // itself clamps each country's local digits length, so an obviously-broken value can't
   // get this far.
   phone: z.string().regex(/^\+[1-9]\d{6,14}$/, "Enter a valid phone number"),
-  email: z.string().email(),
+  email: z.string().email().optional().or(z.literal("")),
   address: z.string().min(3),
   city: z.string().min(1),
   // Georgian post codes are 4 digits; the input strips non-digits so we only need to allow
@@ -54,6 +57,11 @@ type CheckoutInput = z.infer<typeof checkoutSchema>;
 
 const BOG_ENABLED = process.env.NEXT_PUBLIC_BOG_ENABLED === "true";
 const TBC_ENABLED = process.env.NEXT_PUBLIC_TBC_ENABLED === "true";
+// Cash on delivery is temporarily withdrawn. Unlike the card flags above — which gate on
+// merchant credentials existing — this one is a business decision, so it defaults OFF and
+// comes back by setting NEXT_PUBLIC_COD_ENABLED=true. No code change, no redeploy of the
+// bundle logic. The enum, the labels, the Shopify tag and the email copy all stay in place.
+const COD_ENABLED = process.env.NEXT_PUBLIC_COD_ENABLED === "true";
 
 export default function CheckoutPage() {
   const t = useTranslations();
@@ -163,8 +171,8 @@ export default function CheckoutPage() {
       // their next visit even though we never reach the success page handler here.
       saveContact({
         firstName: values.firstName,
-        lastName: values.lastName,
-        email: values.email,
+        lastName: values.lastName ?? "",
+        email: values.email ?? "",
         phone: values.phone,
         address: values.address,
         city: values.city,
@@ -222,12 +230,14 @@ export default function CheckoutPage() {
             icon={<Banknote size={14} />}
             label={t("checkout.bankTransfer")}
           />
-          <ExpressPill
-            active={paymentMethod === "cod"}
-            onClick={() => setValue("paymentMethod", "cod")}
-            icon={<Wallet size={14} />}
-            label={t("checkout.cod")}
-          />
+          {COD_ENABLED ? (
+            <ExpressPill
+              active={paymentMethod === "cod"}
+              onClick={() => setValue("paymentMethod", "cod")}
+              icon={<Wallet size={14} />}
+              label={t("checkout.cod")}
+            />
+          ) : null}
         </div>
       </div>
 
@@ -276,13 +286,13 @@ export default function CheckoutPage() {
           <fieldset className={cn("mb-8", step === 2 && "hidden sm:block")}>
             <legend className="font-display mb-4 text-xl">{t("checkout.shipping")}</legend>
             <div className="grid gap-3 sm:grid-cols-2">
-              <Field label={t("checkout.firstName")} error={errors.firstName?.message}>
-                <input className={inputCls} {...register("firstName")} />
+              <Field label={t("checkout.firstName")} error={errors.firstName?.message} required>
+                <input className={inputCls} aria-required {...register("firstName")} />
               </Field>
               <Field label={t("checkout.lastName")} error={errors.lastName?.message}>
                 <input className={inputCls} {...register("lastName")} />
               </Field>
-              <Field label={t("checkout.phone")} error={errors.phone?.message}>
+              <Field label={t("checkout.phone")} error={errors.phone?.message} required>
                 <Controller
                   control={control}
                   name="phone"
@@ -292,6 +302,7 @@ export default function CheckoutPage() {
                       onChange={field.onChange}
                       onBlur={field.onBlur}
                       aria-invalid={errors.phone ? true : undefined}
+                      aria-required
                     />
                   )}
                 />
@@ -299,11 +310,11 @@ export default function CheckoutPage() {
               <Field label={t("checkout.email")} error={errors.email?.message}>
                 <input className={inputCls} type="email" {...register("email")} />
               </Field>
-              <Field label={t("checkout.address")} error={errors.address?.message} className="sm:col-span-2">
-                <input className={inputCls} {...register("address")} />
+              <Field label={t("checkout.address")} error={errors.address?.message} className="sm:col-span-2" required>
+                <input className={inputCls} aria-required {...register("address")} />
               </Field>
-              <Field label={t("checkout.city")} error={errors.city?.message}>
-                <input className={inputCls} {...register("city")} />
+              <Field label={t("checkout.city")} error={errors.city?.message} required>
+                <input className={inputCls} aria-required {...register("city")} />
               </Field>
               <Field label={t("checkout.postalCode")} error={errors.postalCode?.message}>
                 {(() => {
@@ -372,13 +383,15 @@ export default function CheckoutPage() {
                 title={t("checkout.bankTransfer")}
                 desc={t("checkout.bankTransferDesc")}
               />
-              <PaymentOption
-                active={paymentMethod === "cod"}
-                onSelect={() => setValue("paymentMethod", "cod")}
-                icon={<Wallet size={20} />}
-                title={t("checkout.cod")}
-                desc={t("checkout.codDesc")}
-              />
+              {COD_ENABLED ? (
+                <PaymentOption
+                  active={paymentMethod === "cod"}
+                  onSelect={() => setValue("paymentMethod", "cod")}
+                  icon={<Wallet size={20} />}
+                  title={t("checkout.cod")}
+                  desc={t("checkout.codDesc")}
+                />
+              ) : null}
             </div>
           </fieldset>
         </div>
@@ -388,7 +401,7 @@ export default function CheckoutPage() {
           <ul className="space-y-3 border-b border-black/10 pb-4">
             {cart.lines.map((l) => (
               <li key={l.variantId} className="flex gap-3">
-                <div className="relative aspect-[4/5] w-12 flex-shrink-0 overflow-hidden bg-black/5">
+                <div className="relative aspect-[4/5] w-12 flex-shrink-0 overflow-hidden bg-white">
                   <Image
                     src={safeImageSrc(l.image.url)}
                     alt={l.image.altText}
@@ -396,7 +409,7 @@ export default function CheckoutPage() {
                     sizes="48px"
                     placeholder="blur"
                     blurDataURL={BLUR_DATA_URL}
-                    className="object-cover"
+                    className="object-contain"
                   />
                 </div>
                 <div className="flex flex-1 flex-col">
@@ -505,11 +518,15 @@ function Field({
   label,
   error,
   className,
+  required = false,
   children,
 }: {
   label: string;
   error?: string;
   className?: string;
+  /** Draws the maroon asterisk. Pair it with `aria-required` on the control itself —
+      the asterisk is `aria-hidden`, so on its own it tells assistive tech nothing. */
+  required?: boolean;
   children: React.ReactNode;
 }) {
   return (
@@ -519,6 +536,11 @@ function Field({
           eyebrow style for section headings; forms get this calmer treatment. */}
       <span className="mb-1.5 block text-[13px] font-medium text-[var(--color-brand-ink)]">
         {label}
+        {required ? (
+          <span aria-hidden="true" className="ml-0.5 text-[var(--color-brand-maroon)]">
+            *
+          </span>
+        ) : null}
       </span>
       {children}
       {error ? <span className="mt-1 block text-xs text-[var(--color-brand-maroon)]">{error}</span> : null}

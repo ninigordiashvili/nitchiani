@@ -5,8 +5,9 @@ import { CategoryChips } from "@/components/homepage/CategoryChips";
 import { SectionHeader } from "@/components/homepage/SectionHeader";
 import { CategoryCardGrid } from "@/components/homepage/CategoryCardGrid";
 import { HomepageReviews } from "@/components/homepage/HomepageReviews";
-import { InstagramStrip } from "@/components/homepage/InstagramStrip";
-import { ServicesTeaser } from "@/components/homepage/ServicesTeaser";
+import { ConnectStrip } from "@/components/homepage/ConnectStrip";
+// Hidden for now — see the commented-out "Booking + services" section below.
+// import { ServicesTeaser } from "@/components/homepage/ServicesTeaser";
 import { ProductGrid } from "@/components/commerce/ProductGrid";
 import { RecentlyViewedRail } from "@/components/commerce/RecentlyViewedRail";
 import { BundleUpsellPicker } from "@/components/homepage/BundleUpsellPicker";
@@ -116,10 +117,14 @@ export default async function HomePage({
         </section>
       ) : null}
 
-      {/* 5 — Booking + services (full-bleed dark panel, content inside container) */}
+      {/* 5 — Booking + services (full-bleed dark panel, content inside container).
+          Temporarily hidden. To bring it back, uncomment this block and the
+          `ServicesTeaser` import at the top of the file. */}
+      {/*
       <section className="mt-12">
         <ServicesTeaser />
       </section>
+      */}
 
       {/* 7 — Visual category cards */}
       <section className="container-shop mt-12">
@@ -132,9 +137,9 @@ export default async function HomePage({
         <HomepageReviews locale={locale} />
       </section>
 
-      {/* 9 — Instagram strip (closes the page on a social-feed note) */}
+      {/* 9 — Contact channels (closes the page on "start a conversation") */}
       <section className="container-shop mt-8 sm:mt-12">
-        <InstagramStrip />
+        <ConnectStrip />
       </section>
     </div>
   );

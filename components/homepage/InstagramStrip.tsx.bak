@@ -15,7 +15,7 @@ function IgGlyph({ size = 14 }: { size?: number }) {
 
 export async function InstagramStrip() {
   const t = await getTranslations("home");
-  const handle = process.env.NEXT_PUBLIC_INSTAGRAM_HANDLE ?? "nitchiani";
+  const handle = process.env.NEXT_PUBLIC_INSTAGRAM_HANDLE ?? "Nitchiani.shop";
   const posts = await getInstagramFeed(6);
 
   return (

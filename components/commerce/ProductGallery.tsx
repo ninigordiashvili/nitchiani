@@ -23,7 +23,7 @@ export function ProductGallery({ images, title }: { images: ImageRef[]; title: s
                 onClick={() => setActive(i)}
                 aria-label={t("showImage", { n: i + 1 })}
                 className={cn(
-                  "relative h-16 w-16 flex-shrink-0 overflow-hidden border transition-colors",
+                  "relative h-16 w-16 flex-shrink-0 overflow-hidden border bg-white transition-colors",
                   i === active
                     ? "border-[var(--color-brand-ink)]"
                     : "border-transparent opacity-60 hover:opacity-100",
@@ -36,7 +36,7 @@ export function ProductGallery({ images, title }: { images: ImageRef[]; title: s
                   sizes="64px"
                   placeholder="blur"
                   blurDataURL={BLUR_DATA_URL}
-                  className="object-cover"
+                  className="object-contain"
                 />
               </button>
             </li>
@@ -45,7 +45,7 @@ export function ProductGallery({ images, title }: { images: ImageRef[]; title: s
       ) : null}
 
       <div
-        className="relative order-1 aspect-[4/5] w-full self-start overflow-hidden bg-black/5 lg:order-2 lg:flex-1"
+        className="relative order-1 aspect-[4/5] w-full self-start overflow-hidden bg-white lg:order-2 lg:flex-1"
         style={{
           // `contain: layout style` isolates this subtree from external reflows so opening
           // a modal / dropdown anywhere on the page can't trigger a re-layout of the gallery.
@@ -61,7 +61,7 @@ export function ProductGallery({ images, title }: { images: ImageRef[]; title: s
           priority
           placeholder="blur"
           blurDataURL={BLUR_DATA_URL}
-          className="object-cover"
+          className="object-contain"
         />
       </div>
     </div>

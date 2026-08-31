@@ -1,6 +1,6 @@
 "use client";
 
-import { Clock, MapPin, Phone } from "lucide-react";
+import { Facebook, Instagram, Mail, MapPin, Phone } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/lib/i18n/routing";
 import {
@@ -12,12 +12,13 @@ import { Logo } from "@/components/brand/Logo";
 import { TrustStrip } from "@/components/homepage/TrustStrip";
 import { BUSINESS } from "@/lib/business";
 import { useCookieConsent } from "@/lib/ui/cookie-consent";
-import { NewsletterForm } from "./NewsletterForm";
+// import { NewsletterForm } from "./NewsletterForm";  // hidden — see the footer body
 
 export function Footer() {
   const t = useTranslations();
   const year = new Date().getFullYear();
   const whatsappNumber = getWhatsAppNumber();
+  const instagramHandle = process.env.NEXT_PUBLIC_INSTAGRAM_HANDLE ?? "Nitchiani.shop";
   const phoneDisplay = formatWhatsAppNumber(whatsappNumber);
   const { reset: resetCookieConsent } = useCookieConsent();
 
@@ -30,8 +31,13 @@ export function Footer() {
           (~64px content + iOS safe-area inset) doesn't cover the bottom of the footer.
           `sm:pb-12` resets this on desktop where BottomNav is hidden. */}
       <div className="container-shop pt-10 pb-[calc(6rem+env(safe-area-inset-bottom))] sm:pb-12">
+        {/* Newsletter signup — hidden for now. Uncomment this block (and the
+            `NewsletterForm` import above) to bring it back; the divider below it
+            belongs to this block, not to TrustStrip. */}
+        {/*
         <NewsletterForm />
         <div className="my-10 border-t border-white/10" />
+        */}
         <TrustStrip tone="dark" />
         <div className="my-10 border-t border-white/10" />
         <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
@@ -47,7 +53,7 @@ export function Footer() {
             <ul className="space-y-2.5 text-sm opacity-85">
               <li className="flex items-start gap-2">
                 <MapPin size={14} className="mt-0.5 flex-shrink-0 opacity-70" />
-                <span>{t("footer.address")}</span>
+                <span>{t("footer.tbilisi")}</span>
               </li>
               <li>
                 <a
@@ -56,6 +62,15 @@ export function Footer() {
                 >
                   <Phone size={14} className="flex-shrink-0 opacity-70" />
                   <span>{phoneDisplay}</span>
+                </a>
+              </li>
+              <li>
+                <a
+                  href={`mailto:${BUSINESS.email}`}
+                  className="flex items-center gap-2 hover:opacity-100"
+                >
+                  <Mail size={14} className="flex-shrink-0 opacity-70" />
+                  <span>{BUSINESS.email}</span>
                 </a>
               </li>
               <li>
@@ -69,13 +84,27 @@ export function Footer() {
                   <span>{t("nav.chatWhatsApp")}</span>
                 </a>
               </li>
-              <li className="flex items-start gap-2 pt-1 text-xs opacity-70">
-                <Clock size={13} className="mt-0.5 flex-shrink-0" />
-                <span>
-                  {t("footer.weekdays")}
-                  <br />
-                  {t("footer.sunday")}
-                </span>
+              <li>
+                <a
+                  href={`https://instagram.com/${instagramHandle}`}
+                  target="_blank"
+                  rel="noreferrer noopener"
+                  className="flex items-center gap-2 hover:opacity-100"
+                >
+                  <Instagram size={14} className="flex-shrink-0 opacity-70" />
+                  <span>@{instagramHandle}</span>
+                </a>
+              </li>
+              <li>
+                <a
+                  href={BUSINESS.facebookUrl}
+                  target="_blank"
+                  rel="noreferrer noopener"
+                  className="flex items-center gap-2 hover:opacity-100"
+                >
+                  <Facebook size={14} className="flex-shrink-0 opacity-70" />
+                  <span>{BUSINESS.facebookName}</span>
+                </a>
               </li>
             </ul>
           </div>
@@ -99,10 +128,10 @@ export function Footer() {
               {t("footer.help")}
             </p>
             <ul className="space-y-2 text-sm opacity-80">
-              <li><Link href="/services">{t("nav.services")}</Link></li>
-              <li><Link href="/journal">{t("nav.journal")}</Link></li>
+              {/* <li><Link href="/services">{t("nav.services")}</Link></li> */}
+              {/* <li><Link href="/journal">{t("nav.journal")}</Link></li> */}
               <li><Link href="/about">{t("nav.about")}</Link></li>
-              <li><Link href="/contact">{t("nav.contact")}</Link></li>
+              {/* <li><Link href="/contact">{t("nav.contact")}</Link></li> */}
               <li><Link href="/order-status">{t("nav.orderStatus")}</Link></li>
               <li><Link href="/terms">{t("nav.terms")}</Link></li>
               <li><Link href="/privacy">{t("nav.privacy")}</Link></li>

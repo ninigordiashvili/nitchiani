@@ -40,7 +40,7 @@ export default function CartPage() {
         <ul className="divide-y divide-black/10">
           {cart.lines.map((line) => (
             <li key={line.variantId} className="flex gap-4 py-5">
-              <div className="relative aspect-[4/5] w-28 flex-shrink-0 overflow-hidden bg-black/5">
+              <div className="relative aspect-[4/5] w-28 flex-shrink-0 overflow-hidden bg-white">
                 <Image
                   src={safeImageSrc(line.image.url)}
                   alt={line.image.altText}
@@ -48,7 +48,7 @@ export default function CartPage() {
                   sizes="112px"
                   placeholder="blur"
                   blurDataURL={BLUR_DATA_URL}
-                  className="object-cover"
+                  className="object-contain"
                 />
               </div>
               <div className="flex flex-1 flex-col justify-between">

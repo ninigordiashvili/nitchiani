@@ -1,6 +1,6 @@
 "use client";
 
-import { Heart, Home, Search, ShoppingBag } from "lucide-react";
+import { Heart, Home, ShoppingBag } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Link, usePathname } from "@/lib/i18n/routing";
 import { useCart } from "@/lib/cart/store";
@@ -20,9 +20,11 @@ import { CountBadge } from "./CountBadge";
  * Only exception: on a PDP, the sticky Add-to-bag bar takes over this slot via
  * `overlays.pdpCtaActive` so the user doesn't see two stacked bars.
  *
- * Four slots: Home + Wishlist are nav links (active state via current path); Search opens
- * the shared overlay; Bag opens the cart drawer. The previous `/shop` slot was dropped —
- * Home + the category chips on the homepage + the menu drawer all cover that intent.
+ * Three slots: Home + Wishlist are nav links (active state via current path); Bag opens the
+ * cart drawer. The previous `/shop` slot was dropped — Home + the category chips on the
+ * homepage + the menu drawer all cover that intent. Search was dropped too: the header keeps
+ * its own search button on mobile, so the affordance is still one tap away without spending
+ * a bottom slot on it.
  */
 export function BottomNav() {
   const t = useTranslations("nav");
@@ -57,24 +59,13 @@ export function BottomNav() {
         willChange: "transform",
       }}
     >
-      <ul className="grid grid-cols-4">
+      <ul className="grid grid-cols-3">
         <NavItem
           href="/"
           icon={<Home size={20} />}
           label={t("home")}
           active={isActive("/")}
         />
-        <li>
-          <button
-            type="button"
-            onClick={() => overlays.setSearchOpen(true)}
-            className="flex w-full cursor-pointer flex-col items-center justify-center gap-0.5 py-2 transition-colors"
-            aria-label={t("search")}
-          >
-            <Search size={20} />
-            <span className="text-[10px] tracking-[0.05em]">{t("search")}</span>
-          </button>
-        </li>
         <NavItem
           href="/wishlist"
           icon={<Heart size={20} />}
@@ -90,9 +81,23 @@ export function BottomNav() {
             aria-label={t("cart")}
           >
             <span className="relative">
-              <ShoppingBag size={20} />
+              {/* Pulses only while the bag holds something — an empty bag breathing
+                  forever would be motion with nothing to say. */}
+              <span
+                style={
+                  cart.totalQuantity > 0
+                    ? { animation: "cart-pulse 2.4s ease-in-out infinite", display: "inline-flex" }
+                    : undefined
+                }
+              >
+                <ShoppingBag size={20} />
+              </span>
               {cart.totalQuantity > 0 ? (
-                <CountBadge count={cart.totalQuantity} className="-top-1.5 -right-2" />
+                <CountBadge
+                  count={cart.totalQuantity}
+                  className="-top-1.5 -right-2"
+                  motion="pulse"
+                />
               ) : null}
             </span>
             <span className="text-[10px] tracking-[0.05em]">{t("cart")}</span>
