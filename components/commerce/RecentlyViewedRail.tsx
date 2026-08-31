@@ -45,7 +45,7 @@ export function RecentlyViewedRail({
             className="w-[140px] flex-shrink-0 snap-start"
           >
             <Link href={`/products/${item.handle}`} className="group block">
-              <div className="relative aspect-square overflow-hidden bg-black/5">
+              <div className="relative aspect-square overflow-hidden bg-white">
                 <Image
                   src={safeImageSrc(item.image.url)}
                   alt={item.image.altText}
@@ -53,7 +53,7 @@ export function RecentlyViewedRail({
                   sizes="140px"
                   placeholder="blur"
                   blurDataURL={BLUR_DATA_URL}
-                  className="object-cover transition-transform duration-500 ease-[var(--ease-brand)] group-hover:scale-105"
+                  className="object-contain transition-transform duration-500 ease-[var(--ease-brand)] group-hover:scale-105"
                 />
               </div>
               <p className="mt-2 line-clamp-1 text-xs leading-tight">{item.title}</p>

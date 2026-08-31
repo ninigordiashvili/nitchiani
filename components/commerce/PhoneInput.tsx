@@ -9,8 +9,8 @@ import { cn } from "@/lib/utils";
  * primary market — but accepts diaspora numbers (US/UK/DE/IL/TR/RU/FR/IT/ES) and emits
  * canonical E.164 ("+<code><digits>") to the form value.
  *
- * For Georgian numbers the local digits auto-format to `5XX XX XX XX` (the convention
- * Georgians know). Other countries render plain grouped digits.
+ * Local digits auto-format into three-digit groups as you type — `5XX XXX XXX` for a
+ * Georgian mobile — matching how the number is written everywhere else on the site.
  *
  * Empty input emits "" so the form's `optional()` / regex validation behaves predictably.
  */
@@ -47,18 +47,15 @@ function digitsOnly(s: string, max: number): string {
   return s.replace(/\D/g, "").slice(0, max);
 }
 
-/** Georgia-style "555 12 34 56" grouping. Empty input → "". */
-function formatGeorgian(digits: string): string {
-  const parts: string[] = [];
-  if (digits.length > 0) parts.push(digits.slice(0, 3));
-  if (digits.length > 3) parts.push(digits.slice(3, 5));
-  if (digits.length > 5) parts.push(digits.slice(5, 7));
-  if (digits.length > 7) parts.push(digits.slice(7, 9));
-  return parts.join(" ");
-}
-
-/** Generic XXX XXX XXXX-style grouping in chunks of 3. Used for non-GE countries. */
-function formatGeneric(digits: string): string {
+/**
+ * Groups digits in threes: "579370374" → "579 370 374".
+ *
+ * Georgian mobiles used to get a 3-2-2-2 special case here ("579 37 03 74"), which put the
+ * field at odds with its own placeholder, with `formatWhatsAppNumber` in the footer and on
+ * /contact, and with the number as the studio writes it. Three-digit groups now apply to
+ * every country, Georgia included.
+ */
+function formatGroups(digits: string): string {
   const groups: string[] = [];
   for (let i = 0; i < digits.length; i += 3) groups.push(digits.slice(i, i + 3));
   return groups.join(" ");
@@ -88,10 +85,19 @@ type Props = {
   className?: string;
   placeholder?: string;
   "aria-invalid"?: boolean;
+  "aria-required"?: boolean;
 };
 
 export const PhoneInput = forwardRef<HTMLInputElement, Props>(function PhoneInput(
-  { value, onChange, onBlur, className, placeholder, "aria-invalid": invalid },
+  {
+    value,
+    onChange,
+    onBlur,
+    className,
+    placeholder,
+    "aria-invalid": invalid,
+    "aria-required": ariaRequired,
+  },
   ref,
 ) {
   // Mirror state internally so the user can change the country without losing the digits
@@ -148,8 +154,7 @@ export const PhoneInput = forwardRef<HTMLInputElement, Props>(function PhoneInpu
     emit(country, next);
   };
 
-  const formatted =
-    country.code === "+995" ? formatGeorgian(digits) : formatGeneric(digits);
+  const formatted = formatGroups(digits);
   // Build a localised placeholder based on the current country's expected length.
   const inferredPlaceholder = placeholder ?? "0".repeat(country.digits).replace(/(\d{3})(?=\d)/g, "$1 ");
 
@@ -186,6 +191,7 @@ export const PhoneInput = forwardRef<HTMLInputElement, Props>(function PhoneInpu
           onBlur={onBlur}
           placeholder={inferredPlaceholder}
           aria-invalid={invalid}
+          aria-required={ariaRequired}
           className="flex-1 bg-transparent px-3 py-2.5 text-sm focus:outline-none"
         />
       </div>

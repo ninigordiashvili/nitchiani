@@ -18,7 +18,7 @@ import { cn } from "@/lib/utils";
 /**
  * Self-contained "How it works" trigger + modal. Drops into cart drawer / cart page / checkout
  * aside to reassure first-time Georgian buyers about the post-tap flow: order → confirmation →
- * Tbilisi studio prep → courier delivery → 14-day returns. Pattern mirrors `SizeGuideButton`.
+ * Tbilisi studio prep → courier delivery → 24-hour returns. Pattern mirrors `SizeGuideButton`.
  *
  * Tone is the only variant — `light` for cream surfaces, `dark` for the (eventual) footer
  * placement. Trigger is a small underline-on-hover link, not a button — it's a passive

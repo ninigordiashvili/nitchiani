@@ -1,8 +1,8 @@
 import type { MetadataRoute } from "next";
 import { CAMPAIGNS } from "@/lib/campaigns";
 import { locales } from "@/lib/i18n/config";
-import { JOURNAL_POSTS } from "@/lib/journal";
-import { SERVICES } from "@/lib/services";
+// import { JOURNAL_POSTS } from "@/lib/journal";  // hidden — see the journal loop below
+// import { SERVICES } from "@/lib/services";  // hidden — see the services loop below
 import { getProducts } from "@/lib/shopify/client";
 
 /**
@@ -32,9 +32,9 @@ const STATIC_PATHS = [
   "",
   "/shop",
   "/about",
-  "/contact",
-  "/services",
-  "/journal",
+  // "/contact",  // hidden — route lives in (content)/_contact
+  // "/services",  // hidden — route lives in (content)/_services
+  // "/journal",  // hidden — route lives in (content)/_journal
   "/order-status",
   "/terms",
   "/privacy",
@@ -82,12 +82,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // Campaigns are usually time-bound and drive paid/social traffic — high priority while live.
     entries.push(buildEntry(baseUrl, `/shop/${c.slug}`, 0.8));
   }
-  for (const s of SERVICES) {
-    entries.push(buildEntry(baseUrl, `/services/${s.slug}`, 0.6));
-  }
-  for (const post of JOURNAL_POSTS) {
-    entries.push(buildEntry(baseUrl, `/journal/${post.slug}`, 0.6));
-  }
+  // Services are hidden site-wide — see (content)/_services. Re-enable alongside
+  // the route, the nav links and the homepage teaser.
+  // for (const s of SERVICES) {
+  //   entries.push(buildEntry(baseUrl, `/services/${s.slug}`, 0.6));
+  // }
+  // Journal is hidden site-wide — see (content)/_journal. Re-enable alongside the
+  // route and the footer link.
+  // for (const post of JOURNAL_POSTS) {
+  //   entries.push(buildEntry(baseUrl, `/journal/${post.slug}`, 0.6));
+  // }
   for (const p of products) {
     entries.push(buildEntry(baseUrl, `/products/${p.handle}`, 0.8));
   }

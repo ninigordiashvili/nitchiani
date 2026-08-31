@@ -42,7 +42,8 @@
     "decreaseQuantity": "Decrease quantity",
     "increaseQuantity": "Increase quantity",
     "breadcrumb": "Breadcrumb",
-    "showImage": "Show image {n}"
+    "showImage": "Show image {n}",
+    "chatOnSite": "Chat with us here"
   },
   "promo": {
     "shipping": "Free shipping in Tbilisi over ₾150",
@@ -60,7 +61,7 @@
     "shopNow": "Shop now",
     "bookSession": "Book a session",
     "bookSessionDesc": "Braids, locs and consultations at our Tbilisi studio",
-    "instagram": "@nitchiani on Instagram",
+    "instagram": "@Nitchiani.shop on Instagram",
     "instagramDesc": "Our latest moments",
     "instagramTag": "Tag {handle} in your photo and we'll feature you here.",
     "reviewsEyebrow": "Loved in Tbilisi",
@@ -76,11 +77,14 @@
     "trust": {
       "shipping": "Shipping in Georgia",
       "shippingDesc": "1–3 business days",
-      "returns": "14-day returns",
+      "returns": "24-hour returns",
       "returnsDesc": "Even on opened items",
       "payment": "Secure checkout",
       "paymentDesc": "BOG · TBC · Bank transfer"
-    }
+    },
+    "connectEyebrow": "Get in touch",
+    "connectTitle": "Contact us",
+    "connectDesc": "Follow us so you don't miss anything new."
   },
   "categories": {
     "bonnets": "Bonnets",
@@ -113,7 +117,7 @@
     "shareCopied": "Link copied",
     "shipsIn": "Ships from Tbilisi · 1–3 business days",
     "askQuestion": "Questions about this?",
-    "askQuestionDesc": "Message us on WhatsApp — we usually reply in minutes.",
+    "askQuestionDesc": "Chat with us right here — we usually reply in minutes.",
     "sizeGuide": "Size guide",
     "sizeGuideBonnet": "Bonnet sizes",
     "sizeGuideSize": "Size",
@@ -169,10 +173,11 @@
     "howItWorksStep3Title": "Delivered in 1–3 days",
     "howItWorksStep3Desc": "Courier shipping across Georgia. Free over ₾150 in Tbilisi.",
     "howItWorksStep4Title": "Try at home",
-    "howItWorksStep4Desc": "14-day returns, even on opened items. No questions asked.",
+    "howItWorksStep4Desc": "24-hour returns, even on opened items. No questions asked.",
     "total": "Total",
     "checkout": "Checkout",
-    "remove": "Remove"
+    "remove": "Remove",
+    "clearCartConfirmDesc": "This empties your cart. It can't be undone."
   },
   "checkout": {
     "title": "Checkout",
@@ -250,9 +255,9 @@
     "eyebrow": "Legal",
     "title": "Terms & Conditions",
     "lastUpdated": "Last updated {date}",
-    "intro": "These terms govern your use of nitchiani.com and any order you place with us. Please read them carefully before purchasing — placing an order means you accept them.",
+    "intro": "These terms govern your use of nitchiani.shop and any order you place with us. Please read them carefully before purchasing — placing an order means you accept them.",
     "metaTitle": "Terms & Conditions",
-    "metaDescription": "The terms that govern orders placed on nitchiani.com, including delivery, returns and the 14-day right of withdrawal."
+    "metaDescription": "The terms that govern orders placed on nitchiani.shop, including delivery, returns and the 24-hour right of withdrawal."
   },
   "whatsapp": {
     "productMessage": "Hi — I have a question about: {title}",
@@ -266,7 +271,9 @@
     "whatsappLabel": "WhatsApp",
     "whatsappDesc": "Replies within the hour",
     "instagramLabel": "Instagram",
-    "emailLabel": "Email"
+    "emailLabel": "Email",
+    "facebookLabel": "Facebook",
+    "phoneLabel": "Phone"
   },
   "cookies": {
     "title": "Cookies",
@@ -278,7 +285,7 @@
     "eyebrow": "Legal",
     "title": "Privacy Policy",
     "lastUpdated": "Last updated {date}",
-    "intro": "How we collect, use and protect your personal data when you use nitchiani.com. Written so a reasonable person can actually read it.",
+    "intro": "How we collect, use and protect your personal data when you use nitchiani.shop. Written so a reasonable person can actually read it.",
     "metaTitle": "Privacy Policy",
     "metaDescription": "How Nitchiani collects, uses and protects personal data — under the Georgian Personal Data Protection Act."
   },
@@ -286,9 +293,9 @@
     "eyebrow": "Legal",
     "title": "Refund & Returns Policy",
     "lastUpdated": "Last updated {date}",
-    "intro": "How returns and refunds work — your 14-day right of withdrawal, what's excluded for hygiene reasons, and how to get money back into your account.",
+    "intro": "How returns and refunds work — your 24-hour right of withdrawal, what's excluded for hygiene reasons, and how to get money back into your account.",
     "metaTitle": "Refund & Returns Policy",
-    "metaDescription": "Return and refund terms for orders placed on nitchiani.com, including the 14-day right of withdrawal and hygiene exceptions."
+    "metaDescription": "Return and refund terms for orders placed on nitchiani.shop, including the 24-hour right of withdrawal and hygiene exceptions."
   },
   "footer": {
     "shop": "Shop",
@@ -305,10 +312,7 @@
     "regId": "Reg. ID",
     "vatId": "VAT ID",
     "tbilisi": "Tbilisi, Georgia",
-    "contact": "Contact",
-    "address": "Marjanishvili St 5, Tbilisi",
-    "weekdays": "Mon–Sat · 11:00–19:00",
-    "sunday": "Sun · By appointment"
+    "contact": "Contact"
   },
   "common": {
     "loading": "Loading...",
@@ -357,7 +361,8 @@
     "noResultsCta": "Browse the whole shop",
     "popularEyebrow": "Popular",
     "closeAria": "Close search",
-    "clearAria": "Clear search"
+    "clearAria": "Clear search",
+    "viewAllType": "View all {type}"
   },
   "orderStatus": {
     "eyebrow": "Order status",

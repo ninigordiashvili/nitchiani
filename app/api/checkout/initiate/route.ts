@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { discountFor, findCoupon, type Coupon } from "@/lib/cart/coupons";
+import { computeTotals, type ServerComputedTotals } from "@/lib/checkout/totals";
 import { sendOrderConfirmation } from "@/lib/email/order-confirmation";
 import {
   createManualOrder,
@@ -9,6 +9,8 @@ import {
 } from "@/lib/shopify/orders";
 import { createBogPaymentOrder, isBogConfigured } from "@/lib/payments/bog";
 import { createTbcPayment, getClientIp, isTbcConfigured } from "@/lib/payments/tbc";
+import { clientIp, rateLimit } from "@/lib/rate-limit";
+import { reportError } from "@/lib/observability";
 
 const lineSchema = z.object({
   variantId: z.string(),
@@ -19,11 +21,16 @@ const lineSchema = z.object({
   quantity: z.number().int().positive(),
 });
 
+// Mirrors NEXT_PUBLIC_COD_ENABLED on the checkout page. The client hides the option; this
+// is what actually refuses it, so a hand-rolled request can't book a cash-on-delivery order
+// while the service is withdrawn.
+const COD_ENABLED = process.env.NEXT_PUBLIC_COD_ENABLED === "true";
+
 const bodySchema = z.object({
   firstName: z.string().min(1),
-  lastName: z.string().min(1),
+  lastName: z.string().optional(),
   phone: z.string().min(6),
-  email: z.string().email(),
+  email: z.string().email().optional().or(z.literal("")),
   address: z.string().min(3),
   city: z.string().min(1),
   postalCode: z.string().optional(),
@@ -42,49 +49,6 @@ type CheckoutResponse =
   | { redirectUrl: string }
   | { error: string };
 
-/**
- * Server-side total computation. Never trust client-supplied subtotal/total/discount —
- * a DevTools user can edit the request before it leaves the browser. We recompute
- * everything from the line items + coupon registry and cross-check against the client
- * subtotal so we surface mismatches early (e.g., catalog price changed between cart and
- * checkout). All amounts are in GEL (the storefront's transaction currency).
- */
-type ServerComputedTotals = {
-  subtotal: number;
-  discount: number;
-  total: number;
-  coupon: Coupon | null;
-};
-
-function computeTotals(
-  lines: z.infer<typeof lineSchema>[],
-  couponCode: string | null | undefined,
-): { ok: true; totals: ServerComputedTotals } | { ok: false; error: string } {
-  const subtotal = lines.reduce(
-    (sum, l) => sum + Number.parseFloat(l.unitPrice.amount) * l.quantity,
-    0,
-  );
-
-  if (!Number.isFinite(subtotal) || subtotal <= 0) {
-    return { ok: false, error: "Invalid subtotal" };
-  }
-
-  let coupon: Coupon | null = null;
-  let discount = 0;
-  if (couponCode) {
-    coupon = findCoupon(couponCode);
-    if (!coupon) {
-      return { ok: false, error: "Coupon code is not valid." };
-    }
-    discount = discountFor(subtotal, coupon);
-    // `discountFor` returns 0 when the min-subtotal gate fails — we still keep the coupon
-    // attached to the order for analytics, but the charge is the full subtotal.
-  }
-
-  const total = Math.max(0, Math.round((subtotal - discount) * 100) / 100);
-  return { ok: true, totals: { subtotal, discount, total, coupon } };
-}
-
 /** Build the order-creation payload the way `createManualOrder` / `createPendingOrder` expect. */
 function buildOrderInput(
   payload: z.infer<typeof bodySchema>,
@@ -92,9 +56,9 @@ function buildOrderInput(
 ): ManualOrderInput {
   return {
     firstName: payload.firstName,
-    lastName: payload.lastName,
+    lastName: payload.lastName ?? "",
     phone: payload.phone,
-    email: payload.email,
+    email: payload.email ?? "",
     address: payload.address,
     city: payload.city,
     postalCode: payload.postalCode,
@@ -113,12 +77,30 @@ function buildOrderInput(
 }
 
 export async function POST(req: Request): Promise<NextResponse<CheckoutResponse>> {
+  // Rate limit BEFORE any work — this endpoint creates real Shopify orders, so an unthrottled
+  // caller could flood the admin with junk. 8 orders/minute/IP is generous for a real shopper
+  // (including payment retries) but caps automated abuse.
+  const rl = rateLimit(`checkout:${clientIp(req)}`, { limit: 8, windowMs: 60_000 });
+  if (!rl.ok) {
+    return NextResponse.json(
+      { error: "Too many requests. Please wait a moment and try again." },
+      { status: 429, headers: { "Retry-After": String(rl.retryAfter) } },
+    );
+  }
+
   let payload: z.infer<typeof bodySchema>;
   try {
     payload = bodySchema.parse(await req.json());
   } catch (err) {
     return NextResponse.json(
       { error: err instanceof Error ? err.message : "Invalid request" },
+      { status: 400 },
+    );
+  }
+
+  if (payload.paymentMethod === "cod" && !COD_ENABLED) {
+    return NextResponse.json(
+      { error: "Cash on delivery is unavailable. Please choose another payment method." },
       { status: 400 },
     );
   }
@@ -159,7 +141,7 @@ export async function POST(req: Request): Promise<NextResponse<CheckoutResponse>
 
   // bank_transfer / cod — manual flow, order created in pending state, customer follow-up by hand.
   const orderId = await createManualOrder(orderInput).catch((err) => {
-    console.error("[api/checkout/initiate] manual order threw:", err);
+    reportError(err, { op: "createManualOrder", paymentMethod: payload.paymentMethod, total: totals.total });
     return null;
   });
   const finalOrderId = orderId ?? `LOCAL-${Date.now()}`;
@@ -168,7 +150,7 @@ export async function POST(req: Request): Promise<NextResponse<CheckoutResponse>
   // blocks the checkout response — the order is real in Shopify either way, and the email
   // module returns false instead of throwing when the API key isn't configured.
   void sendOrderConfirmation({ ...orderInput, orderId: finalOrderId }).catch((err) => {
-    console.error("[api/checkout/initiate] confirmation email threw:", err);
+    reportError(err, { op: "sendOrderConfirmation", orderId: finalOrderId });
   });
 
   return NextResponse.json({ orderId: finalOrderId });
@@ -187,7 +169,7 @@ async function handleBogCard(
   }
 
   const pending = await createPendingOrder(orderInput).catch((err) => {
-    console.error("[api/checkout/initiate] pending order threw:", err);
+    reportError(err, { op: "createPendingOrder", paymentMethod: orderInput.paymentMethod, total: totals.total });
     return null;
   });
   if (!pending) {
@@ -212,7 +194,7 @@ async function handleBogCard(
       unit_price: Number.parseFloat(l.unitPrice.amount),
     })),
     buyer: {
-      full_name: `${orderInput.firstName} ${orderInput.lastName}`,
+      full_name: `${orderInput.firstName} ${orderInput.lastName}`.trim(),
       email: orderInput.email,
       phone: orderInput.phone,
     },
@@ -221,7 +203,7 @@ async function handleBogCard(
     callbackUrl: `${origin}/api/checkout/webhook`,
     language: orderInput.locale === "en" ? "en" : "ka",
   }).catch((err) => {
-    console.error("[api/checkout/initiate] BOG order create threw:", err);
+    reportError(err, { op: "createBogPaymentOrder", orderId: pending.id, total: totals.total });
     return null;
   });
 
@@ -248,7 +230,7 @@ async function handleTbcCard(
   }
 
   const pending = await createPendingOrder(orderInput).catch((err) => {
-    console.error("[api/checkout/initiate] pending order threw:", err);
+    reportError(err, { op: "createPendingOrder", paymentMethod: orderInput.paymentMethod, total: totals.total });
     return null;
   });
   if (!pending) {
@@ -269,7 +251,7 @@ async function handleTbcCard(
     language: orderInput.locale === "en" ? "EN" : "KA",
     userIpAddress: getClientIp(req),
   }).catch((err) => {
-    console.error("[api/checkout/initiate] TBC payment create threw:", err);
+    reportError(err, { op: "createTbcPayment", orderId: pending.id, total: totals.total });
     return null;
   });
 

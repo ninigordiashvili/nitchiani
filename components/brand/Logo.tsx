@@ -8,9 +8,10 @@ import { cn } from "@/lib/utils";
  *                        Used in the header — small footprint, reads clearly at 14-16px.
  *                        Pass `tone="cream"` for use on the dark footer surface.
  *
- *   variant="mark"     — circular brand stamp (square 1:1, maroon Mkhedruli inside teal-black
- *                        circle). Self-contained; looks correct on any background. Used in the
- *                        footer + as the favicon (app/icon.png).
+ *   variant="mark"     — circular brand stamp (square 1:1, "NITCHIANI .SHOP" on a cream disc,
+ *                        transparent outside the circle). Reads on dark surfaces; on a light
+ *                        one the disc edge all but disappears. Used in the footer + as the
+ *                        favicon (app/icon.png).
  *
  *   variant="wordmark" — vertical Mkhedruli wordmark only (transparent background, maroon glyphs).
  *                        Reserved for hero/splash placements where the column has room to breathe.

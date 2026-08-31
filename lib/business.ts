@@ -18,7 +18,11 @@ export const BUSINESS = {
   /** Registered legal address (street, city, country). */
   address: "[REGISTERED ADDRESS, Tbilisi, Georgia]",
   /** Public-facing contact email. */
-  email: "hello@nitchiani.com",
+  email: "Info@nitchiani.shop",
+  /** Official Facebook page. Numeric profile URL — the page has no vanity handle yet. */
+  facebookUrl: "https://www.facebook.com/profile.php?id=61593930928320",
+  /** Display name for the Facebook page (the URL carries no readable handle). */
+  facebookName: "Nitchiani Shop",
 } as const;
 
 /** Convenience boolean — true once the placeholders have been replaced with real data. */

@@ -66,7 +66,7 @@ export function ContactFloater() {
   }, [open]);
 
   const whatsappNumber = getWhatsAppNumber();
-  const instagramHandle = process.env.NEXT_PUBLIC_INSTAGRAM_HANDLE ?? "nitchiani";
+  const instagramHandle = process.env.NEXT_PUBLIC_INSTAGRAM_HANDLE ?? "Nitchiani.shop";
 
   // Mobile: lift just above the BottomNav (4.5rem) + iOS safe-area. Desktop (sm+): handled
   // by the `sm:bottom-2` class which overrides this value.

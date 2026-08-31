@@ -4,6 +4,7 @@ import { AlertOctagon, RotateCcw } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useEffect } from "react";
 import { Link } from "@/lib/i18n/routing";
+import { reportError } from "@/lib/observability";
 
 /**
  * Branded runtime-error boundary for locale routes. Must be a client component (Next.js
@@ -11,8 +12,8 @@ import { Link } from "@/lib/i18n/routing";
  * enough for transient network blips; persistent bugs land the user on "Home" via the
  * fallback link.
  *
- * In production we'd ship the `error.digest` to Sentry / a log drain here. For now we
- * just surface it in the eyebrow so support has something to copy when a customer
+ * Errors are forwarded to `reportError` (lib/observability) with the digest attached; the
+ * digest is also shown in the eyebrow so support has something to copy when a customer
  * reports an issue.
  */
 export default function GlobalError({
@@ -25,8 +26,7 @@ export default function GlobalError({
   const t = useTranslations();
 
   useEffect(() => {
-    // Swap this for the real error reporter when wiring up monitoring.
-    console.error("[error boundary]", error);
+    reportError(error, { source: "error-boundary", digest: error.digest });
   }, [error]);
 
   return (

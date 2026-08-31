@@ -7,6 +7,7 @@ import { useEffect, useRef } from "react";
 import { Link } from "@/lib/i18n/routing";
 import { BLUR_DATA_URL } from "@/lib/images";
 import { useFocusTrap } from "@/lib/ui/use-focus-trap";
+import { useOverlays } from "@/lib/ui/overlays";
 import { useQuickView } from "@/lib/ui/quick-view";
 import { useSwipeDismiss } from "@/lib/ui/use-swipe-dismiss";
 import { ProductPurchase } from "./ProductPurchase";
@@ -16,10 +17,17 @@ import { ProductPurchase } from "./ProductPurchase";
  * QuickViewProvider. When `product` is non-null, the sheet slides in from the bottom with a
  * scrim. Reuses the same `<ProductPurchase>` block as the PDP so variant selection + add-to-bag
  * are perfectly consistent.
+ *
+ * Note the search overlay: `SearchOverlay` closes itself by catching bubbled clicks on its
+ * results grid, but `QuickViewButton` stops propagation so tapping it doesn't also trigger
+ * the card's `<Link>`. That leaves search mounted behind this sheet — correct while the sheet
+ * is open (dismissing it should return you to your results), wrong the moment we navigate
+ * away. So only the "View full details" link closes both.
  */
 export function QuickViewModal() {
   const t = useTranslations();
   const quickView = useQuickView();
+  const overlays = useOverlays();
   const product = quickView.product;
   const open = product !== null;
   const { dragOffset, handlers } = useSwipeDismiss({
@@ -76,7 +84,7 @@ export function QuickViewModal() {
         {product ? (
           <div className="flex flex-col sm:grid sm:grid-cols-2">
             {/* Image */}
-            <div className="relative aspect-square w-full bg-black/5 sm:rounded-l-2xl sm:rounded-tr-none">
+            <div className="relative aspect-square w-full bg-white sm:rounded-l-2xl sm:rounded-tr-none">
               <Image
                 src={product.featuredImage.url}
                 alt={product.featuredImage.altText}
@@ -84,7 +92,7 @@ export function QuickViewModal() {
                 sizes="(min-width: 640px) 50vw, 100vw"
                 placeholder="blur"
                 blurDataURL={BLUR_DATA_URL}
-                className="object-cover sm:rounded-l-2xl"
+                className="object-contain sm:rounded-l-2xl"
               />
               <button
                 type="button"
@@ -119,7 +127,10 @@ export function QuickViewModal() {
 
               <Link
                 href={`/products/${product.handle}`}
-                onClick={quickView.close}
+                onClick={() => {
+                  quickView.close();
+                  overlays.setSearchOpen(false);
+                }}
                 className="mt-auto inline-flex items-center gap-1 self-center pt-6 text-xs font-medium tracking-[0.16em] uppercase opacity-80 hover:opacity-100"
               >
                 {t("product.viewFullDetails")}

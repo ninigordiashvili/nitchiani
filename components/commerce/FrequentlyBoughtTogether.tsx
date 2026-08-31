@@ -40,7 +40,6 @@ export function FrequentlyBoughtTogether({
   const [selected, setSelected] = useState<Set<string>>(
     new Set(items.map((p) => p.handle)),
   );
-  const [added, setAdded] = useState(false);
 
   if (items.length < 2) return null;
 
@@ -74,8 +73,6 @@ export function FrequentlyBoughtTogether({
         unitPrice: v.price,
       });
     }
-    setAdded(true);
-    setTimeout(() => setAdded(false), 1800);
   };
 
   return (
@@ -116,7 +113,7 @@ export function FrequentlyBoughtTogether({
 
                 <Link
                   href={`/products/${p.handle}`}
-                  className="relative h-14 w-14 flex-shrink-0 overflow-hidden rounded-md bg-black/5"
+                  className="relative h-14 w-14 flex-shrink-0 overflow-hidden rounded-md bg-white"
                 >
                   <Image
                     src={safeImageSrc(p.featuredImage.url)}
@@ -125,7 +122,7 @@ export function FrequentlyBoughtTogether({
                     sizes="56px"
                     placeholder="blur"
                     blurDataURL={BLUR_DATA_URL}
-                    className="object-cover"
+                    className="object-contain"
                   />
                 </Link>
 
@@ -167,14 +164,7 @@ export function FrequentlyBoughtTogether({
               !canAdd && "cursor-not-allowed opacity-50",
             )}
           >
-            {added ? (
-              <>
-                <Check size={16} />
-                {t("fbtAdded")}
-              </>
-            ) : (
-              t("fbtAdd", { count: selectedItems.length })
-            )}
+            {t("fbtAdd", { count: selectedItems.length })}
           </button>
         </div>
       </div>

@@ -1,10 +1,11 @@
 "use client";
 
-import { X } from "lucide-react";
+import { MessageCircle, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useEffect, useRef } from "react";
 import { Link } from "@/lib/i18n/routing";
-import { getWhatsAppNumber, WhatsAppIcon } from "@/components/brand/WhatsAppIcon";
+import { getWhatsAppNumber } from "@/components/brand/WhatsAppIcon";
+import { ChatTrigger } from "@/components/ui/ChatTrigger";
 import { useFocusTrap } from "@/lib/ui/use-focus-trap";
 import { useSwipeDismiss } from "@/lib/ui/use-swipe-dismiss";
 
@@ -19,9 +20,9 @@ const SHOP_LINKS = [
 ];
 
 const SECONDARY = [
-  { href: "/services", labelKey: "services" as const },
+  // { href: "/services", labelKey: "services" as const },  // hidden site-wide
   { href: "/about", labelKey: "about" as const },
-  { href: "/contact", labelKey: "contact" as const },
+  // { href: "/contact", labelKey: "contact" as const },  // hidden site-wide
 ];
 
 export function MobileMenuDrawer({
@@ -122,21 +123,22 @@ export function MobileMenuDrawer({
 
           <div className="mt-6 border-t border-black/10 pt-5">
             <p className="label-eyebrow mb-3">{t("needHelp")}</p>
-            <a
-              href={`https://wa.me/${whatsappNumber}`}
-              target="_blank"
-              rel="noreferrer noopener"
-              onClick={onClose}
-              className="flex items-center gap-3 rounded-md border border-black/10 px-3 py-2.5 transition-colors hover:border-black/30"
+            <ChatTrigger
+              fallbackHref={`https://wa.me/${whatsappNumber}`}
+              onOpen={onClose}
+              className="flex w-full cursor-pointer items-center gap-3 rounded-md border border-black/10 px-3 py-2.5 text-left transition-colors hover:border-black/30"
             >
               <span
                 className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full"
-                style={{ background: "#25D366", color: "white" }}
+                style={{
+                  background: "var(--color-brand-maroon)",
+                  color: "var(--color-brand-cream)",
+                }}
               >
-                <WhatsAppIcon size={16} />
+                <MessageCircle size={16} />
               </span>
-              <span className="text-sm font-medium">{t("chatWhatsApp")}</span>
-            </a>
+              <span className="text-sm font-medium">{t("chatOnSite")}</span>
+            </ChatTrigger>
           </div>
 
         </nav>

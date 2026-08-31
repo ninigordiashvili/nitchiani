@@ -68,8 +68,8 @@
     text-rendering: optimizeLegibility;
     /* Always reserve scrollbar space, even when no scrollbar is rendered. Otherwise opening
        a modal (which locks `body.style.overflow = "hidden"`) removes the scrollbar and the
-       layout reflows by ~15px — the PDP gallery's `object-cover` image re-crops into the
-       new width, which reads visually as "zooming and shifting". `scrollbar-gutter: stable`
+       layout reflows by ~15px — the PDP gallery image re-fits into the new width, which
+       reads visually as "zooming and shifting". `scrollbar-gutter: stable`
        eliminates the shift entirely on Chrome 94+, Safari 16+, Firefox 97+. */
     scrollbar-gutter: stable;
   }
@@ -150,6 +150,25 @@
   /* Min tap target for mobile */
   button, a {
     -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Tailwind v4's Preflight resets `button` to `cursor: default` (v3 left it as `pointer`),
+     which is why individual `cursor-pointer` utilities are scattered through the components.
+     Set it once here so every button — including ones added later — behaves the same, and
+     the utilities become belt-and-braces rather than load-bearing.
+
+     Disabled buttons are excluded and get `not-allowed` instead, matching what the add-to-bag
+     and bundle buttons already do by hand. `[role="button"]` catches the non-<button>
+     controls, and `summary` the native disclosure toggles. */
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]),
+  summary {
+    cursor: pointer;
+  }
+
+  button:disabled,
+  [role="button"][aria-disabled="true"] {
+    cursor: not-allowed;
   }
 }
 
@@ -238,4 +257,62 @@
   0%   { transform: scale(1); }
   40%  { transform: scale(1.35); }
   100% { transform: scale(1); }
+}
+
+/* Cart acknowledgement. Adding to the bag no longer opens the drawer, so the bag itself
+   carries the signal — and it keeps breathing for as long as the cart has something in it,
+   rather than firing once at the moment of the add and going still.
+
+   Scale only, no translation: the badge stays anchored on its corner and simply swells and
+   settles, which reads as alive without ever shifting position against the icon it sits on.
+   10% over a 2.4s ease-in-out loop is the whole amplitude. `count-pop` above (35% over 400ms)
+   is the opposite register — a one-shot celebration for the wishlist heart. */
+@keyframes cart-pulse {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.1); }
+}
+
+/* A permanent loop is exactly what vestibular-sensitivity settings exist to stop, so hold
+   it still rather than merely shortening it. */
+@media (prefers-reduced-motion: reduce) {
+  @keyframes cart-pulse {
+    0%, 100% { transform: none; }
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   EchoDesk chat widget — lift clear of the mobile BottomNav.
+
+   The widget positions its launcher, panel and proactive bubble with INLINE styles
+   (`position:fixed;bottom:20px|90px|86px`), so only `!important` can move them. Its
+   launcher would otherwise sit directly on top of the cart icon in the bottom nav.
+
+   Selectors are the vendor's own markup — the launcher's `aria-label="Open chat"`, the
+   panel's iframe src, the bubble's `aria-label="Chat prompt"`. If EchoDesk ever renames
+   those, the widget simply falls back to its own offsets and re-overlaps the nav; nothing
+   breaks. Same fragility already noted in `lib/ui/chat-widget.ts`.
+
+   `--chat-lift` is the delta from the launcher's native 20px up to the clearance the rest
+   of the app uses for the BottomNav (`4.5rem + safe-area`, matching ContactFloater and the
+   cookie banner). Applying one delta to all three keeps their relative spacing intact, and
+   the panel's max-height shrinks by the same amount so lifting it can't push it off-screen.
+
+   Scoped below 640px only: the bottom nav is `sm:hidden`, so desktop keeps stock offsets. */
+@media (max-width: 639px) {
+  :root {
+    --chat-lift: calc(4.5rem + env(safe-area-inset-bottom) - 20px);
+  }
+
+  button[aria-label="Open chat"] {
+    bottom: calc(20px + var(--chat-lift)) !important;
+  }
+
+  iframe[src*="echodesk.ge"] {
+    bottom: calc(90px + var(--chat-lift)) !important;
+    max-height: calc(100vh - 110px - var(--chat-lift)) !important;
+  }
+
+  [aria-label="Chat prompt"] {
+    bottom: calc(86px + var(--chat-lift)) !important;
+  }
 }

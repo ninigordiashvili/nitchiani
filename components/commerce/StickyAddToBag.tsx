@@ -68,7 +68,7 @@ export function StickyAddToBag({
       }}
     >
       <div className="flex items-center gap-3 px-3 py-2.5">
-        <div className="relative h-12 w-10 flex-shrink-0 overflow-hidden rounded-md bg-black/5">
+        <div className="relative h-12 w-10 flex-shrink-0 overflow-hidden rounded-md bg-white">
           <Image
             src={safeImageSrc(product.featuredImage.url)}
             alt={product.featuredImage.altText}
@@ -76,7 +76,7 @@ export function StickyAddToBag({
             sizes="40px"
             placeholder="blur"
             blurDataURL={BLUR_DATA_URL}
-            className="object-cover"
+            className="object-contain"
           />
         </div>
         <div className="flex min-w-0 flex-1 flex-col">

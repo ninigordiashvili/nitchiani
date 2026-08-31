@@ -8,15 +8,16 @@ import {
   type ProductFilters,
   type SortKey,
   PRICE_TIERS,
-  SORT_KEYS,
   isSortKey,
 } from "@/lib/products/filter";
+import { Select } from "@/components/ui/Select";
 import { cn } from "@/lib/utils";
 
 /**
  * Toolbar for /shop and /shop/[collection] — sort dropdown on the right, filter chips on the left.
  * State lives in the URL (`?sort=price-asc&color=Noir,Cream&onSale=1`) so filters are shareable
- * and survive a refresh. Native <select> for sort keeps it accessible without custom popover code.
+ * and survive a refresh. Sort uses the branded <Select> listbox — a native <select> draws its
+ * option list through the OS, which ignores the brand surface and typography entirely.
  */
 export function CollectionToolbar({
   totalCount,
@@ -71,7 +72,7 @@ export function CollectionToolbar({
     [updateParam],
   );
 
-  const sortOptions = useMemo(
+  const sortOptions: { value: SortKey; label: string }[] = useMemo(
     () => [
       { value: "featured", label: t("sortFeatured") },
       { value: "new", label: t("sortNew") },
@@ -90,23 +91,17 @@ export function CollectionToolbar({
             : t("countFiltered", { visible: visibleCount, total: totalCount })}
         </p>
 
-        <label className="inline-flex items-center gap-2 text-xs">
+        <div className="inline-flex items-center gap-2 text-xs">
           <span className="opacity-60">{t("sortLabel")}</span>
-          <select
+          <Select
             value={sort}
-            onChange={(e) => {
-              const v = e.target.value;
-              updateParam({ sort: isSortKey(v) && v !== "featured" ? v : null });
-            }}
-            className="cursor-pointer rounded-md border border-black/15 bg-transparent px-2 py-1.5 text-xs focus:border-[var(--color-brand-ink)] focus:outline-none"
-          >
-            {sortOptions.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
-        </label>
+            options={sortOptions}
+            onChange={(v) =>
+              updateParam({ sort: isSortKey(v) && v !== "featured" ? v : null })
+            }
+            label={t("sortLabel")}
+          />
+        </div>
       </div>
 
       <div className="flex flex-wrap items-center gap-2">

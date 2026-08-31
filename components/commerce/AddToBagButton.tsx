@@ -1,8 +1,6 @@
 "use client";
 
-import { useState } from "react";
 import { useTranslations } from "next-intl";
-import { Check } from "lucide-react";
 import type { Product, ProductVariant } from "@/lib/shopify/types";
 import { useCart } from "@/lib/cart/store";
 import { cn } from "@/lib/utils";
@@ -20,7 +18,6 @@ export function AddToBagButton({
 }) {
   const t = useTranslations("product");
   const cart = useCart();
-  const [justAdded, setJustAdded] = useState(false);
 
   const disabled = !variant.availableForSale;
 
@@ -38,20 +35,10 @@ export function AddToBagButton({
           unitPrice: variant.price,
           quantity,
         });
-        setJustAdded(true);
-        setTimeout(() => setJustAdded(false), 1400);
       }}
       className={cn("btn-primary w-full", disabled && "opacity-50 cursor-not-allowed", className)}
     >
-      {disabled ? (
-        t("outOfStock")
-      ) : justAdded ? (
-        <>
-          <Check size={16} /> {t("addToBag")}
-        </>
-      ) : (
-        t("addToBag")
-      )}
+      {disabled ? t("outOfStock") : t("addToBag")}
     </button>
   );
 }

@@ -1,8 +1,9 @@
 "use client";
 
-import { Search, X } from "lucide-react";
+import { ArrowRight, Search, X } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
-import { useEffect, useRef, useState, useTransition } from "react";
+import { usePathname } from "next/navigation";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { searchAction } from "@/app/actions/search";
 import { ProductGrid } from "@/components/commerce/ProductGrid";
 import type { Locale } from "@/lib/i18n/config";
@@ -36,6 +37,26 @@ export function SearchOverlay() {
   const overlayRef = useRef<HTMLElement>(null);
   useFocusTrap(overlayRef, open);
 
+  // Safety net: close on any navigation.
+  //
+  // The results grid below closes the overlay by catching bubbled clicks, which covers the
+  // ordinary "tap a result" path and does it instantly, before the route resolves. But any
+  // link that stops propagation on the way up escapes it — the quick-view sheet's "View full
+  // details" did exactly that until it was taught to close the overlay itself. Watching the
+  // path means a route change can never strand the panel open over the new page, whatever
+  // route it out.
+  //
+  // `next/navigation`'s pathname is the real, locale-prefixed URL, so a locale switch counts
+  // as a navigation here too — also correct, since the results were fetched for the old one.
+  const { setSearchOpen } = overlays;
+  const pathname = usePathname();
+  const lastPathRef = useRef(pathname);
+  useEffect(() => {
+    if (pathname === lastPathRef.current) return;
+    lastPathRef.current = pathname;
+    setSearchOpen(false);
+  }, [pathname, setSearchOpen]);
+
   // Body scroll lock + focus the input on open. Reset on close.
   useEffect(() => {
     if (open) {
@@ -60,6 +81,29 @@ export function SearchOverlay() {
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
   }, [open, onClose]);
+
+  // "View all <type>" target. Search returns a mix, so pick the type that actually dominates
+  // the results and offer its collection. Requiring at least half guards against slapping a
+  // confident "View all Bonnets" on a 4-bonnet / 4-tool split, where the label would be a
+  // coin flip.
+  //
+  // `productTypeHandle` is the stable English-derived slug ("Loc Care" -> "loc-care") and every
+  // one of them is an existing /shop collection, so it can be linked straight through;
+  // `productType` alongside it is already localised for the label.
+  const dominantType = useMemo(() => {
+    if (results.length === 0) return null;
+    const counts = new Map<string, { count: number; label: string }>();
+    for (const p of results) {
+      const entry = counts.get(p.productTypeHandle);
+      if (entry) entry.count += 1;
+      else counts.set(p.productTypeHandle, { count: 1, label: p.productType });
+    }
+    let top: { handle: string; count: number; label: string } | null = null;
+    for (const [handle, { count, label }] of counts) {
+      if (!top || count > top.count) top = { handle, count, label };
+    }
+    return top && top.count * 2 >= results.length ? top : null;
+  }, [results]);
 
   // Debounced search — kick off the action 200ms after the last keystroke.
   useEffect(() => {
@@ -172,6 +216,17 @@ export function SearchOverlay() {
               // Closing the overlay on click bubbles from any tap on a result card. The Link inside
               // the card handles navigation; this just clears the overlay state alongside it.
               <div onClick={onClose}>
+                {dominantType ? (
+                  <div className="mb-4 text-center">
+                    <Link
+                      href={`/shop/${dominantType.handle}`}
+                      className="btn-ghost inline-flex"
+                    >
+                      {t("search.viewAllType", { type: dominantType.label })}
+                      <ArrowRight size={14} />
+                    </Link>
+                  </div>
+                ) : null}
                 <ProductGrid products={results} />
               </div>
             )}

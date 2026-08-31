@@ -12,7 +12,7 @@ export async function generateMetadata({
   const title = locale === "ka" ? "ჩვენ შესახებ" : "About";
   const description =
     locale === "ka"
-      ? "Nitchiani — თბილისში დაფუძნებული ბრენდი ხელით ნაკეთი ფრჩხების, ლოკსებისა და თმის მოვლის პროდუქტებისთვის."
+      ? "Nitchiani — თბილისში დაფუძნებული ბრენდი თმის მოვლის პროდუქტებისთვის."
       : "Nitchiani is a Tbilisi-based brand for hand-crafted braids, dreadlocks and loc-care essentials — premium quality in a minimalist, editorial aesthetic.";
   return {
     title,
@@ -21,11 +21,7 @@ export async function generateMetadata({
   };
 }
 
-export default async function AboutPage({
-  params,
-}: {
-  params: Promise<{ locale: Locale }>;
-}) {
+export default async function AboutPage({ params }: { params: Promise<{ locale: Locale }> }) {
   const { locale } = await params;
   setRequestLocale(locale);
 

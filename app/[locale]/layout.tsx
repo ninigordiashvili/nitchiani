@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
@@ -14,7 +15,7 @@ import { CartDrawer } from "@/components/layout/CartDrawer";
 import { BottomNav } from "@/components/layout/BottomNav";
 import { LocalePrompt } from "@/components/layout/LocalePrompt";
 import { SkipToContent } from "@/components/layout/SkipToContent";
-import { ContactFloater } from "@/components/layout/ContactFloater";
+// import { ContactFloater } from "@/components/layout/ContactFloater";  // removed — EchoDesk chat owns the corner now
 import { WelcomePopup } from "@/components/layout/WelcomePopup";
 import { SearchOverlay } from "@/components/search/SearchOverlay";
 import { QuickViewModal } from "@/components/commerce/QuickViewModal";
@@ -91,9 +92,19 @@ export default async function LocaleLayout({
                   <SearchOverlay />
                   <QuickViewModal />
                   <BottomNav />
-                  <ContactFloater />
+                  {/* <ContactFloater /> — removed; the EchoDesk chat button below owns
+                      the bottom-right corner. Its WhatsApp / Instagram / email links now
+                      live in the footer contact column. */}
                   <WelcomePopup />
                   <CookieConsentBanner />
+                  {/* EchoDesk live chat. Injects its own fixed button (bottom-right,
+                      z-index ~2.1e9) and an iframe against echodesk.ge — both origins
+                      are allowlisted in the CSP in next.config.ts, so keep the two in
+                      sync if the vendor ever changes hosts. */}
+                  <Script
+                    src="https://echodesk.ge/widget.js?t=wgt_live_uiW4-k34AQvHTgKP2hzgFVDa8sA6icAz"
+                    strategy="afterInteractive"
+                  />
                 </div>
                 </OverlaysProvider>
               </QuickViewProvider>

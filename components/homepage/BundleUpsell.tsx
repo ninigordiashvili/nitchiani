@@ -1,8 +1,7 @@
 "use client";
 
-import { Check, Plus, Tag } from "lucide-react";
+import { Plus, Tag } from "lucide-react";
 import Image from "next/image";
-import { useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/lib/i18n/routing";
 import type { Bundle } from "@/lib/bundles";
@@ -32,7 +31,6 @@ export function BundleUpsell({
   const t = useTranslations("home");
   const locale = useLocale() as Locale;
   const cart = useCart();
-  const [added, setAdded] = useState(false);
 
   const title = locale === "ka" ? bundle.titleKa : bundle.titleEn;
   const tagline = locale === "ka" ? bundle.taglineKa : bundle.taglineEn;
@@ -60,8 +58,6 @@ export function BundleUpsell({
       });
     }
     cart.applyCoupon(bundle.couponCode);
-    setAdded(true);
-    setTimeout(() => setAdded(false), 1800);
   };
 
   return (
@@ -85,7 +81,7 @@ export function BundleUpsell({
               <li key={p.handle} className="flex items-center gap-2">
                 <Link
                   href={`/products/${p.handle}`}
-                  className="group relative block h-16 w-16 flex-shrink-0 overflow-hidden rounded-md bg-black/5"
+                  className="group relative block h-16 w-16 flex-shrink-0 overflow-hidden rounded-md bg-white"
                   aria-label={p.title}
                 >
                   <Image
@@ -95,7 +91,7 @@ export function BundleUpsell({
                     sizes="64px"
                     placeholder="blur"
                     blurDataURL={BLUR_DATA_URL}
-                    className="object-cover transition-transform duration-500 ease-[var(--ease-brand)] group-hover:scale-105"
+                    className="object-contain transition-transform duration-500 ease-[var(--ease-brand)] group-hover:scale-105"
                   />
                 </Link>
                 {i < products.length - 1 ? (
@@ -142,14 +138,7 @@ export function BundleUpsell({
           ) : null}
 
           <button type="button" onClick={onAdd} className="btn-primary mt-4 w-full">
-            {added ? (
-              <>
-                <Check size={16} />
-                {t("bundleAdded")}
-              </>
-            ) : (
-              t("bundleAddAll")
-            )}
+            {t("bundleAddAll")}
           </button>
         </div>
       </div>

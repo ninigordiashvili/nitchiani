@@ -139,9 +139,23 @@ export function Header({ locale }: { locale: Locale }) {
               aria-label={t("cart")}
               className="relative -mr-2 hidden h-10 w-10 cursor-pointer items-center justify-center sm:flex"
             >
-              <ShoppingBag size={18} />
+              {/* Pulses only while the bag holds something — an empty bag breathing
+                  forever would be motion with nothing to say. */}
+              <span
+                style={
+                  cart.totalQuantity > 0
+                    ? { animation: "cart-pulse 2.4s ease-in-out infinite", display: "inline-flex" }
+                    : undefined
+                }
+              >
+                <ShoppingBag size={18} />
+              </span>
               {cart.totalQuantity > 0 ? (
-                <CountBadge count={cart.totalQuantity} className="-top-0.5 -right-0.5" />
+                <CountBadge
+                  count={cart.totalQuantity}
+                  className="-top-0.5 -right-0.5"
+                  motion="pulse"
+                />
               ) : null}
             </button>
           </div>

@@ -7,7 +7,7 @@
  *
  * Required env:
  *   RESEND_API_KEY        — Resend API key (https://resend.com/api-keys)
- *   EMAIL_FROM            — verified sender, e.g. "Nitchiani <orders@nitchiani.com>"
+ *   EMAIL_FROM            — verified sender, e.g. "Nitchiani <orders@nitchiani.shop>"
  * Optional:
  *   EMAIL_STUDIO_BCC      — BCC address for the studio (collect order notifications)
  *

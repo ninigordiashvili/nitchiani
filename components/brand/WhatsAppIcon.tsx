@@ -22,17 +22,18 @@ export function WhatsAppIcon({ size = 24 }: { size?: number }) {
 
 /** Live WhatsApp number used by every contact CTA. Format: digits only, no `+`. */
 export function getWhatsAppNumber() {
-  return process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? "995555000000";
+  return process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? "995579370374";
 }
 
 /**
- * `"995555000000"` → `"+995 555 00 00 00"`. Falls through unchanged for non-GE
- * numbers so a future international move doesn't silently mangle the display.
+ * `"995579370374"` → `"+995 579 370 374"` — the 3-3-3 grouping Georgian mobile
+ * numbers are normally written in. Falls through unchanged for non-GE numbers so a
+ * future international move doesn't silently mangle the display.
  */
 export function formatWhatsAppNumber(digits: string): string {
   if (digits.startsWith("995") && digits.length === 12) {
     const local = digits.slice(3);
-    return `+995 ${local.slice(0, 3)} ${local.slice(3, 5)} ${local.slice(5, 7)} ${local.slice(7, 9)}`;
+    return `+995 ${local.slice(0, 3)} ${local.slice(3, 6)} ${local.slice(6, 9)}`;
   }
   return `+${digits}`;
 }
