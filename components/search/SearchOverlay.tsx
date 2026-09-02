@@ -3,7 +3,7 @@
 import { ArrowRight, Search, X } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { usePathname } from "next/navigation";
-import { useEffect, useMemo, useRef, useState, useTransition } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { searchAction } from "@/app/actions/search";
 import { ProductGrid } from "@/components/commerce/ProductGrid";
 import type { Locale } from "@/lib/i18n/config";
@@ -25,7 +25,10 @@ export function SearchOverlay() {
   const locale = useLocale() as Locale;
   const overlays = useOverlays();
   const open = overlays.searchOpen;
-  const onClose = () => overlays.setSearchOpen(false);
+  const setSearchOpen = overlays.setSearchOpen;
+  // Stable identity: the ESC-key effect below lists `onClose` as a dependency, so an inline
+  // arrow would tear down and re-register the keydown listener on every render.
+  const onClose = useCallback(() => setSearchOpen(false), [setSearchOpen]);
   const inputRef = useRef<HTMLInputElement>(null);
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<Product[]>([]);
@@ -48,7 +51,6 @@ export function SearchOverlay() {
   //
   // `next/navigation`'s pathname is the real, locale-prefixed URL, so a locale switch counts
   // as a navigation here too — also correct, since the results were fetched for the old one.
-  const { setSearchOpen } = overlays;
   const pathname = usePathname();
   const lastPathRef = useRef(pathname);
   useEffect(() => {

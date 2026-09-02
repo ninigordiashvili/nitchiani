@@ -246,7 +246,9 @@ async function handleTbcCard(
     externalOrderId: String(pending.id),
     totalAmount: totals.total,
     currency: orderInput.subtotal.currencyCode,
-    returnUrl: `${origin}/api/checkout/tbc/callback?order=${encodeURIComponent(pending.name)}&shopify=${pending.id}`,
+    // `locale` is what the callback reads to route the customer back into their own language —
+    // without it every shopper lands on the Georgian success page.
+    returnUrl: `${origin}/api/checkout/tbc/callback?order=${encodeURIComponent(pending.name)}&shopify=${pending.id}&locale=${encodeURIComponent(orderInput.locale)}`,
     callbackUrl: `${origin}/api/checkout/tbc/webhook?shopify=${pending.id}`,
     language: orderInput.locale === "en" ? "EN" : "KA",
     userIpAddress: getClientIp(req),

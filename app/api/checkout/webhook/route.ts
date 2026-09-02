@@ -59,15 +59,19 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: false }, { status: 400 });
   }
 
-  const ok = await markOrderPaid(numericId, "bog_card").catch((err) => {
+  const result = await markOrderPaid(numericId, "bog_card").catch((err) => {
     console.error("[webhook/bog] markOrderPaid threw:", err);
-    return false;
+    return "failed" as const;
   });
 
   // Fire the confirmation email once the gateway has confirmed payment. We `void` the
   // chain so a slow/failed Shopify-Admin fetch or email-provider hiccup doesn't make BOG
   // think the webhook failed (which would trigger retries we don't need).
-  if (ok) {
+  //
+  // Only on `marked` — BOG replays this callback until it gets a 2xx, and `already` means a
+  // previous delivery settled the order and sent the email. Emailing again would spam the
+  // customer with a duplicate confirmation for a single purchase.
+  if (result === "marked") {
     void getOrderForConfirmation(numericId)
       .then((order) => {
         if (order) return sendOrderConfirmation(order);
@@ -79,5 +83,7 @@ export async function POST(req: Request) {
       });
   }
 
-  return NextResponse.json({ ok });
+  // `already` is a success for acknowledgement purposes — the order is settled, so BOG should
+  // stop retrying. Only a genuine write failure gets a falsy ack.
+  return NextResponse.json({ ok: result !== "failed", result });
 }

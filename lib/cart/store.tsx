@@ -165,19 +165,25 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const totals = useMemo(() => computeTotals(lines), [lines]);
 
+  // `findCoupon` returns a reference into the module-level registry, so this stays stable
+  // across renders as long as the code does.
   const coupon = couponCode ? findCoupon(couponCode) : null;
   const subtotalNum = Number.parseFloat(totals.subtotal.amount);
   const discountAmount = coupon ? discountFor(subtotalNum, coupon) : 0;
   const totalNum = Math.max(0, subtotalNum - discountAmount);
   const currencyCode = totals.subtotal.currencyCode;
-  const discount: Money = {
-    amount: discountAmount.toFixed(2),
-    currencyCode,
-  };
-  const total: Money = {
-    amount: totalNum.toFixed(2),
-    currencyCode,
-  };
+
+  // Memoised on primitives. Built inline these were fresh objects every render, which put a
+  // never-equal value in the context `useMemo` below — so every cart consumer in the tree
+  // re-rendered on every provider render.
+  const discount: Money = useMemo(
+    () => ({ amount: discountAmount.toFixed(2), currencyCode }),
+    [discountAmount, currencyCode],
+  );
+  const total: Money = useMemo(
+    () => ({ amount: totalNum.toFixed(2), currencyCode }),
+    [totalNum, currencyCode],
+  );
 
   const applyCoupon = useCallback(
     (code: string) => {

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
+import { sendOrderConfirmation } from "@/lib/email/order-confirmation";
 import { getTbcPayment } from "@/lib/payments/tbc";
-import { markOrderPaid } from "@/lib/shopify/orders";
+import { getOrderForConfirmation, markOrderPaid } from "@/lib/shopify/orders";
 
 /**
  * Browser redirect-back from TBC. Unlike BOG, TBC does not pass the payId in the URL by default —
@@ -8,8 +9,9 @@ import { markOrderPaid } from "@/lib/shopify/orders";
  * `returnurl` with a placeholder. To keep things robust, we prefer querying TBC by payId if present,
  * and otherwise short-circuit to the failed page.
  *
- * The async webhook (/api/checkout/tbc/webhook) is the source of truth for marking Shopify paid;
- * this route is for routing the user UI only.
+ * This route races the async webhook (/api/checkout/tbc/webhook); either one may settle the order
+ * first. `markOrderPaid` is idempotent and reports whether *this* call was the one that settled it,
+ * so whichever wins sends the single confirmation email and the loser stays quiet.
  */
 export async function GET(req: Request) {
   const url = new URL(req.url);
@@ -28,15 +30,29 @@ export async function GET(req: Request) {
   const details = await getTbcPayment(payId).catch(() => null);
   const succeeded = details?.status === "Succeeded";
 
-  // Belt-and-suspenders: if the webhook hasn't landed yet but the customer is back, attempt to mark
-  // paid here too (markOrderPaid is idempotent enough — Shopify will record duplicate transactions
-  // but the order's financial_status flips to paid on the first successful sale).
+  // Belt-and-suspenders: the customer is often back before TBC's server-to-server callback
+  // lands, so settle the order here too rather than leaving it pending.
   if (succeeded && shopifyId) {
     const id = Number.parseInt(shopifyId, 10);
     if (Number.isFinite(id)) {
-      await markOrderPaid(id, "tbc_card").catch((err) =>
-        console.error("[tbc/callback] markOrderPaid threw:", err),
-      );
+      const result = await markOrderPaid(id, "tbc_card").catch((err) => {
+        console.error("[tbc/callback] markOrderPaid threw:", err);
+        return "failed" as const;
+      });
+
+      // We got there before the webhook, so the email is ours to send. Fire-and-forget: the
+      // customer is mid-redirect and shouldn't wait on Shopify Admin or the email provider.
+      if (result === "marked") {
+        void getOrderForConfirmation(id)
+          .then((order) => {
+            if (order) return sendOrderConfirmation(order);
+            console.warn("[tbc/callback] order not retrievable for confirmation email:", id);
+            return false;
+          })
+          .catch((err) => {
+            console.error("[tbc/callback] confirmation email threw:", err);
+          });
+      }
     }
   }
 
@@ -47,7 +63,11 @@ export async function GET(req: Request) {
   return NextResponse.redirect(new URL(target, url.origin));
 }
 
+/**
+ * The locale to send the customer back into. `/api/checkout/initiate` appends `?locale=` to the
+ * return URL it hands TBC; Georgian is the default for anything else, since that's the store's
+ * primary market.
+ */
 function pickLocale(url: URL): "ka" | "en" {
-  const referer = url.searchParams.get("locale");
-  return referer === "en" ? "en" : "ka";
+  return url.searchParams.get("locale") === "en" ? "en" : "ka";
 }
