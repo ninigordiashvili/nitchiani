@@ -11,6 +11,7 @@ import { useOverlays } from "@/lib/ui/overlays";
 import { useQuickView } from "@/lib/ui/quick-view";
 import { useSwipeDismiss } from "@/lib/ui/use-swipe-dismiss";
 import { ProductPurchase } from "./ProductPurchase";
+import { WishlistButton } from "./WishlistButton";
 
 /**
  * Slide-up quick-view sheet. Mounted once at the layout level; reads `product` from the shared
@@ -94,6 +95,12 @@ export function QuickViewModal() {
                 blurDataURL={BLUR_DATA_URL}
                 className="object-contain sm:rounded-l-2xl"
               />
+              {/* Save to favourites. Top-LEFT rather than the card's top-right, because the
+                  mobile close button owns that corner here. Same component as ProductCard, so
+                  the heart's saved state carries straight over from the grid behind the sheet. */}
+              <div className="absolute top-3 left-3">
+                <WishlistButton handle={product.handle} size={20} />
+              </div>
               <button
                 type="button"
                 onClick={quickView.close}
