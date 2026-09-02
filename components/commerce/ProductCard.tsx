@@ -17,7 +17,7 @@ export function ProductCard({ product, priority = false }: { product: Product; p
   const variant = product.variants[0];
   const compareAt = variant?.compareAtPrice;
   const offPercent = discountPercent(variant?.price ?? product.priceRange.min, compareAt);
-  const summary = getReviewSummary(product.handle);
+  const summary = product.reviewSummary ?? getReviewSummary(product.handle);
 
   // Funnel rule: clicking the card (image, title, price) opens the quick view first; the
   // PDP is reached from inside the modal. We keep the `<Link>` so cmd-/middle-click still

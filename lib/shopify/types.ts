@@ -55,6 +55,11 @@ export type Product = {
    * for products in the Piercings category — drives the `MaterialTrust` panel on the PDP.
    */
   material?: string;
+  /**
+   * Rating summary as reported by the backend. Present only when the catalog is live —
+   * the sample catalog's ratings are derived from `lib/reviews.ts` instead.
+   */
+  reviewSummary?: { count: number; average: number };
 };
 
 export type Collection = {

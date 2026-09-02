@@ -66,7 +66,8 @@ export default async function ProductPage({
     getTranslations("reviews"),
     getTranslations("product"),
   ]);
-  const summary = getReviewSummary(handle);
+  // Live catalog reports its own rating; the sample map only covers sample handles.
+  const summary = product.reviewSummary ?? getReviewSummary(handle);
 
   return (
     <article className="pb-12">
@@ -154,7 +155,7 @@ export default async function ProductPage({
 
       <FrequentlyBoughtTogether product={product} related={related} />
 
-      <Reviews handle={handle} />
+      <Reviews handle={handle} product={product} />
       <RelatedProducts products={related} />
 
       <div className="container-shop mt-12">

@@ -114,6 +114,15 @@ export function adaptProduct(p: EchoDeskProduct, locale: Locale): Product {
       max: { amount: Math.max(...prices).toFixed(2), currencyCode: CURRENCY },
     },
     isBestSeller: p.is_featured || undefined,
+    // The list and detail payloads both carry these, so a card can show a real rating
+    // without a second request per product.
+    reviewSummary:
+      typeof p.review_count === "number" && p.review_count > 0
+        ? {
+            count: p.review_count,
+            average: Math.round((p.average_rating ?? 0) * 10) / 10,
+          }
+        : undefined,
   };
 }
 

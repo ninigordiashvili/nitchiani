@@ -3,12 +3,35 @@ import { Monogram } from "./Monogram";
 import { StarRating } from "./StarRating";
 import { getReviewSummary, getReviewsForProduct } from "@/lib/reviews";
 import type { Locale } from "@/lib/i18n/config";
+import type { Product } from "@/lib/shopify/types";
+import { getReviews } from "@/lib/echodesk/reviews";
 
-export async function Reviews({ handle }: { handle: string }) {
+function average(values: number[]): number {
+  if (values.length === 0) return 0;
+  return Math.round((values.reduce((a, b) => a + b, 0) / values.length) * 10) / 10;
+}
+
+export async function Reviews({
+  handle,
+  product,
+}: {
+  handle: string;
+  /** Passed when available so live reviews can be fetched by the backend's product id. */
+  product?: Product;
+}) {
   const locale = (await getLocale()) as Locale;
   const t = await getTranslations("reviews");
-  const reviews = getReviewsForProduct(handle, locale);
-  const summary = getReviewSummary(handle);
+
+  // EchoDesk is the source once it's configured, even when it returns nothing: an empty
+  // review list is the truth for a product nobody has reviewed yet, and falling back to the
+  // sample map there would put invented testimonials under a real product.
+  const live = product ? await getReviews(product.id) : null;
+  const reviews = live ?? getReviewsForProduct(handle, locale);
+  const summary =
+    product?.reviewSummary ??
+    (live
+      ? { count: live.length, average: average(live.map((r) => r.rating)) }
+      : getReviewSummary(handle));
 
   if (reviews.length === 0) return null;
 
