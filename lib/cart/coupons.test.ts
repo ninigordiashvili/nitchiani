@@ -53,6 +53,8 @@ describe("discountFor", () => {
 describe("couponLabel", () => {
   it("formats percent and amount coupons", () => {
     expect(couponLabel({ code: "P", type: "percent", value: 10 })).toBe("−10%");
-    expect(couponLabel({ code: "A", type: "amount", value: 20 })).toBe("−₾20");
+    // Two decimals so the chip matches the totals row beside it — a backend-priced
+    // coupon is money, and "−₾20" next to "−₾20.00" reads as two different numbers.
+    expect(couponLabel({ code: "A", type: "amount", value: 20 })).toBe("−₾20.00");
   });
 });

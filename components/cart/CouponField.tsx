@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronDown, Tag, X } from "lucide-react";
+import { Check, ChevronDown, Tag, X } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 import { useCart } from "@/lib/cart/store";
@@ -40,18 +40,31 @@ export function CouponField({ tone = "light" }: { tone?: "light" | "dark" } = {}
           isDark ? "border-white/15 bg-white/5" : "border-black/10",
         )}
       >
-        <div className="flex min-w-0 items-center gap-2">
-          <Tag size={14} className="flex-shrink-0 opacity-70" />
-          <span className={cn("text-xs font-medium tabular-nums", labelColor)}>
-            {cart.coupon.code}
+        <div className="flex min-w-0 flex-col gap-0.5">
+          <span className="flex min-w-0 items-center gap-2">
+            <Check size={14} className="flex-shrink-0" style={{ color: "var(--color-brand-maroon)" }} />
+            <span className={cn("text-xs font-medium tabular-nums", labelColor)}>
+              {cart.coupon.code}
+            </span>
+            <span
+              className="text-xs font-medium"
+              style={{ color: "var(--color-brand-maroon)" }}
+            >
+              {couponLabel(cart.coupon)}
+            </span>
           </span>
-          <span
-            className="text-xs font-medium"
-            style={{ color: "var(--color-brand-maroon)" }}
-          >
-            {couponLabel(cart.coupon)}
-          </span>
-          {discountAmount === 0 && cart.coupon.minSubtotal ? (
+          {/* Say plainly that it worked and by how much. The chip alone reads as "a code is
+              attached"; shoppers reported not realising the price had actually come down. */}
+          {discountAmount > 0 ? (
+            <span
+              role="status"
+              aria-live="polite"
+              className="text-[11px]"
+              style={{ color: "var(--color-brand-maroon)" }}
+            >
+              {t("promoCodeApplied", { amount: formatGel(discountAmount, locale) })}
+            </span>
+          ) : cart.coupon.minSubtotal ? (
             <span className="truncate text-[11px] opacity-60">
               {t("promoCodeMinimum", {
                 amount: formatGel(cart.coupon.minSubtotal, locale),
@@ -108,6 +121,7 @@ function CouponEditor({
   onClose: () => void;
 }) {
   const t = useTranslations("cart");
+  const locale = useLocale() as Locale;
   const cart = useCart();
   const inputRef = useRef<HTMLInputElement>(null);
   const isDark = tone === "dark";
@@ -215,13 +229,21 @@ function CouponEditor({
           className="mt-1.5 text-xs"
           style={{ color: "var(--color-brand-maroon)" }}
         >
-          {cart.couponError === "invalid"
-            ? t("promoCodeInvalid")
-            : cart.couponError === "unavailable"
-              ? // We couldn't reach the backend — not the same as a bad code, so don't tell
-                // the shopper their coupon is invalid when we simply don't know.
-                t("promoCodeUnavailable")
-              : t("promoCodeMinimumGeneric")}
+          {/* Prefer the backend's own explanation — "Minimum order is ₾50", "This code has
+              expired" — over our generic line. It's written for shoppers and it's the only
+              version that tells them what to actually do about it. */}
+          {cart.couponMessage
+            ? cart.couponMessage
+            : cart.couponError === "minimum" && cart.couponMinSubtotal
+              ? // Name the actual threshold — "min. order ₾100" tells them what to do next.
+                t("promoCodeMinimum", { amount: formatGel(cart.couponMinSubtotal, locale) })
+              : cart.couponError === "invalid"
+                ? t("promoCodeInvalid")
+                : cart.couponError === "unavailable"
+                  ? // Couldn't reach the backend — not the same as a bad code, so don't tell
+                  // the shopper their coupon is invalid when we simply don't know.
+                    t("promoCodeUnavailable")
+                  : t("promoCodeMinimumGeneric")}
         </p>
       ) : null}
     </div>
@@ -230,5 +252,10 @@ function CouponEditor({
 
 function formatGel(amount: number, locale: Locale): string {
   const localeMap: Record<Locale, string> = { ka: "ka-GE", en: "en-US" };
-  return `₾${amount.toLocaleString(localeMap[locale])}`;
+  // Always two decimals: the totals row renders "−₾8.90" via the shared money formatter, and
+  // a bare `toLocaleString` gave "₾8.9" — the same discount printed two ways, inches apart.
+  return `₾${amount.toLocaleString(localeMap[locale], {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
 }

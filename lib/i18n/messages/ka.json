@@ -178,7 +178,8 @@
     "checkout": "გაფორმება",
     "remove": "წაშლა",
     "clearCartConfirmDesc": "კალათა მთლიანად დაიცლება. მოქმედება შეუქცევადია.",
-    "promoCodeUnavailable": "კოდის შემოწმება ვერ მოხერხდა — სცადე ხელახლა"
+    "promoCodeUnavailable": "კოდის შემოწმება ვერ მოხერხდა — სცადე ხელახლა",
+    "promoCodeApplied": "გააქტიურდა — ზოგავ {amount}-ს"
   },
   "checkout": {
     "title": "შეკვეთის გაფორმება",

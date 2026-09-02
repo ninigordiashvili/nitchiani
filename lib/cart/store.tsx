@@ -36,6 +36,10 @@ type CartState = {
   total: Money;
   /** Last attempted-apply error, cleared by a successful apply or remove. */
   couponError: CouponError | null;
+  /** Backend explanation for a rejected code, when there is one. */
+  couponMessage: string | null;
+  /** Threshold behind a `minimum` rejection, when known. */
+  couponMinSubtotal: number | null;
 };
 
 type CartActions = {
@@ -74,6 +78,17 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const [couponError, setCouponError] = useState<CouponError | null>(null);
   /** Discount as priced by the backend, when it did the pricing. Null means price locally. */
   const [serverDiscount, setServerDiscount] = useState<number | null>(null);
+  /**
+   * The coupon the backend approved. Needed because `findCoupon` only knows the local
+   * registry: a code EchoDesk accepts but we've never heard of would otherwise leave
+   * `coupon` null, and the applied-state chip — the only confirmation the shopper gets —
+   * would never render. They'd see the field simply empty itself.
+   */
+  const [appliedCoupon, setAppliedCoupon] = useState<Coupon | null>(null);
+  /** The backend's own explanation of a rejection ("Minimum order is ₾50"), when it gives one. */
+  const [couponMessage, setCouponMessage] = useState<string | null>(null);
+  /** Spend threshold behind a `minimum` rejection, so the UI can name the actual figure. */
+  const [couponMinSubtotal, setCouponMinSubtotal] = useState<number | null>(null);
   const [open, setOpen] = useState(false);
   const [hydrated, setHydrated] = useState(false);
 
@@ -164,14 +179,16 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     setLines([]);
     setCouponCode(null);
     setServerDiscount(null);
+    setAppliedCoupon(null);
     setCouponError(null);
+    setCouponMessage(null);
   }, []);
 
   const totals = useMemo(() => computeTotals(lines), [lines]);
 
   // `findCoupon` returns a reference into the module-level registry, so this stays stable
   // across renders as long as the code does.
-  const coupon = couponCode ? findCoupon(couponCode) : null;
+  const coupon = appliedCoupon ?? (couponCode ? findCoupon(couponCode) : null);
   const subtotalNum = Number.parseFloat(totals.subtotal.amount);
   // When the backend priced the code, its number wins. It is the one that will actually be
   // charged, and recomputing locally from a registry the backend doesn't share would let the
@@ -202,15 +219,26 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         // Couldn't reach the backend — distinct from a bad code, so say so rather than
         // telling someone their valid code is invalid.
         setCouponError("unavailable");
+        setCouponMessage(null);
+        setCouponMinSubtotal(null);
         return false;
       }
       if (result.status === "invalid") {
-        setCouponError("invalid");
+        setCouponError(result.reason === "minimum" ? "minimum" : "invalid");
+        setCouponMinSubtotal(result.minSubtotal ?? null);
+        // The backend explains *why* — minimum spend, expiry, already used. Keeping that is
+        // the difference between "this code isn't valid" and something the shopper can act on.
+        setCouponMessage(result.message ?? null);
         return false;
       }
       setCouponCode(result.code);
       setServerDiscount(result.discount);
+      // Represent it as a fixed amount: the backend gave us money, not a rule, and inventing
+      // a percentage from it would misreport the offer.
+      setAppliedCoupon({ code: result.code, type: "amount", value: result.discount });
       setCouponError(null);
+      setCouponMessage(null);
+      setCouponMinSubtotal(null);
       return true;
     },
     [subtotalNum],
@@ -219,10 +247,16 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const removeCoupon = useCallback(() => {
     setCouponCode(null);
     setServerDiscount(null);
+    setAppliedCoupon(null);
     setCouponError(null);
+    setCouponMessage(null);
   }, []);
 
-  const clearCouponError = useCallback(() => setCouponError(null), []);
+  const clearCouponError = useCallback(() => {
+    setCouponError(null);
+    setCouponMessage(null);
+    setCouponMinSubtotal(null);
+  }, []);
 
   const value = useMemo(
     () => ({
@@ -232,6 +266,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       discount,
       total,
       couponError,
+      couponMessage,
+      couponMinSubtotal,
       addLine,
       updateQuantity,
       removeLine,
@@ -249,6 +285,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       discount,
       total,
       couponError,
+      couponMessage,
+      couponMinSubtotal,
       addLine,
       updateQuantity,
       removeLine,

@@ -16,7 +16,12 @@ import { discountFor, findCoupon } from "@/lib/cart/coupons";
  */
 export type PromoCheck =
   | { status: "valid"; code: string; discount: number }
-  | { status: "invalid"; message?: string }
+  /**
+   * `reason` lets the UI say something specific about a locally-known rule. The backend
+   * sends prose instead (`message`), already written for shoppers, so that's preferred where
+   * present. Either way the shopper learns what to do — "min. order ₾100" beats "invalid".
+   */
+  | { status: "invalid"; reason?: "minimum"; minSubtotal?: number; message?: string }
   | { status: "unavailable" };
 
 export async function checkPromoAction(code: string, subtotal: number): Promise<PromoCheck> {
@@ -38,6 +43,8 @@ export async function checkPromoAction(code: string, subtotal: number): Promise<
 
   const found = findCoupon(trimmed);
   if (!found) return { status: "invalid" };
-  if (found.minSubtotal && subtotal < found.minSubtotal) return { status: "invalid" };
+  if (found.minSubtotal && subtotal < found.minSubtotal) {
+    return { status: "invalid", reason: "minimum", minSubtotal: found.minSubtotal };
+  }
   return { status: "valid", code: found.code, discount: discountFor(subtotal, found) };
 }

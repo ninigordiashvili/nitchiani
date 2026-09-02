@@ -49,5 +49,7 @@ export function discountFor(subtotal: number, coupon: Coupon): number {
 
 /** Short visual label, e.g. `−10%` or `−₾20`. */
 export function couponLabel(coupon: Coupon): string {
-  return coupon.type === "percent" ? `−${coupon.value}%` : `−₾${coupon.value}`;
+  // Amounts get two decimals so a backend-priced coupon reads as money ("−₾8.90") and matches
+  // the totals row; percentages stay bare ("−10%"), where a decimal would be noise.
+  return coupon.type === "percent" ? `−${coupon.value}%` : `−₾${coupon.value.toFixed(2)}`;
 }
