@@ -23,6 +23,16 @@ export function Footer() {
   const phoneDisplay = formatWhatsAppNumber(whatsappNumber);
   const { reset: resetCookieConsent } = useCookieConsent();
 
+  // One definition for both renderings below: mobile shows these as an icon row, desktop as a
+  // labelled list. Two hand-maintained copies of the same five links would drift.
+  const contactLinks = [
+    { key: "phone", href: `tel:+${whatsappNumber}`, label: phoneDisplay, icon: <Phone size={16} />, external: false },
+    { key: "email", href: `mailto:${BUSINESS.email}`, label: BUSINESS.email, icon: <Mail size={16} />, external: false },
+    { key: "whatsapp", href: `https://wa.me/${whatsappNumber}`, label: t("nav.chatWhatsApp"), icon: <WhatsAppIcon size={16} />, external: true },
+    { key: "instagram", href: `https://instagram.com/${instagramHandle}`, label: `@${instagramHandle}`, icon: <Instagram size={16} />, external: true },
+    { key: "facebook", href: BUSINESS.facebookUrl, label: BUSINESS.facebookName, icon: <Facebook size={16} />, external: true },
+  ];
+
   return (
     <footer
       className="mt-6 sm:mt-16"
@@ -41,13 +51,38 @@ export function Footer() {
         */}
         <TrustStrip tone="dark" />
         <div className="my-10 border-t border-white/10" />
-        <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
-          <div className="space-y-4">
-            <Logo variant="mark" size={64} />
-            <p className="text-sm opacity-70">{t("brand.tagline")}</p>
+        <div className="grid grid-cols-2 gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-4">
+          {/* Centred on mobile where it's the full width of the column and reads as a
+              masthead; left-aligned from sm up where it sits in a grid beside the link lists. */}
+          <div className="col-span-2 flex flex-col items-center gap-4 text-center sm:col-span-1 sm:items-start sm:text-left">
+            <Logo variant="mark" size={72} />
+            <p className="max-w-[28ch] text-sm opacity-70">{t("brand.tagline")}</p>
+
+            {/* Mobile-only contact row. The labelled list below runs to six full-width rows,
+                which is most of a phone screen; as icons it's one line and every target is
+                44px. Labels move to aria-label so the links stay announced. */}
+            <ul className="flex items-center justify-center gap-1 sm:hidden">
+              {contactLinks.map((c) => (
+                <li key={c.key}>
+                  <a
+                    href={c.href}
+                    aria-label={c.label}
+                    {...(c.external ? { target: "_blank", rel: "noreferrer noopener" } : {})}
+                    className="flex h-11 w-11 items-center justify-center rounded-full border border-white/15 opacity-80 transition-opacity hover:opacity-100"
+                  >
+                    {c.icon}
+                  </a>
+                </li>
+              ))}
+            </ul>
+            <p className="flex items-center gap-1.5 text-xs opacity-60 sm:hidden">
+              <MapPin size={13} className="opacity-70" />
+              {t("footer.tbilisi")}
+            </p>
           </div>
 
-          <div>
+          {/* Desktop rendering of the same links — full labels, where there's room for them. */}
+          <div className="hidden sm:block">
             <p className="label-eyebrow mb-4 text-[var(--color-brand-silver)]">
               {t("footer.contact")}
             </p>
@@ -177,7 +212,7 @@ export function Footer() {
         </div>
         ) : null}
 
-        <div className="mt-6 flex flex-col items-start justify-between gap-3 border-t border-white/10 pt-6 text-xs opacity-60 sm:flex-row sm:items-center">
+        <div className="mt-6 flex flex-col items-center justify-between gap-3 border-t border-white/10 pt-6 text-center text-xs opacity-60 sm:flex-row sm:items-center sm:text-left">
           <p>© {year} Nitchiani. {t("footer.rights")}.</p>
           {/* Card brands, not banks: EchoDesk picks the gateway, bank transfer is refused at
               checkout, and TBC isn't enabled on the tenant — naming any of them here would
