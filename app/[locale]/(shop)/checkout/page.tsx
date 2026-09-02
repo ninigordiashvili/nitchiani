@@ -59,6 +59,25 @@ type CheckoutInput = z.infer<typeof checkoutSchema>;
 
 const BOG_ENABLED = process.env.NEXT_PUBLIC_BOG_ENABLED === "true";
 const TBC_ENABLED = process.env.NEXT_PUBLIC_TBC_ENABLED === "true";
+
+/**
+ * When EchoDesk is the backend it chooses the card gateway itself and hands back a
+ * `payment_url` — we neither pick it nor are told which one it is. Naming a bank in the
+ * option would be a guess: the tenant can be switched from BOG to TBC without any change
+ * here, and the label would then be quietly wrong on the one screen where trust matters
+ * most. So under EchoDesk the card option is provider-neutral, and the customer sees the
+ * real bank on the gateway's own page a moment later.
+ */
+const ECHODESK_BACKED = Boolean(process.env.NEXT_PUBLIC_ECHODESK_API_URL);
+const CARD_LABEL_KEY = ECHODESK_BACKED ? "checkout.cardGeneric" : "checkout.bogCard";
+const CARD_DESC_KEY = ECHODESK_BACKED ? "checkout.cardGenericDesc" : "checkout.bogCardDesc";
+/**
+ * Under EchoDesk both card flags route to the same place, so the second option would be the
+ * same payment offered twice under two bank names. Show one card choice, and only show the
+ * separate TBC entry on the legacy path where it really is a different integration.
+ */
+const SHOW_CARD = ECHODESK_BACKED ? BOG_ENABLED || TBC_ENABLED : BOG_ENABLED;
+const SHOW_SEPARATE_TBC = !ECHODESK_BACKED && TBC_ENABLED;
 // Cash on delivery is temporarily withdrawn. Unlike the card flags above — which gate on
 // merchant credentials existing — this one is a business decision, so it defaults OFF and
 // comes back by setting NEXT_PUBLIC_COD_ENABLED=true. No code change, no redeploy of the
@@ -228,15 +247,15 @@ export default function CheckoutPage() {
       <div className="mb-8 border-b border-black/10 pb-6">
         <p className="label-eyebrow mb-3">{t("checkout.expressCheckout")}</p>
         <div className="flex flex-wrap gap-2">
-          {BOG_ENABLED ? (
+          {SHOW_CARD ? (
             <ExpressPill
               active={paymentMethod === "bog_card"}
               onClick={() => setValue("paymentMethod", "bog_card")}
               icon={<CreditCard size={14} />}
-              label={t("checkout.bogCard")}
+              label={t(CARD_LABEL_KEY)}
             />
           ) : null}
-          {TBC_ENABLED ? (
+          {SHOW_SEPARATE_TBC ? (
             <ExpressPill
               active={paymentMethod === "tbc_card"}
               onClick={() => setValue("paymentMethod", "tbc_card")}
@@ -378,16 +397,16 @@ export default function CheckoutPage() {
           <fieldset className={cn(step === 1 && "hidden sm:block")}>
             <legend className="font-display mb-4 text-xl">{t("checkout.paymentMethod")}</legend>
             <div className="space-y-3">
-              {BOG_ENABLED ? (
+              {SHOW_CARD ? (
                 <PaymentOption
                   active={paymentMethod === "bog_card"}
                   onSelect={() => setValue("paymentMethod", "bog_card")}
                   icon={<CreditCard size={20} />}
-                  title={t("checkout.bogCard")}
-                  desc={t("checkout.bogCardDesc")}
+                  title={t(CARD_LABEL_KEY)}
+                  desc={t(CARD_DESC_KEY)}
                 />
               ) : null}
-              {TBC_ENABLED ? (
+              {SHOW_SEPARATE_TBC ? (
                 <PaymentOption
                   active={paymentMethod === "tbc_card"}
                   onSelect={() => setValue("paymentMethod", "tbc_card")}
@@ -576,8 +595,12 @@ function Field({
 function PaymentTrust() {
   const t = useTranslations("product");
   const cardMethods: string[] = [];
-  if (BOG_ENABLED) cardMethods.push("BOG");
-  if (TBC_ENABLED) cardMethods.push("TBC");
+  // Same reasoning as CARD_LABEL_KEY: don't advertise a bank we don't choose.
+  if (ECHODESK_BACKED) cardMethods.push("Visa/Mastercard");
+  else {
+    if (BOG_ENABLED) cardMethods.push("BOG");
+    if (TBC_ENABLED) cardMethods.push("TBC");
+  }
   if (cardMethods.length > 0) cardMethods.push("VISA", "MASTERCARD");
 
   return (

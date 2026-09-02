@@ -80,7 +80,7 @@
       "returns": "24-hour returns",
       "returnsDesc": "Even on opened items",
       "payment": "Secure checkout",
-      "paymentDesc": "BOG · TBC · Bank transfer"
+      "paymentDesc": "Visa / Mastercard · secure checkout"
     },
     "connectEyebrow": "Get in touch",
     "connectTitle": "Contact us",
@@ -238,7 +238,9 @@
       "outOfStock": "Something in your cart is no longer available. Please review it and try again.",
       "missingDetails": "Some required details are missing. Please check the form and try again.",
       "orderFailed": "We couldn't place your order. Please try again or message us on WhatsApp."
-    }
+    },
+    "cardGeneric": "Bank card",
+    "cardGenericDesc": "Visa / Mastercard · secure checkout"
   },
   "services": {
     "title": "Our Services",
