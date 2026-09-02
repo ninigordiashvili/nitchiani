@@ -8,10 +8,10 @@ export default async function CheckoutSuccess({
   searchParams,
 }: {
   params: Promise<{ locale: Locale }>;
-  searchParams: Promise<{ order?: string }>;
+  searchParams: Promise<{ order?: string; token?: string }>;
 }) {
   const { locale } = await params;
-  const { order } = await searchParams;
+  const { order, token } = await searchParams;
   setRequestLocale(locale);
   const [t, tCart] = await Promise.all([
     getTranslations("checkout"),
@@ -28,7 +28,15 @@ export default async function CheckoutSuccess({
       {order ? <p className="label-eyebrow tabular-nums">{t("orderNumber", { id: order })}</p> : null}
       <div className="mt-3 flex flex-wrap justify-center gap-3">
         <Link
-          href={order ? `/order-status?order=${order}` : "/order-status"}
+          // The token is what makes tracking work without an account, so prefer it; the order
+          // number is the fallback for flows that don't issue one.
+          href={
+            token
+              ? `/order-status?token=${encodeURIComponent(token)}`
+              : order
+                ? `/order-status?order=${encodeURIComponent(order)}`
+                : "/order-status"
+          }
           className="btn-primary"
         >
           {t("trackOrder")}

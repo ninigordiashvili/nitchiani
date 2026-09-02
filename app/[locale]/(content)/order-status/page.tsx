@@ -3,6 +3,7 @@ import { Check, ClipboardCheck, ExternalLink, Package, RotateCcw, Truck } from "
 import { setRequestLocale, getTranslations } from "next-intl/server";
 import { WhatsAppIcon, getWhatsAppNumber } from "@/components/brand/WhatsAppIcon";
 import { getOrderByName, type OrderTracking } from "@/lib/shopify/orders";
+import { getTrackingByToken } from "@/lib/echodesk/tracking";
 import { localeAlternates } from "@/lib/seo";
 import type { Locale } from "@/lib/i18n/config";
 
@@ -44,10 +45,10 @@ export default async function OrderStatusPage({
   searchParams,
 }: {
   params: Promise<{ locale: Locale }>;
-  searchParams: Promise<{ order?: string }>;
+  searchParams: Promise<{ order?: string; token?: string }>;
 }) {
   const { locale } = await params;
-  const { order: orderParam } = await searchParams;
+  const { order: orderParam, token: tokenParam } = await searchParams;
   setRequestLocale(locale);
 
   const [t, tCart, tCheckout, tWa] = await Promise.all([
@@ -59,8 +60,17 @@ export default async function OrderStatusPage({
 
   const whatsappNumber = getWhatsAppNumber();
 
-  // Attempt the live lookup only when an order param was supplied.
-  const order = orderParam ? await getOrderByName(orderParam).catch(() => null) : null;
+  // Two ways in, in order of reliability:
+  //   1. `?token=` — the order's public_token, from the confirmation email. Works without an
+  //      account and is the link we hand the customer at checkout.
+  //   2. `?order=` — legacy Shopify order-name lookup, kept so older links don't break.
+  //
+  // A pasted value could be either, so a token lookup is tried first and the name lookup is
+  // the fallback; a wrong guess costs one request, not a dead end.
+  const lookup = tokenParam ?? orderParam;
+  const order =
+    (lookup ? await getTrackingByToken(lookup, locale).catch(() => null) : null) ??
+    (orderParam ? await getOrderByName(orderParam).catch(() => null) : null);
 
   const message = orderParam
     ? tWa("orderMessage", { id: orderParam })
@@ -71,9 +81,9 @@ export default async function OrderStatusPage({
     <div className="container-shop pb-8 sm:pb-12">
       <header className="mb-8 max-w-2xl">
         <p className="label-eyebrow mb-2">{t("eyebrow")}</p>
-        {orderParam ? (
+        {order ? (
           <p className="mb-3 text-xs tabular-nums opacity-60">
-            {tCheckout("orderNumber", { id: orderParam })}
+            {tCheckout("orderNumber", { id: order.name })}
           </p>
         ) : null}
         <h1 className="font-display text-3xl leading-tight tracking-tight sm:text-4xl">
@@ -90,7 +100,7 @@ export default async function OrderStatusPage({
         <>
           {/* A number was supplied but nothing came back — say so plainly. Falling through to
               the generic timeline would leave the customer thinking the page had ignored them. */}
-          {orderParam ? (
+          {lookup ? (
             <div
               role="status"
               className="mb-8 rounded-lg border p-5"
@@ -101,7 +111,7 @@ export default async function OrderStatusPage({
             </div>
           ) : null}
 
-          <OrderLookup t={t} defaultValue={orderParam} />
+          <OrderLookup t={t} defaultValue={lookup} />
           <StaticTimeline tCart={tCart} />
         </>
       )}
@@ -222,10 +232,9 @@ async function LiveTracking({
               >
                 {completed ? <Check size={16} /> : `0${stepNumber}`}
               </span>
-              <div>
-                <p className="text-[11px] tabular-nums opacity-50">0{stepNumber}</p>
-                <p className="text-sm font-medium leading-tight">{label}</p>
-              </div>
+              {/* The number already sits in the badge to the left — repeating it above the
+                  label rendered every step twice ("01 / 01 Order placed"). */}
+              <p className="self-center text-sm font-medium leading-tight">{label}</p>
             </li>
           );
         })}
@@ -309,9 +318,8 @@ function OrderLookup({
       <div className="flex flex-col gap-2 sm:flex-row">
         <input
           id="order-lookup"
-          name="order"
+          name="token"
           type="text"
-          inputMode="numeric"
           autoComplete="off"
           required
           defaultValue={defaultValue ?? ""}

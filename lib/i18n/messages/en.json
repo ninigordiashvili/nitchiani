@@ -381,12 +381,12 @@
     "contactTitle": "Message us about your order",
     "contactDesc": "We reply within working hours — usually in minutes. Mention your order number if you have it.",
     "openWhatsApp": "Open WhatsApp",
-    "lookupLabel": "Order number",
-    "lookupPlaceholder": "e.g. #1042",
+    "lookupLabel": "Tracking code",
+    "lookupPlaceholder": "Paste the code from your confirmation email",
     "lookupCta": "Track order",
-    "lookupHint": "It's on your confirmation email and the order-received page.",
+    "lookupHint": "Your confirmation email links straight here — the code is in that link.",
     "notFoundTitle": "We couldn't find that order",
-    "notFoundDesc": "Check the number and try again — it looks like #1042. If it still doesn't come up, message us and we'll look it up by hand."
+    "notFoundDesc": "Check the code and try again. The surest way in is the tracking link in your confirmation email. If it still doesn't come up, message us and we'll look it up by hand."
   },
   "welcome": {
     "eyebrow": "Welcome offer",

@@ -161,6 +161,8 @@ export default function CheckoutPage() {
       });
       const data = (await res.json()) as {
         orderId?: string;
+        /** Public order token, when the backend issues one — used to build the tracking link. */
+        trackingToken?: string;
         redirectUrl?: string;
         error?: string;
       };
@@ -188,7 +190,13 @@ export default function CheckoutPage() {
 
       if (!data.orderId) throw new Error(t("checkout.orderFailed"));
       cart.clear();
-      router.push(`/checkout/success?order=${data.orderId}`);
+      // `trackingToken` is the order's public token when the backend issues one. Carrying it
+      // through is what lets the success page hand the customer a working tracking link —
+      // without it they'd have nothing to look the order up with.
+      const trackingQs = data.trackingToken
+        ? `&token=${encodeURIComponent(data.trackingToken)}`
+        : "";
+      router.push(`/checkout/success?order=${encodeURIComponent(data.orderId)}${trackingQs}`);
     } catch (err) {
       setSubmitError(err instanceof Error ? err.message : t("checkout.orderFailed"));
     } finally {
