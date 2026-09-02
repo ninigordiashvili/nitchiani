@@ -128,10 +128,14 @@ export function QuickViewModal() {
                         aria-label={t("nav.showImage", { n: i + 1 })}
                         aria-current={i === active}
                         className={cn(
-                          "relative h-12 w-12 flex-shrink-0 cursor-pointer overflow-hidden rounded-md border-2 bg-white transition-opacity",
+                          "relative h-12 w-12 flex-shrink-0 cursor-pointer overflow-hidden rounded-md border-2 bg-white transition-all",
                           i === active
                             ? "border-[var(--color-brand-ink)]"
-                            : "border-transparent opacity-60 hover:opacity-100",
+                            // Unselected shots keep a hairline edge and near-full opacity. At
+                            // opacity-60 with a transparent border they were product photos on
+                            // white sitting on a white tile — barely there, so the strip read as
+                            // one image rather than a picker.
+                            : "border-[var(--border-soft)] opacity-90 hover:border-[var(--color-brand-ink)] hover:opacity-100",
                         )}
                       >
                         <Image

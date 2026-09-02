@@ -30,10 +30,12 @@ export function ProductGallery({ images, title }: { images: ImageRef[]; title: s
                 onClick={() => setActive(i)}
                 aria-label={t("showImage", { n: i + 1 })}
                 className={cn(
-                  "relative h-16 w-16 flex-shrink-0 overflow-hidden border bg-white transition-colors",
+                  "relative h-16 w-16 flex-shrink-0 overflow-hidden border bg-white transition-all",
                   i === active
                     ? "border-[var(--color-brand-ink)]"
-                    : "border-transparent opacity-60 hover:opacity-100",
+                    // Matches the quick-view strip: a hairline edge and near-full opacity, so
+                    // an unselected shot still reads as a thumbnail you can tap.
+                    : "border-[var(--border-soft)] opacity-90 hover:border-[var(--color-brand-ink)] hover:opacity-100",
                 )}
               >
                 <Image
