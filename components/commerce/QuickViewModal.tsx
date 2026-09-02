@@ -95,12 +95,6 @@ export function QuickViewModal() {
                 blurDataURL={BLUR_DATA_URL}
                 className="object-contain sm:rounded-l-2xl"
               />
-              {/* Save to favourites. Top-LEFT rather than the card's top-right, because the
-                  mobile close button owns that corner here. Same component as ProductCard, so
-                  the heart's saved state carries straight over from the grid behind the sheet. */}
-              <div className="absolute top-3 left-3">
-                <WishlistButton handle={product.handle} size={20} />
-              </div>
               <button
                 type="button"
                 onClick={quickView.close}
@@ -124,9 +118,21 @@ export function QuickViewModal() {
               </button>
 
               <p className="label-eyebrow mb-2">{product.productType}</p>
-              <h2 className="font-display text-2xl leading-tight tracking-tight sm:text-3xl">
-                {product.title}
-              </h2>
+              {/* Favourites sits beside the title rather than over the artwork: the heart's
+                  translucent pill is designed for the tinted product cards and all but vanished
+                  against a white product photo. On the cream panel the maroon reads clearly, and
+                  the hairline border makes it legible as a control rather than decoration.
+                  Kept on the title row (not the eyebrow) to clear the desktop close button. */}
+              <div className="flex items-start justify-between gap-3">
+                <h2 className="font-display text-2xl leading-tight tracking-tight sm:text-3xl">
+                  {product.title}
+                </h2>
+                <WishlistButton
+                  handle={product.handle}
+                  size={20}
+                  className="mt-0.5 shrink-0 border border-[var(--border-soft)]"
+                />
+              </div>
 
               <div className="mt-5">
                 <ProductPurchase product={product} showSizeGuide={false} />
