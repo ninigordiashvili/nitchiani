@@ -49,10 +49,9 @@ export function ProductCard({ product, priority = false }: { product: Product; p
           blurDataURL={BLUR_DATA_URL}
           className="object-contain transition-transform duration-[400ms] ease-[var(--ease-brand)] group-hover:scale-105"
         />
-        {(product.isNew || product.isBestSeller || offPercent !== null) && (
+        {(product.isNew || offPercent !== null) && (
           <div className="absolute top-2 left-2 flex flex-col gap-1">
             {offPercent !== null && <Badge tone="maroon">−{offPercent}%</Badge>}
-            {product.isBestSeller && <Badge>{t("badgeBestSeller")}</Badge>}
             {product.isNew && <Badge>{t("badgeNew")}</Badge>}
           </div>
         )}
