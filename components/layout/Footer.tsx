@@ -38,10 +38,13 @@ export function Footer() {
       className="mt-6 sm:mt-16"
       style={{ background: "var(--color-brand-bg)", color: "var(--color-brand-cream)" }}
     >
-      {/* Mobile only: reserve room below the copyright line so the fixed BottomNav
-          (~64px content + iOS safe-area inset) doesn't cover the bottom of the footer.
-          `sm:pb-12` resets this on desktop where BottomNav is hidden. */}
-      <div className="container-shop pt-10 pb-[calc(6rem+env(safe-area-inset-bottom))] sm:pb-12">
+      {/* Bottom padding reserves room for the two things that float over the end of the page.
+          Mobile: the fixed BottomNav (~64px + iOS safe-area inset).
+          Desktop: the chat launcher, 56px at 20px from the corner, which the right-aligned
+          payment line otherwise runs underneath — measured at 44px of overlap at 1280px.
+          `sm:pb-24` clears it with room to spare, and keeps the row's alignment intact
+          instead of shunting the text sideways. */}
+      <div className="container-shop pt-10 pb-[calc(6rem+env(safe-area-inset-bottom))] sm:pb-24">
         {/* Newsletter signup — hidden for now. Uncomment this block (and the
             `NewsletterForm` import above) to bring it back; the divider below it
             belongs to this block, not to TrustStrip. */}
