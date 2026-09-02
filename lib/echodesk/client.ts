@@ -22,15 +22,23 @@ const API_URL = process.env.NEXT_PUBLIC_ECHODESK_API_URL?.replace(/\/+$/, "");
 
 export const isEchoDeskConfigured = Boolean(API_URL);
 
-/** Storefront reads are cached; the catalog changes far less often than it's requested. */
-const DEFAULT_REVALIDATE = 300;
+/**
+ * Storefront reads are cached in production — the catalog is read far more often than it
+ * changes — but never in development. While the catalog is being built, a 5-minute window
+ * where a product you just added is invisible reads as a bug rather than a cache, so dev
+ * pays the extra request and always tells the truth.
+ *
+ * Override in production with ECHODESK_REVALIDATE (seconds).
+ */
+const DEFAULT_REVALIDATE = Number.parseInt(process.env.ECHODESK_REVALIDATE ?? "", 10) || 300;
+const isDev = process.env.NODE_ENV === "development";
 
 async function get<T>(path: string, revalidate = DEFAULT_REVALIDATE): Promise<T | null> {
   if (!API_URL) return null;
   try {
     const res = await fetch(`${API_URL}/api/ecommerce/client${path}`, {
       headers: { Accept: "application/json" },
-      next: { revalidate },
+      ...(isDev ? { cache: "no-store" as const } : { next: { revalidate } }),
     });
     if (!res.ok) {
       console.error("[echodesk] GET", path, "->", res.status);

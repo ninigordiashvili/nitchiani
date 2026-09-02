@@ -65,7 +65,11 @@ export function adaptProduct(p: EchoDeskProduct, locale: Locale): Product {
       }))
     : [
         {
-          id: `gid://echodesk/Variant/${p.id}`,
+          // Tagged Product, not Variant: this row stands in for a product that has no
+          // variants of its own, and checkout must send it as `product_id` with no
+          // `variant_id`. Encoding it as a Variant would post the product id in the wrong
+          // field and the order would be rejected.
+          id: `gid://echodesk/Product/${p.id}`,
           title: "One Size",
           availableForSale: inStock,
           selectedOptions: [],
@@ -113,9 +117,19 @@ export function adaptProduct(p: EchoDeskProduct, locale: Locale): Product {
   };
 }
 
-/** Numeric EchoDesk id back out of a variant GID — needed by cart and shipping-quote calls. */
-export function echoDeskIdFromGid(gid: string): number | null {
-  const tail = gid.split("/").pop() ?? "";
-  const n = Number.parseInt(tail, 10);
-  return Number.isFinite(n) && String(n) === tail ? n : null;
+/**
+ * Reads an EchoDesk reference back out of a cart line's id.
+ *
+ * `gid://echodesk/Variant/12` → { kind: "variant", id: 12 }
+ * `gid://echodesk/Product/12` → { kind: "product", id: 12 }
+ *
+ * Checkout needs the distinction: a variant row sends both `product_id` and `variant_id`,
+ * a product row sends `product_id` alone.
+ */
+export function parseEchoDeskGid(
+  gid: string,
+): { kind: "product" | "variant"; id: number } | null {
+  const m = /^gid:\/\/echodesk\/(Product|Variant)\/(\d+)$/.exec(gid);
+  if (!m) return null;
+  return { kind: m[1] === "Product" ? "product" : "variant", id: Number.parseInt(m[2], 10) };
 }

@@ -9,6 +9,8 @@ import {
 } from "@/lib/shopify/orders";
 import { createBogPaymentOrder, isBogConfigured } from "@/lib/payments/bog";
 import { createTbcPayment, getClientIp, isTbcConfigured } from "@/lib/payments/tbc";
+import { createGuestOrder, toEchoDeskPaymentMethod } from "@/lib/echodesk/orders";
+import { isEchoDeskConfigured } from "@/lib/echodesk/client";
 import { clientIp, rateLimit } from "@/lib/rate-limit";
 import { reportError } from "@/lib/observability";
 
@@ -45,7 +47,7 @@ const bodySchema = z.object({
 });
 
 type CheckoutResponse =
-  | { orderId: string }
+  | { orderId: string; trackingToken?: string }
   | { redirectUrl: string }
   | { error: string };
 
@@ -131,6 +133,13 @@ export async function POST(req: Request): Promise<NextResponse<CheckoutResponse>
   }
 
   const orderInput = buildOrderInput(payload, totals);
+
+  // EchoDesk owns orders once it's configured. It brokers card payments itself, so the
+  // BOG/TBC branches below are bypassed entirely — the tenant decides which providers are
+  // live and hands back a `payment_url` when one applies.
+  if (isEchoDeskConfigured) {
+    return handleEchoDeskOrder(orderInput, totals);
+  }
 
   if (payload.paymentMethod === "bog_card") {
     return handleBogCard(orderInput, totals, req);
@@ -265,4 +274,64 @@ async function handleTbcCard(
   }
 
   return NextResponse.json({ redirectUrl: tbc.redirectUrl });
+}
+
+/**
+ * Places the order in EchoDesk and routes the shopper accordingly.
+ *
+ * The response tells us which of two worlds we're in: a `payment_url` means the tenant has a
+ * card provider live and the shopper still has to pay; its absence means the order is already
+ * booked (cash on delivery / bank transfer) and we can confirm immediately.
+ *
+ * `public_token` is carried through to the success page so the customer can track the order
+ * without an account — it's the credential, so it never appears in a log line.
+ */
+async function handleEchoDeskOrder(
+  orderInput: ManualOrderInput,
+  totals: ServerComputedTotals,
+): Promise<NextResponse<CheckoutResponse>> {
+  // Caught here rather than deep in the client so the shopper gets a useful instruction
+  // instead of "could not create order".
+  if (!toEchoDeskPaymentMethod(orderInput.paymentMethod)) {
+    return NextResponse.json(
+      { error: "Bank transfer isn't available. Please pay by card." },
+      { status: 400 },
+    );
+  }
+
+  const outcome = await createGuestOrder(orderInput).catch((err) => {
+    reportError(err, {
+      op: "echodesk.createGuestOrder",
+      paymentMethod: orderInput.paymentMethod,
+      total: totals.total,
+    });
+    return { ok: false as const, error: undefined };
+  });
+
+  if (!outcome.ok) {
+    // A message means EchoDesk told us something the shopper can act on; pass it through
+    // as a 400. Otherwise it's our problem, so keep the generic 502 and the WhatsApp escape.
+    return outcome.error
+      ? NextResponse.json({ error: outcome.error }, { status: 400 })
+      : NextResponse.json(
+          { error: "Could not create order. Please try again or contact us on WhatsApp." },
+          { status: 502 },
+        );
+  }
+  const order = outcome.order;
+
+  // Card flow: the gateway owns the next step.
+  if (order.paymentUrl) {
+    return NextResponse.json({ redirectUrl: order.paymentUrl });
+  }
+
+  const reference = order.orderNumber ?? String(order.id);
+
+  // Fire-and-forget confirmation, same as the manual flow: the order exists in EchoDesk either
+  // way, and an email-provider hiccup shouldn't block the response.
+  void sendOrderConfirmation({ ...orderInput, orderId: reference }).catch((err) => {
+    reportError(err, { op: "sendOrderConfirmation", orderId: reference });
+  });
+
+  return NextResponse.json({ orderId: reference, trackingToken: order.publicToken });
 }

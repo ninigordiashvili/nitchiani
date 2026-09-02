@@ -62,3 +62,18 @@ describe("payment config", () => {
     expect(problems.map((p) => p.method)).toContain("bog_card");
   });
 });
+
+describe("with EchoDesk as the backend", () => {
+  it("stops warning about our own gateway credentials", async () => {
+    // EchoDesk brokers the charge and hands back a payment_url, so BOG/TBC secrets are
+    // never read. Warning about them would be a permanent false alarm.
+    const problems = await problemsWith({
+      NEXT_PUBLIC_ECHODESK_API_URL: "https://nitchiani.api.echodesk.ge",
+      NEXT_PUBLIC_BOG_ENABLED: "true",
+      NEXT_PUBLIC_TBC_ENABLED: "true",
+      BOG_CLIENT_ID: "",
+      TBC_API_KEY: "",
+    });
+    expect(problems).toEqual([]);
+  });
+});

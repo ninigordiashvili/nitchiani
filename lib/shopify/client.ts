@@ -9,6 +9,7 @@ import {
 import { findMatchingProducts } from "./search";
 import { adaptProduct } from "../echodesk/adapt";
 import { getProductBySlug, isEchoDeskConfigured, listProducts } from "../echodesk/client";
+import { categoriesFor } from "../echodesk/categories";
 import type { Locale } from "../i18n/config";
 import { defaultLocale } from "../i18n/config";
 
@@ -147,6 +148,8 @@ function liveCollections(products: Product[], locale: Locale): Collection[] {
     if (raw.handle === "all-products") members = products;
     else if (raw.handle === "best-sellers") members = products.filter((p) => p.isBestSeller);
     else if (raw.handle === "new-arrivals") members = products;
+    // Themed categories come from the manual map — the API has nothing to match on.
+    else members = products.filter((p) => categoriesFor(p.handle).includes(raw.handle));
     return { ...shell, products: members };
   });
 }

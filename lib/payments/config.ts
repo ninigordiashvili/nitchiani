@@ -21,6 +21,11 @@ export type PaymentConfigProblem = {
 export function findPaymentConfigProblems(): PaymentConfigProblem[] {
   const problems: PaymentConfigProblem[] = [];
 
+  // When EchoDesk is the backend it brokers card payments itself and returns a payment_url,
+  // so our own BOG/TBC credentials are irrelevant — checkout never reaches those branches.
+  // Without this, switching the card option on would log a permanent false alarm.
+  if (process.env.NEXT_PUBLIC_ECHODESK_API_URL) return problems;
+
   if (process.env.NEXT_PUBLIC_BOG_ENABLED === "true" && !isBogConfigured) {
     problems.push({
       method: "bog_card",

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { adaptProduct, echoDeskIdFromGid, pick } from "./adapt";
+import { adaptProduct, parseEchoDeskGid, pick } from "./adapt";
 import type { EchoDeskProduct } from "./types";
 // Captured verbatim from the live tenant (nitchiani.api.echodesk.ge, product 1) so the
 // adapter is tested against a real payload rather than an idealised one.
@@ -22,8 +22,9 @@ describe("adaptProduct — real tenant payload", () => {
     const p = adaptProduct(product, "en");
     expect(p.variants).toHaveLength(1);
     expect(p.variants[0].availableForSale).toBe(true);
-    // The numeric id has to survive — cart, checkout and shipping quotes all key on it.
-    expect(echoDeskIdFromGid(p.variants[0].id)).toBe(1);
+    // The id must survive AND be tagged as a product, so checkout sends it as product_id
+    // rather than variant_id.
+    expect(parseEchoDeskGid(p.variants[0].id)).toEqual({ kind: "product", id: 1 });
   });
 
   it("falls back to the single list image when the detail gallery is absent", () => {
@@ -48,5 +49,19 @@ describe("pick", () => {
     expect(pick(undefined, "en")).toBe("");
     // An empty string for the active locale must not win over a real English value.
     expect(pick({ en: "Wax", ka: "" }, "ka")).toBe("Wax");
+  });
+});
+
+describe("parseEchoDeskGid", () => {
+  it("distinguishes product rows from variant rows", () => {
+    expect(parseEchoDeskGid("gid://echodesk/Product/7")).toEqual({ kind: "product", id: 7 });
+    expect(parseEchoDeskGid("gid://echodesk/Variant/7")).toEqual({ kind: "variant", id: 7 });
+  });
+
+  it("rejects anything that isn't an EchoDesk gid", () => {
+    // Sample-catalog and Shopify ids must not be mistaken for EchoDesk ones at checkout.
+    expect(parseEchoDeskGid("gid://nitchiani/Variant/silk-bonnet-noir-0")).toBeNull();
+    expect(parseEchoDeskGid("gid://shopify/ProductVariant/123")).toBeNull();
+    expect(parseEchoDeskGid("")).toBeNull();
   });
 });
