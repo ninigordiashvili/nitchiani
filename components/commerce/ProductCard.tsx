@@ -1,7 +1,6 @@
 "use client";
 
 import Image from "next/image";
-import { useTranslations } from "next-intl";
 import { Link } from "@/lib/i18n/routing";
 import type { Product } from "@/lib/shopify/types";
 import { BLUR_DATA_URL } from "@/lib/images";
@@ -14,7 +13,6 @@ import { StarRating } from "./StarRating";
 import { WishlistButton } from "./WishlistButton";
 
 export function ProductCard({ product, priority = false }: { product: Product; priority?: boolean }) {
-  const t = useTranslations("product");
   const quickView = useQuickView();
   const variant = product.variants[0];
   const compareAt = variant?.compareAtPrice;
@@ -49,18 +47,13 @@ export function ProductCard({ product, priority = false }: { product: Product; p
           blurDataURL={BLUR_DATA_URL}
           className="object-contain transition-transform duration-[400ms] ease-[var(--ease-brand)] group-hover:scale-105"
         />
-        {(product.isNew || offPercent !== null) && (
-          <div className="absolute top-2 left-2 flex flex-col items-start gap-1">
-            {offPercent !== null && (
-              <span className="flex items-center gap-1">
-                <Badge tone="maroon">−{offPercent}%</Badge>
-                {/* "SALE" is deliberately not translated — it reads as SALE on the Georgian
-                    storefront too, the way the brand uses it. Hardcoded rather than pulled
-                    from the message bundle so nobody "fixes" it into ფასდაკლება later. */}
-                <Badge>SALE</Badge>
-              </span>
-            )}
-            {product.isNew && <Badge>{t("badgeNew")}</Badge>}
+        {offPercent !== null && (
+          <div className="absolute top-2 left-2 flex items-center gap-1">
+            <Badge tone="maroon">−{offPercent}%</Badge>
+            {/* "SALE" is deliberately not translated — it reads as SALE on the Georgian
+                storefront too, the way the brand uses it. Hardcoded rather than pulled from
+                the message bundle so nobody "fixes" it into ფასდაკლება later. */}
+            <Badge>SALE</Badge>
           </div>
         )}
         <div className="absolute top-2 right-2">

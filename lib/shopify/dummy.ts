@@ -132,7 +132,6 @@ export function localizeProduct(p: RawProduct, locale: Locale): Product {
       min: { amount: minPrice.toFixed(2), currencyCode: currency },
       max: { amount: maxPrice.toFixed(2), currencyCode: currency },
     },
-    isNew: p.isNew,
     isBestSeller: p.isBestSeller,
   };
 }
@@ -177,7 +176,6 @@ function makeProduct(p: {
    * than silently overflowing the thumbnail rail.
    */
   gallery?: string[];
-  isNew?: boolean;
   isBestSeller?: boolean;
   /** Option groups (e.g. Color, Size). Omit for a single-SKU product. */
   options?: RawProductOption[];
@@ -215,7 +213,6 @@ function makeProduct(p: {
     baseCompareAt: p.compareAt,
     rawOptions: p.options ?? [],
     rawVariants: p.variants ?? [{ optionValues: [], available: true }],
-    isNew: p.isNew,
     isBestSeller: p.isBestSeller,
     material: p.material,
   };
@@ -385,7 +382,6 @@ export const DUMMY_RAW_PRODUCTS: RawProduct[] = [
     productTypeKa: "ექსტენშენები",
     price: 320,
     image: "/products/human-hair-extension-22-noir.png",
-    isNew: true,
     tags: ["extensions", "new"],
     options: [
       {
@@ -414,7 +410,6 @@ export const DUMMY_RAW_PRODUCTS: RawProduct[] = [
     productTypeKa: "ლოკსების მოვლა",
     price: 72,
     image: "/products/loc-detox-rinse.png",
-    isNew: true,
     tags: ["loc-care", "new"],
   }),
   makeProduct({
@@ -427,7 +422,6 @@ export const DUMMY_RAW_PRODUCTS: RawProduct[] = [
     productTypeKa: "ლოკსების მოვლა",
     price: 42,
     image: "/products/edge-control-mini.png",
-    isNew: true,
     tags: ["loc-care", "new"],
   }),
   makeProduct({
@@ -440,7 +434,6 @@ export const DUMMY_RAW_PRODUCTS: RawProduct[] = [
     productTypeKa: "აქსესუარები",
     price: 56,
     image: "/products/gold-loc-cuff-set.png",
-    isNew: true,
     tags: ["accessories", "new"],
     options: [
       {
@@ -474,7 +467,6 @@ export const DUMMY_RAW_PRODUCTS: RawProduct[] = [
     productTypeKa: "ბონნეტები",
     price: 52,
     image: "/products/silk-bonnet-noir.png",
-    isNew: true,
     tags: ["bonnets", "new"],
     options: [
       {
@@ -498,7 +490,6 @@ export const DUMMY_RAW_PRODUCTS: RawProduct[] = [
     productTypeKa: "ბონნეტები",
     price: 98,
     image: "/products/satin-pillowcase-cream.png",
-    isNew: true,
     tags: ["bonnets", "new"],
   }),
   makeProduct({
@@ -541,7 +532,6 @@ export const DUMMY_RAW_PRODUCTS: RawProduct[] = [
     productTypeKa: "ხელსაწყოები",
     price: 48,
     image: "/products/wood-loc-pick.png",
-    isNew: true,
     tags: ["tools", "new"],
     options: [
       {
@@ -621,7 +611,6 @@ export const DUMMY_RAW_PRODUCTS: RawProduct[] = [
     productTypeKa: "ექსტენშენები",
     price: 280,
     image: "/products/human-hair-extension-22-noir.png",
-    isNew: true,
     tags: ["extensions", "new"],
   }),
 
@@ -636,7 +625,6 @@ export const DUMMY_RAW_PRODUCTS: RawProduct[] = [
     productTypeKa: "აქსესუარები",
     price: 28,
     image: "/products/gold-loc-cuff-set.png",
-    isNew: true,
     tags: ["accessories", "new"],
   }),
   makeProduct({
@@ -694,7 +682,6 @@ export const DUMMY_RAW_PRODUCTS: RawProduct[] = [
     productTypeKa: "პირსინგი",
     price: 145,
     image: "/products/titanium-helix-stud.png",
-    isNew: true,
     tags: ["piercings", "titanium", "new"],
     material: "implant-titanium",
     options: [

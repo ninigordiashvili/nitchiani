@@ -43,7 +43,6 @@ export type Product = {
   options: ProductOption[];
   variants: ProductVariant[];
   priceRange: { min: Money; max: Money };
-  isNew?: boolean;
   isBestSeller?: boolean;
   /**
    * Locale-stable slug derived from the English product type. Used for breadcrumb links
