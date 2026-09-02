@@ -45,9 +45,10 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
       <div
         role="status"
         aria-live="polite"
-        // Fixed above the mobile BottomNav and clear of the chat launcher's corner. Centred
-        // on mobile, bottom-left on desktop so it never lands under the launcher.
-        className="pointer-events-none fixed inset-x-0 z-[60] flex justify-center px-4 sm:left-6 sm:right-auto sm:justify-start"
+        // Centred at every width, and sat above the mobile BottomNav. Centring keeps it clear
+        // of the chat launcher too — that lives in the bottom-right corner, so the middle of
+        // the viewport is the one place nothing else occupies.
+        className="pointer-events-none fixed inset-x-0 z-[60] flex justify-center px-4"
         style={{ bottom: "calc(5.5rem + env(safe-area-inset-bottom))" }}
       >
         {toast ? (
