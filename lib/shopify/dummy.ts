@@ -766,15 +766,6 @@ export const DUMMY_RAW_PRODUCTS: RawProduct[] = [
 
 export const DUMMY_RAW_COLLECTIONS: RawCollection[] = [
   {
-    id: "gid://nitchiani/Collection/best-sellers",
-    handle: "best-sellers",
-    titleEn: "Best Sellers",
-    titleKa: "ბესტსელერები",
-    descriptionEn: "Our most-loved pieces.",
-    descriptionKa: "ჩვენი ყველაზე საყვარელი ნივთები.",
-    products: DUMMY_RAW_PRODUCTS.filter((p) => p.isBestSeller),
-  },
-  {
     id: "gid://nitchiani/Collection/new-arrivals",
     handle: "new-arrivals",
     titleEn: "New Arrivals",

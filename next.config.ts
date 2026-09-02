@@ -85,7 +85,10 @@ const nextConfig: NextConfig = {
         destination: `/:locale/shop/${to}`,
         permanent: true,
       })),
-      ...["piercings", "tools"].map((from) => ({
+      // Best Sellers was removed outright — every product was flagged featured, so the
+      // collection had become the catalog under another name. It was in the sitemap, so it
+      // redirects rather than 404s.
+      ...["piercings", "tools", "best-sellers"].map((from) => ({
         source: `/:locale(ka|en)/shop/${from}`,
         destination: `/:locale/shop`,
         permanent: true,

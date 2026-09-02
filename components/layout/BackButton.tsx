@@ -18,7 +18,7 @@ export function BackButton() {
   const pathname = usePathname();
 
   // Hide on the homepage and on every category/collection page reachable via the chips
-  // (`/shop`, `/shop/best-sellers`, `/shop/bonnets`, …) — those pages already have the
+  // (`/shop`, `/shop/new-arrivals`, `/shop/bonnets`, …) — those pages already have the
   // CategoryChips strip immediately under the header, so a separate "Back" link is noise.
   if (pathname === "/" || pathname === "/shop" || pathname.startsWith("/shop/")) return null;
 

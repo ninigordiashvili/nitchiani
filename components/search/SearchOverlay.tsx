@@ -14,7 +14,6 @@ import { useOverlays } from "@/lib/ui/overlays";
 import { useSwipeDismiss } from "@/lib/ui/use-swipe-dismiss";
 
 const POPULAR = [
-  { handle: "best-sellers", labelKey: "bestSellers" as const },
   { handle: "new-arrivals", labelKey: "newArrivals" as const },
   { handle: "bonnets", labelKey: "bonnets" as const },
   { handle: "loc-care", labelKey: "locCare" as const },
