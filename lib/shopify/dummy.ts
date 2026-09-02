@@ -764,9 +764,6 @@ export const DUMMY_RAW_PRODUCTS: RawProduct[] = [
   }),
 ];
 
-const productsByEnglishType = (englishType: string) =>
-  DUMMY_RAW_PRODUCTS.filter((p) => p.productTypeEn === englishType);
-
 export const DUMMY_RAW_COLLECTIONS: RawCollection[] = [
   {
     id: "gid://nitchiani/Collection/best-sellers",
@@ -787,65 +784,53 @@ export const DUMMY_RAW_COLLECTIONS: RawCollection[] = [
     products: DUMMY_RAW_PRODUCTS.filter((p) => p.isNew),
   },
   {
+    id: "gid://nitchiani/Collection/hair-extensions",
+    handle: "hair-extensions",
+    titleEn: "Hair Extensions",
+    titleKa: "ხელოვნური თმა",
+    descriptionEn: "Braiding hair and extensions.",
+    descriptionKa: "ხელოვნური თმა და ექსტენშენები ნაწნავებისთვის.",
+    // Membership comes from lib/echodesk/categories.ts when the catalog is live.
+    products: [],
+  },
+  {
+    id: "gid://nitchiani/Collection/braiding-wax",
+    handle: "braiding-wax",
+    titleEn: "Braiding Wax",
+    titleKa: "თმის ჟელე",
+    descriptionEn: "Wax and gel for braiding and edges.",
+    descriptionKa: "ჟელე და ვოსკი ნაწნავებისა და კიდეებისთვის.",
+    // Membership comes from lib/echodesk/categories.ts when the catalog is live.
+    products: [],
+  },
+  {
+    id: "gid://nitchiani/Collection/hair-accessories",
+    handle: "hair-accessories",
+    titleEn: "Hair Accessories",
+    titleKa: "თმის აქსესუარი",
+    descriptionEn: "Beads, cuffs, rings and tools.",
+    descriptionKa: "მძივები, რგოლები და აქსესუარები.",
+    // Membership comes from lib/echodesk/categories.ts when the catalog is live.
+    products: [],
+  },
+  {
     id: "gid://nitchiani/Collection/bonnets",
     handle: "bonnets",
     titleEn: "Bonnets",
-    titleKa: "ბონნეტები",
+    titleKa: "ბონეტი",
     descriptionEn: "Silk and satin bonnets for overnight protection.",
-    descriptionKa: "აბრეშუმისა და სატენის ბონნეტები ღამის დაცვისთვის.",
-    image: { url: "/categories/bonnets.png", altText: "Bonnets" },
-    products: productsByEnglishType("Bonnets"),
+    descriptionKa: "აბრეშუმისა და სატენის ბონეტები ღამის დაცვისთვის.",
+    // Membership comes from lib/echodesk/categories.ts when the catalog is live.
+    products: [],
   },
   {
-    id: "gid://nitchiani/Collection/loc-care",
-    handle: "loc-care",
-    titleEn: "Loc Care",
-    titleKa: "ლოკსების მოვლა",
-    descriptionEn: "Oils, rinses, gels — everything your locs need.",
-    descriptionKa: "ზეთები, ჩამოსარეცხები, გელები — ყველაფერი, რაც შენს ლოკსებს სჭირდება.",
-    image: { url: "/categories/loc-care.png", altText: "Loc Care" },
-    products: productsByEnglishType("Loc Care"),
-  },
-  {
-    id: "gid://nitchiani/Collection/accessories",
-    handle: "accessories",
-    titleEn: "Accessories",
-    titleKa: "აქსესუარები",
-    descriptionEn: "Pillowcases, cuffs, beads, and more.",
-    descriptionKa: "ბალიშის გარსები, მანჟეტები, მძივები და სხვა.",
-    image: { url: "/categories/accessories.png", altText: "Accessories" },
-    products: productsByEnglishType("Accessories"),
-  },
-  {
-    id: "gid://nitchiani/Collection/extensions",
-    handle: "extensions",
-    titleEn: "Extensions",
-    titleKa: "ექსტენშენები",
-    descriptionEn: "Premium human hair extensions, ethically sourced.",
-    descriptionKa: "პრემიუმ ბუნებრივი თმის ექსტენშენები, ეთიკური წარმოშობით.",
-    image: { url: "/categories/extensions.png", altText: "Extensions" },
-    products: productsByEnglishType("Extensions"),
-  },
-  {
-    id: "gid://nitchiani/Collection/tools",
-    handle: "tools",
-    titleEn: "Tools",
-    titleKa: "ხელსაწყოები",
-    descriptionEn: "Picks, combs, and styling tools.",
-    descriptionKa: "პიკები, სავარცხლები და სტილისტური ხელსაწყოები.",
-    image: { url: "https://picsum.photos/seed/nitchiani-tools/1200/900", altText: "Tools" },
-    products: productsByEnglishType("Tools"),
-  },
-  {
-    // Piercing accessories — scaffolded empty for now. Add products with `productType: "Piercings"`
-    // (and the matching localised type via `productTypeHandle: "piercings"`) when the line launches.
-    id: "gid://nitchiani/Collection/piercings",
-    handle: "piercings",
-    titleEn: "Piercings",
-    titleKa: "პირსინგი",
-    descriptionEn: "Hand-finished studs, hoops and cuffs — the same Tbilisi-studio craft as our hair pieces.",
-    descriptionKa: "ხელით დამზადებული საყურეები, რგოლები და მანჟეტები — იგივე თბილისური სტუდიური ხელობა, რაც ჩვენი თმის ნივთები.",
-    image: { url: "/categories/piercings.png", altText: "Piercings" },
-    products: productsByEnglishType("Piercings"),
+    id: "gid://nitchiani/Collection/durags",
+    handle: "durags",
+    titleEn: "Durags",
+    titleKa: "დურაგი",
+    descriptionEn: "Durags for laying and protecting.",
+    descriptionKa: "დურაგები თმის დასაცავად და გასასწორებლად.",
+    // Membership comes from lib/echodesk/categories.ts when the catalog is live.
+    products: [],
   },
 ];

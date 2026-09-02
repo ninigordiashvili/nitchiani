@@ -1,31 +1,33 @@
+import { CATEGORY_HANDLES } from "../categories";
+
 /**
- * Manual product → category mapping.
+ * Manual product → category mapping, keyed by EchoDesk product slug.
  *
- * EchoDesk has no categories endpoint and the tenant's `item-lists` are empty, so the themed
- * collections (bonnets, loc care, extensions, …) have nothing in the API to match on. Until
- * products carry a category attribute, membership is declared here by product slug.
+ * EchoDesk has no categories endpoint and the tenant's `item-lists` are empty, so membership
+ * is declared here. Its `attribute_values` are the eventual home for this — they're already
+ * filterable — but the two attributes defined today have mismatched names, keys and types, so
+ * nothing reliable can be derived from them yet.
  *
- * To place a new product, add its slug with the collection handles it belongs to. A product
- * that isn't listed still appears in "All products" (and in "Best sellers" when EchoDesk marks
- * it featured) — it just won't show under a themed category, which is the honest default: a
- * silent wrong guess is worse than an absence you can see.
- *
- * Valid handles are the collection shells in `lib/shopify/dummy.ts`:
- *   bonnets · loc-care · extensions · accessories · tools · piercings
- * ("all-products", "best-sellers" and "new-arrivals" are derived, so don't list them here.)
+ * To place a product, add its slug with the handles it belongs to. Valid handles are the ones
+ * in `lib/categories.ts`; an unlisted product still appears under All products (and Best
+ * sellers when EchoDesk marks it featured) — it just won't show under a theme, which is the
+ * honest default. A silent wrong guess is worse than a visible absence.
  */
 export const PRODUCT_CATEGORIES: Record<string, string[]> = {
-  // თმის ჟელე — hair wax for braiding
-  "prod-001": ["loc-care"],
-  // არიელი — synthetic hair for braids
-  "prod-002": ["extensions"],
-  "prod-003": ["extensions"],
-  a: ["extensions"],
+  // თმის ჟელე — braiding wax
+  "prod-001": ["braiding-wax"],
+  // არიელი — synthetic braiding hair
+  "prod-002": ["hair-extensions"],
+  "prod-003": ["hair-extensions"],
+  a: ["hair-extensions"],
 };
-
-/** Collection handles whose membership is derived from the API, not declared above. */
-export const DERIVED_COLLECTIONS = new Set(["all-products", "best-sellers", "new-arrivals"]);
 
 export function categoriesFor(slug: string): string[] {
   return PRODUCT_CATEGORIES[slug] ?? [];
+}
+
+/** Guards against a typo silently hiding a product from its category. */
+export function invalidCategoryHandles(): string[] {
+  const valid = new Set(CATEGORY_HANDLES);
+  return [...new Set(Object.values(PRODUCT_CATEGORIES).flat())].filter((h) => !valid.has(h));
 }

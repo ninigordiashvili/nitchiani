@@ -64,6 +64,35 @@ const nextConfig: NextConfig = {
   experimental: {
     optimizePackageImports: ["lucide-react"],
   },
+  /**
+   * The category set was renamed (extensions → hair-extensions, loc-care → braiding-wax, …).
+   * These URLs were in the sitemap and are linked from the journal, so a plain 404 would throw
+   * away whatever ranking and bookmarks they'd earned. Permanent redirects to the closest
+   * equivalent; the two categories with no successor land on the shop index rather than
+   * pretending to be something they aren't.
+   *
+   * `:locale` keeps the visitor in the language they arrived in.
+   */
+  async redirects() {
+    const moved: Array<[string, string]> = [
+      ["extensions", "hair-extensions"],
+      ["loc-care", "braiding-wax"],
+      ["accessories", "hair-accessories"],
+    ];
+    return [
+      ...moved.map(([from, to]) => ({
+        source: `/:locale(ka|en)/shop/${from}`,
+        destination: `/:locale/shop/${to}`,
+        permanent: true,
+      })),
+      ...["piercings", "tools"].map((from) => ({
+        source: `/:locale(ka|en)/shop/${from}`,
+        destination: `/:locale/shop`,
+        permanent: true,
+      })),
+    ];
+  },
+
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },

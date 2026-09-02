@@ -43,7 +43,11 @@
     "increaseQuantity": "Increase quantity",
     "breadcrumb": "Breadcrumb",
     "showImage": "Show image {n}",
-    "chatOnSite": "Chat with us here"
+    "chatOnSite": "Chat with us here",
+    "hairExtensions": "Hair Extensions",
+    "braidingWax": "Braiding Wax",
+    "hairAccessories": "Hair Accessories",
+    "durags": "Durags"
   },
   "promo": {
     "shipping": "Free shipping in Tbilisi over ₾150",
@@ -87,12 +91,11 @@
     "connectDesc": "Follow us so you don't miss anything new."
   },
   "categories": {
+    "hairExtensions": "Hair Extensions",
+    "braidingWax": "Braiding Wax",
+    "hairAccessories": "Hair Accessories",
     "bonnets": "Bonnets",
-    "locCare": "Loc Care",
-    "accessories": "Accessories",
-    "extensions": "Extensions",
-    "tools": "Tools",
-    "piercings": "Piercings"
+    "durags": "Durags"
   },
   "product": {
     "addToBag": "Add to bag",

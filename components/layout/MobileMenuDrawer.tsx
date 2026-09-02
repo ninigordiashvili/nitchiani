@@ -2,6 +2,7 @@
 
 import { MessageCircle, X } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { CATEGORIES } from "@/lib/categories";
 import { useEffect, useRef } from "react";
 import { Link } from "@/lib/i18n/routing";
 import { getWhatsAppNumber } from "@/components/brand/WhatsAppIcon";
@@ -12,11 +13,7 @@ import { useSwipeDismiss } from "@/lib/ui/use-swipe-dismiss";
 const SHOP_LINKS = [
   { href: "/shop/best-sellers", labelKey: "bestSellers" as const },
   { href: "/shop/new-arrivals", labelKey: "newArrivals" as const },
-  { href: "/shop/bonnets", labelKey: "bonnets" as const },
-  { href: "/shop/loc-care", labelKey: "locCare" as const },
-  { href: "/shop/extensions", labelKey: "extensions" as const },
-  { href: "/shop/accessories", labelKey: "accessories" as const },
-  { href: "/shop/tools", labelKey: "tools" as const },
+    ...CATEGORIES.map((c) => ({ href: `/shop/${c.handle}`, labelKey: c.labelKey })),
 ];
 
 const SECONDARY = [

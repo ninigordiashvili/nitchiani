@@ -2,6 +2,7 @@
 
 import { Facebook, Instagram, Mail, MapPin, Phone } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { CATEGORIES } from "@/lib/categories";
 import { Link } from "@/lib/i18n/routing";
 import {
   formatWhatsAppNumber,
@@ -116,10 +117,11 @@ export function Footer() {
             <ul className="space-y-2 text-sm opacity-80">
               <li><Link href="/shop/best-sellers">{t("nav.bestSellers")}</Link></li>
               <li><Link href="/shop/new-arrivals">{t("nav.newArrivals")}</Link></li>
-              <li><Link href="/shop/bonnets">{t("nav.bonnets")}</Link></li>
-              <li><Link href="/shop/loc-care">{t("nav.locCare")}</Link></li>
-              <li><Link href="/shop/extensions">{t("nav.extensions")}</Link></li>
-              <li><Link href="/shop/piercings">{t("nav.piercings")}</Link></li>
+              {CATEGORIES.map((c) => (
+                <li key={c.handle}>
+                  <Link href={`/shop/${c.handle}`}>{t(`nav.${c.labelKey}`)}</Link>
+                </li>
+              ))}
             </ul>
           </div>
 

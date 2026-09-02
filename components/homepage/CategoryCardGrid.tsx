@@ -2,55 +2,38 @@ import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { Link } from "@/lib/i18n/routing";
 import { BLUR_DATA_URL } from "@/lib/images";
-
-const CARDS = [
-  {
-    handle: "bonnets",
-    labelKey: "bonnets" as const,
-    image: "/categories/bonnets.png",
-  },
-  {
-    handle: "loc-care",
-    labelKey: "locCare" as const,
-    image: "/categories/loc-care.png",
-  },
-  {
-    handle: "extensions",
-    labelKey: "extensions" as const,
-    image: "/categories/extensions.png",
-  },
-  {
-    handle: "accessories",
-    labelKey: "accessories" as const,
-    image: "/categories/accessories.png",
-  },
-  {
-    handle: "piercings",
-    labelKey: "piercings" as const,
-    image: "/categories/piercings.png",
-  },
-];
+import { CATEGORIES } from "@/lib/categories";
 
 export function CategoryCardGrid() {
   const t = useTranslations("categories");
 
   return (
     <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-4 lg:grid-cols-5">
-      {CARDS.map((c) => (
+      {CATEGORIES.map((c) => (
         <Link
           key={c.handle}
           href={`/shop/${c.handle}`}
           className="group relative block aspect-square overflow-hidden"
         >
-          <Image
-            src={c.image}
-            alt={t(c.labelKey)}
-            fill
-            sizes="(min-width: 1024px) 25vw, 50vw"
-            placeholder="blur"
-            blurDataURL={BLUR_DATA_URL}
-            className="object-cover transition-transform duration-500 ease-[var(--ease-brand)] group-hover:scale-105"
-          />
+          {/* A category without artwork yet gets a branded panel rather than a broken image —
+              it reads as a deliberate tile instead of a loading failure. Drop a file into
+              /public/categories and point `image` at it to replace this. */}
+          {c.image ? (
+            <Image
+              src={c.image}
+              alt={t(c.labelKey)}
+              fill
+              sizes="(min-width: 1024px) 25vw, 50vw"
+              placeholder="blur"
+              blurDataURL={BLUR_DATA_URL}
+              className="object-cover transition-transform duration-500 ease-[var(--ease-brand)] group-hover:scale-105"
+            />
+          ) : (
+            <div
+              className="absolute inset-0 transition-transform duration-500 ease-[var(--ease-brand)] group-hover:scale-105"
+              style={{ background: "var(--color-brand-ink)" }}
+            />
+          )}
           <div className="absolute inset-0 scrim-bottom" />
           <div className="absolute right-3 bottom-3 left-3">
             <p className="font-display text-xl text-[var(--color-brand-cream)] sm:text-2xl">

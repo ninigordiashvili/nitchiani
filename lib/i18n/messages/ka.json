@@ -10,7 +10,7 @@
     "allProductsDesc": "ყველა Nitchiani-ის ნაწარმი — ბონნეტები, ლოკსების მოვლა, ხელსაწყოები და ექსტენშენები — ერთ სივრცეში.",
     "bestSellers": "ბესტსელერები",
     "newArrivals": "ახალი ჩამოსვლა",
-    "bonnets": "ბონნეტები",
+    "bonnets": "ბონეტი",
     "locCare": "ლოკსების მზრუნველობა",
     "accessories": "აქსესუარები",
     "extensions": "ექსტენშენები",
@@ -43,7 +43,11 @@
     "increaseQuantity": "რაოდენობის გაზრდა",
     "breadcrumb": "ნავიგაცია",
     "showImage": "სურათი {n}",
-    "chatOnSite": "მოგვწერე აქვე, ჩატში"
+    "chatOnSite": "მოგვწერე აქვე, ჩატში",
+    "hairExtensions": "ხელოვნური თმა",
+    "braidingWax": "თმის ჟელე",
+    "hairAccessories": "თმის აქსესუარი",
+    "durags": "დურაგი"
   },
   "promo": {
     "shipping": "უფასო მიწოდება თბილისში ₾150-დან",
@@ -87,12 +91,11 @@
     "connectDesc": "გამოგვიწერე რომ არ გამოგრჩეს სიახლეები"
   },
   "categories": {
-    "bonnets": "ბონნეტები",
-    "locCare": "ლოკსების მზრუნველობა",
-    "accessories": "აქსესუარები",
-    "extensions": "ექსტენშენები",
-    "tools": "ხელსაწყოები",
-    "piercings": "პირსინგი"
+    "hairExtensions": "ხელოვნური თმა",
+    "braidingWax": "თმის ჟელე",
+    "hairAccessories": "თმის აქსესუარი",
+    "bonnets": "ბონეტი",
+    "durags": "დურაგი"
   },
   "product": {
     "addToBag": "კალათაში დამატება",
