@@ -11,12 +11,15 @@ import { useFocusTrap } from "@/lib/ui/use-focus-trap";
 import { useSwipeDismiss } from "@/lib/ui/use-swipe-dismiss";
 
 const SHOP_LINKS = [
-    ...CATEGORIES.map((c) => ({ href: `/shop/${c.handle}`, labelKey: c.labelKey })),
+  ...CATEGORIES.map((c) => ({ href: `/shop/${c.handle}`, labelKey: c.labelKey })),
 ];
 
 const SECONDARY = [
   // { href: "/services", labelKey: "services" as const },  // hidden site-wide
   { href: "/about", labelKey: "about" as const },
+  // Tracking has no account behind it, so the menu is the only place a returning customer
+  // can reach it without digging out the link from their confirmation email.
+  { href: "/order-status", labelKey: "orderStatus" as const },
   // { href: "/contact", labelKey: "contact" as const },  // hidden site-wide
 ];
 
