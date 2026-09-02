@@ -19,12 +19,12 @@ describe("computeTotals", () => {
 
   it("rejects a non-positive subtotal", () => {
     const res = computeTotals([line("0", 1)], null);
-    expect(res).toEqual({ ok: false, error: "Invalid subtotal" });
+    expect(res).toEqual({ ok: false, error: "invalidSubtotal" });
   });
 
   it("rejects a non-numeric unit price (NaN subtotal)", () => {
     const res = computeTotals([line("not-a-number", 1)], null);
-    expect(res).toEqual({ ok: false, error: "Invalid subtotal" });
+    expect(res).toEqual({ ok: false, error: "invalidSubtotal" });
   });
 
   it("applies a valid percentage coupon and attaches it", () => {
@@ -38,7 +38,7 @@ describe("computeTotals", () => {
 
   it("rejects an unknown coupon code", () => {
     const res = computeTotals([line("100.00", 1)], "DOES-NOT-EXIST");
-    expect(res).toEqual({ ok: false, error: "Coupon code is not valid." });
+    expect(res).toEqual({ ok: false, error: "promoInvalid" });
   });
 
   it("keeps the coupon attached but charges full price when the min-subtotal gate fails", () => {

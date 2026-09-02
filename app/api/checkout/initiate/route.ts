@@ -51,6 +51,19 @@ const bodySchema = z.object({
   couponCode: z.string().nullable().optional(),
 });
 
+/**
+ * Errors are returned as stable keys, not sentences. The client translates them, so a
+ * Georgian shopper gets Georgian — and the wording can change without touching the API.
+ */
+function classifyOrderError(message: string): string {
+  if (/cash on delivery|pickup/i.test(message)) return "codPickupOnly";
+  if (/promo|coupon/i.test(message)) return "promoInvalid";
+  if (/stock|unavailable|quantity/i.test(message)) return "outOfStock";
+  if (/required|missing/i.test(message)) return "missingDetails";
+  console.warn("[api/checkout/initiate] unclassified backend error:", message);
+  return "orderFailed";
+}
+
 type CheckoutResponse =
   | { orderId: string; trackingToken?: string }
   | { redirectUrl: string }
@@ -90,7 +103,7 @@ export async function POST(req: Request): Promise<NextResponse<CheckoutResponse>
   const rl = rateLimit(`checkout:${clientIp(req)}`, { limit: 8, windowMs: 60_000 });
   if (!rl.ok) {
     return NextResponse.json(
-      { error: "Too many requests. Please wait a moment and try again." },
+      { error: "rateLimited" },
       { status: 429, headers: { "Retry-After": String(rl.retryAfter) } },
     );
   }
@@ -99,15 +112,15 @@ export async function POST(req: Request): Promise<NextResponse<CheckoutResponse>
   try {
     payload = bodySchema.parse(await req.json());
   } catch (err) {
-    return NextResponse.json(
-      { error: err instanceof Error ? err.message : "Invalid request" },
-      { status: 400 },
-    );
+    // A zod dump is neither translatable nor readable; the client form validates first, so
+    // reaching here means a hand-rolled request.
+    console.warn("[api/checkout/initiate] payload rejected:", err);
+    return NextResponse.json({ error: "invalidRequest" }, { status: 400 });
   }
 
   if (payload.paymentMethod === "cod" && !COD_ENABLED) {
     return NextResponse.json(
-      { error: "Cash on delivery is unavailable. Please choose another payment method." },
+      { error: "codUnavailable" },
       { status: 400 },
     );
   }
@@ -135,7 +148,7 @@ export async function POST(req: Request): Promise<NextResponse<CheckoutResponse>
       totals.subtotal,
     );
     return NextResponse.json(
-      { error: "Cart total has changed. Please refresh your cart and try again." },
+      { error: "cartChanged" },
       { status: 409 },
     );
   }
@@ -180,7 +193,7 @@ async function handleBogCard(
 ): Promise<NextResponse<CheckoutResponse>> {
   if (!isBogConfigured) {
     return NextResponse.json(
-      { error: "Card payments are not yet enabled. Please choose bank transfer or cash on delivery." },
+      { error: "cardUnavailable" },
       { status: 400 },
     );
   }
@@ -191,7 +204,7 @@ async function handleBogCard(
   });
   if (!pending) {
     return NextResponse.json(
-      { error: "Could not create order. Please try again or contact us on WhatsApp." },
+      { error: "orderFailed" },
       { status: 502 },
     );
   }
@@ -226,7 +239,7 @@ async function handleBogCard(
 
   if (!bog) {
     return NextResponse.json(
-      { error: "Card payment session could not be started. Please try a different method." },
+      { error: "paymentSessionFailed" },
       { status: 502 },
     );
   }
@@ -241,7 +254,7 @@ async function handleTbcCard(
 ): Promise<NextResponse<CheckoutResponse>> {
   if (!isTbcConfigured) {
     return NextResponse.json(
-      { error: "TBC card payments are not yet enabled. Please choose another method." },
+      { error: "cardUnavailable" },
       { status: 400 },
     );
   }
@@ -252,7 +265,7 @@ async function handleTbcCard(
   });
   if (!pending) {
     return NextResponse.json(
-      { error: "Could not create order. Please try again or contact us on WhatsApp." },
+      { error: "orderFailed" },
       { status: 502 },
     );
   }
@@ -276,7 +289,7 @@ async function handleTbcCard(
 
   if (!tbc) {
     return NextResponse.json(
-      { error: "Card payment session could not be started. Please try a different method." },
+      { error: "paymentSessionFailed" },
       { status: 502 },
     );
   }
@@ -302,7 +315,7 @@ async function handleEchoDeskOrder(
   // instead of "could not create order".
   if (!toEchoDeskPaymentMethod(orderInput.paymentMethod)) {
     return NextResponse.json(
-      { error: "Bank transfer isn't available. Please pay by card." },
+      { error: "bankTransferUnavailable" },
       { status: 400 },
     );
   }
@@ -317,14 +330,11 @@ async function handleEchoDeskOrder(
   });
 
   if (!outcome.ok) {
-    // A message means EchoDesk told us something the shopper can act on; pass it through
-    // as a 400. Otherwise it's our problem, so keep the generic 502 and the WhatsApp escape.
+    // EchoDesk's 4xx text is English prose; classify it so the client can say it in the
+    // shopper's own language rather than rendering an English sentence on a Georgian page.
     return outcome.error
-      ? NextResponse.json({ error: outcome.error }, { status: 400 })
-      : NextResponse.json(
-          { error: "Could not create order. Please try again or contact us on WhatsApp." },
-          { status: 502 },
-        );
+      ? NextResponse.json({ error: classifyOrderError(outcome.error) }, { status: 400 })
+      : NextResponse.json({ error: "orderFailed" }, { status: 502 });
   }
   const order = outcome.order;
 

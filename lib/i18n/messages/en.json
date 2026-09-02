@@ -179,7 +179,14 @@
     "remove": "Remove",
     "clearCartConfirmDesc": "This empties your cart. It can't be undone.",
     "promoCodeUnavailable": "Couldn't check that code right now — please try again",
-    "promoCodeApplied": "Applied — you save {amount}"
+    "promoCodeApplied": "Applied — you save {amount}",
+    "promoReason": {
+      "notFound": "This code isn't valid",
+      "minimum": "Your order is below the minimum for this code",
+      "expired": "This code has expired",
+      "usageLimit": "This code has already been used",
+      "inactive": "This code isn't active right now"
+    }
   },
   "checkout": {
     "title": "Checkout",
@@ -214,7 +221,24 @@
     "successTitle": "Order received",
     "successDesc": "We'll reach out by WhatsApp or email shortly",
     "orderNumber": "Order #{id}",
-    "trackOrder": "Track your order"
+    "trackOrder": "Track your order",
+    "errors": {
+      "rateLimited": "Too many attempts. Please wait a moment and try again.",
+      "invalidRequest": "Something in the form looks wrong. Please check your details and try again.",
+      "invalidSubtotal": "There's a problem with your cart total. Please refresh and try again.",
+      "codUnavailable": "Cash on delivery is unavailable. Please choose another payment method.",
+      "codPickupOnly": "Cash on delivery is only available for pickup orders. Please pay by card.",
+      "cartChanged": "Your cart total has changed. Please refresh your cart and try again.",
+      "cardUnavailable": "Card payments aren't available right now. Please choose another method.",
+      "bankTransferUnavailable": "Bank transfer isn't available. Please pay by card.",
+      "paymentSessionFailed": "We couldn't start the card payment. Please try again or choose another method.",
+      "promoInvalid": "That promo code isn't valid. Remove it and try again.",
+      "promoMinimum": "Your order is below the minimum for that promo code.",
+      "promoUnavailable": "We couldn't check that promo code. Please try again.",
+      "outOfStock": "Something in your cart is no longer available. Please review it and try again.",
+      "missingDetails": "Some required details are missing. Please check the form and try again.",
+      "orderFailed": "We couldn't place your order. Please try again or message us on WhatsApp."
+    }
   },
   "services": {
     "title": "Our Services",

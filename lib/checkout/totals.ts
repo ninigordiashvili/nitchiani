@@ -1,7 +1,10 @@
 import { discountFor, findCoupon, type Coupon } from "@/lib/cart/coupons";
-import { validatePromo } from "@/lib/echodesk/promo";
+import { classifyPromoMessage, validatePromo } from "@/lib/echodesk/promo";
 
 /**
+ * Errors are returned as stable keys (e.g. `promoInvalid`), not sentences — the client
+ * translates them so a Georgian shopper reads Georgian.
+ *
  * Server-authoritative order totals. Never trust client-supplied subtotal/total/discount —
  * a DevTools user can edit the request before it leaves the browser. We recompute everything
  * from the line items + coupon registry. Kept in its own module (not inline in the route) so
@@ -32,7 +35,7 @@ export function computeTotals(
   );
 
   if (!Number.isFinite(subtotal) || subtotal <= 0) {
-    return { ok: false, error: "Invalid subtotal" };
+    return { ok: false, error: "invalidSubtotal" };
   }
 
   let coupon: Coupon | null = null;
@@ -40,7 +43,7 @@ export function computeTotals(
   if (couponCode) {
     coupon = findCoupon(couponCode);
     if (!coupon) {
-      return { ok: false, error: "Coupon code is not valid." };
+      return { ok: false, error: "promoInvalid" };
     }
     discount = discountFor(subtotal, coupon);
     // `discountFor` returns 0 when the min-subtotal gate fails — we still keep the coupon
@@ -76,10 +79,12 @@ export async function computeTotalsWithEchoDesk(
 
   const result = await validatePromo(code, base.totals.subtotal);
   if (!result) {
-    return { ok: false, error: "Could not check that promo code. Please try again." };
+    return { ok: false, error: "promoUnavailable" };
   }
   if (!result.valid) {
-    return { ok: false, error: result.message || "Coupon code is not valid." };
+    // Classified, not passed through: the backend writes English and the client translates.
+    const reason = classifyPromoMessage(result.message);
+    return { ok: false, error: reason === "minimum" ? "promoMinimum" : "promoInvalid" };
   }
 
   const discount = Math.min(result.discountAmount ?? 0, base.totals.subtotal);

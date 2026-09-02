@@ -229,21 +229,18 @@ function CouponEditor({
           className="mt-1.5 text-xs"
           style={{ color: "var(--color-brand-maroon)" }}
         >
-          {/* Prefer the backend's own explanation — "Minimum order is ₾50", "This code has
-              expired" — over our generic line. It's written for shoppers and it's the only
-              version that tells them what to actually do about it. */}
-          {cart.couponMessage
-            ? cart.couponMessage
-            : cart.couponError === "minimum" && cart.couponMinSubtotal
-              ? // Name the actual threshold — "min. order ₾100" tells them what to do next.
-                t("promoCodeMinimum", { amount: formatGel(cart.couponMinSubtotal, locale) })
-              : cart.couponError === "invalid"
-                ? t("promoCodeInvalid")
-                : cart.couponError === "unavailable"
-                  ? // Couldn't reach the backend — not the same as a bad code, so don't tell
-                  // the shopper their coupon is invalid when we simply don't know.
-                    t("promoCodeUnavailable")
-                  : t("promoCodeMinimumGeneric")}
+          {/* Localised from a reason key, never the backend's English sentence — on the
+              Georgian site an English rejection is worse than a vague Georgian one. The
+              minimum case names the actual threshold when we know it. */}
+          {cart.couponError === "minimum" && cart.couponMinSubtotal
+            ? t("promoCodeMinimum", { amount: formatGel(cart.couponMinSubtotal, locale) })
+            : cart.couponError === "unavailable"
+              ? // Couldn't reach the backend — not the same as a bad code, so don't tell the
+                // shopper their coupon is invalid when we simply don't know.
+                t("promoCodeUnavailable")
+              : cart.couponReason && cart.couponReason !== "unknown"
+                ? t(`promoReason.${cart.couponReason}` as never)
+                : t("promoCodeInvalid")}
         </p>
       ) : null}
     </div>

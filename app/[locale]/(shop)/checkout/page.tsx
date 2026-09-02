@@ -72,6 +72,14 @@ export default function CheckoutPage() {
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+
+  /** Maps an API error key to localised copy, falling back to the generic failure line. */
+  const translateCheckoutError = (key: unknown): string => {
+    if (typeof key !== "string" || !key) return t("checkout.errors.orderFailed");
+    // `t.has` guards keys added server-side that this bundle doesn't know yet.
+    const path = `checkout.errors.${key}`;
+    return t.has(path as never) ? t(path as never) : t("checkout.errors.orderFailed");
+  };
   // Mobile-only two-step flow: 1 = contact/shipping, 2 = payment + place order.
   // Desktop ignores `step` entirely because both fieldsets are rendered side-by-side via
   // the existing `lg:grid-cols-[1fr_360px]` layout.
@@ -168,7 +176,9 @@ export default function CheckoutPage() {
         redirectUrl?: string;
         error?: string;
       };
-      if (!res.ok) throw new Error(data.error ?? t("checkout.orderFailed"));
+      // The API answers with a stable key, never a sentence, so the message the shopper reads
+      // is rendered in their own language here rather than echoed from the server in English.
+      if (!res.ok) throw new Error(translateCheckoutError(data.error));
 
       // Persist the contact + shipping fields for the next checkout. We save BEFORE the
       // redirect so card-payment users (who leave the site to BOG/TBC) still benefit on
@@ -190,7 +200,7 @@ export default function CheckoutPage() {
         return;
       }
 
-      if (!data.orderId) throw new Error(t("checkout.orderFailed"));
+      if (!data.orderId) throw new Error(t("checkout.errors.orderFailed"));
       cart.clear();
       // `trackingToken` is the order's public token when the backend issues one. Carrying it
       // through is what lets the success page hand the customer a working tracking link —
@@ -200,7 +210,7 @@ export default function CheckoutPage() {
         : "";
       router.push(`/checkout/success?order=${encodeURIComponent(data.orderId)}${trackingQs}`);
     } catch (err) {
-      setSubmitError(err instanceof Error ? err.message : t("checkout.orderFailed"));
+      setSubmitError(err instanceof Error ? err.message : t("checkout.errors.orderFailed"));
     } finally {
       setSubmitting(false);
     }

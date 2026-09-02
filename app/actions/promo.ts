@@ -1,7 +1,7 @@
 "use server";
 
 import { isEchoDeskConfigured } from "@/lib/echodesk/client";
-import { validatePromo } from "@/lib/echodesk/promo";
+import { classifyPromoMessage, type PromoReason, validatePromo } from "@/lib/echodesk/promo";
 import { discountFor, findCoupon } from "@/lib/cart/coupons";
 
 /**
@@ -17,23 +17,25 @@ import { discountFor, findCoupon } from "@/lib/cart/coupons";
 export type PromoCheck =
   | { status: "valid"; code: string; discount: number }
   /**
-   * `reason` lets the UI say something specific about a locally-known rule. The backend
-   * sends prose instead (`message`), already written for shoppers, so that's preferred where
-   * present. Either way the shopper learns what to do — "min. order ₾100" beats "invalid".
+   * `reason` is a translatable key rather than the backend's English sentence, so a Georgian
+   * shopper reads Georgian. `minSubtotal` lets the UI name the actual threshold when we know
+   * it — "min. order ₾100" beats "invalid".
    */
-  | { status: "invalid"; reason?: "minimum"; minSubtotal?: number; message?: string }
+  | { status: "invalid"; reason: PromoReason; minSubtotal?: number }
   | { status: "unavailable" };
 
 export async function checkPromoAction(code: string, subtotal: number): Promise<PromoCheck> {
   const trimmed = code.trim();
-  if (!trimmed) return { status: "invalid" };
+  if (!trimmed) return { status: "invalid", reason: "notFound" };
 
   if (isEchoDeskConfigured) {
     const result = await validatePromo(trimmed, subtotal);
     // `null` means we couldn't reach the backend — distinct from "the code is bad", because
     // telling someone their valid code is invalid loses the sale.
     if (!result) return { status: "unavailable" };
-    if (!result.valid) return { status: "invalid", message: result.message };
+    if (!result.valid) {
+      return { status: "invalid", reason: classifyPromoMessage(result.message) };
+    }
     return {
       status: "valid",
       code: trimmed.toUpperCase(),
@@ -42,7 +44,7 @@ export async function checkPromoAction(code: string, subtotal: number): Promise<
   }
 
   const found = findCoupon(trimmed);
-  if (!found) return { status: "invalid" };
+  if (!found) return { status: "invalid", reason: "notFound" };
   if (found.minSubtotal && subtotal < found.minSubtotal) {
     return { status: "invalid", reason: "minimum", minSubtotal: found.minSubtotal };
   }

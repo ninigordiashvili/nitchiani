@@ -63,3 +63,28 @@ describe("validatePromo", () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 });
+
+import { classifyPromoMessage } from "./promo";
+
+describe("classifyPromoMessage", () => {
+  it("classifies the message the live tenant actually returns", () => {
+    expect(classifyPromoMessage("Promo code not found.")).toBe("notFound");
+  });
+
+  it("recognises the common rejection families", () => {
+    expect(classifyPromoMessage("Minimum order amount is 100 GEL")).toBe("minimum");
+    expect(classifyPromoMessage("This promo code has expired")).toBe("expired");
+    expect(classifyPromoMessage("Usage limit reached")).toBe("usageLimit");
+    expect(classifyPromoMessage("This code is inactive")).toBe("inactive");
+  });
+
+  it("prefers the more specific family over a generic 'invalid'", () => {
+    // "invalid" also appears in minimum-spend copy; the shopper needs the actionable one.
+    expect(classifyPromoMessage("Invalid: minimum order is 50 GEL")).toBe("minimum");
+  });
+
+  it("falls back to unknown rather than guessing", () => {
+    expect(classifyPromoMessage("Something we've never seen")).toBe("unknown");
+    expect(classifyPromoMessage(undefined)).toBe("unknown");
+  });
+});

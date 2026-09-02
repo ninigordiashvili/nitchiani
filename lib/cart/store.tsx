@@ -4,6 +4,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 import type { ImageRef, Money } from "../shopify/types";
 import { type Coupon, type CouponError, discountFor, findCoupon } from "./coupons";
 import { checkPromoAction } from "@/app/actions/promo";
+import type { PromoReason } from "@/lib/echodesk/promo";
 
 // Bump the version when image hosts or line shape change, so stale localStorage entries
 // don't crash the cart UI on the next visit.
@@ -37,7 +38,8 @@ type CartState = {
   /** Last attempted-apply error, cleared by a successful apply or remove. */
   couponError: CouponError | null;
   /** Backend explanation for a rejected code, when there is one. */
-  couponMessage: string | null;
+  /** Why the last code was rejected, as a translatable key — never backend prose. */
+  couponReason: PromoReason | null;
   /** Threshold behind a `minimum` rejection, when known. */
   couponMinSubtotal: number | null;
 };
@@ -85,8 +87,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
    * would never render. They'd see the field simply empty itself.
    */
   const [appliedCoupon, setAppliedCoupon] = useState<Coupon | null>(null);
-  /** The backend's own explanation of a rejection ("Minimum order is ₾50"), when it gives one. */
-  const [couponMessage, setCouponMessage] = useState<string | null>(null);
+  /** Why the last code was rejected, as a translatable key. */
+  const [couponReason, setCouponReason] = useState<PromoReason | null>(null);
   /** Spend threshold behind a `minimum` rejection, so the UI can name the actual figure. */
   const [couponMinSubtotal, setCouponMinSubtotal] = useState<number | null>(null);
   const [open, setOpen] = useState(false);
@@ -181,7 +183,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     setServerDiscount(null);
     setAppliedCoupon(null);
     setCouponError(null);
-    setCouponMessage(null);
+    setCouponReason(null);
   }, []);
 
   const totals = useMemo(() => computeTotals(lines), [lines]);
@@ -219,16 +221,16 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         // Couldn't reach the backend — distinct from a bad code, so say so rather than
         // telling someone their valid code is invalid.
         setCouponError("unavailable");
-        setCouponMessage(null);
+        setCouponReason(null);
         setCouponMinSubtotal(null);
         return false;
       }
       if (result.status === "invalid") {
         setCouponError(result.reason === "minimum" ? "minimum" : "invalid");
         setCouponMinSubtotal(result.minSubtotal ?? null);
-        // The backend explains *why* — minimum spend, expiry, already used. Keeping that is
-        // the difference between "this code isn't valid" and something the shopper can act on.
-        setCouponMessage(result.message ?? null);
+        // Keep *why* — minimum spend, expiry, already used. That's the difference between
+        // "this code isn't valid" and something the shopper can act on.
+        setCouponReason(result.reason);
         return false;
       }
       setCouponCode(result.code);
@@ -237,7 +239,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       // a percentage from it would misreport the offer.
       setAppliedCoupon({ code: result.code, type: "amount", value: result.discount });
       setCouponError(null);
-      setCouponMessage(null);
+      setCouponReason(null);
       setCouponMinSubtotal(null);
       return true;
     },
@@ -249,12 +251,12 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     setServerDiscount(null);
     setAppliedCoupon(null);
     setCouponError(null);
-    setCouponMessage(null);
+    setCouponReason(null);
   }, []);
 
   const clearCouponError = useCallback(() => {
     setCouponError(null);
-    setCouponMessage(null);
+    setCouponReason(null);
     setCouponMinSubtotal(null);
   }, []);
 
@@ -266,7 +268,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       discount,
       total,
       couponError,
-      couponMessage,
+      couponReason,
       couponMinSubtotal,
       addLine,
       updateQuantity,
@@ -285,7 +287,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       discount,
       total,
       couponError,
-      couponMessage,
+      couponReason,
       couponMinSubtotal,
       addLine,
       updateQuantity,
