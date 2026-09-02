@@ -78,41 +78,41 @@ export default async function OrderStatusPage({
 
   return (
     <div className="container-shop pb-8 sm:pb-12">
+      {/* The page keeps one shape whether or not an order is loaded: heading, the lookup, then
+          the result beneath it. Swapping the whole page out on a hit meant the field vanished,
+          so checking a second order meant going back — and the result read as a different page
+          rather than an answer to what was just typed. */}
       <header className="mb-8 max-w-2xl">
         <p className="label-eyebrow mb-2">{t("eyebrow")}</p>
-        {order ? (
-          <p className="mb-3 text-xs tabular-nums opacity-60">
-            {tCheckout("orderNumber", { id: order.name })}
-          </p>
-        ) : null}
         <h1 className="font-display text-3xl leading-tight tracking-tight sm:text-4xl">
-          {order ? t("liveTitle") : t("title")}
+          {t("title")}
         </h1>
-        <p className="mt-4 text-sm opacity-80 sm:text-base">
-          {order ? t("liveIntro") : t("intro")}
-        </p>
+        <p className="mt-4 text-sm opacity-80 sm:text-base">{t("intro")}</p>
       </header>
 
-      {order ? (
-        <LiveTracking order={order} locale={locale} />
-      ) : (
-        <>
-          {/* A number was supplied but nothing came back — say so plainly. Falling through to
-              the generic timeline would leave the customer thinking the page had ignored them. */}
-          {lookup ? (
-            <div
-              role="status"
-              className="mb-8 rounded-lg border p-5"
-              style={{ borderColor: "var(--border-soft)", background: "var(--surface-2, transparent)" }}
-            >
-              <p className="font-display text-lg tracking-tight">{t("notFoundTitle")}</p>
-              <p className="mt-2 max-w-md text-sm opacity-75">{t("notFoundDesc")}</p>
-            </div>
-          ) : null}
+      <OrderLookup t={t} defaultValue={lookup} />
 
-          <OrderLookup t={t} defaultValue={lookup} />
-        </>
-      )}
+      {order ? (
+        <section className="mb-10">
+          <p className="label-eyebrow mb-2">{t("liveTitle")}</p>
+          <p className="mb-4 text-sm tabular-nums opacity-70">
+            {tCheckout("orderNumber", { id: order.name })}
+          </p>
+          <p className="mb-6 max-w-2xl text-sm opacity-80">{t("liveIntro")}</p>
+          <LiveTracking order={order} locale={locale} />
+        </section>
+      ) : lookup ? (
+        /* A code was supplied but nothing came back — say so plainly, directly under the
+           field it was typed into. */
+        <div
+          role="status"
+          className="mb-10 rounded-lg border p-5"
+          style={{ borderColor: "var(--border-soft)" }}
+        >
+          <p className="font-display text-lg tracking-tight">{t("notFoundTitle")}</p>
+          <p className="mt-2 max-w-md text-sm opacity-75">{t("notFoundDesc")}</p>
+        </div>
+      ) : null}
 
       <div className="rounded-lg border border-black/10 p-5 sm:p-6">
         <p className="label-eyebrow mb-2">{t("contactEyebrow")}</p>
