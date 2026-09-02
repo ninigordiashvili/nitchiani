@@ -50,8 +50,16 @@ export function ProductCard({ product, priority = false }: { product: Product; p
           className="object-contain transition-transform duration-[400ms] ease-[var(--ease-brand)] group-hover:scale-105"
         />
         {(product.isNew || offPercent !== null) && (
-          <div className="absolute top-2 left-2 flex flex-col gap-1">
-            {offPercent !== null && <Badge tone="maroon">−{offPercent}%</Badge>}
+          <div className="absolute top-2 left-2 flex flex-col items-start gap-1">
+            {offPercent !== null && (
+              <span className="flex items-center gap-1">
+                <Badge tone="maroon">−{offPercent}%</Badge>
+                {/* "SALE" is deliberately not translated — it reads as SALE on the Georgian
+                    storefront too, the way the brand uses it. Hardcoded rather than pulled
+                    from the message bundle so nobody "fixes" it into ფასდაკლება later. */}
+                <Badge>SALE</Badge>
+              </span>
+            )}
             {product.isNew && <Badge>{t("badgeNew")}</Badge>}
           </div>
         )}
