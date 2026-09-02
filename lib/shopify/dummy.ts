@@ -766,15 +766,6 @@ export const DUMMY_RAW_PRODUCTS: RawProduct[] = [
 
 export const DUMMY_RAW_COLLECTIONS: RawCollection[] = [
   {
-    id: "gid://nitchiani/Collection/new-arrivals",
-    handle: "new-arrivals",
-    titleEn: "New Arrivals",
-    titleKa: "ახალი ჩამოსვლა",
-    descriptionEn: "Fresh from the studio.",
-    descriptionKa: "ახლადჩამოსული სტუდიოდან.",
-    products: DUMMY_RAW_PRODUCTS.filter((p) => p.isNew),
-  },
-  {
     id: "gid://nitchiani/Collection/hair-extensions",
     handle: "hair-extensions",
     titleEn: "Hair Extensions",

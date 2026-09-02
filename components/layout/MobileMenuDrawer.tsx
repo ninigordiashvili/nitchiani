@@ -11,7 +11,6 @@ import { useFocusTrap } from "@/lib/ui/use-focus-trap";
 import { useSwipeDismiss } from "@/lib/ui/use-swipe-dismiss";
 
 const SHOP_LINKS = [
-  { href: "/shop/new-arrivals", labelKey: "newArrivals" as const },
     ...CATEGORIES.map((c) => ({ href: `/shop/${c.handle}`, labelKey: c.labelKey })),
 ];
 

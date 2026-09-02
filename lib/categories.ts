@@ -26,6 +26,6 @@ export const CATEGORIES: CategoryDef[] = [
 ];
 
 /** Collections whose contents come from the API rather than the manual map. */
-export const DERIVED_COLLECTION_HANDLES = ["all-products", "new-arrivals"] as const;
+export const DERIVED_COLLECTION_HANDLES = ["all-products"] as const;
 
 export const CATEGORY_HANDLES = CATEGORIES.map((c) => c.handle);

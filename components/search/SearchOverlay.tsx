@@ -5,6 +5,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { searchAction } from "@/app/actions/search";
+import { CATEGORIES } from "@/lib/categories";
 import { ProductGrid } from "@/components/commerce/ProductGrid";
 import type { Locale } from "@/lib/i18n/config";
 import { Link } from "@/lib/i18n/routing";
@@ -13,11 +14,10 @@ import { useFocusTrap } from "@/lib/ui/use-focus-trap";
 import { useOverlays } from "@/lib/ui/overlays";
 import { useSwipeDismiss } from "@/lib/ui/use-swipe-dismiss";
 
-const POPULAR = [
-  { handle: "new-arrivals", labelKey: "newArrivals" as const },
-  { handle: "bonnets", labelKey: "bonnets" as const },
-  { handle: "loc-care", labelKey: "locCare" as const },
-];
+// Shortcuts shown on an empty search. Taken from the shared category list rather than a
+// hand-written pair, which is how this ended up still pointing at loc-care after the set was
+// renamed. First two only — the panel is a quick nudge, not a second navigation.
+const POPULAR = CATEGORIES.slice(0, 2);
 
 export function SearchOverlay() {
   const t = useTranslations();

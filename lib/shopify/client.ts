@@ -146,7 +146,6 @@ function liveCollections(products: Product[], locale: Locale): Collection[] {
     const shell = localizeCollection(raw, locale);
     let members: Product[] = [];
     if (raw.handle === "all-products") members = products;
-    else if (raw.handle === "new-arrivals") members = products;
     // Themed categories come from the manual map — the API has nothing to match on.
     else members = products.filter((p) => categoriesFor(p.handle).includes(raw.handle));
     return { ...shell, products: members };
@@ -169,11 +168,6 @@ export async function getCollectionByHandle(
   }
   const raw = DUMMY_RAW_COLLECTIONS.find((c) => c.handle === handle);
   return raw ? localizeCollection(raw, locale) : null;
-}
-
-export async function getNewArrivals(locale: Locale = defaultLocale, limit = 8): Promise<Product[]> {
-  const collection = await getCollectionByHandle("new-arrivals", locale);
-  return collection?.products.slice(0, limit) ?? [];
 }
 
 export async function searchProducts(

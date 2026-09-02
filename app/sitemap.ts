@@ -18,7 +18,7 @@ import { getProducts } from "@/lib/shopify/client";
  * which is why each path is built with the locale segment baked in.
  */
 
-const COLLECTIONS = ["new-arrivals", ...CATEGORY_HANDLES];
+const COLLECTIONS = [...CATEGORY_HANDLES];
 
 const STATIC_PATHS = [
   "",

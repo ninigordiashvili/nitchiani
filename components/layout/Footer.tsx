@@ -115,7 +115,6 @@ export function Footer() {
               {t("footer.shop")}
             </p>
             <ul className="space-y-2 text-sm opacity-80">
-              <li><Link href="/shop/new-arrivals">{t("nav.newArrivals")}</Link></li>
               {CATEGORIES.map((c) => (
                 <li key={c.handle}>
                   <Link href={`/shop/${c.handle}`}>{t(`nav.${c.labelKey}`)}</Link>
