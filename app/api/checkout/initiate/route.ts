@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { computeTotals, type ServerComputedTotals } from "@/lib/checkout/totals";
+import {
+  computeTotals,
+  computeTotalsWithEchoDesk,
+  type ServerComputedTotals,
+} from "@/lib/checkout/totals";
 import { sendOrderConfirmation } from "@/lib/email/order-confirmation";
 import {
   createManualOrder,
@@ -30,7 +34,8 @@ const COD_ENABLED = process.env.NEXT_PUBLIC_COD_ENABLED === "true";
 
 const bodySchema = z.object({
   firstName: z.string().min(1),
-  lastName: z.string().optional(),
+  // Required for the same reason as the client schema: the backend refuses without it.
+  lastName: z.string().min(1),
   phone: z.string().min(6),
   email: z.string().email().optional().or(z.literal("")),
   address: z.string().min(3),
@@ -58,7 +63,7 @@ function buildOrderInput(
 ): ManualOrderInput {
   return {
     firstName: payload.firstName,
-    lastName: payload.lastName ?? "",
+    lastName: payload.lastName,
     phone: payload.phone,
     email: payload.email ?? "",
     address: payload.address,
@@ -109,7 +114,10 @@ export async function POST(req: Request): Promise<NextResponse<CheckoutResponse>
 
   // Server-side total computation. Recompute subtotal from the line items and validate the
   // coupon against the registry — never trust the client's `subtotal` / `discount` numbers.
-  const totalsResult = computeTotals(payload.lines, payload.couponCode);
+  // When EchoDesk owns the order it also owns the discount — see computeTotalsWithEchoDesk.
+  const totalsResult = isEchoDeskConfigured
+    ? await computeTotalsWithEchoDesk(payload.lines, payload.couponCode)
+    : computeTotals(payload.lines, payload.couponCode);
   if (!totalsResult.ok) {
     return NextResponse.json({ error: totalsResult.error }, { status: 400 });
   }

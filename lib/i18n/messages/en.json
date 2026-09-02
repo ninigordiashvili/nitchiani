@@ -177,7 +177,8 @@
     "total": "Total",
     "checkout": "Checkout",
     "remove": "Remove",
-    "clearCartConfirmDesc": "This empties your cart. It can't be undone."
+    "clearCartConfirmDesc": "This empties your cart. It can't be undone.",
+    "promoCodeUnavailable": "Couldn't check that code right now — please try again"
   },
   "checkout": {
     "title": "Checkout",

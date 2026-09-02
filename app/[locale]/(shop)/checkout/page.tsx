@@ -33,7 +33,9 @@ const checkoutSchema = z.object({
   // Surname and email are optional — plenty of Georgian customers order with a first
   // name and a phone number alone. Email still has to be well-formed if given, so a
   // typo can't silently swallow the order confirmation.
-  lastName: z.string().optional(),
+  // Required: EchoDesk rejects an order without it ("Missing required fields: last_name"),
+  // so leaving it optional here only moves the failure to the last step of checkout.
+  lastName: z.string().min(1),
   // Canonical E.164 phone. `+` followed by 7–15 digits, leading digit 1–9. The PhoneInput
   // component now accepts diaspora numbers (US/UK/DE/IL/TR/FR/IT/ES/RU) in addition to
   // Georgia (+995), so the schema is loosened to the generic E.164 shape. The PhoneInput
@@ -173,7 +175,7 @@ export default function CheckoutPage() {
       // their next visit even though we never reach the success page handler here.
       saveContact({
         firstName: values.firstName,
-        lastName: values.lastName ?? "",
+        lastName: values.lastName,
         email: values.email ?? "",
         phone: values.phone,
         address: values.address,
@@ -297,7 +299,7 @@ export default function CheckoutPage() {
               <Field label={t("checkout.firstName")} error={errors.firstName?.message} required>
                 <input className={inputCls} aria-required {...register("firstName")} />
               </Field>
-              <Field label={t("checkout.lastName")} error={errors.lastName?.message}>
+              <Field label={t("checkout.lastName")} required error={errors.lastName?.message}>
                 <input className={inputCls} {...register("lastName")} />
               </Field>
               <Field label={t("checkout.phone")} error={errors.phone?.message} required>

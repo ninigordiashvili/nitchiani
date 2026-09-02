@@ -3,6 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import type { ImageRef, Money } from "../shopify/types";
 import { type Coupon, type CouponError, discountFor, findCoupon } from "./coupons";
+import { checkPromoAction } from "@/app/actions/promo";
 
 // Bump the version when image hosts or line shape change, so stale localStorage entries
 // don't crash the cart UI on the next visit.
@@ -42,7 +43,7 @@ type CartActions = {
   updateQuantity: (variantId: string, quantity: number) => void;
   removeLine: (variantId: string) => void;
   clear: () => void;
-  applyCoupon: (code: string) => boolean;
+  applyCoupon: (code: string) => Promise<boolean>;
   removeCoupon: () => void;
   clearCouponError: () => void;
   open: boolean;
@@ -71,6 +72,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const [lines, setLines] = useState<LocalCartLine[]>([]);
   const [couponCode, setCouponCode] = useState<string | null>(null);
   const [couponError, setCouponError] = useState<CouponError | null>(null);
+  /** Discount as priced by the backend, when it did the pricing. Null means price locally. */
+  const [serverDiscount, setServerDiscount] = useState<number | null>(null);
   const [open, setOpen] = useState(false);
   const [hydrated, setHydrated] = useState(false);
 
@@ -160,6 +163,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const clear = useCallback(() => {
     setLines([]);
     setCouponCode(null);
+    setServerDiscount(null);
     setCouponError(null);
   }, []);
 
@@ -169,7 +173,11 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   // across renders as long as the code does.
   const coupon = couponCode ? findCoupon(couponCode) : null;
   const subtotalNum = Number.parseFloat(totals.subtotal.amount);
-  const discountAmount = coupon ? discountFor(subtotalNum, coupon) : 0;
+  // When the backend priced the code, its number wins. It is the one that will actually be
+  // charged, and recomputing locally from a registry the backend doesn't share would let the
+  // cart advertise a discount checkout won't honour.
+  const discountAmount =
+    serverDiscount !== null ? Math.min(serverDiscount, subtotalNum) : coupon ? discountFor(subtotalNum, coupon) : 0;
   const totalNum = Math.max(0, subtotalNum - discountAmount);
   const currencyCode = totals.subtotal.currencyCode;
 
@@ -185,18 +193,23 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     [totalNum, currencyCode],
   );
 
+  // Asks the server, so the cart gets exactly the answer checkout will give later — a code
+  // accepted here and refused at checkout is the worst version of this feature.
   const applyCoupon = useCallback(
-    (code: string) => {
-      const found = findCoupon(code);
-      if (!found) {
+    async (code: string) => {
+      const result = await checkPromoAction(code, subtotalNum).catch(() => null);
+      if (!result || result.status === "unavailable") {
+        // Couldn't reach the backend — distinct from a bad code, so say so rather than
+        // telling someone their valid code is invalid.
+        setCouponError("unavailable");
+        return false;
+      }
+      if (result.status === "invalid") {
         setCouponError("invalid");
         return false;
       }
-      if (found.minSubtotal && subtotalNum < found.minSubtotal) {
-        setCouponError("minimum");
-        return false;
-      }
-      setCouponCode(found.code);
+      setCouponCode(result.code);
+      setServerDiscount(result.discount);
       setCouponError(null);
       return true;
     },
@@ -205,6 +218,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const removeCoupon = useCallback(() => {
     setCouponCode(null);
+    setServerDiscount(null);
     setCouponError(null);
   }, []);
 

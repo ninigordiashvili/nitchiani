@@ -15,7 +15,11 @@ export type Coupon = {
   minSubtotal?: number;
 };
 
-export type CouponError = "invalid" | "minimum";
+/**
+ * `unavailable` is deliberately separate from `invalid`: a code we couldn't check is not a
+ * code we know is bad, and telling a shopper their valid coupon is invalid loses the sale.
+ */
+export type CouponError = "invalid" | "minimum" | "unavailable";
 
 const COUPONS: Coupon[] = [
   { code: "WELCOME10", type: "percent", value: 10 },

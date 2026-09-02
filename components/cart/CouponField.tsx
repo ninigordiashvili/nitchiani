@@ -133,10 +133,10 @@ function CouponEditor({
   // checkout's outer form and nested forms are invalid HTML (the inner one collapses, and
   // an inner submit button would fire the outer form's onSubmit — i.e. accidentally
   // place the order from the coupon Apply button).
-  const apply = () => {
+  const apply = async () => {
     const value = draft.trim();
     if (!value) return;
-    const ok = cart.applyCoupon(value);
+    const ok = await cart.applyCoupon(value);
     if (ok) setDraft("");
   };
 
@@ -217,7 +217,11 @@ function CouponEditor({
         >
           {cart.couponError === "invalid"
             ? t("promoCodeInvalid")
-            : t("promoCodeMinimumGeneric")}
+            : cart.couponError === "unavailable"
+              ? // We couldn't reach the backend — not the same as a bad code, so don't tell
+                // the shopper their coupon is invalid when we simply don't know.
+                t("promoCodeUnavailable")
+              : t("promoCodeMinimumGeneric")}
         </p>
       ) : null}
     </div>
