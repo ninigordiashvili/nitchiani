@@ -21,9 +21,12 @@ import { VariantPicker } from "./VariantPicker";
 export function ProductPurchase({
   product,
   showSizeGuide = true,
+  onAdded,
 }: {
   product: Product;
   showSizeGuide?: boolean;
+  /** Passed straight to AddToBagButton — the quick-view sheet closes on it. */
+  onAdded?: () => void;
 }) {
   const t = useTranslations("product");
   const tNav = useTranslations("nav");
@@ -72,7 +75,7 @@ export function ProductPurchase({
           </button>
         </div>
         <div className="flex-1">
-          <AddToBagButton product={product} variant={selected} quantity={quantity} />
+          <AddToBagButton product={product} variant={selected} quantity={quantity} onAdded={onAdded} />
         </div>
       </div>
 

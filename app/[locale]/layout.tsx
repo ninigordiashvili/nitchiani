@@ -26,6 +26,7 @@ import { CurrencyProvider } from "@/lib/currency/store";
 import { RecentlyViewedProvider } from "@/lib/recently-viewed/store";
 import { OverlaysProvider } from "@/lib/ui/overlays";
 import { QuickViewProvider } from "@/lib/ui/quick-view";
+import { ToastProvider } from "@/lib/ui/toast";
 import { WishlistProvider } from "@/lib/wishlist/store";
 import { isLocale, locales, type Locale } from "@/lib/i18n/config";
 
@@ -71,6 +72,7 @@ export default async function LocaleLayout({
           <RecentlyViewedProvider>
             <CartProvider>
               <QuickViewProvider>
+                <ToastProvider>
                 <OverlaysProvider>
                 <div className="flex min-h-dvh flex-col">
                   <SkipToContent />
@@ -111,6 +113,7 @@ export default async function LocaleLayout({
                   <ChatWidgetPlacement />
                 </div>
                 </OverlaysProvider>
+                </ToastProvider>
               </QuickViewProvider>
             </CartProvider>
           </RecentlyViewedProvider>

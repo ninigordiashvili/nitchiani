@@ -208,7 +208,7 @@ export function QuickViewModal() {
                   stepper and Add to bag were floating in the middle with dead space under
                   them; anchored low they sit where the eye ends up and near the thumb. */}
               <div className="mt-auto pt-5">
-                <ProductPurchase product={product} showSizeGuide={false} />
+                <ProductPurchase product={product} showSizeGuide={false} onAdded={quickView.close} />
               </div>
 
               <Link
