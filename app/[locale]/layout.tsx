@@ -19,6 +19,7 @@ import { SkipToContent } from "@/components/layout/SkipToContent";
 import { WelcomePopup } from "@/components/layout/WelcomePopup";
 import { SearchOverlay } from "@/components/search/SearchOverlay";
 import { QuickViewModal } from "@/components/commerce/QuickViewModal";
+import { ChatWidgetPlacement } from "@/components/ui/ChatWidgetPlacement";
 import { CartProvider } from "@/lib/cart/store";
 import { CookieConsentProvider } from "@/lib/ui/cookie-consent";
 import { CurrencyProvider } from "@/lib/currency/store";
@@ -105,6 +106,9 @@ export default async function LocaleLayout({
                     src="https://echodesk.ge/widget.js?t=wgt_live_uiW4-k34AQvHTgKP2hzgFVDa8sA6icAz"
                     strategy="afterInteractive"
                   />
+                  {/* Retracts the vendor's button while scrolling — it otherwise parks on the
+                      product grid's wishlist heart and quick-view control. */}
+                  <ChatWidgetPlacement />
                 </div>
                 </OverlaysProvider>
               </QuickViewProvider>

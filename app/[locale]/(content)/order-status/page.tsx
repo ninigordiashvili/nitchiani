@@ -84,7 +84,27 @@ export default async function OrderStatusPage({
         </p>
       </header>
 
-      {order ? <LiveTracking order={order} locale={locale} /> : <StaticTimeline tCart={tCart} />}
+      {order ? (
+        <LiveTracking order={order} locale={locale} />
+      ) : (
+        <>
+          {/* A number was supplied but nothing came back — say so plainly. Falling through to
+              the generic timeline would leave the customer thinking the page had ignored them. */}
+          {orderParam ? (
+            <div
+              role="status"
+              className="mb-8 rounded-lg border p-5"
+              style={{ borderColor: "var(--border-soft)", background: "var(--surface-2, transparent)" }}
+            >
+              <p className="font-display text-lg tracking-tight">{t("notFoundTitle")}</p>
+              <p className="mt-2 max-w-md text-sm opacity-75">{t("notFoundDesc")}</p>
+            </div>
+          ) : null}
+
+          <OrderLookup t={t} defaultValue={orderParam} />
+          <StaticTimeline tCart={tCart} />
+        </>
+      )}
 
       <div className="rounded-lg border border-black/10 p-5 sm:p-6">
         <p className="label-eyebrow mb-2">{t("contactEyebrow")}</p>
@@ -258,5 +278,52 @@ async function LiveTracking({
         </ul>
       </div>
     </div>
+  );
+}
+
+/**
+ * Order-number lookup. A plain GET form submitting to this same route, so it works without
+ * JavaScript and leaves a shareable/bookmarkable `?order=` URL — which is also the link the
+ * confirmation email points at.
+ *
+ * Deliberately not behind an account: the order number is the credential. `getOrderByName`
+ * matches an exact name, so there is nothing to enumerate usefully, and the response exposes
+ * only fulfilment state — no address, no contact details, no payment data.
+ */
+function OrderLookup({
+  t,
+  defaultValue,
+}: {
+  t: Awaited<ReturnType<typeof getTranslations<"orderStatus">>>;
+  defaultValue?: string;
+}) {
+  return (
+    <form
+      method="get"
+      className="mb-10 rounded-lg border p-5 sm:p-6"
+      style={{ borderColor: "var(--border-soft)" }}
+    >
+      <label htmlFor="order-lookup" className="label-eyebrow mb-2 block">
+        {t("lookupLabel")}
+      </label>
+      <div className="flex flex-col gap-2 sm:flex-row">
+        <input
+          id="order-lookup"
+          name="order"
+          type="text"
+          inputMode="numeric"
+          autoComplete="off"
+          required
+          defaultValue={defaultValue ?? ""}
+          placeholder={t("lookupPlaceholder")}
+          className="w-full rounded-md border px-3 py-2.5 text-base outline-none focus:border-[var(--color-brand-ink)]"
+          style={{ borderColor: "var(--border-soft)", background: "var(--surface)" }}
+        />
+        <button type="submit" className="btn-primary shrink-0 justify-center">
+          {t("lookupCta")}
+        </button>
+      </div>
+      <p className="mt-2 text-xs opacity-60">{t("lookupHint")}</p>
+    </form>
   );
 }

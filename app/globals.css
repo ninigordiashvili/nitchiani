@@ -316,3 +316,19 @@
     bottom: calc(86px + var(--chat-lift)) !important;
   }
 }
+
+/* Retract the launcher while the page is scrolling — see ChatWidgetPlacement, which sets the
+   flag. Not media-scoped: the launcher sits on the product grid's card controls at every
+   width. `!important` for the same reason as the offsets above (the vendor styles the button
+   inline), and it also beats any attention animation the widget may run on itself. */
+html[data-chat-retracted="true"] button[aria-label="Open chat"],
+html[data-chat-retracted="true"] [aria-label="Chat prompt"] {
+  opacity: 0 !important;
+  transform: translateY(16px) scale(0.9) !important;
+  pointer-events: none !important;
+}
+
+button[aria-label="Open chat"],
+[aria-label="Chat prompt"] {
+  transition: opacity 0.2s ease, transform 0.2s ease !important;
+}
