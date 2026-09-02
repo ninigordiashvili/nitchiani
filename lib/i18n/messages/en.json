@@ -45,7 +45,7 @@
     "showImage": "Show image {n}",
     "chatOnSite": "Chat with us here",
     "hairExtensions": "Hair Extensions",
-    "braidingWax": "Braiding Wax",
+    "hairCare": "Hair Care",
     "hairAccessories": "Hair Accessories",
     "durags": "Durags"
   },
@@ -92,7 +92,7 @@
   },
   "categories": {
     "hairExtensions": "Hair Extensions",
-    "braidingWax": "Braiding Wax",
+    "hairCare": "Hair Care",
     "hairAccessories": "Hair Accessories",
     "bonnets": "Bonnets",
     "durags": "Durags"

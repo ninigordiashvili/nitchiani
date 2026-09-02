@@ -14,8 +14,8 @@ import { CATEGORY_HANDLES } from "../categories";
  * honest default. A silent wrong guess is worse than a visible absence.
  */
 export const PRODUCT_CATEGORIES: Record<string, string[]> = {
-  // თმის ჟელე — braiding wax
-  "prod-001": ["braiding-wax"],
+  // თმის ჟელე — a hair-care product (wax for braiding)
+  "prod-001": ["hair-care"],
   // არიელი — synthetic braiding hair
   "prod-002": ["hair-extensions"],
   "prod-003": ["hair-extensions"],

@@ -45,7 +45,7 @@
     "showImage": "სურათი {n}",
     "chatOnSite": "მოგვწერე აქვე, ჩატში",
     "hairExtensions": "ხელოვნური თმა",
-    "braidingWax": "თმის ჟელე",
+    "hairCare": "თმის მოვლა",
     "hairAccessories": "თმის აქსესუარი",
     "durags": "დურაგი"
   },
@@ -92,7 +92,7 @@
   },
   "categories": {
     "hairExtensions": "ხელოვნური თმა",
-    "braidingWax": "თმის ჟელე",
+    "hairCare": "თმის მოვლა",
     "hairAccessories": "თმის აქსესუარი",
     "bonnets": "ბონეტი",
     "durags": "დურაგი"

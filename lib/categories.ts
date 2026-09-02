@@ -19,7 +19,7 @@ export type CategoryDef = {
 
 export const CATEGORIES: CategoryDef[] = [
   { handle: "hair-extensions", labelKey: "hairExtensions", image: "/categories/extensions.png" },
-  { handle: "braiding-wax", labelKey: "braidingWax", image: "/categories/loc-care.png" },
+  { handle: "hair-care", labelKey: "hairCare", image: "/categories/loc-care.png" },
   { handle: "hair-accessories", labelKey: "hairAccessories", image: "/categories/accessories.png" },
   { handle: "bonnets", labelKey: "bonnets", image: "/categories/bonnets.png" },
   { handle: "durags", labelKey: "durags" },

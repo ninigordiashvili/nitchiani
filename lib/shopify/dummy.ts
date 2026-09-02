@@ -794,12 +794,12 @@ export const DUMMY_RAW_COLLECTIONS: RawCollection[] = [
     products: [],
   },
   {
-    id: "gid://nitchiani/Collection/braiding-wax",
-    handle: "braiding-wax",
-    titleEn: "Braiding Wax",
-    titleKa: "თმის ჟელე",
-    descriptionEn: "Wax and gel for braiding and edges.",
-    descriptionKa: "ჟელე და ვოსკი ნაწნავებისა და კიდეებისთვის.",
+    id: "gid://nitchiani/Collection/hair-care",
+    handle: "hair-care",
+    titleEn: "Hair Care",
+    titleKa: "თმის მოვლა",
+    descriptionEn: "Oils, wax and care for braids and locs.",
+    descriptionKa: "ზეთები, ჟელე და მოვლის საშუალებები ნაწნავებისა და ლოკსებისთვის.",
     // Membership comes from lib/echodesk/categories.ts when the catalog is live.
     products: [],
   },

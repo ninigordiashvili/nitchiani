@@ -10,7 +10,7 @@ describe("product → category map", () => {
   });
 
   it("places the live tenant's products", () => {
-    expect(categoriesFor("prod-001")).toEqual(["braiding-wax"]);
+    expect(categoriesFor("prod-001")).toEqual(["hair-care"]);
     expect(categoriesFor("prod-002")).toEqual(["hair-extensions"]);
   });
 

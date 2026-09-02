@@ -65,7 +65,7 @@ const nextConfig: NextConfig = {
     optimizePackageImports: ["lucide-react"],
   },
   /**
-   * The category set was renamed (extensions → hair-extensions, loc-care → braiding-wax, …).
+   * The category set was renamed (extensions → hair-extensions, loc-care → hair-care, …).
    * These URLs were in the sitemap and are linked from the journal, so a plain 404 would throw
    * away whatever ranking and bookmarks they'd earned. Permanent redirects to the closest
    * equivalent; the two categories with no successor land on the shop index rather than
@@ -76,7 +76,7 @@ const nextConfig: NextConfig = {
   async redirects() {
     const moved: Array<[string, string]> = [
       ["extensions", "hair-extensions"],
-      ["loc-care", "braiding-wax"],
+      ["loc-care", "hair-care"],
       ["accessories", "hair-accessories"],
     ];
     return [
