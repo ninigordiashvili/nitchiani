@@ -160,7 +160,11 @@ export function QuickViewModal() {
             </div>
 
             {/* Details */}
-            <div className="relative flex flex-col p-5 sm:p-7">
+            {/* `sm:pt-14` clears the close button above: it sits at top-3 and is 36px tall,
+                so it occupies the first 48px of this panel — more than the 28px of `sm:p-7`.
+                Without it the title row, and the heart on it, ride up underneath the X. Mobile
+                keeps p-5 because there the close button is over the image, not in here. */}
+            <div className="relative flex flex-col p-5 sm:p-7 sm:pt-16">
               <button
                 type="button"
                 onClick={quickView.close}
@@ -170,12 +174,19 @@ export function QuickViewModal() {
                 <X size={18} />
               </button>
 
-              <p className="label-eyebrow mb-2">{product.productType}</p>
+              {product.productType ? (
+                <p className="label-eyebrow mb-2">{product.productType}</p>
+              ) : (
+                // Reserve the eyebrow's height when a product has no category. Otherwise the
+                // title row — and the heart on it — rides 24px higher for those products only,
+                // leaving 18px to the close button instead of 43px. Products from EchoDesk
+                // carry no productType today, so that was the common case, not the edge one.
+                <div aria-hidden className="mb-2 h-4" />
+              )}
               {/* Favourites sits beside the title rather than over the artwork: the heart's
                   translucent pill is designed for the tinted product cards and all but vanished
                   against a white product photo. On the cream panel the maroon reads clearly, and
-                  the hairline border makes it legible as a control rather than decoration.
-                  Kept on the title row (not the eyebrow) to clear the desktop close button. */}
+                  the hairline border makes it legible as a control rather than decoration. */}
               <div className="flex items-start justify-between gap-3">
                 <h2 className="font-display text-2xl leading-tight tracking-tight sm:text-3xl">
                   {product.title}
