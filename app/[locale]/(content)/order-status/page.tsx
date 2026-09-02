@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Check, ClipboardCheck, ExternalLink, Package, RotateCcw, Truck } from "lucide-react";
+import { Check, ExternalLink } from "lucide-react";
 import { setRequestLocale, getTranslations } from "next-intl/server";
 import { WhatsAppIcon, getWhatsAppNumber } from "@/components/brand/WhatsAppIcon";
 import { getOrderByName, type OrderTracking } from "@/lib/shopify/orders";
@@ -51,9 +51,8 @@ export default async function OrderStatusPage({
   const { order: orderParam, token: tokenParam } = await searchParams;
   setRequestLocale(locale);
 
-  const [t, tCart, tCheckout, tWa] = await Promise.all([
+  const [t, tCheckout, tWa] = await Promise.all([
     getTranslations("orderStatus"),
-    getTranslations("cart"),
     getTranslations("checkout"),
     getTranslations("whatsapp"),
   ]);
@@ -112,7 +111,6 @@ export default async function OrderStatusPage({
           ) : null}
 
           <OrderLookup t={t} defaultValue={lookup} />
-          <StaticTimeline tCart={tCart} />
         </>
       )}
 
@@ -131,44 +129,6 @@ export default async function OrderStatusPage({
         </a>
       </div>
     </div>
-  );
-}
-
-/** Static 4-step explainer — the page's original behaviour, kept as a fallback. */
-function StaticTimeline({
-  tCart,
-}: {
-  tCart: Awaited<ReturnType<typeof getTranslations<"cart">>>;
-}) {
-  const steps = [
-    { icon: ClipboardCheck, text: tCart("howItWorksStep1Title") },
-    { icon: Package, text: tCart("howItWorksStep2Title") },
-    { icon: Truck, text: tCart("howItWorksStep3Title") },
-    { icon: RotateCcw, text: tCart("howItWorksStep4Title") },
-  ];
-  return (
-    <ol className="mb-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-      {steps.map((step, i) => (
-        <li
-          key={i}
-          className="flex items-start gap-3 rounded-md border border-black/10 p-4"
-        >
-          <span
-            className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full"
-            style={{
-              background: "color-mix(in oklab, var(--color-brand-maroon) 10%, transparent)",
-              color: "var(--color-brand-maroon)",
-            }}
-          >
-            <step.icon size={16} />
-          </span>
-          <div>
-            <p className="text-[11px] tabular-nums opacity-50">0{i + 1}</p>
-            <p className="text-sm font-medium leading-tight">{step.text}</p>
-          </div>
-        </li>
-      ))}
-    </ol>
   );
 }
 
