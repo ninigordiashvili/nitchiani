@@ -1,8 +1,8 @@
 import type { Product } from "../shopify/types";
 
-export type SortKey = "featured" | "new" | "price-asc" | "price-desc";
+export type SortKey = "featured" | "price-asc" | "price-desc";
 
-export const SORT_KEYS: SortKey[] = ["featured", "new", "price-asc", "price-desc"];
+export const SORT_KEYS: SortKey[] = ["featured", "price-asc", "price-desc"];
 export const DEFAULT_SORT: SortKey = "featured";
 
 export function isSortKey(v: string): v is SortKey {
@@ -87,9 +87,6 @@ export function applySort(products: Product[], sort: SortKey): Product[] {
       return arr.sort((a, b) => minPrice(a) - minPrice(b));
     case "price-desc":
       return arr.sort((a, b) => minPrice(b) - minPrice(a));
-    case "new":
-      // isNew first, then keep original ordering for the rest
-      return arr.sort((a, b) => Number(!!b.isNew) - Number(!!a.isNew));
     case "featured":
     default:
       // isBestSeller first, then everything else

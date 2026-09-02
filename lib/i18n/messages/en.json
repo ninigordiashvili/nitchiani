@@ -350,7 +350,6 @@
   "shop": {
     "sortLabel": "Sort",
     "sortFeatured": "Featured",
-    "sortNew": "New arrivals",
     "sortPriceAsc": "Price: low to high",
     "sortPriceDesc": "Price: high to low",
     "filterOnSale": "On sale",

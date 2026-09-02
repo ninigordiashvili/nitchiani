@@ -75,7 +75,6 @@ export function CollectionToolbar({
   const sortOptions: { value: SortKey; label: string }[] = useMemo(
     () => [
       { value: "featured", label: t("sortFeatured") },
-      { value: "new", label: t("sortNew") },
       { value: "price-asc", label: t("sortPriceAsc") },
       { value: "price-desc", label: t("sortPriceDesc") },
     ],

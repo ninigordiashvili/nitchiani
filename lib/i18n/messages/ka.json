@@ -350,7 +350,6 @@
   "shop": {
     "sortLabel": "დახარისხება",
     "sortFeatured": "რეკომენდებული",
-    "sortNew": "ახალი ჩამოსვლა",
     "sortPriceAsc": "ფასი: ზრდადობით",
     "sortPriceDesc": "ფასი: კლებადობით",
     "filterOnSale": "ფასდაკლება",
