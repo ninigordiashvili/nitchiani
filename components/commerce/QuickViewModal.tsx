@@ -198,7 +198,12 @@ export function QuickViewModal() {
                 />
               </div>
 
-              <div className="mt-5">
+              {/* `mt-auto` moves here from the link below, which pushes the purchase controls
+                  to the foot of the panel and puts the slack above them instead. The panel is
+                  as tall as the product image beside it, so on a short product the quantity
+                  stepper and Add to bag were floating in the middle with dead space under
+                  them; anchored low they sit where the eye ends up and near the thumb. */}
+              <div className="mt-auto pt-5">
                 <ProductPurchase product={product} showSizeGuide={false} />
               </div>
 
@@ -208,7 +213,7 @@ export function QuickViewModal() {
                   quickView.close();
                   overlays.setSearchOpen(false);
                 }}
-                className="mt-auto inline-flex items-center gap-1 self-center pt-6 text-xs font-medium tracking-[0.16em] uppercase opacity-80 hover:opacity-100"
+                className="inline-flex items-center gap-1 self-center pt-6 text-xs font-medium tracking-[0.16em] uppercase opacity-80 hover:opacity-100"
               >
                 {t("product.viewFullDetails")}
                 <ArrowRight size={14} />
