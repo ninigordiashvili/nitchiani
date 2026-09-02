@@ -11,7 +11,7 @@ import {
 } from "@/components/brand/WhatsAppIcon";
 import { Logo } from "@/components/brand/Logo";
 import { TrustStrip } from "@/components/homepage/TrustStrip";
-import { BUSINESS } from "@/lib/business";
+import { BUSINESS, BUSINESS_DETAILS_FILLED } from "@/lib/business";
 import { useCookieConsent } from "@/lib/ui/cookie-consent";
 // import { NewsletterForm } from "./NewsletterForm";  // hidden — see the footer body
 
@@ -149,8 +149,14 @@ export function Footer() {
           </div>
         </div>
 
-        {/* Business identification — required for Georgian e-commerce (legal entity name,
-            registration ID, address, contact email). Pulled from `lib/business.ts`. */}
+        {/* Business identification — legal entity name, registration ID, address, contact
+            email. Required for Georgian e-commerce, so this stays in the codebase, but it is
+            hidden until `lib/business.ts` holds real values: publishing "[LEGAL ENTITY NAME]"
+            and "[REGISTRATION NUMBER]" to customers looks worse than showing nothing, and
+            reads as an unfinished site rather than a registered business.
+            `BUSINESS_DETAILS_FILLED` flips the moment the placeholders are replaced, so the
+            block returns on its own — no code change needed at incorporation. */}
+        {BUSINESS_DETAILS_FILLED ? (
         <div className="mt-10 border-t border-white/10 pt-6 text-[11px] leading-relaxed opacity-55 sm:text-xs">
           <p className="font-medium opacity-90">{BUSINESS.legalName}</p>
           <p>
@@ -169,10 +175,14 @@ export function Footer() {
             </a>
           </p>
         </div>
+        ) : null}
 
         <div className="mt-6 flex flex-col items-start justify-between gap-3 border-t border-white/10 pt-6 text-xs opacity-60 sm:flex-row sm:items-center">
           <p>© {year} Nitchiani. {t("footer.rights")}.</p>
-          <p>BOG · TBC · Bank transfer</p>
+          {/* Card brands, not banks: EchoDesk picks the gateway, bank transfer is refused at
+              checkout, and TBC isn't enabled on the tenant — naming any of them here would
+              advertise payment methods a shopper can't actually use. Matches the trust strip. */}
+          <p>Visa · Mastercard</p>
         </div>
       </div>
     </footer>
