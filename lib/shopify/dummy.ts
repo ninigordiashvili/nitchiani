@@ -4,6 +4,9 @@ import type { Locale } from "../i18n/config";
 // Default image used for any product that doesn't specify its own.
 const DEFAULT_PRODUCT_IMAGE = "/products/gold-wax.png";
 
+/** Hard ceiling on gallery length. Anything beyond this is dropped by `makeProduct`. */
+export const MAX_PRODUCT_IMAGES = 5;
+
 const img = (path: string | undefined, alt: string) => ({
   url: path ?? DEFAULT_PRODUCT_IMAGE,
   altText: alt,
@@ -168,6 +171,12 @@ function makeProduct(p: {
   image?: string;
   /** Optional secondary image for the gallery. */
   imageAlt?: string;
+  /**
+   * Extra gallery shots, in display order after `image` and `imageAlt`. Paths under /public.
+   * The gallery is capped at MAX_PRODUCT_IMAGES (5) — anything past that is dropped rather
+   * than silently overflowing the thumbnail rail.
+   */
+  gallery?: string[];
   isNew?: boolean;
   isBestSeller?: boolean;
   /** Option groups (e.g. Color, Size). Omit for a single-SKU product. */
@@ -195,10 +204,13 @@ function makeProduct(p: {
     tags: p.tags ?? [],
     vendor: "Nitchiani",
     featuredImage: img(p.image, p.titleEn),
+    // Alt text is numbered per position so repeated shots of one product stay distinguishable
+    // to screen readers instead of announcing the same string several times over.
     images: [
       img(p.image, p.titleEn),
       ...(p.imageAlt ? [img(p.imageAlt, `${p.titleEn} alt`)] : []),
-    ],
+      ...(p.gallery ?? []).map((path, i) => img(path, `${p.titleEn} — view ${i + 2}`)),
+    ].slice(0, MAX_PRODUCT_IMAGES),
     basePrice: p.price,
     baseCompareAt: p.compareAt,
     rawOptions: p.options ?? [],
@@ -230,6 +242,9 @@ export const DUMMY_RAW_PRODUCTS: RawProduct[] = [
     productTypeKa: "ბონნეტები",
     price: 89,
     image: "/products/silk-bonnet-noir.png",
+    // Gallery demo: the same shot repeated so the thumbnail rail has something to show
+    // until real alternate angles land. Capped at MAX_PRODUCT_IMAGES with `image` above.
+    gallery: ["/products/silk-bonnet-noir.png", "/products/silk-bonnet-noir.png", "/products/silk-bonnet-noir.png", "/products/silk-bonnet-noir.png"],
     isBestSeller: true,
     tags: ["bonnets", "best-seller"],
     options: [
@@ -268,6 +283,9 @@ export const DUMMY_RAW_PRODUCTS: RawProduct[] = [
     price: 64,
     compareAt: 79,
     image: "/products/loc-care-oil-15ml.png",
+    // Gallery demo: the same shot repeated so the thumbnail rail has something to show
+    // until real alternate angles land. Capped at MAX_PRODUCT_IMAGES with `image` above.
+    gallery: ["/products/loc-care-oil-15ml.png", "/products/loc-care-oil-15ml.png", "/products/loc-care-oil-15ml.png", "/products/loc-care-oil-15ml.png"],
     isBestSeller: true,
     tags: ["loc-care", "best-seller"],
     options: [

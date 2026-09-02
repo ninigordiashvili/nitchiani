@@ -17,7 +17,9 @@ export function ProductGallery({ images, title }: { images: ImageRef[]; title: s
       {images.length > 1 ? (
         <ul className="order-2 mt-3 flex gap-2 overflow-x-auto lg:order-1 lg:mt-0 lg:flex-col">
           {images.map((img, i) => (
-            <li key={img.url}>
+            // Keyed by position, not URL: a gallery may legitimately repeat the same shot,
+            // and duplicate keys would make React reuse the wrong thumbnail on re-render.
+            <li key={`${img.url}-${i}`}>
               <button
                 type="button"
                 onClick={() => setActive(i)}
