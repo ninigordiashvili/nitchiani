@@ -24,9 +24,11 @@ const csp = [
   `default-src 'self'`,
   `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""} https://*.cal.com https://echodesk.ge`,
   `style-src 'self' 'unsafe-inline'`,
-  `img-src 'self' data: blob: https://cdn.shopify.com https://*.cdninstagram.com https://*.fbcdn.net https://picsum.photos https://fastly.picsum.photos https://*.cal.com`,
+  `img-src 'self' data: blob: https://echodesk-media.fsn1.your-objectstorage.com https://cdn.shopify.com https://*.cdninstagram.com https://*.fbcdn.net https://picsum.photos https://fastly.picsum.photos https://*.cal.com`,
   `font-src 'self' data:`,
-  `connect-src 'self' https://*.cal.com https://api.echodesk.ge${isDev ? " ws:" : ""}`,
+  // `*.api.echodesk.ge` covers the tenant subdomain (nitchiani.api.echodesk.ge); the bare
+  // host alone does not match it, so client-side storefront calls would be blocked.
+  `connect-src 'self' https://*.cal.com https://api.echodesk.ge https://*.api.echodesk.ge${isDev ? " ws:" : ""}`,
   `frame-src 'self' https://*.cal.com https://echodesk.ge`,
   `frame-ancestors 'self'`,
   `base-uri 'self'`,
@@ -50,6 +52,8 @@ const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "cdn.shopify.com" },
+      // EchoDesk product media (object storage behind their CMS).
+      { protocol: "https", hostname: "echodesk-media.fsn1.your-objectstorage.com" },
       { protocol: "https", hostname: "picsum.photos" },
       { protocol: "https", hostname: "fastly.picsum.photos" },
       { protocol: "https", hostname: "scontent.cdninstagram.com" },

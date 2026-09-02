@@ -5,6 +5,7 @@
  * doesn't throw an unconfigured-host runtime error.
  */
 const ALLOWED_HOSTS = [
+  "echodesk-media.fsn1.your-objectstorage.com",
   "cdn.shopify.com",
   "picsum.photos",
   "fastly.picsum.photos",

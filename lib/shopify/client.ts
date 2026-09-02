@@ -6,6 +6,8 @@ import {
   localizeProduct,
 } from "./dummy";
 import { findMatchingProducts } from "./search";
+import { adaptProduct } from "../echodesk/adapt";
+import { getProductBySlug, isEchoDeskConfigured, listProducts } from "../echodesk/client";
 import type { Locale } from "../i18n/config";
 import { defaultLocale } from "../i18n/config";
 
@@ -51,13 +53,25 @@ export async function shopifyFetch<T>({
   return json.data;
 }
 
-// ---------- Public API (with dummy fallback for greenfield dev) ----------
+// ---------- Public API ----------
 //
-// Each getter accepts a `locale` so dummy products/collections come back already
-// translated. When real Shopify is wired, swap to a Storefront query that uses
-// `@inContext(language: <KA|EN>)` so the same shape continues to work.
+// Products come from EchoDesk once NEXT_PUBLIC_ECHODESK_API_URL is set, and from the bundled
+// sample catalog otherwise. Both paths return the same `Product` shape (see
+// `lib/echodesk/adapt.ts`), so callers never learn which backend answered.
+//
+// The fallback is not only for local dev: it also covers the tenant being reachable but
+// empty, which is the state during catalog migration. A storefront with nothing in it is
+// worse than one showing samples, so an empty result falls back rather than rendering bare.
+//
+// Collections still come from the sample data — the tenant exposes merchandising through
+// item-lists/attributes rather than a categories endpoint, so that mapping is separate work.
 
 export async function getProducts(locale: Locale = defaultLocale, limit = 20): Promise<Product[]> {
+  if (isEchoDeskConfigured) {
+    const page = await listProducts(limit);
+    const live = page?.results ?? [];
+    if (live.length > 0) return live.slice(0, limit).map((p) => adaptProduct(p, locale));
+  }
   return DUMMY_RAW_PRODUCTS.slice(0, limit).map((p) => localizeProduct(p, locale));
 }
 
@@ -65,6 +79,10 @@ export async function getProductByHandle(
   handle: string,
   locale: Locale = defaultLocale,
 ): Promise<Product | null> {
+  if (isEchoDeskConfigured) {
+    const live = await getProductBySlug(handle);
+    if (live) return adaptProduct(live, locale);
+  }
   const raw = DUMMY_RAW_PRODUCTS.find((p) => p.handle === handle);
   return raw ? localizeProduct(raw, locale) : null;
 }
