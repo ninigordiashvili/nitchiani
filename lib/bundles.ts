@@ -14,6 +14,12 @@
 export type Bundle = {
   id: string;
   handles: string[];
+  /**
+   * Set for a "buy N of one product" offer rather than "one of each". The picker then adds
+   * `minQuantity` of a single product from `handles` instead of one of every handle, and the
+   * saving is computed against that quantity.
+   */
+  minQuantity?: number;
   titleEn: string;
   titleKa: string;
   taglineEn: string;
@@ -26,24 +32,16 @@ export type Bundle = {
 
 export const BUNDLES: Bundle[] = [
   {
-    id: "loc-start",
-    handles: ["loc-care-oil-15ml", "wood-loc-pick", "loc-detox-rinse"],
-    titleEn: "Loc starter kit",
-    titleKa: "ლოკსების სტარტერ ნაკრები",
-    taglineEn: "Three essentials to begin your loc journey, together for less.",
-    taglineKa: "სამი აუცილებელი ნივთი ლოკსების სამოგზაუროდ, ერთად უფრო იაფად.",
-    couponCode: "LOCSTART15",
-    affinityTypes: ["loc-care", "tools"],
-  },
-  {
-    id: "overnight-care",
-    handles: ["silk-bonnet-noir", "satin-pillowcase-cream", "edge-control-mini"],
-    titleEn: "Overnight care set",
-    titleKa: "ღამის მოვლის ნაკრები",
-    taglineEn: "Silk, satin and hold — three pieces that keep your hair in shape overnight.",
-    taglineKa: "აბრეშუმი, სატენი და დაცვა — სამი ნივთი თმის ღამის მოვლისთვის.",
-    couponCode: "OVERNIGHT15",
-    affinityTypes: ["bonnets", "accessories"],
+    id: "ariel-3",
+    // Both Ariel listings, so the offer stands whichever one a shopper is looking at.
+    handles: ["prod-002", "a"],
+    minQuantity: 3,
+    titleEn: "3 Ariel hair — save ₾15",
+    titleKa: "3 არიელი - ხელოვნური თმა — დაზოგე ₾15",
+    taglineEn: "Enough for a full head, at a better price per pack.",
+    taglineKa: "საკმარისი სრული თავისთვის, უკეთეს ფასად შეკვრაზე.",
+    couponCode: "ARIEL15",
+    affinityTypes: ["hair-extensions"],
   },
 ];
 

@@ -14,6 +14,8 @@ import { BundleUpsellPicker } from "@/components/homepage/BundleUpsellPicker";
 import { UvpBanner } from "@/components/homepage/UvpBanner";
 import { BUNDLES, type Bundle } from "@/lib/bundles";
 import { getProductByHandle, getProducts } from "@/lib/shopify/client";
+import { isEchoDeskConfigured } from "@/lib/echodesk/client";
+import { validatePromo } from "@/lib/echodesk/promo";
 import type { Locale } from "@/lib/i18n/config";
 import type { Product } from "@/lib/shopify/types";
 import { localeAlternates } from "@/lib/seo";
@@ -80,7 +82,38 @@ export default async function HomePage({
         .map((h) => productByHandle.get(h))
         .filter((p): p is Product => Boolean(p)),
     }))
-    .filter((bp) => bp.products.length === bp.bundle.handles.length);
+    // A quantity offer ("3 of one product") only needs one of its handles in stock; a
+    // multi-product bundle needs all of them, or the "save ₾X" maths would be wrong.
+    .filter((bp) =>
+      bp.bundle.minQuantity
+        ? bp.products.length > 0
+        : bp.products.length === bp.bundle.handles.length,
+    );
+
+  // An offer is only shown if its coupon will actually be honoured. EchoDesk validates codes
+  // now, so a bundle whose code isn't defined there would advertise "save ₾15" and then have
+  // the discount refused in the cart — the shopper pays full price having been told otherwise.
+  // Checking here means the offer stays hidden until the code exists, and appears by itself
+  // once it does.
+  const offers = isEchoDeskConfigured
+    ? (
+        await Promise.all(
+          bundlesWithProducts.map(async (bp) => {
+            const subtotal = bp.products
+              .slice(0, bp.bundle.minQuantity ? 1 : bp.products.length)
+              .reduce(
+                (sum, p) =>
+                  sum +
+                  Number.parseFloat(p.variants[0]?.price.amount ?? "0") *
+                    (bp.bundle.minQuantity ?? 1),
+                0,
+              );
+            const check = await validatePromo(bp.bundle.couponCode, subtotal).catch(() => null);
+            return check?.valid ? bp : null;
+          }),
+        )
+      ).filter((bp): bp is (typeof bundlesWithProducts)[number] => bp !== null)
+    : bundlesWithProducts;
 
   return (
     <div className="pb-0 sm:pb-12">
@@ -108,9 +141,9 @@ export default async function HomePage({
       </section>
 
       {/* 4 — Featured bundle (picked client-side to match recent browsing) */}
-      {bundlesWithProducts.length > 0 ? (
+      {offers.length > 0 ? (
         <section className="container-shop mt-12">
-          <BundleUpsellPicker bundlesWithProducts={bundlesWithProducts} />
+          <BundleUpsellPicker bundlesWithProducts={offers} />
         </section>
       ) : null}
 

@@ -23,6 +23,10 @@ export type CouponError = "invalid" | "minimum" | "unavailable";
 
 const COUPONS: Coupon[] = [
   { code: "WELCOME10", type: "percent", value: 10 },
+  // Pairs with the Ariel promo in lib/bundles.ts. `minSubtotal` is the closest this registry
+  // can get to "3 packs" — 3 x ₾80. EchoDesk is the authority when it's configured, so the
+  // same code has to exist there or the discount is refused at checkout.
+  { code: "ARIEL15", type: "amount", value: 15, minSubtotal: 240 },
   { code: "GEORGIA20", type: "amount", value: 20, minSubtotal: 100 },
   { code: "FRIDAY15", type: "percent", value: 15, minSubtotal: 80 },
   // Auto-applied by the homepage bundle CTAs. Paired with `lib/bundles.ts`.

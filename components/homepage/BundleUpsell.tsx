@@ -36,16 +36,19 @@ export function BundleUpsell({
   const tagline = locale === "ka" ? bundle.taglineKa : bundle.taglineEn;
   const currencyCode = products[0]?.variants[0]?.price.currencyCode ?? "GEL";
 
-  const subtotalNum = products.reduce((sum, p) => {
+  // A quantity offer is N of one product; otherwise it's one of each.
+  const qty = bundle.minQuantity ?? 1;
+  const offerProducts = bundle.minQuantity ? products.slice(0, 1) : products;
+  const subtotalNum = offerProducts.reduce((sum, p) => {
     const v = p.variants[0];
-    return sum + Number.parseFloat(v?.price.amount ?? "0");
+    return sum + Number.parseFloat(v?.price.amount ?? "0") * qty;
   }, 0);
   const coupon = findCoupon(bundle.couponCode);
   const discountNum = coupon ? discountFor(subtotalNum, coupon) : 0;
   const bundleTotalNum = Math.max(0, subtotalNum - discountNum);
 
   const onAdd = () => {
-    for (const p of products) {
+    for (const p of offerProducts) {
       const v = p.variants.find((vv) => vv.availableForSale) ?? p.variants[0];
       if (!v) continue;
       cart.addLine({
@@ -55,9 +58,13 @@ export function BundleUpsell({
         variantTitle: v.title,
         image: p.featuredImage,
         unitPrice: v.price,
+        quantity: qty,
       });
     }
-    cart.applyCoupon(bundle.couponCode);
+    // Fire and forget: the coupon is validated by the backend now, so this is async. A
+    // rejection surfaces in the cart's own error line rather than here — the products are
+    // in the bag either way, which is the part the shopper asked for.
+    void cart.applyCoupon(bundle.couponCode);
   };
 
   return (
@@ -77,7 +84,7 @@ export function BundleUpsell({
           <p className="mt-2 max-w-md text-sm opacity-70">{tagline}</p>
 
           <ul className="mt-5 flex items-center gap-2">
-            {products.map((p, i) => (
+            {offerProducts.map((p, i) => (
               <li key={p.handle} className="flex items-center gap-2">
                 <Link
                   href={`/products/${p.handle}`}
