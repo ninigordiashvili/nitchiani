@@ -11,9 +11,20 @@ import type { PromoReason } from "@/lib/echodesk/promo";
 //   v1 → Unsplash URLs (broken hostnames)
 //   v2 → picsum + local images
 //   v3 → variant titles changed (no longer always "One Size") — old variantIds may be stale
-const STORAGE_KEY = "nitchiani:cart:v3";
-const LEGACY_STORAGE_KEYS = ["nitchiani:cart:v1", "nitchiani:cart:v2"];
-const COUPON_STORAGE_KEY = "nitchiani:cart:coupon:v1";
+//   v4 → catalog moved to EchoDesk. Lines saved before that carry sample-catalog ids
+//        (gid://nitchiani/...), which guest checkout refuses outright — so a returning
+//        shopper with an old bag could not place an order at all, and the error told them
+//        nothing. Dropping those lines is the only recovery that leaves them able to buy.
+const STORAGE_KEY = "nitchiani:cart:v4";
+const LEGACY_STORAGE_KEYS = [
+  "nitchiani:cart:v1",
+  "nitchiani:cart:v2",
+  "nitchiani:cart:v3",
+];
+// Coupons are validated by EchoDesk now, and the old registry's codes (WELCOME10, …) are not
+// in it — a saved one would be rejected at checkout, so old entries go with the cart.
+const COUPON_STORAGE_KEY = "nitchiani:cart:coupon:v2";
+const LEGACY_COUPON_KEYS = ["nitchiani:cart:coupon:v1"];
 
 export type LocalCartLine = {
   variantId: string;
@@ -97,7 +108,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     try {
       // Wipe legacy versions so old image URLs (now banned hosts) can't crash the cart UI.
-      for (const key of LEGACY_STORAGE_KEYS) localStorage.removeItem(key);
+      for (const key of [...LEGACY_STORAGE_KEYS, ...LEGACY_COUPON_KEYS]) localStorage.removeItem(key);
 
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) setLines(JSON.parse(raw) as LocalCartLine[]);
