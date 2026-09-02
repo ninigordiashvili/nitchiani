@@ -14,9 +14,17 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
  * timer is cleared on unmount so a toast raised just before navigation can't fire into a
  * stale tree.
  */
-type ToastState = { message: string; id: number } | null;
+/**
+ * `maroon` is the wishlist's colour, matching the heart itself, so a favourites confirmation
+ * reads as belonging to that action rather than to the bag.
+ */
+export type ToastTone = "ink" | "maroon";
 
-const ToastContext = createContext<{ show: (message: string) => void } | null>(null);
+type ToastState = { message: string; id: number; tone: ToastTone } | null;
+
+const ToastContext = createContext<{
+  show: (message: string, tone?: ToastTone) => void;
+} | null>(null);
 
 const VISIBLE_MS = 2600;
 
@@ -25,11 +33,11 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const nextId = useRef(0);
 
-  const show = useCallback((message: string) => {
+  const show = useCallback((message: string, tone: ToastTone = "ink") => {
     if (timer.current) clearTimeout(timer.current);
     // A fresh id restarts the entry animation even when the text is identical, so a second
     // add still reads as a new confirmation rather than a stuck message.
-    setToast({ message, id: ++nextId.current });
+    setToast({ message, id: ++nextId.current, tone });
     timer.current = setTimeout(() => setToast(null), VISIBLE_MS);
   }, []);
 
@@ -56,7 +64,10 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
             key={toast.id}
             className="toast-in pointer-events-auto flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-medium shadow-lg"
             style={{
-              background: "var(--color-brand-ink)",
+              background:
+                toast.tone === "maroon"
+                  ? "var(--color-brand-maroon)"
+                  : "var(--color-brand-ink)",
               color: "var(--color-brand-cream)",
             }}
           >
@@ -64,15 +75,20 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
               width="16"
               height="16"
               viewBox="0 0 24 24"
-              fill="none"
+              fill={toast.tone === "maroon" ? "currentColor" : "none"}
               stroke="currentColor"
-              strokeWidth="2.5"
+              strokeWidth={toast.tone === "maroon" ? 1.8 : 2.5}
               strokeLinecap="round"
               strokeLinejoin="round"
               aria-hidden="true"
               className="flex-shrink-0"
             >
-              <path d="M20 6 9 17l-5-5" />
+              {toast.tone === "maroon" ? (
+                // Filled heart — the same shape the button itself just became.
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+              ) : (
+                <path d="M20 6 9 17l-5-5" />
+              )}
             </svg>
             {toast.message}
           </div>

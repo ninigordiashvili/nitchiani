@@ -372,7 +372,8 @@
     "emptyDesc": "Save pieces with the heart button — they'll be here when you're ready",
     "addAria": "Add to wishlist",
     "removeAria": "Remove from wishlist",
-    "browseShop": "Browse the shop"
+    "browseShop": "Browse the shop",
+    "added": "Added to wishlist"
   },
   "search": {
     "placeholder": "Search products...",
