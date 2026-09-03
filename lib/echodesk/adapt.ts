@@ -1,6 +1,6 @@
 import type { Locale } from "../i18n/config";
-import type { Product, ProductVariant } from "../shopify/types";
-import type { EchoDeskProduct, LocalizedText } from "./types";
+import type { Product, ProductAttribute, ProductVariant } from "../shopify/types";
+import type { EchoDeskAttributeValue, EchoDeskProduct, LocalizedText } from "./types";
 
 /**
  * Maps EchoDesk records onto the storefront's own `Product` shape.
@@ -58,7 +58,7 @@ export function adaptProduct(p: EchoDeskProduct, locale: Locale): Product {
         availableForSale: v.is_in_stock ?? (v.quantity ?? 0) > 0,
         selectedOptions: (v.attribute_values ?? []).map((a) => ({
           name: pick(a.attribute?.name, locale),
-          value: a.value ?? "",
+          value: typeof a.value === "string" ? a.value : (a.value_text ?? ""),
         })),
         price: money(v.price ?? p.price),
         compareAtPrice: v.compare_at_price ? money(v.compare_at_price) : undefined,
@@ -91,7 +91,11 @@ export function adaptProduct(p: EchoDeskProduct, locale: Locale): Product {
     }
   }
 
-  const productType = pick(p.attribute_values?.find((a) => a.attribute)?.attribute?.name, locale);
+  const attributes = adaptAttributes(p.attribute_values, locale);
+  // Deliberately blank: `productType` used to borrow the first attribute's name, which with
+  // real attributes means a filter label ("Hair type") leaking into the PDP eyebrow as if it
+  // were a category. Category membership lives in lib/echodesk/categories.ts instead.
+  const productType = "";
 
   return {
     id: `gid://echodesk/Product/${p.id}`,
@@ -102,9 +106,7 @@ export function adaptProduct(p: EchoDeskProduct, locale: Locale): Product {
     vendor: "Nitchiani",
     productType,
     // Locale-stable slug for breadcrumb/category links, mirroring the sample catalog's rule.
-    productTypeHandle: (pick(p.attribute_values?.find((a) => a.attribute)?.attribute?.name, "en") || "")
-      .toLowerCase()
-      .replace(/\s+/g, "-"),
+    productTypeHandle: "",
     featuredImage: featured,
     images: gallery.length ? gallery : [featured],
     options: [...optionMap].map(([name, values]) => ({ name, values: [...values] })),
@@ -114,6 +116,7 @@ export function adaptProduct(p: EchoDeskProduct, locale: Locale): Product {
       max: { amount: Math.max(...prices).toFixed(2), currencyCode: CURRENCY },
     },
     isBestSeller: p.is_featured || undefined,
+    attributes: attributes.length > 0 ? attributes : undefined,
     // The list and detail payloads both carry these, so a card can show a real rating
     // without a second request per product.
     reviewSummary:
@@ -141,4 +144,45 @@ export function parseEchoDeskGid(
   const m = /^gid:\/\/echodesk\/(Product|Variant)\/(\d+)$/.exec(gid);
   if (!m) return null;
   return { kind: m[1] === "Product" ? "product" : "variant", id: Number.parseInt(m[2], 10) };
+}
+
+/**
+ * Turns EchoDesk attribute values into the storefront's filter shape.
+ *
+ * Only `is_filterable` attributes are kept, and only those that actually resolve to a value —
+ * the tenant currently has one declared as a `number` with no options and an empty value,
+ * which would otherwise render an empty chip group. A filter you can't filter by is worse
+ * than no filter.
+ *
+ * Multiselect values arrive as an array of option keys; each is mapped back to its localized
+ * label via the attribute's own `options`, falling back to the raw key when there's no match.
+ */
+export function adaptAttributes(
+  raw: EchoDeskAttributeValue[] | undefined,
+  locale: Locale,
+): ProductAttribute[] {
+  const out: ProductAttribute[] = [];
+
+  for (const entry of raw ?? []) {
+    const attr = entry.attribute;
+    if (!attr?.key || attr.is_filterable === false) continue;
+
+    const label = (keyOrValue: unknown): string => {
+      const asKey = String(keyOrValue ?? "").trim();
+      if (!asKey) return "";
+      const match = attr.options?.find((o) => o.value === asKey);
+      return match ? pick(match, locale) || asKey : asKey;
+    };
+
+    const values = (
+      Array.isArray(entry.value)
+        ? entry.value.map(label)
+        : [label(entry.value ?? entry.value_text)]
+    ).filter(Boolean);
+
+    if (values.length === 0) continue;
+    out.push({ key: attr.key, name: pick(attr.name, locale) || attr.key, values });
+  }
+
+  return out;
 }

@@ -60,6 +60,21 @@ export type Product = {
    * the sample catalog's ratings are derived from `lib/reviews.ts` instead.
    */
   reviewSummary?: { count: number; average: number };
+  /**
+   * Filterable attributes as declared by the backend — hair type, length, and whatever else
+   * the catalog defines later. Generic on purpose: the toolbar builds a chip row per
+   * attribute it finds, so a new one needs no code here.
+   */
+  attributes?: ProductAttribute[];
+};
+
+export type ProductAttribute = {
+  /** Stable key from the backend, used in the URL. */
+  key: string;
+  /** Localized label for the chip group heading. */
+  name: string;
+  /** Localized values this product carries for the attribute. */
+  values: string[];
 };
 
 export type Collection = {

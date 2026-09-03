@@ -5,10 +5,12 @@ import { useTranslations } from "next-intl";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useMemo } from "react";
 import {
+  type AttributeFacet,
   type ProductFilters,
   type SortKey,
   PRICE_TIERS,
   isSortKey,
+  serializeAttributeParam,
 } from "@/lib/products/filter";
 import { Select } from "@/components/ui/Select";
 import { cn } from "@/lib/utils";
@@ -23,12 +25,15 @@ export function CollectionToolbar({
   totalCount,
   visibleCount,
   availableColors,
+  attributeFacets,
   filters,
   sort,
 }: {
   totalCount: number;
   visibleCount: number;
   availableColors: string[];
+  /** Attribute groups worth filtering by, derived from the products on screen. */
+  attributeFacets: AttributeFacet[];
   filters: ProductFilters;
   sort: SortKey;
 }) {
@@ -60,7 +65,20 @@ export function CollectionToolbar({
     [filters.colors, updateParam],
   );
 
+  const toggleAttribute = useCallback(
+    (key: string, value: string) => {
+      const current = filters.attributes[key] ?? [];
+      const nextValues = current.includes(value)
+        ? current.filter((v) => v !== value)
+        : [...current, value];
+      const next = { ...filters.attributes, [key]: nextValues };
+      updateParam({ attr: serializeAttributeParam(next) });
+    },
+    [filters.attributes, updateParam],
+  );
+
   const activeFilterCount =
+    Object.values(filters.attributes).reduce((n, v) => n + v.length, 0) +
     filters.colors.length +
     (filters.onSale ? 1 : 0) +
     (filters.availableOnly ? 1 : 0) +
@@ -68,7 +86,7 @@ export function CollectionToolbar({
 
   const clearAll = useCallback(
     () =>
-      updateParam({ color: null, onSale: null, available: null, maxPrice: null }),
+      updateParam({ color: null, onSale: null, available: null, maxPrice: null, attr: null }),
     [updateParam],
   );
 
@@ -102,6 +120,35 @@ export function CollectionToolbar({
           />
         </div>
       </div>
+
+      {/* One row per backend attribute (hair type, length, …), each labelled with the
+          attribute's own name so the chips read as a group rather than a loose pile. Renders
+          nothing until the catalog actually defines a filterable attribute with more than one
+          value across the products on screen. */}
+      {attributeFacets.map((facet) => (
+        <div key={facet.key} className="flex flex-wrap items-center gap-2">
+          <span className="label-eyebrow mr-1 opacity-70">{facet.name}</span>
+          {facet.values.map((value) => {
+            const active = (filters.attributes[facet.key] ?? []).includes(value);
+            return (
+              <button
+                key={value}
+                type="button"
+                onClick={() => toggleAttribute(facet.key, value)}
+                aria-pressed={active}
+                className={cn(
+                  "cursor-pointer rounded-full border px-3 py-1.5 text-xs transition-colors",
+                  active
+                    ? "border-[var(--text-primary)] bg-[var(--text-primary)] text-[var(--surface)]"
+                    : "border-black/15 hover:border-black/40",
+                )}
+              >
+                {value}
+              </button>
+            );
+          })}
+        </div>
+      ))}
 
       <div className="flex flex-wrap items-center gap-2">
         {availableColors.map((color) => {

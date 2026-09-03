@@ -25,7 +25,21 @@ export type EchoDeskVariant = {
   compare_at_price?: string | null;
   quantity?: number;
   is_in_stock?: boolean;
-  attribute_values?: Array<{ attribute?: { name?: LocalizedText }; value?: string }>;
+  attribute_values?: EchoDeskAttributeValue[];
+};
+
+export type EchoDeskAttributeValue = {
+  attribute?: {
+    key?: string;
+    name?: LocalizedText;
+    attribute_type?: string;
+    is_filterable?: boolean;
+    /** Allowed values for select/multiselect, each carrying its own translations. */
+    options?: Array<LocalizedText & { value?: string }>;
+  };
+  /** Shape depends on `attribute_type`: array for multiselect, scalar otherwise. */
+  value?: unknown;
+  value_text?: string;
 };
 
 export type EchoDeskProduct = {
@@ -42,7 +56,7 @@ export type EchoDeskProduct = {
   /** Detail endpoint only. */
   images?: EchoDeskImage[];
   variants?: EchoDeskVariant[];
-  attribute_values?: Array<{ attribute?: { name?: LocalizedText }; value?: string }>;
+  attribute_values?: EchoDeskAttributeValue[];
   quantity?: number;
   is_in_stock?: boolean;
   is_featured?: boolean;
