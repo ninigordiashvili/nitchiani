@@ -62,7 +62,9 @@ function productHasColor(p: Product, color: string): boolean {
   );
 }
 
-function productHasAvailableVariant(p: Product): boolean {
+/** True when at least one variant can actually be bought. Exported: the cart's
+ *  recommendation rails use the same definition of "in stock" as the shop's filter. */
+export function productHasAvailableVariant(p: Product): boolean {
   return p.variants.some((v) => v.availableForSale);
 }
 
