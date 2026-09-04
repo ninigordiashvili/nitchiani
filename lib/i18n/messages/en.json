@@ -178,7 +178,8 @@
       "expired": "This code has expired",
       "usageLimit": "This code has already been used",
       "inactive": "This code isn't active right now"
-    }
+    },
+    "seeAllProducts": "See all products"
   },
   "checkout": {
     "title": "Checkout",

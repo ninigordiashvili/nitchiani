@@ -19,7 +19,7 @@ import {
   Wallet,
 } from "lucide-react";
 import Image from "next/image";
-import { useRouter } from "@/lib/i18n/routing";
+import { Link, useRouter } from "@/lib/i18n/routing";
 import { useCart } from "@/lib/cart/store";
 import { formatPrice } from "@/lib/money";
 import type { Locale } from "@/lib/i18n/config";
@@ -163,6 +163,12 @@ export default function CheckoutPage() {
       <div className="container-shop flex min-h-[60vh] flex-col items-center justify-center gap-3 py-12 text-center">
         <h1 className="font-display text-3xl">{t("cart.empty")}</h1>
         <p className="text-sm opacity-70">{t("cart.emptyDesc")}</p>
+        {/* Without this the screen is a dead end: it says the bag is empty and offers no way
+            to fill it, which is reachable now that the last item can be removed from the
+            summary itself. */}
+        <Link href="/shop" className="btn-primary mt-2">
+          {t("cart.seeAllProducts")}
+        </Link>
       </div>
     );
   }
