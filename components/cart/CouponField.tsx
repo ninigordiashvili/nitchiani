@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, ChevronDown, Tag, X } from "lucide-react";
+import { Check, Tag, X } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 import { useCart } from "@/lib/cart/store";
@@ -9,9 +9,10 @@ import type { Locale } from "@/lib/i18n/config";
 import { cn } from "@/lib/utils";
 
 /**
- * Collapsible promo-code field. Idle state is a single "Have a promo code?" row so the
- * surface stays calm; user opens it intentionally. Applied state shows the active code as
- * a chip with a remove (×) button. Errors render inline beneath the input.
+ * Promo-code field, always visible. It used to sit behind a "Have a promo code?" disclosure,
+ * which kept the surface calm at the cost of hiding the discount from anyone not looking for
+ * it — a shopper holding a code had to guess that the row was a control. Applied state shows
+ * the active code as a chip with a remove (×) button; errors render inline beneath the input.
  *
  * Used in the cart drawer, cart page, and checkout — same component, same store-backed
  * state, so applying in one surface persists everywhere.
@@ -20,7 +21,6 @@ export function CouponField({ tone = "light" }: { tone?: "light" | "dark" } = {}
   const t = useTranslations("cart");
   const locale = useLocale() as Locale;
   const cart = useCart();
-  const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState("");
 
   const isDark = tone === "dark";
@@ -84,41 +84,18 @@ export function CouponField({ tone = "light" }: { tone?: "light" | "dark" } = {}
     );
   }
 
-  if (!open) {
-    return (
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        className={cn(
-          "mb-4 inline-flex items-center gap-1.5 text-xs underline-offset-2 hover:underline",
-          labelColor,
-          isDark ? "opacity-80" : "opacity-70",
-        )}
-      >
-        <Tag size={13} />
-        {t("havePromoCode")}
-        <ChevronDown size={13} />
-      </button>
-    );
-  }
-
-  return <CouponEditor tone={tone} draft={draft} setDraft={setDraft} onClose={() => setOpen(false)} />;
+  return <CouponEditor tone={tone} draft={draft} setDraft={setDraft} />;
 }
 
-/**
- * Active editor — extracted so the autofocus + escape handlers only mount when actually open,
- * which keeps the cleanup logic predictable.
- */
+/** The input itself. Kept separate so the field's own state and effects stay readable. */
 function CouponEditor({
   tone,
   draft,
   setDraft,
-  onClose,
 }: {
   tone: "light" | "dark";
   draft: string;
   setDraft: (value: string) => void;
-  onClose: () => void;
 }) {
   const t = useTranslations("cart");
   const locale = useLocale() as Locale;
@@ -129,19 +106,14 @@ function CouponEditor({
     ? "text-[var(--color-brand-cream)]"
     : "text-[var(--color-brand-ink)]";
 
-  // Focus the input on mount and clear any stale error from a previous open/close cycle so
-  // the user doesn't reopen the field to an error they've already mentally moved past.
+  // Deliberately does NOT focus on mount. The field used to be opened by a tap, where taking
+  // focus was the point; now that it renders with the page, grabbing focus would scroll the
+  // checkout to its summary and raise the keyboard on mobile before the shopper has typed a
+  // thing. Only a stale error from a previous surface is cleared.
   useEffect(() => {
-    inputRef.current?.focus();
     if (cart.couponError) cart.clearCouponError();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  const close = () => {
-    setDraft("");
-    cart.clearCouponError();
-    onClose();
-  };
 
   // Plain handler — no `<form>` wrapper because the CouponField is rendered inside the
   // checkout's outer form and nested forms are invalid HTML (the inner one collapses, and
@@ -156,22 +128,11 @@ function CouponEditor({
 
   return (
     <div className="mb-4">
-      <div className="mb-2 flex items-center justify-between">
+      <div className="mb-2">
         <span className={cn("label-eyebrow inline-flex items-center gap-1.5", isDark && labelColor)}>
           <Tag size={12} />
           {t("promoCode")}
         </span>
-        <button
-          type="button"
-          onClick={close}
-          aria-label={t("close")}
-          className={cn(
-            "-mr-1 flex h-6 w-6 cursor-pointer items-center justify-center rounded-full opacity-50 transition-opacity hover:opacity-100",
-            isDark ? "text-[var(--color-brand-cream)]" : "text-[var(--color-brand-ink)]",
-          )}
-        >
-          <X size={14} />
-        </button>
       </div>
       <div
         className={cn(
@@ -190,9 +151,12 @@ function CouponEditor({
               e.stopPropagation();
               apply();
             } else if (e.key === "Escape") {
+              // Nothing to close any more, so Escape clears what was typed — and is stopped
+              // from bubbling, or it would shut the cart drawer this field sits inside.
               e.preventDefault();
               e.stopPropagation();
-              close();
+              setDraft("");
+              cart.clearCouponError();
             }
           }}
           placeholder={t("promoCodePlaceholder")}
