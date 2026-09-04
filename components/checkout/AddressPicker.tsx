@@ -59,6 +59,11 @@ export function AddressPicker({
   const [open, setOpen] = useState(false);
   const [highlight, setHighlight] = useState(-1);
   const [mapOpen, setMapOpen] = useState(false);
+  // Set when Google refuses to draw the map (a referrer the key doesn't allow, billing off,
+  // quota). Google paints its own grey "something went wrong" panel into the container, which
+  // on a checkout page reads as the store being broken. We hide the map instead and leave the
+  // customer typing, which always works.
+  const [mapUnavailable, setMapUnavailable] = useState(false);
   const [pinned, setPinned] = useState<{ lat: number; lng: number } | null>(null);
 
   const sessionRef = useRef<google.maps.places.AutocompleteSessionToken | null>(null);
@@ -239,6 +244,18 @@ export function AddressPicker({
       });
       mapRef.current = map;
       markerRef.current = marker;
+
+      // Google reports these failures by injecting an error panel, not by throwing, so the
+      // only way to notice is to look for it once tiles have had a moment to load.
+      setTimeout(() => {
+        if (mapNodeRef.current?.querySelector(".gm-err-container")) {
+          console.warn("[maps] map refused to render — check the API key's referrer settings");
+          setMapUnavailable(true);
+          setMapOpen(false);
+          mapRef.current = null;
+          markerRef.current = null;
+        }
+      }, 2500);
     })();
     return () => {
       cancelled = true;
@@ -372,6 +389,7 @@ export function AddressPicker({
       ) : null}
 
       <div className="mt-1.5 flex items-center gap-3">
+        {mapUnavailable ? null : (
         <button
           type="button"
           onClick={async () => {
@@ -383,6 +401,7 @@ export function AddressPicker({
           {mapOpen ? <X size={13} aria-hidden /> : <MapPin size={13} aria-hidden />}
           {mapOpen ? t("hideMap") : t("pickOnMap")}
         </button>
+        )}
         {pinned ? (
           <span className="text-xs opacity-60">{t("pinSet")}</span>
         ) : null}
