@@ -29,8 +29,12 @@ export type ManualOrderInput = {
   subtotal: Money;
   /** Server-validated discount in the same currency as `subtotal`. Omit when no coupon applies. */
   discount?: Money;
-  /** Server-validated final amount (subtotal - discount). Falls back to `subtotal` when omitted. */
+  /** Server-validated final amount (subtotal - discount + shipping). Falls back to `subtotal` when omitted. */
   total?: Money;
+  /** Server-priced delivery. Omitted when the tenant charges none. */
+  shipping?: Money;
+  /** EchoDesk `shipping_method_id`, when a flat method priced the delivery. */
+  shippingMethodId?: number;
   /** Canonical coupon code that produced the discount. Used to attach a Shopify `discount_codes` entry. */
   couponCode?: string;
 };

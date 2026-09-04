@@ -1,6 +1,8 @@
 import { bundleForCoupon, bundleShortfall } from "@/lib/bundles";
 import { discountFor, findCoupon, type Coupon } from "@/lib/cart/coupons";
 import { classifyPromoMessage, validatePromo } from "@/lib/echodesk/promo";
+import { quoteItems, resolveShipping } from "@/lib/echodesk/shipping";
+import type { Locale } from "@/lib/i18n/config";
 
 /**
  * Errors are returned as stable keys (e.g. `promoInvalid`), not sentences — the client
@@ -16,8 +18,12 @@ import { classifyPromoMessage, validatePromo } from "@/lib/echodesk/promo";
 export type ServerComputedTotals = {
   subtotal: number;
   discount: number;
+  /** Delivery, added after the discount. Zero when the tenant charges none. */
+  shipping: number;
   total: number;
   coupon: Coupon | null;
+  /** `shipping_method_id` to send with the order, when a flat method priced it. */
+  shippingMethodId: number | null;
 };
 
 /** Minimal shape `computeTotals` needs from a cart line — a superset of the checkout line schema. */
@@ -26,6 +32,8 @@ export type TotalsLine = {
   quantity: number;
   /** Needed to judge a "buy N of this product" offer. */
   productHandle?: string;
+  /** `gid://echodesk/Product/<id>` — the only place the numeric id for a shipping quote lives. */
+  variantId?: string;
 };
 
 /**
@@ -73,7 +81,10 @@ export function computeTotals(
   }
 
   const total = Math.max(0, Math.round((subtotal - discount) * 100) / 100);
-  return { ok: true, totals: { subtotal, discount, total, coupon } };
+  return {
+    ok: true,
+    totals: { subtotal, discount, shipping: 0, total, coupon, shippingMethodId: null },
+  };
 }
 
 /**
@@ -118,9 +129,51 @@ export async function computeTotalsWithEchoDesk(
     totals: {
       subtotal: base.totals.subtotal,
       discount,
+      shipping: 0,
       total,
       // The registry entry is only used for display/analytics; the money came from EchoDesk.
       coupon: findCoupon(code) ?? { code: code.toUpperCase(), type: "amount", value: discount },
+      shippingMethodId: null,
     },
+  };
+}
+
+/**
+ * Adds delivery to already-computed totals.
+ *
+ * Priced here rather than taken from the request: the client shows an estimate, but what the
+ * customer is charged has to be decided where they can't edit it. Both ask the same endpoint
+ * with the same address moments apart, so they agree in practice.
+ *
+ * Delivery is added *after* the discount — a coupon takes money off the goods, not off the
+ * courier — and a failure to price it charges nothing rather than blocking the order.
+ */
+export async function withShipping(
+  totals: ServerComputedTotals,
+  locale: Locale,
+  address: { street: string; city: string; lat?: number; lng?: number },
+  lines: TotalsLine[],
+): Promise<ServerComputedTotals> {
+  const items = quoteItems(
+    lines.map((l) => ({ variantId: l.variantId ?? "", quantity: l.quantity })),
+  );
+
+  const option = await resolveShipping(locale, totals.subtotal, {
+    items,
+    street: address.street,
+    city: address.city,
+    lat: address.lat,
+    lng: address.lng,
+  });
+  if (!option || option.price <= 0) {
+    return { ...totals, shipping: 0, shippingMethodId: option?.methodId ?? null };
+  }
+
+  const shipping = Math.round(option.price * 100) / 100;
+  return {
+    ...totals,
+    shipping,
+    shippingMethodId: option.methodId,
+    total: Math.round((totals.total + shipping) * 100) / 100,
   };
 }

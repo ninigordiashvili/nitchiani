@@ -3,6 +3,7 @@ import { z } from "zod";
 import {
   computeTotals,
   computeTotalsWithEchoDesk,
+  withShipping,
   type ServerComputedTotals,
 } from "@/lib/checkout/totals";
 import { sendOrderConfirmation } from "@/lib/email/order-confirmation";
@@ -109,6 +110,11 @@ function buildOrderInput(
         : undefined,
     total: { amount: totals.total.toFixed(2), currencyCode: payload.subtotal.currencyCode },
     couponCode: totals.coupon?.code,
+    shipping:
+      totals.shipping > 0
+        ? { amount: totals.shipping.toFixed(2), currencyCode: payload.subtotal.currencyCode }
+        : undefined,
+    shippingMethodId: totals.shippingMethodId ?? undefined,
   };
 }
 
@@ -150,7 +156,15 @@ export async function POST(req: Request): Promise<NextResponse<CheckoutResponse>
   if (!totalsResult.ok) {
     return NextResponse.json({ error: totalsResult.error }, { status: 400 });
   }
-  const totals = totalsResult.totals;
+  // Delivery is priced here, never taken from the request — the client shows an estimate, the
+  // server decides the charge. A pin makes it a live courier quote; without one it falls back
+  // to the tenant's flat method, and to nothing when neither is configured.
+  const totals = await withShipping(
+    totalsResult.totals,
+    payload.locale === "en" ? "en" : "ka",
+    { street: payload.address, city: payload.city, lat: payload.lat, lng: payload.lng },
+    payload.lines,
+  );
 
   // Cross-check the client's subtotal against ours — a small drift means catalog prices
   // changed since the cart was loaded, which is worth surfacing so the user can re-confirm.

@@ -114,6 +114,9 @@ export async function createGuestOrder(
     },
     items,
     payment_method: paymentMethod,
+    // Only sent when a configured flat method priced the delivery. A live courier quote has
+    // no method id — EchoDesk prices that one itself from the same address.
+    ...(input.shippingMethodId ? { shipping_method_id: input.shippingMethodId } : {}),
     ...(input.couponCode ? { promo_code: input.couponCode } : {}),
     // The map pin travels in the notes: guest checkout has no coordinate fields (see
     // lib/checkout/geo.ts), and a pin the courier can't see is a pin we didn't need.

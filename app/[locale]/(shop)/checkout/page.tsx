@@ -29,6 +29,8 @@ import { CouponField } from "@/components/cart/CouponField";
 import { HowItWorksButton } from "@/components/cart/HowItWorksButton";
 import { AddressPicker } from "@/components/checkout/AddressPicker";
 import { ClarifyDetailsModal } from "@/components/checkout/ClarifyDetailsModal";
+import { getShippingQuoteAction } from "@/app/actions/shipping";
+import { quoteItems, type ShippingOption } from "@/lib/echodesk/shipping";
 import { PhoneInput } from "@/components/commerce/PhoneInput";
 
 /**
@@ -122,6 +124,16 @@ export default function CheckoutPage() {
   // refused — so placing the order hands the shopper a chat instead.
   const [clarifyOpen, setClarifyOpen] = useState(false);
 
+  /**
+   * Delivery, priced from the address as it is typed. Null means it can't be priced — the
+   * tenant has no courier and no configured method — and the summary then shows no delivery
+   * line at all, which is the state today.
+   *
+   * Only an estimate: the order route prices it again and that is what gets charged. Both ask
+   * the same endpoint with the same address, so they agree.
+   */
+  const [shipping, setShipping] = useState<ShippingOption | null>(null);
+
   // Mobile-only two-step flow: 1 = contact/shipping, 2 = payment + place order.
   // Desktop ignores `step` entirely because both fieldsets are rendered side-by-side via
   // the existing `lg:grid-cols-[1fr_360px]` layout.
@@ -157,6 +169,41 @@ export default function CheckoutPage() {
   }, [reset]);
 
   const paymentMethod = watch("paymentMethod");
+  const addressValue = watch("address");
+  const cityValue = watch("city");
+  const latValue = watch("lat");
+  const lngValue = watch("lng");
+  const subtotalAmount = cart.subtotal.amount;
+
+  useEffect(() => {
+    // The address is typed a character at a time and the quote is a network round trip, so
+    // wait for a pause rather than asking on every keystroke.
+    const timer = setTimeout(() => {
+      const items = quoteItems(cart.lines);
+      if (items.length === 0 || !addressValue?.trim() || !cityValue?.trim()) {
+        setShipping(null);
+        return;
+      }
+      void getShippingQuoteAction(
+        locale,
+        Number.parseFloat(subtotalAmount),
+        { street: addressValue, city: cityValue, lat: latValue, lng: lngValue },
+        items,
+      )
+        .then(setShipping)
+        // A quote we couldn't get must never block checkout; the order route decides the
+        // charge regardless.
+        .catch(() => setShipping(null));
+    }, 500);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [addressValue, cityValue, latValue, lngValue, subtotalAmount, cart.lines.length, locale]);
+
+  const shippingAmount = shipping && shipping.price > 0 ? shipping.price : 0;
+  const displayTotal = {
+    amount: (Number.parseFloat(cart.total.amount) + shippingAmount).toFixed(2),
+    currencyCode: cart.total.currencyCode,
+  };
 
   if (cart.lines.length === 0) {
     return (
@@ -566,10 +613,29 @@ export default function CheckoutPage() {
               <span className="tabular-nums">−{formatPrice(cart.discount, locale)}</span>
             </div>
           ) : null}
+          {/* Only shown when delivery is actually priced. With no courier and no configured
+              method there is nothing to say, and a "Delivery ₾0" row would imply a choice
+              the shop hasn't made. */}
+          {shipping ? (
+            <div className="mt-1 flex items-center justify-between text-sm">
+              <span className="opacity-70">
+                {t("checkout.delivery")}
+                {shipping.label ? ` · ${shipping.label}` : ""}
+              </span>
+              <span className="tabular-nums">
+                {shipping.price > 0
+                  ? formatPrice(
+                      { amount: shipping.price.toFixed(2), currencyCode: cart.total.currencyCode },
+                      locale,
+                    )
+                  : t("checkout.deliveryFree")}
+              </span>
+            </div>
+          ) : null}
           <div className="mt-3 flex items-center justify-between border-t border-black/10 pt-3">
             <span className="font-medium">{t("cart.total")}</span>
             <span className="font-display text-xl tabular-nums">
-              {formatPrice(cart.total, locale)}
+              {formatPrice(displayTotal, locale)}
             </span>
           </div>
           {submitError ? (

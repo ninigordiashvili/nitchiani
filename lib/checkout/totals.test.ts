@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { computeTotals, type TotalsLine } from "./totals";
+import { computeTotals, withShipping, type TotalsLine } from "./totals";
 
 const line = (amount: string, quantity = 1): TotalsLine => ({
   unitPrice: { amount },
@@ -108,5 +108,32 @@ describe("bundle offers", () => {
       "GEORGIA20",
     );
     expect(out.ok && out.totals.discount).toBe(20);
+  });
+});
+
+describe("withShipping", () => {
+  const base = {
+    subtotal: 100,
+    discount: 10,
+    shipping: 0,
+    total: 90,
+    coupon: null,
+    shippingMethodId: null,
+  };
+  const address = { street: "ჭავჭავაძის 28", city: "თბილისი" };
+  const lines = [{ productHandle: "3", unitPrice: { amount: "100.00" }, quantity: 1 }];
+
+  it("charges nothing when the tenant prices no delivery", async () => {
+    // Today's state: QuickShipper off, and the one configured method is a blank placeholder.
+    const out = await withShipping(base, "ka", address, lines);
+    expect(out.shipping).toBe(0);
+    expect(out.total).toBe(90);
+    expect(out.shippingMethodId).toBeNull();
+  });
+
+  it("leaves the goods total untouched when it adds nothing", async () => {
+    const out = await withShipping(base, "ka", address, lines);
+    expect(out.subtotal).toBe(100);
+    expect(out.discount).toBe(10);
   });
 });
