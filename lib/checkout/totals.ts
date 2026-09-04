@@ -1,3 +1,4 @@
+import { bundleForCoupon, bundleShortfall } from "@/lib/bundles";
 import { discountFor, findCoupon, type Coupon } from "@/lib/cart/coupons";
 import { classifyPromoMessage, validatePromo } from "@/lib/echodesk/promo";
 
@@ -23,7 +24,27 @@ export type ServerComputedTotals = {
 export type TotalsLine = {
   unitPrice: { amount: string };
   quantity: number;
+  /** Needed to judge a "buy N of this product" offer. */
+  productHandle?: string;
 };
+
+/**
+ * Whether a "buy N" offer's condition is met by these lines.
+ *
+ * Enforced here as well as in the cart because this is where the charge is decided. EchoDesk
+ * knows the code but not that it is a three-pack offer — its own rule is a minimum spend at
+ * best — so without this the server would grant a discount the cart has already withdrawn,
+ * and the shopper would be charged something different from what they were shown.
+ */
+function bundleConditionMet(lines: TotalsLine[], code: string): boolean {
+  const bundle = bundleForCoupon(code);
+  if (!bundle) return true;
+  const countable = lines.map((l) => ({
+    productHandle: l.productHandle ?? "",
+    quantity: l.quantity,
+  }));
+  return bundleShortfall(bundle, countable) === 0;
+}
 
 export function computeTotals(
   lines: TotalsLine[],
@@ -45,9 +66,10 @@ export function computeTotals(
     if (!coupon) {
       return { ok: false, error: "promoInvalid" };
     }
-    discount = discountFor(subtotal, coupon);
-    // `discountFor` returns 0 when the min-subtotal gate fails — we still keep the coupon
-    // attached to the order for analytics, but the charge is the full subtotal.
+    // `discountFor` returns 0 when the min-subtotal gate fails, and the bundle check does
+    // the same when the offer's pack count isn't met. Either way the coupon stays attached
+    // to the order for analytics, but the charge is the full subtotal.
+    discount = bundleConditionMet(lines, couponCode) ? discountFor(subtotal, coupon) : 0;
   }
 
   const total = Math.max(0, Math.round((subtotal - discount) * 100) / 100);
@@ -87,7 +109,9 @@ export async function computeTotalsWithEchoDesk(
     return { ok: false, error: reason === "minimum" ? "promoMinimum" : "promoInvalid" };
   }
 
-  const discount = Math.min(result.discountAmount ?? 0, base.totals.subtotal);
+  const discount = bundleConditionMet(lines, code)
+    ? Math.min(result.discountAmount ?? 0, base.totals.subtotal)
+    : 0;
   const total = Math.max(0, Math.round((base.totals.subtotal - discount) * 100) / 100);
   return {
     ok: true,

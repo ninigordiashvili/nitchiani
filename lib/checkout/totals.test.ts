@@ -59,3 +59,54 @@ describe("computeTotals", () => {
     expect(res.totals.total).toBe(53.97);
   });
 });
+
+describe("bundle offers", () => {
+  const pack = (quantity: number) => ({
+    productHandle: "prod-002",
+    unitPrice: { amount: "80.00" },
+    quantity,
+  });
+
+  it("discounts a bag that meets the pack count", () => {
+    const out = computeTotals([pack(3)], "ARIEL15");
+    expect(out.ok && out.totals.discount).toBe(15);
+    expect(out.ok && out.totals.total).toBe(225);
+  });
+
+  it("withdraws the discount once a pack is removed", () => {
+    // The reported bug: 3 packs qualify, one is removed, ₾15 stayed off.
+    const out = computeTotals([pack(2)], "ARIEL15");
+    expect(out.ok && out.totals.discount).toBe(0);
+    expect(out.ok && out.totals.total).toBe(160);
+  });
+
+  it("keeps the coupon attached so restoring the pack restores the discount", () => {
+    const out = computeTotals([pack(2)], "ARIEL15");
+    expect(out.ok && out.totals.coupon?.code).toBe("ARIEL15");
+  });
+
+  it("counts both listings the offer accepts", () => {
+    const out = computeTotals(
+      [pack(2), { productHandle: "a", unitPrice: { amount: "80.00" }, quantity: 1 }],
+      "ARIEL15",
+    );
+    expect(out.ok && out.totals.discount).toBe(15);
+  });
+
+  it("does not discount an unrelated bag that merely reaches the old spend threshold", () => {
+    // ₾240 of something else used to satisfy the minimum-subtotal proxy.
+    const out = computeTotals(
+      [{ productHandle: "prod-001", unitPrice: { amount: "240.00" }, quantity: 1 }],
+      "ARIEL15",
+    );
+    expect(out.ok && out.totals.discount).toBe(0);
+  });
+
+  it("leaves codes without a pack condition alone", () => {
+    const out = computeTotals(
+      [{ productHandle: "prod-001", unitPrice: { amount: "100.00" }, quantity: 1 }],
+      "GEORGIA20",
+    );
+    expect(out.ok && out.totals.discount).toBe(20);
+  });
+});

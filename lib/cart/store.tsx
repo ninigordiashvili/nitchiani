@@ -4,6 +4,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import type { ImageRef, Money } from "../shopify/types";
 import { type Coupon, type CouponError, discountFor, findCoupon } from "./coupons";
 import { clampToStock } from "./stock";
+import { bundleForCoupon, bundleShortfall } from "../bundles";
 import { checkPromoAction } from "@/app/actions/promo";
 import type { PromoReason } from "@/lib/echodesk/promo";
 
@@ -66,6 +67,8 @@ type CartState = {
   couponReason: PromoReason | null;
   /** Threshold behind a `minimum` rejection, when known. */
   couponMinSubtotal: number | null;
+  /** Units still needed for a "buy N" offer; 0 when met, null when the code has no such rule. */
+  couponShortfall: number | null;
 };
 
 type CartActions = {
@@ -246,11 +249,30 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const coupon = appliedCoupon ?? (couponCode ? findCoupon(couponCode) : null);
   const subtotalNum = Number.parseFloat(totals.subtotal.amount);
 
+  /**
+   * Units still missing for a "buy N" offer, or null when the code carries no such
+   * condition. Recomputed from the lines on every change, which is the point: the backend
+   * priced the code once, against the bag as it stood then, and nothing revisited that when
+   * a pack was later removed.
+   */
+  const bundle = coupon ? bundleForCoupon(coupon.code) : null;
+  const couponShortfall = bundle ? bundleShortfall(bundle, lines) : null;
+
   // When the backend priced the code, its number wins. It is the one that will actually be
   // charged, and recomputing locally from a registry the backend doesn't share would let the
   // cart advertise a discount checkout won't honour.
+  //
+  // Except when the offer's own condition has stopped being met. A frozen server amount kept
+  // taking ₾15 off a two-pack bag, so the cart promised a discount the offer doesn't give —
+  // and the code stays attached, so putting the third pack back restores it.
   const discountAmount =
-    serverDiscount !== null ? Math.min(serverDiscount, subtotalNum) : coupon ? discountFor(subtotalNum, coupon) : 0;
+    couponShortfall && couponShortfall > 0
+      ? 0
+      : serverDiscount !== null
+        ? Math.min(serverDiscount, subtotalNum)
+        : coupon
+          ? discountFor(subtotalNum, coupon)
+          : 0;
   const totalNum = Math.max(0, subtotalNum - discountAmount);
   const currencyCode = totals.subtotal.currencyCode;
 
@@ -330,6 +352,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       couponError,
       couponReason,
       couponMinSubtotal,
+      couponShortfall,
       addLine,
       updateQuantity,
       removeLine,
@@ -349,6 +372,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       couponError,
       couponReason,
       couponMinSubtotal,
+      couponShortfall,
       addLine,
       updateQuantity,
       removeLine,

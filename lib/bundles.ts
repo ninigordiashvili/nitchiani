@@ -80,3 +80,32 @@ export function pickBundleForRecentTypes(
   }
   return best;
 }
+
+/** Just enough of a cart line to judge eligibility, so this file needn't know the cart. */
+type CountableLine = { productHandle: string; quantity: number };
+
+/** The bundle a coupon belongs to, or null for a plain code with no quantity condition. */
+export function bundleForCoupon(code: string): Bundle | null {
+  const canonical = code.trim().toUpperCase();
+  return BUNDLES.find((b) => b.couponCode.toUpperCase() === canonical) ?? null;
+}
+
+/** Units of the bundle's products currently in the bag, across all of its handles. */
+export function bundleUnitsInCart(bundle: Bundle, lines: CountableLine[]): number {
+  return lines
+    .filter((l) => bundle.handles.includes(l.productHandle))
+    .reduce((sum, l) => sum + l.quantity, 0);
+}
+
+/**
+ * How many more units the offer still needs. Zero when it is satisfied — and zero for a
+ * bundle with no `minQuantity`, which is a "one of each" offer rather than a "buy N".
+ *
+ * This counts packs rather than money on purpose. Pricing the offer as a minimum spend was a
+ * proxy that broke in both directions: three packs stop qualifying the moment they go on
+ * sale, and any ₾240 of unrelated products start qualifying without a single pack in the bag.
+ */
+export function bundleShortfall(bundle: Bundle, lines: CountableLine[]): number {
+  if (!bundle.minQuantity) return 0;
+  return Math.max(0, bundle.minQuantity - bundleUnitsInCart(bundle, lines));
+}

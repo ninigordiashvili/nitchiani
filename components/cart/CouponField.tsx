@@ -64,6 +64,13 @@ export function CouponField({ tone = "light" }: { tone?: "light" | "dark" } = {}
             >
               {t("promoCodeApplied", { amount: formatGel(discountAmount, locale) })}
             </span>
+          ) : cart.couponShortfall && cart.couponShortfall > 0 ? (
+            /* The code is still attached but its condition has lapsed — a pack was removed.
+               Saying how many are missing turns a silently dead discount into something the
+               shopper can put right in one tap. */
+            <span role="status" aria-live="polite" className="text-[11px] opacity-70">
+              {t("promoCodeAddMore", { count: cart.couponShortfall })}
+            </span>
           ) : cart.coupon.minSubtotal ? (
             <span className="truncate text-[11px] opacity-60">
               {t("promoCodeMinimum", {
