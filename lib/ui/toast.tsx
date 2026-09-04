@@ -28,13 +28,33 @@ const ToastContext = createContext<{
 
 const VISIBLE_MS = 2600;
 
+/** Gap between the header's lower edge and the toast. */
+const HEADER_GAP = 12;
+
+/**
+ * Where the toast should sit, measured when it is raised.
+ *
+ * A fixed offset can't be right: the header is sticky, so at the top of the page it sits
+ * below a promo bar, once scrolled it pins to zero, and scrolling down hides it entirely by
+ * translating it off-screen. Reading its actual lower edge covers all three, and the clamp
+ * keeps the toast on screen when the header is hidden or missing.
+ */
+function toastTop(): number {
+  if (typeof document === "undefined") return HEADER_GAP;
+  const header = document.querySelector("header");
+  const bottom = header?.getBoundingClientRect().bottom ?? 0;
+  return Math.max(bottom, 0) + HEADER_GAP;
+}
+
 export function ToastProvider({ children }: { children: React.ReactNode }) {
   const [toast, setToast] = useState<ToastState>(null);
+  const [top, setTop] = useState(HEADER_GAP);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const nextId = useRef(0);
 
   const show = useCallback((message: string, tone: ToastTone = "ink") => {
     if (timer.current) clearTimeout(timer.current);
+    setTop(toastTop());
     // A fresh id restarts the entry animation even when the text is identical, so a second
     // add still reads as a new confirmation rather than a stuck message.
     setToast({ message, id: ++nextId.current, tone });
@@ -53,11 +73,12 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
       <div
         role="status"
         aria-live="polite"
-        // Centred at every width, and sat above the mobile BottomNav. Centring keeps it clear
-        // of the chat launcher too — that lives in the bottom-right corner, so the middle of
-        // the viewport is the one place nothing else occupies.
+        // Top-centred, just under the header, rather than down by the mobile BottomNav.
+        // Adding to the bag is something you do from a card in the grid, and a confirmation
+        // at the foot of a long page is easy to miss — the eye is where the tap was.
+        // `z-[60]` keeps it above the header's `z-40`.
         className="pointer-events-none fixed inset-x-0 z-[60] flex justify-center px-4"
-        style={{ bottom: "calc(5.5rem + env(safe-area-inset-bottom))" }}
+        style={{ top: `calc(${top}px + env(safe-area-inset-top))` }}
       >
         {toast ? (
           <div

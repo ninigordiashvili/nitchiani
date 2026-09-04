@@ -8,7 +8,7 @@ import { discountPercent } from "@/lib/money";
 import { getReviewSummary } from "@/lib/reviews";
 import { useQuickView } from "@/lib/ui/quick-view";
 import { PriceDisplay } from "./PriceDisplay";
-import { QuickViewButton } from "./QuickViewButton";
+import { CardAddButton } from "./CardAddButton";
 import { StarRating } from "./StarRating";
 import { WishlistButton } from "./WishlistButton";
 
@@ -19,9 +19,10 @@ export function ProductCard({ product, priority = false }: { product: Product; p
   const offPercent = discountPercent(variant?.price ?? product.priceRange.min, compareAt);
   const summary = product.reviewSummary ?? getReviewSummary(product.handle);
 
-  // Funnel rule: clicking the card (image, title, price) opens the quick view first; the
-  // PDP is reached from inside the modal. We keep the `<Link>` so cmd-/middle-click still
-  // opens the PDP in a new tab, and crawlers continue to follow the href for SEO.
+  // Clicking the card (image, title, price) opens the quick view; the PDP is reached from
+  // inside the sheet. The plus button is the other gesture and adds straight to the bag —
+  // see `CardAddButton`. We keep the `<Link>` so cmd-/middle-click still opens the PDP in a
+  // new tab, and crawlers continue to follow the href for SEO.
   const onCardClick = (e: React.MouseEvent) => {
     // Honour modifier-/middle-clicks → let the browser take the link.
     if (e.defaultPrevented || e.metaKey || e.ctrlKey || e.shiftKey || e.button === 1) return;
@@ -60,7 +61,7 @@ export function ProductCard({ product, priority = false }: { product: Product; p
           <WishlistButton handle={product.handle} />
         </div>
         <div className="absolute right-2 bottom-2">
-          <QuickViewButton product={product} />
+          <CardAddButton product={product} />
         </div>
       </div>
       <div className="pt-3 pb-1">

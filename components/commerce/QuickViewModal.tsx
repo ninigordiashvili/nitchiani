@@ -21,7 +21,7 @@ import { WishlistButton } from "./WishlistButton";
  * are perfectly consistent.
  *
  * Note the search overlay: `SearchOverlay` closes itself by catching bubbled clicks on its
- * results grid, but `QuickViewButton` stops propagation so tapping it doesn't also trigger
+ * results grid, but `CardAddButton` stops propagation so tapping it doesn't also trigger
  * the card's `<Link>`. That leaves search mounted behind this sheet — correct while the sheet
  * is open (dismissing it should return you to your results), wrong the moment we navigate
  * away. So only the "View full details" link closes both.
