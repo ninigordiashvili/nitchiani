@@ -18,6 +18,12 @@ export type ProductVariant = {
   id: string;
   title: string;
   availableForSale: boolean;
+  /**
+   * Units the shop can actually ship, when the backend tracks them. `undefined` means
+   * untracked — treat it as no ceiling rather than as zero, or an untracked product becomes
+   * unbuyable.
+   */
+  quantityAvailable?: number;
   selectedOptions: { name: string; value: string }[];
   price: Money;
   compareAtPrice?: Money;

@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/lib/i18n/routing";
 import { useCart } from "@/lib/cart/store";
+import { isAtStockLimit } from "@/lib/cart/stock";
 import { formatPrice } from "@/lib/money";
 import type { Locale } from "@/lib/i18n/config";
 import { BLUR_DATA_URL, safeImageSrc } from "@/lib/images";
@@ -79,8 +80,11 @@ export default function CartPage() {
                       onClick={() =>
                         cart.updateQuantity(line.variantId, line.quantity + 1)
                       }
+                      // The store clamps anyway; disabling makes the ceiling visible instead
+                      // of leaving a button that silently does nothing.
+                      disabled={isAtStockLimit(line.quantity, line.maxQuantity)}
                       aria-label={t("nav.increaseQuantity")}
-                      className="flex h-9 w-9 cursor-pointer items-center justify-center"
+                      className="flex h-9 w-9 cursor-pointer items-center justify-center disabled:cursor-not-allowed disabled:opacity-30"
                     >
                       <Plus size={14} />
                     </button>

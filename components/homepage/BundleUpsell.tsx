@@ -58,7 +58,8 @@ export function BundleUpsell({
 
   const onAdd = () => {
     for (const p of offerProducts) {
-      const v = p.variants.find((vv) => vv.availableForSale) ?? p.variants[0];
+      // Same rule as the bundle rail: never add a variant that can't be sold.
+      const v = p.variants.find((vv) => vv.availableForSale);
       if (!v) continue;
       cart.addLine({
         variantId: v.id,
@@ -67,6 +68,7 @@ export function BundleUpsell({
         variantTitle: v.title,
         image: p.featuredImage,
         unitPrice: v.price,
+        maxQuantity: v.quantityAvailable,
         quantity: qty,
       });
     }

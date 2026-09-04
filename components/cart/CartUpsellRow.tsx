@@ -102,6 +102,7 @@ function UpsellCard({ product, compact }: { product: Product; compact: boolean }
       variantTitle: variant.title,
       image: product.featuredImage,
       unitPrice: variant.price,
+      maxQuantity: variant.quantityAvailable,
     });
     setJustAdded(true);
     setTimeout(() => setJustAdded(false), 1200);

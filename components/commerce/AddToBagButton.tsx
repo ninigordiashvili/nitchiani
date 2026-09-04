@@ -38,6 +38,7 @@ export function AddToBagButton({
           variantTitle: variant.title,
           image: product.featuredImage,
           unitPrice: variant.price,
+          maxQuantity: variant.quantityAvailable,
           quantity,
         });
         // Adding is otherwise invisible: the drawer doesn't open and, from the quick view,

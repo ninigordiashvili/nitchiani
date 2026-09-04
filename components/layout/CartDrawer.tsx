@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 import { useEffect, useRef } from "react";
 import { Link } from "@/lib/i18n/routing";
 import { useCart } from "@/lib/cart/store";
+import { isAtStockLimit } from "@/lib/cart/stock";
 import type { Locale } from "@/lib/i18n/config";
 import { formatPrice } from "@/lib/money";
 import { BLUR_DATA_URL, safeImageSrc } from "@/lib/images";
@@ -146,7 +147,8 @@ export function CartDrawer({ locale }: { locale: Locale }) {
                             type="button"
                             aria-label={t("nav.increaseQuantity")}
                             onClick={() => cart.updateQuantity(line.variantId, line.quantity + 1)}
-                            className="flex h-8 w-8 cursor-pointer items-center justify-center"
+                            disabled={isAtStockLimit(line.quantity, line.maxQuantity)}
+                            className="flex h-8 w-8 cursor-pointer items-center justify-center disabled:cursor-not-allowed disabled:opacity-30"
                           >
                             <Plus size={14} />
                           </button>

@@ -3,6 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import type { ImageRef, Money } from "../shopify/types";
 import { type Coupon, type CouponError, discountFor, findCoupon } from "./coupons";
+import { clampToStock } from "./stock";
 import { checkPromoAction } from "@/app/actions/promo";
 import type { PromoReason } from "@/lib/echodesk/promo";
 
@@ -15,11 +16,17 @@ import type { PromoReason } from "@/lib/echodesk/promo";
 //        (gid://nitchiani/...), which guest checkout refuses outright — so a returning
 //        shopper with an old bag could not place an order at all, and the error told them
 //        nothing. Dropping those lines is the only recovery that leaves them able to buy.
-const STORAGE_KEY = "nitchiani:cart:v4";
+// v5: lines now carry the stock ceiling they were added under. A v4 line has none, so it
+//     would keep its unchecked quantity forever — including bags already holding more than
+//     the shop can ship, which is exactly the state this change exists to prevent. Those
+//     bags fail at checkout with a message that doesn't say which item is the problem, so
+//     clearing them is what leaves the shopper able to buy.
+const STORAGE_KEY = "nitchiani:cart:v5";
 const LEGACY_STORAGE_KEYS = [
   "nitchiani:cart:v1",
   "nitchiani:cart:v2",
   "nitchiani:cart:v3",
+  "nitchiani:cart:v4",
 ];
 // Coupons are validated by EchoDesk now, and the old registry's codes (WELCOME10, …) are not
 // in it — a saved one would be rejected at checkout, so old entries go with the cart.
@@ -34,6 +41,12 @@ export type LocalCartLine = {
   image: ImageRef;
   unitPrice: Money;
   quantity: number;
+  /**
+   * Units the shop can ship, captured when the line was added. `undefined` means the backend
+   * doesn't track stock for it. Stored on the line because the cart page's stepper has only
+   * the line to work from — it never sees the product.
+   */
+  maxQuantity?: number;
 };
 
 type CartState = {
@@ -178,10 +191,21 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         const idx = prev.findIndex((l) => l.variantId === line.variantId);
         if (idx >= 0) {
           const next = [...prev];
-          next[idx] = { ...next[idx], quantity: next[idx].quantity + qty };
+          // Clamp the *total*, not the increment: three taps of + on a product with two in
+          // stock must land on two, not six.
+          const max = line.maxQuantity ?? next[idx].maxQuantity;
+          next[idx] = {
+            ...next[idx],
+            maxQuantity: max,
+            quantity: clampToStock(next[idx].quantity + qty, max),
+          };
           return next;
         }
-        return [...prev, { ...line, quantity: qty }];
+        const clamped = clampToStock(qty, line.maxQuantity);
+        // Nothing in stock — the line never enters the bag at all, rather than entering at
+        // zero and rendering as a phantom row.
+        if (clamped === 0) return prev;
+        return [...prev, { ...line, quantity: clamped }];
       });
       // Deliberately does NOT open the drawer. Interrupting the browse flow to show a
       // cart the user didn't ask for costs more than it confirms; the count badge nudging
@@ -194,7 +218,11 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     setLines((prev) =>
       quantity <= 0
         ? prev.filter((l) => l.variantId !== variantId)
-        : prev.map((l) => (l.variantId === variantId ? { ...l, quantity } : l)),
+        : prev.map((l) =>
+            l.variantId === variantId
+              ? { ...l, quantity: clampToStock(quantity, l.maxQuantity) }
+              : l,
+          ),
     );
   }, [setLines]);
 

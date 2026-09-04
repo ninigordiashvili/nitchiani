@@ -4,6 +4,7 @@ import { Minus, Plus, Truck } from "lucide-react";
 import { useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import type { Product } from "@/lib/shopify/types";
+import { clampToStock, isAtStockLimit } from "@/lib/cart/stock";
 import { AddToBagButton } from "./AddToBagButton";
 import { PriceDisplay } from "./PriceDisplay";
 import { StickyAddToBag } from "./StickyAddToBag";
@@ -34,6 +35,7 @@ export function ProductPurchase({
     product.variants.find((v) => v.availableForSale) ?? product.variants[0],
   );
   const [quantity, setQuantity] = useState(1);
+
   const inlineCtaRef = useRef<HTMLDivElement>(null);
 
   return (
@@ -68,8 +70,9 @@ export function ProductPurchase({
           <button
             type="button"
             aria-label={tNav("increaseQuantity")}
-            onClick={() => setQuantity((q) => q + 1)}
-            className="flex h-full cursor-pointer items-center justify-center px-3"
+            onClick={() => setQuantity((q) => clampToStock(q + 1, selected?.quantityAvailable))}
+            disabled={isAtStockLimit(quantity, selected?.quantityAvailable)}
+            className="flex h-full cursor-pointer items-center justify-center px-3 disabled:cursor-not-allowed disabled:opacity-30"
           >
             <Plus size={14} />
           </button>

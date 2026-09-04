@@ -56,6 +56,7 @@ export function adaptProduct(p: EchoDeskProduct, locale: Locale): Product {
         id: `gid://echodesk/Variant/${v.id}`,
         title: pick(v.name, locale) || "One Size",
         availableForSale: v.is_in_stock ?? (v.quantity ?? 0) > 0,
+        quantityAvailable: v.quantity ?? undefined,
         selectedOptions: (v.attribute_values ?? []).map((a) => ({
           name: pick(a.attribute?.name, locale),
           value: typeof a.value === "string" ? a.value : (a.value_text ?? ""),
@@ -72,6 +73,10 @@ export function adaptProduct(p: EchoDeskProduct, locale: Locale): Product {
           id: `gid://echodesk/Product/${p.id}`,
           title: "One Size",
           availableForSale: inStock,
+          // EchoDesk enforces this at checkout ("Insufficient stock ... Available: 1,
+          // Requested: 2"), so the storefront has to respect it up front — otherwise the
+          // shopper only learns after filling in the whole delivery form.
+          quantityAvailable: p.quantity ?? undefined,
           selectedOptions: [],
           price: money(p.price),
           compareAtPrice: p.compare_at_price ? money(p.compare_at_price) : undefined,
