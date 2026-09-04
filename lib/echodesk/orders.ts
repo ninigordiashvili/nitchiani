@@ -1,3 +1,4 @@
+import { composeNotes } from "../checkout/geo";
 import type { ManualOrderInput } from "../shopify/orders";
 import { parseEchoDeskGid } from "./adapt";
 
@@ -111,7 +112,12 @@ export async function createGuestOrder(
     items,
     payment_method: paymentMethod,
     ...(input.couponCode ? { promo_code: input.couponCode } : {}),
-    ...(input.notes ? { notes: input.notes } : {}),
+    // The map pin travels in the notes: guest checkout has no coordinate fields (see
+    // lib/checkout/geo.ts), and a pin the courier can't see is a pin we didn't need.
+    ...(() => {
+      const notes = composeNotes(input.notes, input.lat, input.lng);
+      return notes ? { notes } : {};
+    })(),
   };
 
   const res = await fetch(`${API_URL}/api/ecommerce/client/guest-checkout/`, {

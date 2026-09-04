@@ -41,6 +41,10 @@ const bodySchema = z.object({
   address: z.string().min(3),
   city: z.string().min(1),
   postalCode: z.string().optional(),
+  // Latitude/longitude from the address picker. Bounded to real coordinates so a malformed
+  // client can't push nonsense into the courier's map link.
+  lat: z.number().min(-90).max(90).optional(),
+  lng: z.number().min(-180).max(180).optional(),
   notes: z.string().optional(),
   paymentMethod: z.enum(["bank_transfer", "cod", "bog_card", "tbc_card"]),
   locale: z.string(),
@@ -81,6 +85,8 @@ function buildOrderInput(
     email: payload.email ?? "",
     address: payload.address,
     city: payload.city,
+    lat: payload.lat,
+    lng: payload.lng,
     postalCode: payload.postalCode,
     notes: payload.notes,
     paymentMethod: payload.paymentMethod,

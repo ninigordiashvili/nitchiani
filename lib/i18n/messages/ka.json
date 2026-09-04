@@ -232,7 +232,12 @@
       "orderFailed": "შეკვეთის განთავსება ვერ მოხერხდა. სცადე ხელახლა ან მოგვწერე WhatsApp-ზე."
     },
     "cardGeneric": "ბანკის ბარათი",
-    "cardGenericDesc": "Visa / Mastercard · უსაფრთხო გადახდა"
+    "cardGenericDesc": "Visa / Mastercard · უსაფრთხო გადახდა",
+    "addressPlaceholder": "დაიწყე აკრეფა — მაგ. ჭავჭავაძის 37",
+    "pickOnMap": "რუკაზე მონიშვნა",
+    "hideMap": "რუკის დახურვა",
+    "pinSet": "ლოკაცია მონიშნულია",
+    "mapHint": "გადაათრიე მარკერი ან შეეხე რუკას ზუსტი მისამართისთვის."
   },
   "services": {
     "title": "ჩვენი სერვისები",

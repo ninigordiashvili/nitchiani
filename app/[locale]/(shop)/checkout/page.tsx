@@ -26,6 +26,7 @@ import { cn } from "@/lib/utils";
 import { BLUR_DATA_URL, safeImageSrc } from "@/lib/images";
 import { CouponField } from "@/components/cart/CouponField";
 import { HowItWorksButton } from "@/components/cart/HowItWorksButton";
+import { AddressPicker } from "@/components/checkout/AddressPicker";
 import { PhoneInput } from "@/components/commerce/PhoneInput";
 
 const checkoutSchema = z.object({
@@ -44,6 +45,10 @@ const checkoutSchema = z.object({
   phone: z.string().regex(/^\+[1-9]\d{6,14}$/, "Enter a valid phone number"),
   email: z.string().email().optional().or(z.literal("")),
   address: z.string().min(3),
+  // Coordinates from the Places picker or a dragged map pin. Optional throughout: many
+  // Tbilisi buildings aren't in Places, and typed-only addresses must still check out.
+  lat: z.number().optional(),
+  lng: z.number().optional(),
   city: z.string().min(1),
   // Georgian post codes are 4 digits; the input strips non-digits so we only need to allow
   // an empty string (optional) or the 4-digit canonical form.
@@ -350,7 +355,29 @@ export default function CheckoutPage() {
                 <input className={inputCls} type="email" {...register("email")} />
               </Field>
               <Field label={t("checkout.address")} error={errors.address?.message} className="sm:col-span-2" required>
-                <input className={inputCls} aria-required {...register("address")} />
+                <Controller
+                  control={control}
+                  name="address"
+                  render={({ field }) => (
+                    <AddressPicker
+                      value={field.value ?? ""}
+                      onChange={field.onChange}
+                      onBlur={field.onBlur}
+                      ariaInvalid={errors.address ? true : undefined}
+                      onPlace={(place) => {
+                        // City and postcode are only overwritten when Google actually
+                        // returned them, so picking a place can't blank a value the
+                        // customer typed by hand.
+                        if (place.city) setValue("city", place.city, { shouldValidate: true });
+                        if (place.postalCode) {
+                          setValue("postalCode", place.postalCode, { shouldValidate: true });
+                        }
+                        setValue("lat", place.lat);
+                        setValue("lng", place.lng);
+                      }}
+                    />
+                  )}
+                />
               </Field>
               <Field label={t("checkout.city")} error={errors.city?.message} required>
                 <input className={inputCls} aria-required {...register("city")} />

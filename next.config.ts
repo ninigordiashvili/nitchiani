@@ -14,6 +14,10 @@ const isDev = process.env.NODE_ENV === "development";
  *  - EchoDesk live chat: script + iframe UI from `echodesk.ge`, config fetch to
  *    `api.echodesk.ge`. It uses no websockets, workers, remote fonts or images, so
  *    those directives stay untouched.
+ *  - Google Maps (checkout address picker): script from `maps.googleapis.com`, map tiles and
+ *    control sprites from `maps.gstatic.com`/`*.googleapis.com`/`*.ggpht.com`, Places and
+ *    Geocoding XHRs to `maps.googleapis.com`, and its injected control stylesheet/fonts from
+ *    `fonts.googleapis.com`/`fonts.gstatic.com`. Without a key none of this loads at all.
  *  - Images come through next/image (self) plus the remote CDNs in `images.remotePatterns`.
  *  - Fonts are self-hosted by next/font, so `font-src 'self'`.
  *
@@ -22,13 +26,14 @@ const isDev = process.env.NODE_ENV === "development";
  */
 const csp = [
   `default-src 'self'`,
-  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""} https://*.cal.com https://echodesk.ge`,
-  `style-src 'self' 'unsafe-inline'`,
-  `img-src 'self' data: blob: https://echodesk-media.fsn1.your-objectstorage.com https://cdn.shopify.com https://*.cdninstagram.com https://*.fbcdn.net https://picsum.photos https://fastly.picsum.photos https://*.cal.com`,
-  `font-src 'self' data:`,
+  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""} https://*.cal.com https://echodesk.ge https://maps.googleapis.com`,
+  // The Maps JS API injects its own stylesheet link for map controls.
+  `style-src 'self' 'unsafe-inline' https://fonts.googleapis.com`,
+  `img-src 'self' data: blob: https://echodesk-media.fsn1.your-objectstorage.com https://cdn.shopify.com https://*.cdninstagram.com https://*.fbcdn.net https://picsum.photos https://fastly.picsum.photos https://*.cal.com https://maps.gstatic.com https://maps.googleapis.com https://*.googleapis.com https://*.ggpht.com`,
+  `font-src 'self' data: https://fonts.gstatic.com`,
   // `*.api.echodesk.ge` covers the tenant subdomain (nitchiani.api.echodesk.ge); the bare
   // host alone does not match it, so client-side storefront calls would be blocked.
-  `connect-src 'self' https://*.cal.com https://api.echodesk.ge https://*.api.echodesk.ge${isDev ? " ws:" : ""}`,
+  `connect-src 'self' https://*.cal.com https://api.echodesk.ge https://*.api.echodesk.ge https://maps.googleapis.com${isDev ? " ws:" : ""}`,
   `frame-src 'self' https://*.cal.com https://echodesk.ge`,
   `frame-ancestors 'self'`,
   `base-uri 'self'`,

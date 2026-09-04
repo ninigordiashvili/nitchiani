@@ -19,6 +19,9 @@ export type ManualOrderInput = {
   address: string;
   city: string;
   postalCode?: string;
+  /** Coordinates from the checkout map picker, when the customer used it. */
+  lat?: number;
+  lng?: number;
   notes?: string;
   paymentMethod: CheckoutPaymentMethod;
   locale: string;

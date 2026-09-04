@@ -232,7 +232,12 @@
       "orderFailed": "We couldn't place your order. Please try again or message us on WhatsApp."
     },
     "cardGeneric": "Bank card",
-    "cardGenericDesc": "Visa / Mastercard · secure checkout"
+    "cardGenericDesc": "Visa / Mastercard · secure checkout",
+    "addressPlaceholder": "Start typing — e.g. 37 Chavchavadze Ave",
+    "pickOnMap": "Pick on map",
+    "hideMap": "Hide map",
+    "pinSet": "Location pinned",
+    "mapHint": "Drag the marker or tap the map to set the exact spot."
   },
   "services": {
     "title": "Our Services",
