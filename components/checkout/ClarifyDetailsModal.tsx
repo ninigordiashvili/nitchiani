@@ -6,6 +6,7 @@ import { useEffect, useRef } from "react";
 import { WhatsAppIcon, getWhatsAppNumber } from "@/components/brand/WhatsAppIcon";
 import { chatChannels } from "@/lib/contact-channels";
 import { useFocusTrap } from "@/lib/ui/use-focus-trap";
+import { useToast } from "@/lib/ui/toast";
 
 /**
  * Offered when the shopper picks bank transfer, which is the one method that can't complete
@@ -15,6 +16,12 @@ import { useFocusTrap } from "@/lib/ui/use-focus-trap";
  *
  * The links open a conversation rather than a profile — `ig.me/m/…` and `m.me/…`, not the
  * page URLs in the footer. See `lib/contact-channels.ts`.
+ *
+ * Each one carries the opening message. WhatsApp takes it in the URL and the shopper only
+ * has to press send; Instagram and Messenger accept no message parameter at all, so there it
+ * is copied to the clipboard and the shopper pastes. That difference is theirs, not ours —
+ * the alternative is a query string those apps silently drop, leaving an empty box and a
+ * customer who has to compose the request themselves.
  *
  * They open in a new tab, so the checkout they were part-way through is still there when
  * they come back. Navigating the tab away would lose the form (the bag survives in storage,
@@ -28,10 +35,12 @@ export function ClarifyDetailsModal({
   onClose: () => void;
 }) {
   const t = useTranslations();
+  const toast = useToast();
   const modalRef = useRef<HTMLDivElement>(null);
   useFocusTrap(modalRef, open);
 
-  const channels = chatChannels(getWhatsAppNumber());
+  const message = t("checkout.clarifyMessage");
+  const channels = chatChannels(getWhatsAppNumber(), message);
   const icons = {
     whatsapp: <WhatsAppIcon size={22} />,
     instagram: <Instagram size={22} />,
@@ -85,6 +94,12 @@ export function ClarifyDetailsModal({
           </button>
         </div>
 
+        {/* The message is shown, not just sent: a shopper about to be dropped into a chat
+            should be able to read what is going with them. */}
+        <p className="mx-5 mt-3 rounded-md bg-black/[0.04] px-3 py-2 text-xs leading-relaxed opacity-80">
+          “{message}”
+        </p>
+
         <div className="grid grid-cols-3 gap-2 px-5 pt-4 pb-6">
           {channels.map((c) => (
             <a
@@ -92,7 +107,19 @@ export function ClarifyDetailsModal({
               href={c.href}
               target="_blank"
               rel="noopener noreferrer"
-              onClick={onClose}
+              onClick={async () => {
+                if (!c.prefills) {
+                  // Best effort: a blocked clipboard (insecure context, denied permission)
+                  // must not stop the chat from opening — the shopper can still type.
+                  try {
+                    await navigator.clipboard.writeText(message);
+                    toast.show(t("checkout.clarifyCopied"));
+                  } catch {
+                    // no-op
+                  }
+                }
+                onClose();
+              }}
               className="flex flex-col items-center gap-2 rounded-lg border border-black/10 px-2 py-4 transition-colors hover:border-[var(--color-brand-ink)] hover:bg-black/[0.03]"
             >
               {icons[c.key]}

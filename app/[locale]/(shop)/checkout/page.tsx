@@ -118,13 +118,8 @@ export default function CheckoutPage() {
   const checkoutSchema = useMemo(() => buildCheckoutSchema(t), [t]);
 
   // Bank transfer can't complete on the site — EchoDesk has no equivalent and the order is
-  // refused — so choosing it opens a chooser of chats instead of silently arming a failure.
+  // refused — so placing the order hands the shopper a chat instead.
   const [clarifyOpen, setClarifyOpen] = useState(false);
-
-  const selectPayment = (method: CheckoutInput["paymentMethod"]) => {
-    setValue("paymentMethod", method);
-    if (method === "bank_transfer") setClarifyOpen(true);
-  };
 
   // Mobile-only two-step flow: 1 = contact/shipping, 2 = payment + place order.
   // Desktop ignores `step` entirely because both fieldsets are rendered side-by-side via
@@ -309,7 +304,7 @@ export default function CheckoutPage() {
           ) : null}
           <ExpressPill
             active={paymentMethod === "bank_transfer"}
-            onClick={() => selectPayment("bank_transfer")}
+            onClick={() => setValue("paymentMethod", "bank_transfer")}
             icon={<Banknote size={14} />}
             label={t("checkout.bankTransfer")}
           />
@@ -483,7 +478,7 @@ export default function CheckoutPage() {
               ) : null}
               <PaymentOption
                 active={paymentMethod === "bank_transfer"}
-                onSelect={() => selectPayment("bank_transfer")}
+                onSelect={() => setValue("paymentMethod", "bank_transfer")}
                 icon={<Banknote size={20} />}
                 title={t("checkout.bankTransfer")}
                 desc={t("checkout.bankTransferDesc")}
@@ -589,6 +584,15 @@ export default function CheckoutPage() {
           <button
             type="submit"
             disabled={submitting}
+            onClick={(e) => {
+              // Bank transfer is arranged in chat, so nothing is submitted. Caught here
+              // rather than inside `onSubmit` so the shopper isn't first made to satisfy a
+              // form whose values are never sent anywhere.
+              if (watch("paymentMethod") === "bank_transfer") {
+                e.preventDefault();
+                setClarifyOpen(true);
+              }
+            }}
             className={cn(
               "btn-primary mt-5 w-full",
               submitting && "opacity-60",

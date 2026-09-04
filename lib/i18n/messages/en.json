@@ -247,7 +247,9 @@
       "address": "Enter your address",
       "postalCode": "Postal code is 4 digits"
     },
-    "clarifyTitle": "Choose where you would like to clarify the details"
+    "clarifyTitle": "Choose where you would like to clarify the details",
+    "clarifyMessage": "Hello, I would like to place an order using the bank transfer payment method. Where should I transfer the money?",
+    "clarifyCopied": "Message copied — paste it in the chat"
   },
   "services": {
     "title": "Our Services",
