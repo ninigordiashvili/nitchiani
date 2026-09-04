@@ -387,7 +387,7 @@
     "popularEyebrow": "Popular",
     "closeAria": "Close search",
     "clearAria": "Clear search",
-    "viewAllType": "View all {type}"
+    "viewAll": "See all"
   },
   "orderStatus": {
     "eyebrow": "Order status",
