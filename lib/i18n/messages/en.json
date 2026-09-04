@@ -249,7 +249,8 @@
     },
     "clarifyTitle": "Choose where you would like to clarify the details",
     "clarifyMessage": "Hello, I would like to place an order using the bank transfer payment method. Where should I transfer the money?",
-    "clarifyCopied": "Message copied — paste it in the chat"
+    "clarifyCopied": "Message copied — paste it in the chat",
+    "clarifyCopy": "Copy message"
   },
   "services": {
     "title": "Our Services",

@@ -1,8 +1,8 @@
 "use client";
 
-import { Facebook, Instagram, X } from "lucide-react";
+import { Check, Copy, Facebook, Instagram, X } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { WhatsAppIcon, getWhatsAppNumber } from "@/components/brand/WhatsAppIcon";
 import { chatChannels } from "@/lib/contact-channels";
 import { useFocusTrap } from "@/lib/ui/use-focus-trap";
@@ -41,6 +41,19 @@ export function ClarifyDetailsModal({
 
   const message = t("checkout.clarifyMessage");
   const channels = chatChannels(getWhatsAppNumber(), message);
+  const [copied, setCopied] = useState(false);
+
+  /** Returns whether it worked, so callers can stay quiet when the clipboard is unavailable. */
+  const copyMessage = useCallback(async () => {
+    try {
+      await navigator.clipboard.writeText(message);
+      return true;
+    } catch {
+      // Insecure context, denied permission, or an old browser. Never fatal — the message is
+      // on screen to be selected by hand.
+      return false;
+    }
+  }, [message]);
   const icons = {
     whatsapp: <WhatsAppIcon size={22} />,
     instagram: <Instagram size={22} />,
@@ -59,6 +72,11 @@ export function ClarifyDetailsModal({
       window.removeEventListener("keydown", onKey);
     };
   }, [open, onClose]);
+
+  // Reopening should offer the copy button, not a stale tick from last time.
+  useEffect(() => {
+    if (!open) setCopied(false);
+  }, [open]);
 
   return (
     <div
@@ -95,10 +113,28 @@ export function ClarifyDetailsModal({
         </div>
 
         {/* The message is shown, not just sent: a shopper about to be dropped into a chat
-            should be able to read what is going with them. */}
-        <p className="mx-5 mt-3 rounded-md bg-black/[0.04] px-3 py-2 text-xs leading-relaxed opacity-80">
-          “{message}”
-        </p>
+            should be able to read what is going with them — and copy it themselves, which is
+            the only route on a platform that won't take it from us. */}
+        <div className="mx-5 mt-3 flex items-start gap-2 rounded-md bg-black/[0.04] px-3 py-2">
+          <p className="min-w-0 flex-1 text-xs leading-relaxed opacity-80">“{message}”</p>
+          <button
+            type="button"
+            onClick={async () => {
+              if (!(await copyMessage())) return;
+              setCopied(true);
+              toast.show(t("checkout.clarifyCopied"));
+              window.setTimeout(() => setCopied(false), 1600);
+            }}
+            aria-label={t("checkout.clarifyCopy")}
+            className="-mr-1 flex h-7 w-7 flex-shrink-0 cursor-pointer items-center justify-center rounded-md transition-colors hover:bg-black/10"
+          >
+            {copied ? (
+              <Check size={14} style={{ color: "var(--color-brand-maroon)" }} />
+            ) : (
+              <Copy size={14} className="opacity-70" />
+            )}
+          </button>
+        </div>
 
         <div className="grid grid-cols-3 gap-2 px-5 pt-4 pb-6">
           {channels.map((c) => (
@@ -108,15 +144,11 @@ export function ClarifyDetailsModal({
               target="_blank"
               rel="noopener noreferrer"
               onClick={async () => {
-                if (!c.prefills) {
-                  // Best effort: a blocked clipboard (insecure context, denied permission)
-                  // must not stop the chat from opening — the shopper can still type.
-                  try {
-                    await navigator.clipboard.writeText(message);
-                    toast.show(t("checkout.clarifyCopied"));
-                  } catch {
-                    // no-op
-                  }
+                // Instagram and Messenger can't take the message in the URL, so it goes to
+                // the clipboard on the way out. A blocked clipboard must not stop the chat
+                // from opening — the shopper can still type, or copy from the box above.
+                if (!c.prefills && (await copyMessage())) {
+                  toast.show(t("checkout.clarifyCopied"));
                 }
                 onClose();
               }}
