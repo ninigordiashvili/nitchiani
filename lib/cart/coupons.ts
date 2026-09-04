@@ -18,8 +18,11 @@ export type Coupon = {
 /**
  * `unavailable` is deliberately separate from `invalid`: a code we couldn't check is not a
  * code we know is bad, and telling a shopper their valid coupon is invalid loses the sale.
+ *
+ * `bundleLapsed` is not a rejection either — the code was good and the bag stopped meeting
+ * its condition. Saying so is what stops the removal looking like a glitch.
  */
-export type CouponError = "invalid" | "minimum" | "unavailable";
+export type CouponError = "invalid" | "minimum" | "unavailable" | "bundleLapsed";
 
 const COUPONS: Coupon[] = [
   { code: "WELCOME10", type: "percent", value: 10 },

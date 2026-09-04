@@ -336,6 +336,25 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     setCouponReason(null);
   }, []);
 
+  /**
+   * Detach a code whose offer no longer applies — the third pack was removed.
+   *
+   * The alternative was leaving it attached but inert, which reads as a discount the shop is
+   * refusing to honour. Removing it says plainly that the offer has lapsed, and the reason
+   * is set so the field can explain rather than the chip just vanishing.
+   *
+   * Runs on hydration too, so a bag restored from storage can't carry a stale code back.
+   */
+  useEffect(() => {
+    if (!hydrated || couponShortfall === null || couponShortfall <= 0) return;
+    setCouponCode(null);
+    setServerDiscount(null);
+    setAppliedCoupon(null);
+    setCouponReason(null);
+    setCouponMinSubtotal(null);
+    setCouponError("bundleLapsed");
+  }, [hydrated, couponShortfall]);
+
   const clearCouponError = useCallback(() => {
     setCouponError(null);
     setCouponReason(null);

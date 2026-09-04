@@ -180,7 +180,7 @@
       "inactive": "This code isn't active right now"
     },
     "seeAllProducts": "See all products",
-    "promoCodeAddMore": "Add {count} more to get the discount"
+    "promoCodeLapsed": "Promo code removed — the offer's condition is no longer met"
   },
   "checkout": {
     "title": "Checkout",

@@ -64,13 +64,6 @@ export function CouponField({ tone = "light" }: { tone?: "light" | "dark" } = {}
             >
               {t("promoCodeApplied", { amount: formatGel(discountAmount, locale) })}
             </span>
-          ) : cart.couponShortfall && cart.couponShortfall > 0 ? (
-            /* The code is still attached but its condition has lapsed — a pack was removed.
-               Saying how many are missing turns a silently dead discount into something the
-               shopper can put right in one tap. */
-            <span role="status" aria-live="polite" className="text-[11px] opacity-70">
-              {t("promoCodeAddMore", { count: cart.couponShortfall })}
-            </span>
           ) : cart.coupon.minSubtotal ? (
             <span className="truncate text-[11px] opacity-60">
               {t("promoCodeMinimum", {
@@ -117,8 +110,12 @@ function CouponEditor({
   // focus was the point; now that it renders with the page, grabbing focus would scroll the
   // checkout to its summary and raise the keyboard on mobile before the shopper has typed a
   // thing. Only a stale error from a previous surface is cleared.
+  //
+  // `bundleLapsed` is exempt: that one is raised *by* the removal that swaps the chip for
+  // this editor, so this component mounts holding the very message it exists to show —
+  // clearing it here would make the code vanish with no explanation at all.
   useEffect(() => {
-    if (cart.couponError) cart.clearCouponError();
+    if (cart.couponError && cart.couponError !== "bundleLapsed") cart.clearCouponError();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -203,7 +200,11 @@ function CouponEditor({
           {/* Localised from a reason key, never the backend's English sentence — on the
               Georgian site an English rejection is worse than a vague Georgian one. The
               minimum case names the actual threshold when we know it. */}
-          {cart.couponError === "minimum" && cart.couponMinSubtotal
+          {cart.couponError === "bundleLapsed"
+            ? // The code was fine; the bag stopped qualifying. Said plainly, so its
+              // disappearance doesn't read as the shop losing the discount.
+              t("promoCodeLapsed")
+            : cart.couponError === "minimum" && cart.couponMinSubtotal
             ? t("promoCodeMinimum", { amount: formatGel(cart.couponMinSubtotal, locale) })
             : cart.couponError === "unavailable"
               ? // Couldn't reach the backend — not the same as a bad code, so don't tell the
