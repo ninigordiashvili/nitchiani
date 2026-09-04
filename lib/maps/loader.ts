@@ -57,9 +57,10 @@ export function loadMaps(language: string): Promise<typeof google.maps | null> {
     const script = document.createElement("script");
     const params = new URLSearchParams({
       key: API_KEY,
-      // `places` for autocomplete, `maps`/`marker` for the pin, `geocoding` for the reverse
-      // lookup after a drag. Loaded together so dragging the pin has no second round trip.
-      libraries: "places,maps,marker,geocoding",
+      // `places` for autocomplete, `maps`/`marker` for the pin. Geocoding is deliberately
+      // absent: Google rejects referrer-restricted keys for that API, so the reverse lookup
+      // goes through our own server route instead (app/api/geocode/route.ts).
+      libraries: "places,maps,marker",
       // Google localises its own suggestion text and map labels from this.
       language,
       region: COUNTRY.toUpperCase(),

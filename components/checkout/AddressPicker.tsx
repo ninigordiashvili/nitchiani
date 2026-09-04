@@ -73,6 +73,10 @@ export function AddressPicker({
   const markerRef = useRef<google.maps.marker.AdvancedMarkerElement | null>(null);
   // Guards against a slow response for an earlier keystroke overwriting a newer one.
   const seqRef = useRef(0);
+  // Releasing a marker drag also reaches the map as a `click`, so a single gesture asked the
+  // server to name two nearly-identical points — and geocoding is billed per request. The
+  // click handler consults this and stands down while a drag is in flight.
+  const draggingRef = useRef(false);
 
   const ensureMaps = useCallback(async () => {
     if (maps || !isMapsConfigured) return maps;
@@ -177,25 +181,29 @@ export function AddressPicker({
   const applyLatLng = useCallback(
     async (lat: number, lng: number) => {
       setPinned({ lat, lng });
+      // Record the pin first and unconditionally. Naming it is a nicety; the coordinates are
+      // what actually get the courier there, and they must survive a failed lookup.
       onPlace({ address: value, lat, lng });
-      if (!maps) return;
+
       try {
-        const { Geocoder } = (await maps.importLibrary("geocoding")) as google.maps.GeocodingLibrary;
-        const { results } = await new Geocoder().geocode({
-          location: { lat, lng },
-          language: locale,
-        });
-        const best = results[0];
-        if (!best) return;
-        const comp = (type: string) =>
-          best.address_components.find((c) => c.types.includes(type))?.long_name ?? undefined;
-        const street = [comp("route"), comp("street_number")].filter(Boolean).join(" ");
-        const line = street || best.formatted_address;
-        onChange(line);
+        // Our own route, not Google directly: the Geocoding API rejects any browser key with
+        // referrer restrictions, and dropping those would expose the public Maps key.
+        // See app/api/geocode/route.ts.
+        const res = await fetch(
+          `/api/geocode?lat=${lat}&lng=${lng}&language=${encodeURIComponent(locale)}`,
+        );
+        if (!res.ok) return; // includes 501 when no server key is configured
+        const data = (await res.json()) as {
+          address?: string | null;
+          city?: string | null;
+          postalCode?: string | null;
+        };
+        if (!data.address) return;
+        onChange(data.address);
         onPlace({
-          address: line,
-          city: comp("locality") ?? comp("administrative_area_level_1"),
-          postalCode: comp("postal_code"),
+          address: data.address,
+          city: data.city ?? undefined,
+          postalCode: data.postalCode ?? undefined,
           lat,
           lng,
         });
@@ -204,7 +212,7 @@ export function AddressPicker({
         console.warn("[maps] reverse geocode failed:", err);
       }
     },
-    [maps, locale, onChange, onPlace, value],
+    [locale, onChange, onPlace, value],
   );
 
   // Build the map lazily, the first time it is opened.
@@ -229,16 +237,23 @@ export function AddressPicker({
         mapId: "DEMO_MAP_ID",
       });
       const marker = new AdvancedMarkerElement({ map, position: center, gmpDraggable: true });
+      marker.addListener("dragstart", () => {
+        draggingRef.current = true;
+      });
       marker.addListener("dragend", () => {
         const p = marker.position;
         if (!p) return;
         const lat = typeof p.lat === "function" ? p.lat() : (p.lat as number);
         const lng = typeof p.lng === "function" ? p.lng() : (p.lng as number);
         void applyLatLng(lat, lng);
+        // Cleared on a later tick: the click this drag generates arrives after `dragend`.
+        setTimeout(() => {
+          draggingRef.current = false;
+        }, 400);
       });
       // Tapping the map is easier than dragging a small pin on a phone.
       map.addListener("click", (e: google.maps.MapMouseEvent) => {
-        if (!e.latLng) return;
+        if (!e.latLng || draggingRef.current) return;
         marker.position = e.latLng;
         void applyLatLng(e.latLng.lat(), e.latLng.lng());
       });
