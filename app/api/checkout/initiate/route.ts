@@ -41,7 +41,8 @@ const bodySchema = z.object({
   // Required for the same reason as the client schema: the backend refuses without it.
   lastName: z.string().min(1),
   phone: z.string().min(6),
-  email: z.string().email().optional().or(z.literal("")),
+  // Required: EchoDesk's guest checkout lists `email` among its required fields.
+  email: z.string().email(),
   address: z.string().min(3),
   city: z.string().min(1),
   postalCode: z.string().optional(),
@@ -91,7 +92,7 @@ function buildOrderInput(
     firstName: payload.firstName,
     lastName: payload.lastName,
     phone: payload.phone,
-    email: payload.email ?? "",
+    email: payload.email,
     address: payload.address,
     city: payload.city,
     lat: payload.lat,

@@ -239,7 +239,14 @@
     "pickOnMap": "Pick on map",
     "hideMap": "Hide map",
     "pinSet": "Location pinned",
-    "mapHint": "Drag the marker or tap the map to set the exact spot."
+    "mapHint": "Drag the marker or tap the map to set the exact spot.",
+    "validation": {
+      "required": "This field is required",
+      "email": "Enter a valid email address",
+      "phone": "Enter a valid phone number",
+      "address": "Enter your address",
+      "postalCode": "Postal code is 4 digits"
+    }
   },
   "services": {
     "title": "Our Services",
