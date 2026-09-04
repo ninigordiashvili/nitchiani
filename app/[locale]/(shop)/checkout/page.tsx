@@ -15,6 +15,7 @@ import {
   CreditCard,
   Loader2,
   ShieldCheck,
+  Trash2,
   Wallet,
 } from "lucide-react";
 import Image from "next/image";
@@ -516,15 +517,28 @@ export default function CheckoutPage() {
                   <span className="line-clamp-1 text-sm">{l.productTitle}</span>
                   <span className="text-xs opacity-60">× {l.quantity}</span>
                 </div>
-                <span className="text-sm tabular-nums">
-                  {formatPrice(
-                    {
-                      amount: (Number.parseFloat(l.unitPrice.amount) * l.quantity).toFixed(2),
-                      currencyCode: l.unitPrice.currencyCode,
-                    },
-                    locale,
-                  )}
-                </span>
+                <div className="flex flex-shrink-0 items-start gap-2">
+                  <span className="text-sm tabular-nums">
+                    {formatPrice(
+                      {
+                        amount: (Number.parseFloat(l.unitPrice.amount) * l.quantity).toFixed(2),
+                        currencyCode: l.unitPrice.currencyCode,
+                      },
+                      locale,
+                    )}
+                  </span>
+                  {/* Same control as the cart page. Reaching checkout and finding something
+                      you no longer want shouldn't mean navigating back to drop it — that's a
+                      trip out of the funnel, and some shoppers just abandon instead. */}
+                  <button
+                    type="button"
+                    onClick={() => cart.removeLine(l.variantId)}
+                    aria-label={t("cart.remove")}
+                    className="-mt-0.5 -mr-1 flex h-6 w-6 cursor-pointer items-center justify-center opacity-50 transition-opacity hover:opacity-100"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
               </li>
             ))}
           </ul>
