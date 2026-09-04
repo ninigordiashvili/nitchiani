@@ -246,7 +246,8 @@
       "phone": "Enter a valid phone number",
       "address": "Enter your address",
       "postalCode": "Postal code is 4 digits"
-    }
+    },
+    "clarifyTitle": "Choose where you would like to clarify the details"
   },
   "services": {
     "title": "Our Services",

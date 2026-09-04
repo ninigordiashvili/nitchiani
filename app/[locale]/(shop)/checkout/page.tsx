@@ -27,6 +27,7 @@ import { BLUR_DATA_URL, safeImageSrc } from "@/lib/images";
 import { CouponField } from "@/components/cart/CouponField";
 import { HowItWorksButton } from "@/components/cart/HowItWorksButton";
 import { AddressPicker } from "@/components/checkout/AddressPicker";
+import { ClarifyDetailsModal } from "@/components/checkout/ClarifyDetailsModal";
 import { PhoneInput } from "@/components/commerce/PhoneInput";
 
 /**
@@ -115,6 +116,15 @@ export default function CheckoutPage() {
     return t.has(path as never) ? t(path as never) : t("checkout.errors.orderFailed");
   };
   const checkoutSchema = useMemo(() => buildCheckoutSchema(t), [t]);
+
+  // Bank transfer can't complete on the site — EchoDesk has no equivalent and the order is
+  // refused — so choosing it opens a chooser of chats instead of silently arming a failure.
+  const [clarifyOpen, setClarifyOpen] = useState(false);
+
+  const selectPayment = (method: CheckoutInput["paymentMethod"]) => {
+    setValue("paymentMethod", method);
+    if (method === "bank_transfer") setClarifyOpen(true);
+  };
 
   // Mobile-only two-step flow: 1 = contact/shipping, 2 = payment + place order.
   // Desktop ignores `step` entirely because both fieldsets are rendered side-by-side via
@@ -299,7 +309,7 @@ export default function CheckoutPage() {
           ) : null}
           <ExpressPill
             active={paymentMethod === "bank_transfer"}
-            onClick={() => setValue("paymentMethod", "bank_transfer")}
+            onClick={() => selectPayment("bank_transfer")}
             icon={<Banknote size={14} />}
             label={t("checkout.bankTransfer")}
           />
@@ -473,7 +483,7 @@ export default function CheckoutPage() {
               ) : null}
               <PaymentOption
                 active={paymentMethod === "bank_transfer"}
-                onSelect={() => setValue("paymentMethod", "bank_transfer")}
+                onSelect={() => selectPayment("bank_transfer")}
                 icon={<Banknote size={20} />}
                 title={t("checkout.bankTransfer")}
                 desc={t("checkout.bankTransferDesc")}
@@ -602,6 +612,8 @@ export default function CheckoutPage() {
           </div>
         </aside>
       </form>
+
+      <ClarifyDetailsModal open={clarifyOpen} onClose={() => setClarifyOpen(false)} />
     </div>
   );
 }
