@@ -194,6 +194,8 @@ export default function CheckoutPage() {
         }),
       });
       const data = (await res.json()) as {
+        /** Set when a line exceeded stock — lets us name the product and what's left. */
+        stock?: { product: string; available: number };
         orderId?: string;
         /** Public order token, when the backend issues one — used to build the tracking link. */
         trackingToken?: string;
@@ -202,7 +204,22 @@ export default function CheckoutPage() {
       };
       // The API answers with a stable key, never a sentence, so the message the shopper reads
       // is rendered in their own language here rather than echoed from the server in English.
-      if (!res.ok) throw new Error(translateCheckoutError(data.error));
+      if (!res.ok) {
+        // The one failure we can describe exactly. Rendered from our own message bundle with
+        // the backend's product name and count filled in, so the shopper reads their own
+        // language and knows precisely what to change.
+        if (data.stock) {
+          const { product, available } = data.stock;
+          // "Only 0 left" is not an instruction. When nothing remains, the fix is to remove
+          // the line, so the message says that instead.
+          throw new Error(
+            available > 0
+              ? t("checkout.errors.insufficientStock", { product, count: available })
+              : t("checkout.errors.insufficientStockNone", { product }),
+          );
+        }
+        throw new Error(translateCheckoutError(data.error));
+      }
 
       // Persist the contact + shipping fields for the next checkout. We save BEFORE the
       // redirect so card-payment users (who leave the site to BOG/TBC) still benefit on

@@ -229,7 +229,9 @@
       "promoUnavailable": "We couldn't check that promo code. Please try again.",
       "outOfStock": "Something in your cart is no longer available. Please review it and try again.",
       "missingDetails": "Some required details are missing. Please check the form and try again.",
-      "orderFailed": "We couldn't place your order. Please try again or message us on WhatsApp."
+      "orderFailed": "We couldn't place your order. Please try again or message us on WhatsApp.",
+      "insufficientStock": "Only {count} left of “{product}”. Please reduce the quantity in your bag.",
+      "insufficientStockNone": "“{product}” has sold out. Please remove it from your bag."
     },
     "cardGeneric": "Bank card",
     "cardGenericDesc": "Visa / Mastercard · secure checkout",

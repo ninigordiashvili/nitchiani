@@ -13,7 +13,11 @@ import {
 } from "@/lib/shopify/orders";
 import { createBogPaymentOrder, isBogConfigured } from "@/lib/payments/bog";
 import { createTbcPayment, getClientIp, isTbcConfigured } from "@/lib/payments/tbc";
-import { createGuestOrder, toEchoDeskPaymentMethod } from "@/lib/echodesk/orders";
+import {
+  createGuestOrder,
+  type GuestOrderOutcome,
+  toEchoDeskPaymentMethod,
+} from "@/lib/echodesk/orders";
 import { isEchoDeskConfigured } from "@/lib/echodesk/client";
 import { clientIp, rateLimit } from "@/lib/rate-limit";
 import { reportError } from "@/lib/observability";
@@ -71,7 +75,12 @@ function classifyOrderError(message: string): string {
 type CheckoutResponse =
   | { orderId: string; trackingToken?: string }
   | { redirectUrl: string }
-  | { error: string };
+  | {
+      error: string;
+      /** Present only for an over-limit line, so the client can name the product and the
+       *  number left instead of showing the catch-all message. */
+      stock?: { product: string; available: number };
+    };
 
 /** Build the order-creation payload the way `createManualOrder` / `createPendingOrder` expect. */
 function buildOrderInput(
@@ -332,12 +341,23 @@ async function handleEchoDeskOrder(
       paymentMethod: orderInput.paymentMethod,
       total: totals.total,
     });
-    return { ok: false as const, error: undefined };
+    // Typed as the outcome union so a thrown request narrows the same way a rejected one
+    // does — otherwise the `stock` branch below is unreachable to the compiler.
+    return { ok: false, error: undefined } as GuestOrderOutcome;
   });
 
   if (!outcome.ok) {
     // EchoDesk's 4xx text is English prose; classify it so the client can say it in the
     // shopper's own language rather than rendering an English sentence on a Georgian page.
+    if (outcome.stock) {
+      // The one rejection we can explain precisely. The product name comes from the
+      // merchant's own catalogue, and the count is a number — no backend prose reaches
+      // the shopper, who reads our sentence in their own language.
+      return NextResponse.json(
+        { error: "insufficientStock", stock: outcome.stock },
+        { status: 400 },
+      );
+    }
     return outcome.error
       ? NextResponse.json({ error: classifyOrderError(outcome.error) }, { status: 400 })
       : NextResponse.json({ error: "orderFailed" }, { status: 502 });

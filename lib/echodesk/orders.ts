@@ -1,4 +1,5 @@
 import { composeNotes } from "../checkout/geo";
+import { type InsufficientStock, parseInsufficientStock } from "./stock-error";
 import type { ManualOrderInput } from "../shopify/orders";
 import { parseEchoDeskGid } from "./adapt";
 
@@ -25,7 +26,9 @@ const API_URL = process.env.NEXT_PUBLIC_ECHODESK_API_URL?.replace(/\/+$/, "");
  */
 export type GuestOrderOutcome =
   | { ok: true; order: GuestOrderResult }
-  | { ok: false; error?: string };
+  /** `stock` is set when the rejection was specifically an over-limit line, so the shopper
+   *  can be told which product and how many are left rather than "something is unavailable". */
+  | { ok: false; error?: string; stock?: InsufficientStock };
 
 export type GuestOrderResult = {
   id: number;
@@ -139,7 +142,7 @@ export async function createGuestOrder(
           return undefined;
         }
       })();
-      return { ok: false, error: message };
+      return { ok: false, error: message, stock: parseInsufficientStock(message ?? raw) ?? undefined };
     }
     return { ok: false };
   }
