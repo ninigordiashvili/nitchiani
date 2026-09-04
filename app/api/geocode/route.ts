@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { isInGeorgia } from "@/lib/maps/bounds";
 
 /**
  * Reverse geocoding proxy: coordinates in, a written address out.
@@ -15,13 +16,6 @@ import { NextResponse } from "next/server";
  */
 const SERVER_KEY = process.env.GOOGLE_MAPS_SERVER_KEY ?? "";
 
-/**
- * Georgia's bounding box. This endpoint spends money per call, so it only answers for
- * coordinates the store could plausibly deliver to — an open worldwide geocoder on a public
- * URL is someone else's free API.
- */
-const BOUNDS = { minLat: 41.0, maxLat: 43.6, minLng: 39.9, maxLng: 46.8 };
-
 export async function GET(req: Request) {
   if (!SERVER_KEY) {
     return NextResponse.json({ error: "not_configured" }, { status: 501 });
@@ -35,7 +29,9 @@ export async function GET(req: Request) {
   if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
     return NextResponse.json({ error: "bad_coordinates" }, { status: 400 });
   }
-  if (lat < BOUNDS.minLat || lat > BOUNDS.maxLat || lng < BOUNDS.minLng || lng > BOUNDS.maxLng) {
+  // This endpoint spends money per call, so it only answers for coordinates the store could
+  // deliver to — an open worldwide geocoder on a public URL is someone else's free API.
+  if (!isInGeorgia(lat, lng)) {
     return NextResponse.json({ error: "out_of_area" }, { status: 400 });
   }
 

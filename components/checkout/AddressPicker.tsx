@@ -3,6 +3,7 @@
 import { Loader2, MapPin, X } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
+import { GEORGIA_LATLNG_BOUNDS, isInGeorgia } from "@/lib/maps/bounds";
 import { COUNTRY, DEFAULT_CENTER, isMapsConfigured, loadMaps } from "@/lib/maps/loader";
 import { cn } from "@/lib/utils";
 
@@ -180,6 +181,10 @@ export function AddressPicker({
   /** Reverse-geocode after the pin is dragged so the written address follows the marker. */
   const applyLatLng = useCallback(
     async (lat: number, lng: number) => {
+      // Belt and braces behind the map's own restriction: a coordinate from outside the
+      // delivery area is never recorded, so nothing downstream has to decide what to do with
+      // an order pinned to another country.
+      if (!isInGeorgia(lat, lng)) return;
       setPinned({ lat, lng });
       // Record the pin first and unconditionally. Naming it is a nicety; the coordinates are
       // what actually get the courier there, and they must survive a failed lookup.
@@ -229,6 +234,11 @@ export function AddressPicker({
       const map = new Map(mapNodeRef.current, {
         center,
         zoom: pinned ? 17 : 12,
+        // The store delivers inside Georgia only, so the map does not go anywhere else.
+        // `strictBounds` stops the pan rather than rubber-banding back, and clamps zoom-out
+        // so the country always fills the frame — a customer cannot wander to Paris, drop a
+        // pin and have those coordinates ride along to the courier.
+        restriction: { latLngBounds: GEORGIA_LATLNG_BOUNDS, strictBounds: true },
         disableDefaultUI: true,
         zoomControl: true,
         clickableIcons: false,
