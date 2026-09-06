@@ -1,0 +1,983 @@
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
+import { useLocale, useTranslations } from "next-intl";
+import { Controller, useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { loadSavedContact, saveContact } from "@/lib/checkout/saved-contact";
+import {
+  AlertCircle,
+  ArrowLeft,
+  ArrowRight,
+  Banknote,
+  Check,
+  CreditCard,
+  Loader2,
+  ShieldCheck,
+  Trash2,
+  Wallet,
+} from "lucide-react";
+import Image from "next/image";
+import { Link, useRouter } from "@/lib/i18n/routing";
+import { useCart } from "@/lib/cart/store";
+import { formatPrice } from "@/lib/money";
+import type { Locale } from "@/lib/i18n/config";
+import { cn } from "@/lib/utils";
+import { BLUR_DATA_URL, safeImageSrc } from "@/lib/images";
+import { CouponField } from "@/components/cart/CouponField";
+import { HowItWorksButton } from "@/components/cart/HowItWorksButton";
+import { AddressPicker } from "@/components/checkout/AddressPicker";
+import type { PaymentAvailability } from "@/lib/echodesk/payments";
+import type { DeliveryChoice } from "@/lib/echodesk/shipping";
+import type { EchoDeskStoreConfig } from "@/lib/echodesk/types";
+import { ClarifyDetailsModal } from "@/components/checkout/ClarifyDetailsModal";
+import { getShippingQuoteAction } from "@/app/actions/shipping";
+import { quoteItems, type ShippingOption } from "@/lib/echodesk/shipping";
+import { PhoneInput } from "@/components/commerce/PhoneInput";
+
+/**
+ * Built per-render from the message bundle rather than declared at module scope, so the
+ * shopper reads validation errors in their own language. They used to surface zod's raw
+ * strings — "Enter a valid phone number", "Required" — in English on the Georgian storefront.
+ */
+type Translate = ReturnType<typeof useTranslations>;
+
+const buildCheckoutSchema = (t: Translate) => z.object({
+  firstName: z.string().min(1, t("checkout.validation.required")),
+  // Required: EchoDesk rejects an order without it ("Missing required fields: last_name"),
+  // so leaving it optional here only moves the failure to the last step of checkout.
+  lastName: z.string().min(1, t("checkout.validation.required")),
+  // Canonical E.164 phone. `+` followed by 7–15 digits, leading digit 1–9. The PhoneInput
+  // component now accepts diaspora numbers (US/UK/DE/IL/TR/FR/IT/ES/RU) in addition to
+  // Georgia (+995), so the schema is loosened to the generic E.164 shape. The PhoneInput
+  // itself clamps each country's local digits length, so an obviously-broken value can't
+  // get this far.
+  phone: z.string().regex(/^\+[1-9]\d{6,14}$/, t("checkout.validation.phone")),
+  // Required for the same reason as the surname: EchoDesk's guest checkout lists `email`
+  // among its required fields and rejects the order without one. Asking here costs a field;
+  // not asking cost the whole order, after the shopper had filled the form in.
+  email: z
+    .string()
+    .min(1, t("checkout.validation.required"))
+    .email(t("checkout.validation.email")),
+  address: z.string().min(3, t("checkout.validation.address")),
+  // Coordinates from the Places picker or a dragged map pin. Optional throughout: many
+  // Tbilisi buildings aren't in Places, and typed-only addresses must still check out.
+  lat: z.number().optional(),
+  lng: z.number().optional(),
+  city: z.string().min(1, t("checkout.validation.required")),
+  // Georgian post codes are 4 digits; the input strips non-digits so we only need to allow
+  // an empty string (optional) or the 4-digit canonical form.
+  postalCode: z
+    .string()
+    .regex(/^\d{4}$/, t("checkout.validation.postalCode"))
+    .optional()
+    .or(z.literal("")),
+  notes: z.string().optional(),
+  paymentMethod: z.enum(["bank_transfer", "cod", "bog_card", "tbc_card"]),
+});
+type CheckoutInput = z.infer<ReturnType<typeof buildCheckoutSchema>>;
+
+const TBC_ENABLED = process.env.NEXT_PUBLIC_TBC_ENABLED === "true";
+
+/**
+ * When EchoDesk is the backend it chooses the card gateway itself and hands back a
+ * `payment_url` — we neither pick it nor are told which one it is. Naming a bank in the
+ * option would be a guess: the tenant can be switched from BOG to TBC without any change
+ * here, and the label would then be quietly wrong on the one screen where trust matters
+ * most. So under EchoDesk the card option is provider-neutral, and the customer sees the
+ * real bank on the gateway's own page a moment later.
+ */
+const ECHODESK_BACKED = Boolean(process.env.NEXT_PUBLIC_ECHODESK_API_URL);
+const CARD_LABEL_KEY = ECHODESK_BACKED ? "checkout.cardGeneric" : "checkout.bogCard";
+const CARD_DESC_KEY = ECHODESK_BACKED ? "checkout.cardGenericDesc" : "checkout.bogCardDesc";
+/**
+ * Under EchoDesk both card flags route to the same place, so the second option would be the
+ * same payment offered twice under two bank names. Show one card choice, and only show the
+ * separate TBC entry on the legacy path where it really is a different integration.
+ */
+const SHOW_SEPARATE_TBC = !ECHODESK_BACKED && TBC_ENABLED;
+// Cash on delivery is temporarily withdrawn. Unlike the card flags above — which gate on
+// merchant credentials existing — this one is a business decision, so it defaults OFF and
+
+export function CheckoutForm({
+  payments,
+  delivery,
+  pickup,
+}: {
+  /** What the tenant actually has switched on — see lib/echodesk/payments.ts. */
+  payments: PaymentAvailability;
+  /** The shop's delivery methods, including a pickup one if it configures it. */
+  delivery: DeliveryChoice[];
+  /** Store address, when collection is offered. */
+  pickup: NonNullable<EchoDeskStoreConfig["pickup"]> | null;
+}) {
+  const t = useTranslations();
+  const locale = useLocale() as Locale;
+  const cart = useCart();
+  const router = useRouter();
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+
+  /** Maps an API error key to localised copy, falling back to the generic failure line. */
+  const translateCheckoutError = (key: unknown): string => {
+    if (typeof key !== "string" || !key) return t("checkout.errors.orderFailed");
+    // `t.has` guards keys added server-side that this bundle doesn't know yet.
+    const path = `checkout.errors.${key}`;
+    return t.has(path as never) ? t(path as never) : t("checkout.errors.orderFailed");
+  };
+  const checkoutSchema = useMemo(() => buildCheckoutSchema(t), [t]);
+
+  /**
+   * What the form opens on. Card when the shop can take it, then cash on delivery, and
+   * bank transfer last — it is the one that always works, because it needs no gateway, so
+   * it is the right floor rather than the right default.
+   */
+  const defaultPaymentMethod: CheckoutInput["paymentMethod"] = payments.card
+    ? "bog_card"
+    : payments.cashOnDelivery
+      ? "cod"
+      : "bank_transfer";
+
+  // Bank transfer can't complete on the site — EchoDesk has no equivalent and the order is
+  // refused — so placing the order hands the shopper a chat instead.
+  const [clarifyOpen, setClarifyOpen] = useState(false);
+
+  /**
+   * Delivery, priced from the address as it is typed. Null means it can't be priced — the
+   * tenant has no courier and no configured method — and the summary then shows no delivery
+   * line at all, which is the state today.
+   *
+   * Only an estimate: the order route prices it again and that is what gets charged. Both ask
+   * the same endpoint with the same address, so they agree.
+   */
+  const [shipping, setShipping] = useState<ShippingOption | null>(null);
+
+  /**
+   * The delivery method the shopper picked. Defaults to the shop's first, which is what the
+   * server would have chosen anyway, so the chooser changes nothing until it is used.
+   */
+  const [methodId, setMethodId] = useState<number | null>(delivery[0]?.methodId ?? null);
+  const chosen = delivery.find((m) => m.methodId === methodId) ?? null;
+
+  // Mobile-only two-step flow: 1 = contact/shipping, 2 = payment + place order.
+  // Desktop ignores `step` entirely because both fieldsets are rendered side-by-side via
+  // the existing `lg:grid-cols-[1fr_360px]` layout.
+  const [step, setStep] = useState<1 | 2>(1);
+
+  const {
+    control,
+    register,
+    handleSubmit,
+    trigger,
+    watch,
+    setValue,
+    reset,
+    formState: { errors },
+  } = useForm<CheckoutInput>({
+    resolver: zodResolver(checkoutSchema),
+    defaultValues: {
+      city: "Tbilisi",
+      paymentMethod: defaultPaymentMethod,
+    },
+  });
+
+  // Pre-fill the form from saved contact (set by a previous successful checkout). Runs on
+  // mount so we don't mismatch SSR; `reset` is RHF's way to swap defaults without losing
+  // the form's other state (errors, dirty flags reset cleanly).
+  useEffect(() => {
+    const saved = loadSavedContact();
+    if (!saved) return;
+    reset({
+      ...saved,
+      paymentMethod: defaultPaymentMethod,
+    });
+    // Mount-only on purpose: re-running when `defaultPaymentMethod` changes would overwrite
+    // whatever the shopper has typed, and the shop's payment settings don't change mid-visit.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [reset]);
+
+  const paymentMethod = watch("paymentMethod");
+  const addressValue = watch("address");
+  const cityValue = watch("city");
+  const latValue = watch("lat");
+  const lngValue = watch("lng");
+  const subtotalAmount = cart.subtotal.amount;
+
+  useEffect(() => {
+    // The address is typed a character at a time and the quote is a network round trip, so
+    // wait for a pause rather than asking on every keystroke.
+    const timer = setTimeout(() => {
+      const items = quoteItems(cart.lines);
+      if (items.length === 0 || !addressValue?.trim() || !cityValue?.trim()) {
+        setShipping(null);
+        return;
+      }
+      void getShippingQuoteAction(
+        locale,
+        Number.parseFloat(subtotalAmount),
+        { street: addressValue, city: cityValue, lat: latValue, lng: lngValue },
+        items,
+      )
+        .then(setShipping)
+        // A quote we couldn't get must never block checkout; the order route decides the
+        // charge regardless.
+        .catch(() => setShipping(null));
+    }, 500);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [addressValue, cityValue, latValue, lngValue, subtotalAmount, cart.lines.length, locale]);
+
+  /**
+   * What the summary shows for delivery.
+   *
+   * A live courier quote wins — it prices the actual pin. Otherwise the chosen method decides,
+   * so switching to collection drops the charge in the UI immediately rather than after a
+   * round trip. `shipping.price === 0` means the server applied the free-shipping threshold,
+   * which overrides the method's own price.
+   */
+  const shippingAmount = (() => {
+    if (shipping?.source === "quote") return shipping.price;
+    if (!shipping) return 0;
+    if (shipping.price === 0) return 0;
+    return chosen ? chosen.price : shipping.price;
+  })();
+  const displayTotal = {
+    amount: (Number.parseFloat(cart.total.amount) + shippingAmount).toFixed(2),
+    currencyCode: cart.total.currencyCode,
+  };
+
+  if (cart.lines.length === 0) {
+    return (
+      <div className="container-shop flex min-h-[60vh] flex-col items-center justify-center gap-3 py-12 text-center">
+        <h1 className="font-display text-3xl">{t("cart.empty")}</h1>
+        <p className="text-sm opacity-70">{t("cart.emptyDesc")}</p>
+        {/* Without this the screen is a dead end: it says the bag is empty and offers no way
+            to fill it, which is reachable now that the last item can be removed from the
+            summary itself. */}
+        <Link href="/shop" className="btn-primary mt-2">
+          {t("cart.seeAllProducts")}
+        </Link>
+      </div>
+    );
+  }
+
+  const advanceToPayment = async () => {
+    const ok = await trigger([
+      "firstName",
+      "lastName",
+      "phone",
+      "email",
+      "address",
+      "city",
+    ]);
+    if (ok) {
+      setStep(2);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  };
+
+  const backToShipping = () => {
+    setStep(1);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const onSubmit = async (values: CheckoutInput) => {
+    setSubmitting(true);
+    setSubmitError(null);
+    try {
+      const res = await fetch("/api/checkout/initiate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...values,
+          locale,
+          lines: cart.lines.map((l) => ({
+            variantId: l.variantId,
+            productHandle: l.productHandle,
+            productTitle: l.productTitle,
+            variantTitle: l.variantTitle,
+            unitPrice: l.unitPrice,
+            quantity: l.quantity,
+          })),
+          subtotal: cart.subtotal,
+          shippingMethodId: methodId,
+          couponCode: cart.coupon?.code ?? null,
+          discount: cart.discount,
+          total: cart.total,
+        }),
+      });
+      const data = (await res.json()) as {
+        /** Set when a line exceeded stock — lets us name the product and what's left. */
+        stock?: { product: string; available: number };
+        orderId?: string;
+        /** Public order token, when the backend issues one — used to build the tracking link. */
+        trackingToken?: string;
+        redirectUrl?: string;
+        error?: string;
+      };
+      // The API answers with a stable key, never a sentence, so the message the shopper reads
+      // is rendered in their own language here rather than echoed from the server in English.
+      if (!res.ok) {
+        // The one failure we can describe exactly. Rendered from our own message bundle with
+        // the backend's product name and count filled in, so the shopper reads their own
+        // language and knows precisely what to change.
+        if (data.stock) {
+          const { product, available } = data.stock;
+          // "Only 0 left" is not an instruction. When nothing remains, the fix is to remove
+          // the line, so the message says that instead.
+          throw new Error(
+            available > 0
+              ? t("checkout.errors.insufficientStock", { product, count: available })
+              : t("checkout.errors.insufficientStockNone", { product }),
+          );
+        }
+        throw new Error(translateCheckoutError(data.error));
+      }
+
+      // Persist the contact + shipping fields for the next checkout. We save BEFORE the
+      // redirect so card-payment users (who leave the site to BOG/TBC) still benefit on
+      // their next visit even though we never reach the success page handler here.
+      saveContact({
+        firstName: values.firstName,
+        lastName: values.lastName,
+        email: values.email ?? "",
+        phone: values.phone,
+        address: values.address,
+        city: values.city,
+        postalCode: values.postalCode,
+      });
+
+      if (data.redirectUrl) {
+        // BOG hosted payment page — clear cart only after payment confirms via webhook,
+        // but redirect now so the customer can complete payment.
+        window.location.href = data.redirectUrl;
+        return;
+      }
+
+      if (!data.orderId) throw new Error(t("checkout.errors.orderFailed"));
+      cart.clear();
+      // `trackingToken` is the order's public token when the backend issues one. Carrying it
+      // through is what lets the success page hand the customer a working tracking link —
+      // without it they'd have nothing to look the order up with.
+      const trackingQs = data.trackingToken
+        ? `&token=${encodeURIComponent(data.trackingToken)}`
+        : "";
+      router.push(`/checkout/success?order=${encodeURIComponent(data.orderId)}${trackingQs}`);
+    } catch (err) {
+      setSubmitError(err instanceof Error ? err.message : t("checkout.errors.orderFailed"));
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="container-shop pb-8 sm:pb-12">
+      <h1 className="font-display mb-6 text-3xl tracking-tight sm:mb-8 sm:text-4xl">
+        {t("checkout.title")}
+      </h1>
+
+      {/* Express checkout row — quick payment-method picker at the top of the page. Decoratively
+          doubles as a "we accept these" trust strip; functionally pre-selects in the radio
+          group below so the user doesn't have to scroll to choose. */}
+      <div className="mb-8 border-b border-black/10 pb-6">
+        <p className="label-eyebrow mb-3">{t("checkout.expressCheckout")}</p>
+        <div className="flex flex-wrap gap-2">
+          {payments.card ? (
+            <ExpressPill
+              active={paymentMethod === "bog_card"}
+              onClick={() => setValue("paymentMethod", "bog_card")}
+              icon={<CreditCard size={14} />}
+              label={t(CARD_LABEL_KEY)}
+            />
+          ) : null}
+          {SHOW_SEPARATE_TBC ? (
+            <ExpressPill
+              active={paymentMethod === "tbc_card"}
+              onClick={() => setValue("paymentMethod", "tbc_card")}
+              icon={<CreditCard size={14} />}
+              label={t("checkout.tbcCard")}
+            />
+          ) : null}
+          <ExpressPill
+            active={paymentMethod === "bank_transfer"}
+            onClick={() => setValue("paymentMethod", "bank_transfer")}
+            icon={<Banknote size={14} />}
+            label={t("checkout.bankTransfer")}
+          />
+          {payments.cashOnDelivery ? (
+            <ExpressPill
+              active={paymentMethod === "cod"}
+              onClick={() => setValue("paymentMethod", "cod")}
+              icon={<Wallet size={14} />}
+              label={t("checkout.cod")}
+            />
+          ) : null}
+        </div>
+      </div>
+
+      {/* Mobile step indicator. Desktop has both fieldsets visible at once so the indicator
+          is irrelevant there — `sm:hidden` removes it from the wider layout entirely. */}
+      <div className="mb-6 flex items-center gap-2 sm:hidden">
+        <StepBadge num={1} state={step === 1 ? "active" : "done"} />
+        <span
+          className={cn(
+            "text-xs",
+            step === 1 ? "font-medium" : "opacity-70",
+          )}
+        >
+          {t("checkout.stepContact")}
+        </span>
+        <span className="mx-1 h-px flex-1 bg-black/10" />
+        <StepBadge num={2} state={step === 2 ? "active" : "future"} />
+        <span
+          className={cn(
+            "text-xs",
+            step === 2 ? "font-medium" : "opacity-70",
+          )}
+        >
+          {t("checkout.stepPayment")}
+        </span>
+      </div>
+
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        className="grid gap-10 lg:grid-cols-[1fr_360px]"
+      >
+        <div>
+          {/* "Back to shipping" link — visible only on mobile step 2. */}
+          {step === 2 ? (
+            <button
+              type="button"
+              onClick={backToShipping}
+              className="-ml-1 mb-4 inline-flex cursor-pointer items-center gap-1.5 text-xs underline-offset-2 opacity-80 hover:underline hover:opacity-100 sm:hidden"
+            >
+              <ArrowLeft size={14} />
+              {t("checkout.backToShipping")}
+            </button>
+          ) : null}
+
+          {/* Shipping fieldset — hidden on mobile step 2; always visible on sm+. */}
+          <fieldset className={cn("mb-8", step === 2 && "hidden sm:block")}>
+            <legend className="font-display mb-4 text-xl">{t("checkout.shipping")}</legend>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Field label={t("checkout.firstName")} error={errors.firstName?.message} required>
+                <input className={inputCls} aria-required {...register("firstName")} />
+              </Field>
+              <Field label={t("checkout.lastName")} required error={errors.lastName?.message}>
+                <input className={inputCls} {...register("lastName")} />
+              </Field>
+              <Field label={t("checkout.phone")} error={errors.phone?.message} required>
+                <Controller
+                  control={control}
+                  name="phone"
+                  render={({ field }) => (
+                    <PhoneInput
+                      value={field.value}
+                      onChange={field.onChange}
+                      onBlur={field.onBlur}
+                      aria-invalid={errors.phone ? true : undefined}
+                      aria-required
+                    />
+                  )}
+                />
+              </Field>
+              <Field label={t("checkout.email")} error={errors.email?.message} required>
+                <input className={inputCls} type="email" aria-required {...register("email")} />
+              </Field>
+              <Field label={t("checkout.address")} error={errors.address?.message} className="sm:col-span-2" required>
+                <Controller
+                  control={control}
+                  name="address"
+                  render={({ field }) => (
+                    <AddressPicker
+                      value={field.value ?? ""}
+                      onChange={field.onChange}
+                      onBlur={field.onBlur}
+                      ariaInvalid={errors.address ? true : undefined}
+                      onPlace={(place) => {
+                        // City and postcode are only overwritten when Google actually
+                        // returned them, so picking a place can't blank a value the
+                        // customer typed by hand.
+                        if (place.city) setValue("city", place.city, { shouldValidate: true });
+                        if (place.postalCode) {
+                          setValue("postalCode", place.postalCode, { shouldValidate: true });
+                        }
+                        setValue("lat", place.lat);
+                        setValue("lng", place.lng);
+                      }}
+                    />
+                  )}
+                />
+              </Field>
+              <Field label={t("checkout.city")} error={errors.city?.message} required>
+                <input className={inputCls} aria-required {...register("city")} />
+              </Field>
+              <Field label={t("checkout.postalCode")} error={errors.postalCode?.message}>
+                {(() => {
+                  const field = register("postalCode");
+                  return (
+                    <input
+                      className={inputCls}
+                      inputMode="numeric"
+                      pattern="\d*"
+                      maxLength={4}
+                      autoComplete="postal-code"
+                      {...field}
+                      onChange={(e) => {
+                        e.target.value = e.target.value.replace(/\D/g, "").slice(0, 4);
+                        field.onChange(e);
+                      }}
+                    />
+                  );
+                })()}
+              </Field>
+              {/* Only when the shop offers a real choice. One method is not a decision, and a
+                  radio group with a single option is furniture. Collection at the store shows
+                  up here too — EchoDesk's guest checkout has no pickup flag, so a shop that
+                  offers it adds a method priced 0 and the order carries that method id. */}
+              {delivery.length > 1 ? (
+                <fieldset className="sm:col-span-2">
+                  <legend className="mb-1.5 block text-[13px] font-medium text-[var(--color-brand-ink)]">
+                    {t("checkout.deliveryMethod")}
+                  </legend>
+                  <div className="grid gap-2">
+                    {delivery.map((m) => (
+                      <label
+                        key={m.methodId}
+                        className={cn(
+                          "flex cursor-pointer items-center justify-between gap-3 rounded-md border px-3 py-2.5 text-sm transition-colors",
+                          methodId === m.methodId
+                            ? "border-[var(--color-brand-ink)] bg-black/[0.03]"
+                            : "border-black/15 hover:border-black/30",
+                        )}
+                      >
+                        <span className="flex items-center gap-2">
+                          <input
+                            type="radio"
+                            name="deliveryMethod"
+                            className="accent-[var(--color-brand-ink)]"
+                            checked={methodId === m.methodId}
+                            onChange={() => setMethodId(m.methodId)}
+                          />
+                          <span>
+                            {m.label}
+                            {m.estimatedDays ? (
+                              <span className="ml-1 text-xs opacity-60">
+                                · {t("checkout.deliveryDays", { count: m.estimatedDays })}
+                              </span>
+                            ) : null}
+                          </span>
+                        </span>
+                        <span className="tabular-nums">
+                          {m.price > 0
+                            ? formatPrice(
+                                { amount: m.price.toFixed(2), currencyCode: cart.subtotal.currencyCode },
+                                locale,
+                              )
+                            : t("checkout.deliveryFree")}
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                  {/* Where to come, for whoever picked collection. */}
+                  {pickup?.address ? (
+                    <p className="mt-2 text-xs opacity-70">
+                      {t("checkout.pickupAt", {
+                        address: [pickup.address, pickup.city].filter(Boolean).join(", "),
+                      })}
+                    </p>
+                  ) : null}
+                </fieldset>
+              ) : null}
+
+              <Field label={t("checkout.notes")} error={errors.notes?.message} className="sm:col-span-2">
+                <textarea className={cn(inputCls, "min-h-20 resize-y")} {...register("notes")} />
+              </Field>
+            </div>
+          </fieldset>
+
+          {/* Inline "Continue to payment" on mobile step 1. The aside (which holds the
+              other copy of this CTA) stacks below the form on mobile — surfacing a
+              button right under the shipping fields saves the user a long scroll. */}
+          {step === 1 ? (
+            <button
+              type="button"
+              onClick={advanceToPayment}
+              className="btn-primary mb-8 w-full sm:hidden"
+            >
+              {t("checkout.continueToPayment")}
+              <ArrowRight size={16} />
+            </button>
+          ) : null}
+
+          <fieldset className={cn(step === 1 && "hidden sm:block")}>
+            <legend className="font-display mb-4 text-xl">{t("checkout.paymentMethod")}</legend>
+            <div className="space-y-3">
+              {payments.card ? (
+                <PaymentOption
+                  active={paymentMethod === "bog_card"}
+                  onSelect={() => setValue("paymentMethod", "bog_card")}
+                  icon={<CreditCard size={20} />}
+                  title={t(CARD_LABEL_KEY)}
+                  desc={t(CARD_DESC_KEY)}
+                />
+              ) : null}
+              {SHOW_SEPARATE_TBC ? (
+                <PaymentOption
+                  active={paymentMethod === "tbc_card"}
+                  onSelect={() => setValue("paymentMethod", "tbc_card")}
+                  icon={<CreditCard size={20} />}
+                  title={t("checkout.tbcCard")}
+                  desc={t("checkout.tbcCardDesc")}
+                />
+              ) : null}
+              <PaymentOption
+                active={paymentMethod === "bank_transfer"}
+                onSelect={() => setValue("paymentMethod", "bank_transfer")}
+                icon={<Banknote size={20} />}
+                title={t("checkout.bankTransfer")}
+                desc={t("checkout.bankTransferDesc")}
+              />
+              {payments.cashOnDelivery ? (
+                <PaymentOption
+                  active={paymentMethod === "cod"}
+                  onSelect={() => setValue("paymentMethod", "cod")}
+                  icon={<Wallet size={20} />}
+                  title={t("checkout.cod")}
+                  desc={t("checkout.codDesc")}
+                />
+              ) : null}
+            </div>
+          </fieldset>
+        </div>
+
+        <aside className="h-fit border border-black/10 p-5 lg:sticky lg:top-20">
+          <h2 className="font-display mb-4 text-lg">{t("nav.cart")}</h2>
+          <ul className="space-y-3 border-b border-black/10 pb-4">
+            {cart.lines.map((l) => (
+              <li key={l.variantId} className="flex gap-3">
+                <div className="relative aspect-[4/5] w-12 flex-shrink-0 overflow-hidden bg-white">
+                  <Image
+                    src={safeImageSrc(l.image.url)}
+                    alt={l.image.altText}
+                    fill
+                    sizes="48px"
+                    placeholder="blur"
+                    blurDataURL={BLUR_DATA_URL}
+                    className="object-contain"
+                  />
+                </div>
+                <div className="flex flex-1 flex-col">
+                  <span className="line-clamp-1 text-sm">{l.productTitle}</span>
+                  <span className="text-xs opacity-60">× {l.quantity}</span>
+                </div>
+                <div className="flex flex-shrink-0 items-start gap-2">
+                  <span className="text-sm tabular-nums">
+                    {formatPrice(
+                      {
+                        amount: (Number.parseFloat(l.unitPrice.amount) * l.quantity).toFixed(2),
+                        currencyCode: l.unitPrice.currencyCode,
+                      },
+                      locale,
+                    )}
+                  </span>
+                  {/* Same control as the cart page. Reaching checkout and finding something
+                      you no longer want shouldn't mean navigating back to drop it — that's a
+                      trip out of the funnel, and some shoppers just abandon instead. */}
+                  <button
+                    type="button"
+                    onClick={() => cart.removeLine(l.variantId)}
+                    aria-label={t("cart.remove")}
+                    className="-mt-0.5 -mr-1 flex h-6 w-6 cursor-pointer items-center justify-center opacity-50 transition-opacity hover:opacity-100"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+          <div className="mt-4">
+            <CouponField />
+          </div>
+          <div className="flex items-center justify-between text-sm">
+            <span className="opacity-70">{t("cart.subtotal")}</span>
+            <span className="tabular-nums">{formatPrice(cart.subtotal, locale)}</span>
+          </div>
+          {cart.coupon && Number.parseFloat(cart.discount.amount) > 0 ? (
+            <div
+              className="mt-1 flex items-center justify-between text-sm"
+              style={{ color: "var(--color-brand-maroon)" }}
+            >
+              <span className="opacity-80">
+                {t("cart.discount")} · {cart.coupon.code}
+              </span>
+              <span className="tabular-nums">−{formatPrice(cart.discount, locale)}</span>
+            </div>
+          ) : null}
+          {/* Only shown when delivery is actually priced. With no courier and no configured
+              method there is nothing to say, and a "Delivery ₾0" row would imply a choice
+              the shop hasn't made. */}
+          {shipping ? (
+            <div className="mt-1 flex items-center justify-between text-sm">
+              <span className="opacity-70">
+                {t("checkout.delivery")}
+                {shipping.label ? ` · ${shipping.label}` : ""}
+              </span>
+              <span className="tabular-nums">
+                {shipping.price > 0
+                  ? formatPrice(
+                      { amount: shipping.price.toFixed(2), currencyCode: cart.total.currencyCode },
+                      locale,
+                    )
+                  : t("checkout.deliveryFree")}
+              </span>
+            </div>
+          ) : null}
+          <div className="mt-3 flex items-center justify-between border-t border-black/10 pt-3">
+            <span className="font-medium">{t("cart.total")}</span>
+            <span className="font-display text-xl tabular-nums">
+              {formatPrice(displayTotal, locale)}
+            </span>
+          </div>
+          {submitError ? (
+            <div
+              role="alert"
+              aria-live="polite"
+              className="mt-4 flex items-start gap-2 rounded-md px-3 py-2.5 text-xs"
+              style={{
+                background: "color-mix(in oklab, var(--color-brand-maroon) 10%, transparent)",
+                color: "var(--color-brand-maroon-3)",
+                border: "1px solid color-mix(in oklab, var(--color-brand-maroon) 30%, transparent)",
+              }}
+            >
+              <AlertCircle size={14} className="mt-0.5 flex-shrink-0" />
+              <span>{submitError}</span>
+            </div>
+          ) : null}
+          {/* Mobile step 1: "Continue to payment" advances to step 2 (no submission). */}
+          <button
+            type="button"
+            onClick={advanceToPayment}
+            className={cn(
+              "btn-primary mt-5 w-full",
+              step === 1 ? "sm:hidden" : "hidden",
+            )}
+          >
+            {t("checkout.continueToPayment")}
+            <ArrowRight size={16} />
+          </button>
+
+          {/* Mobile step 2 + desktop: real submit. */}
+          <button
+            type="submit"
+            disabled={submitting}
+            onClick={(e) => {
+              // Bank transfer is arranged in chat, so nothing is submitted. Caught here
+              // rather than inside `onSubmit` so the shopper isn't first made to satisfy a
+              // form whose values are never sent anywhere.
+              if (watch("paymentMethod") === "bank_transfer") {
+                e.preventDefault();
+                setClarifyOpen(true);
+              }
+            }}
+            className={cn(
+              "btn-primary mt-5 w-full",
+              submitting && "opacity-60",
+              step === 1 && "hidden sm:inline-flex",
+            )}
+          >
+            {submitting ? (
+              <>
+                <Loader2 size={16} className="animate-spin" />
+                {t("common.loading")}
+              </>
+            ) : (
+              t("checkout.placeOrder")
+            )}
+          </button>
+
+          <PaymentTrust cardAvailable={payments.card} />
+
+          <div className="mt-4 flex justify-center">
+            <HowItWorksButton />
+          </div>
+        </aside>
+      </form>
+
+      <ClarifyDetailsModal open={clarifyOpen} onClose={() => setClarifyOpen(false)} />
+    </div>
+  );
+}
+
+const inputCls =
+  "w-full rounded-md border border-black/15 bg-white/60 px-3 py-2.5 text-sm focus:border-[var(--color-brand-ink)] focus:outline-none";
+
+function Field({
+  label,
+  error,
+  className,
+  required = false,
+  children,
+}: {
+  label: string;
+  error?: string;
+  className?: string;
+  /** Draws the maroon asterisk. Pair it with `aria-required` on the control itself —
+      the asterisk is `aria-hidden`, so on its own it tells assistive tech nothing. */
+  required?: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <label className={cn("block", className)}>
+      {/* Sentence-case 13px form label — the editorial `label-eyebrow` (11px tracked uppercase)
+          looks great as a section eyebrow but is hard to scan on a mobile form. Keep the
+          eyebrow style for section headings; forms get this calmer treatment. */}
+      <span className="mb-1.5 block text-[13px] font-medium text-[var(--color-brand-ink)]">
+        {label}
+        {required ? (
+          <span aria-hidden="true" className="ml-0.5 text-[var(--color-brand-maroon)]">
+            *
+          </span>
+        ) : null}
+      </span>
+      {children}
+      {error ? <span className="mt-1 block text-xs text-[var(--color-brand-maroon)]">{error}</span> : null}
+    </label>
+  );
+}
+
+/**
+ * Trust strip under the Place Order button. Card-brand pills only render when at least one
+ * card processor is enabled — otherwise BOG/TBC/Visa/Mastercard would be misleading next to a
+ * bank-transfer-only flow. The shield + "Secure checkout" line always renders.
+ */
+function PaymentTrust({ cardAvailable }: { cardAvailable: boolean }) {
+  const t = useTranslations("product");
+  const cardMethods: string[] = [];
+  // Gated on the tenant, not just on the integration: with cards switched off, Visa and
+  // Mastercard pills under the button advertise a method the shop cannot take.
+  if (cardAvailable) {
+    // Same reasoning as CARD_LABEL_KEY: don't advertise a bank we don't choose.
+    if (ECHODESK_BACKED) cardMethods.push("Visa/Mastercard");
+    else {
+      cardMethods.push("BOG");
+      if (TBC_ENABLED) cardMethods.push("TBC");
+    }
+  }
+  if (cardMethods.length > 0) cardMethods.push("VISA", "MASTERCARD");
+
+  return (
+    <div className="mt-3 space-y-1.5">
+      {cardMethods.length > 0 ? (
+        <div className="flex flex-wrap items-center justify-center gap-1.5">
+          {cardMethods.map((label) => (
+            <span
+              key={label}
+              className="rounded border border-black/15 px-2 py-0.5 text-[10px] font-medium tracking-[0.14em]"
+            >
+              {label}
+            </span>
+          ))}
+        </div>
+      ) : null}
+      <div className="flex items-center justify-center gap-1.5 text-[11px] opacity-60">
+        <ShieldCheck size={12} />
+        <span>{t("secureCheckout")}</span>
+      </div>
+    </div>
+  );
+}
+
+function ExpressPill({
+  active,
+  onClick,
+  icon,
+  label,
+}: {
+  active: boolean;
+  onClick: () => void;
+  icon: React.ReactNode;
+  label: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={active}
+      className={cn(
+        "inline-flex cursor-pointer items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs transition-colors",
+        active
+          ? "border-[var(--text-primary)] bg-[var(--text-primary)] text-[var(--surface)]"
+          : "border-black/15 hover:border-black/40",
+      )}
+    >
+      {icon}
+      <span>{label}</span>
+    </button>
+  );
+}
+
+function StepBadge({
+  num,
+  state,
+}: {
+  num: number;
+  state: "active" | "done" | "future";
+}) {
+  return (
+    <span
+      className={cn(
+        "flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full text-[11px] font-medium tabular-nums",
+        state === "active" &&
+          "bg-[var(--color-brand-maroon)] text-[var(--color-brand-cream)]",
+        state === "done" &&
+          "border border-[var(--color-brand-maroon)] text-[var(--color-brand-maroon)]",
+        state === "future" &&
+          "border border-black/20 text-[var(--color-brand-ink)] opacity-60",
+      )}
+      aria-hidden="true"
+    >
+      {state === "done" ? <Check size={12} strokeWidth={2.5} /> : num}
+    </span>
+  );
+}
+
+function PaymentOption({
+  active,
+  onSelect,
+  icon,
+  title,
+  desc,
+}: {
+  active: boolean;
+  onSelect: () => void;
+  icon: React.ReactNode;
+  title: string;
+  desc: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onSelect}
+      className={cn(
+        "flex w-full items-start gap-3 rounded-md border p-4 text-left transition-colors",
+        active
+          ? "border-[var(--color-brand-ink)] bg-[var(--color-brand-cream-2)]"
+          : "border-black/15 hover:border-black/40",
+      )}
+    >
+      <span
+        className="flex h-9 w-9 items-center justify-center rounded-full"
+        style={{ background: "var(--color-brand-cream-2)" }}
+      >
+        {icon}
+      </span>
+      <div>
+        <p className="text-sm font-medium">{title}</p>
+        <p className="text-xs opacity-70">{desc}</p>
+      </div>
+    </button>
+  );
+}

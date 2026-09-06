@@ -253,7 +253,10 @@
     "clarifyCopied": "შეტყობინება დაკოპირდა — ჩასვი ჩატში",
     "clarifyCopy": "შეტყობინების კოპირება",
     "delivery": "მიწოდება",
-    "deliveryFree": "უფასო"
+    "deliveryFree": "უფასო",
+    "deliveryMethod": "მიწოდების მეთოდი",
+    "deliveryDays": "{count} სამუშაო დღე",
+    "pickupAt": "აიღე მაღაზიიდან: {address}"
   },
   "services": {
     "title": "ჩვენი სერვისები",

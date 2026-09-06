@@ -167,13 +167,22 @@ export async function resolveShipping(
   locale: Locale,
   subtotal: number,
   input: Omit<QuoteInput, "lat" | "lng"> & { lat?: number; lng?: number },
+  chosenMethodId: number | null = null,
 ): Promise<ShippingOption | null> {
+  const methods = (await listShippingMethods())?.results ?? [];
+
+  // An explicitly chosen method wins over a courier quote: picking collection at the store
+  // and then being charged for a courier would be the worst of both.
+  if (chosenMethodId !== null) {
+    const picked = methods.find((m) => m.id === chosenMethodId);
+    if (picked) return pickFlatMethod([picked], locale, subtotal);
+  }
+
   if (input.lat !== undefined && input.lng !== undefined) {
     const quote = await quoteGuestShipping({ ...input, lat: input.lat, lng: input.lng });
     if (quote) return quote;
   }
-  const methods = await listShippingMethods();
-  return pickFlatMethod(methods?.results ?? [], locale, subtotal);
+  return pickFlatMethod(methods, locale, subtotal);
 }
 
 /**
@@ -195,4 +204,39 @@ export async function getFreeShippingThreshold(locale: Locale): Promise<number |
 
   const threshold = Number.parseFloat(raw);
   return Number.isFinite(threshold) && threshold > 0 ? threshold : null;
+}
+
+export type DeliveryChoice = {
+  methodId: number;
+  label: string;
+  /** GEL, before any free-shipping threshold is applied. */
+  price: number;
+  estimatedDays: number | null;
+};
+
+/**
+ * Every delivery method the shop offers, for the chooser at checkout.
+ *
+ * This is also how collection at the store is expressed. EchoDesk's guest checkout has no
+ * pickup field — the only lever on an order is `shipping_method_id` — so a shop that wants
+ * pickup adds a method priced 0 and names it accordingly. That way the order carries a real
+ * method the back office can act on, rather than a courier order with a note attached and
+ * nobody told not to dispatch.
+ */
+export function deliveryChoices(
+  methods: EchoDeskShippingMethod[],
+  locale: Locale,
+): DeliveryChoice[] {
+  return methods
+    .filter((m) => m.is_active !== false && localized(m.name, locale).length > 0)
+    .sort((a, b) => (a.position ?? 0) - (b.position ?? 0))
+    .map((m) => {
+      const price = Number.parseFloat(m.price ?? "0");
+      return {
+        methodId: m.id,
+        label: localized(m.name, locale),
+        price: Number.isFinite(price) && price > 0 ? price : 0,
+        estimatedDays: m.estimated_days ?? null,
+      };
+    });
 }

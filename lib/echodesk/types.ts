@@ -96,5 +96,12 @@ export type EchoDeskStoreConfig = {
     tax_inclusive?: boolean;
   };
   shipping?: { quickshipper_enabled?: boolean };
-  pickup?: { enabled?: boolean };
+  pickup?: {
+    enabled?: boolean;
+    address?: string;
+    city?: string;
+    phone?: string;
+    contact_name?: string;
+    extra_instructions?: string;
+  };
 };

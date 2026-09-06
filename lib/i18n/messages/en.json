@@ -253,7 +253,10 @@
     "clarifyCopied": "Message copied — paste it in the chat",
     "clarifyCopy": "Copy message",
     "delivery": "Delivery",
-    "deliveryFree": "Free"
+    "deliveryFree": "Free",
+    "deliveryMethod": "Delivery method",
+    "deliveryDays": "{count} working days",
+    "pickupAt": "Collect at: {address}"
   },
   "services": {
     "title": "Our Services",

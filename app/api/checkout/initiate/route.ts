@@ -49,6 +49,8 @@ const bodySchema = z.object({
   postalCode: z.string().optional(),
   // Latitude/longitude from the address picker. Bounded to real coordinates so a malformed
   // client can't push nonsense into the courier's map link.
+  /** The delivery method the shopper chose, when the shop offers more than one. */
+  shippingMethodId: z.number().int().positive().nullable().optional(),
   lat: z.number().min(-90).max(90).optional(),
   lng: z.number().min(-180).max(180).optional(),
   notes: z.string().optional(),
@@ -164,6 +166,7 @@ export async function POST(req: Request): Promise<NextResponse<CheckoutResponse>
     payload.locale === "en" ? "en" : "ka",
     { street: payload.address, city: payload.city, lat: payload.lat, lng: payload.lng },
     payload.lines,
+    payload.shippingMethodId ?? null,
   );
 
   // Cross-check the client's subtotal against ours — a small drift means catalog prices

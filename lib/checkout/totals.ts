@@ -153,18 +153,19 @@ export async function withShipping(
   locale: Locale,
   address: { street: string; city: string; lat?: number; lng?: number },
   lines: TotalsLine[],
+  /** The method the shopper chose; null lets the shop's default apply. */
+  chosenMethodId: number | null = null,
 ): Promise<ServerComputedTotals> {
   const items = quoteItems(
     lines.map((l) => ({ variantId: l.variantId ?? "", quantity: l.quantity })),
   );
 
-  const option = await resolveShipping(locale, totals.subtotal, {
-    items,
-    street: address.street,
-    city: address.city,
-    lat: address.lat,
-    lng: address.lng,
-  });
+  const option = await resolveShipping(
+    locale,
+    totals.subtotal,
+    { items, street: address.street, city: address.city, lat: address.lat, lng: address.lng },
+    chosenMethodId,
+  );
   if (!option || option.price <= 0) {
     return { ...totals, shipping: 0, shippingMethodId: option?.methodId ?? null };
   }
