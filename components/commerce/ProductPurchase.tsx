@@ -5,9 +5,9 @@ import { useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import type { Product } from "@/lib/shopify/types";
 import { clampToStock, isAtStockLimit } from "@/lib/cart/stock";
-import { AddToBagButton } from "./AddToBagButton";
+import { AddToCartButton } from "./AddToCartButton";
 import { PriceDisplay } from "./PriceDisplay";
-import { StickyAddToBag } from "./StickyAddToBag";
+import { StickyAddToCart } from "./StickyAddToCart";
 import { VariantPicker } from "./VariantPicker";
 
 /**
@@ -26,7 +26,7 @@ export function ProductPurchase({
 }: {
   product: Product;
   showSizeGuide?: boolean;
-  /** Passed straight to AddToBagButton — the quick-view sheet closes on it. */
+  /** Passed straight to AddToCartButton — the quick-view sheet closes on it. */
   onAdded?: () => void;
 }) {
   const t = useTranslations("product");
@@ -78,7 +78,7 @@ export function ProductPurchase({
           </button>
         </div>
         <div className="flex-1">
-          <AddToBagButton product={product} variant={selected} quantity={quantity} onAdded={onAdded} />
+          <AddToCartButton product={product} variant={selected} quantity={quantity} onAdded={onAdded} />
         </div>
       </div>
 
@@ -87,7 +87,7 @@ export function ProductPurchase({
         {t("shipsIn")}
       </p>
 
-      <StickyAddToBag
+      <StickyAddToCart
         product={product}
         variant={selected}
         quantity={quantity}

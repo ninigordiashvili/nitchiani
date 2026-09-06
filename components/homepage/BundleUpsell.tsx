@@ -78,7 +78,7 @@ export function BundleUpsell({
     void cart.applyCoupon(bundle.couponCode);
     // Same confirmation as every other add-to-bag. This button is furthest from the header
     // badge, so without it the offer gives no sign it did anything.
-    toast.show(tProduct("addedToBag"));
+    toast.show(tProduct("addedToCart"));
   };
 
   return (

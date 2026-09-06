@@ -6,7 +6,7 @@ import { useCart } from "@/lib/cart/store";
 import { useToast } from "@/lib/ui/toast";
 import { cn } from "@/lib/utils";
 
-export function AddToBagButton({
+export function AddToCartButton({
   product,
   variant,
   quantity = 1,
@@ -43,12 +43,12 @@ export function AddToBagButton({
         });
         // Adding is otherwise invisible: the drawer doesn't open and, from the quick view,
         // the sheet is about to close. The toast is the only confirmation the shopper gets.
-        toast.show(t("addedToBag"));
+        toast.show(t("addedToCart"));
         onAdded?.();
       }}
       className={cn("btn-primary w-full", disabled && "opacity-50 cursor-not-allowed", className)}
     >
-      {disabled ? t("outOfStock") : t("addToBag")}
+      {disabled ? t("outOfStock") : t("addToCart")}
     </button>
   );
 }

@@ -89,7 +89,6 @@
     "durags": "დურაგი"
   },
   "product": {
-    "addToBag": "კალათაში დამატება",
     "outOfStock": "გაყიდულია",
     "selectOption": "აირჩიე ვარიანტი",
     "quantity": "რაოდენობა",
@@ -130,8 +129,8 @@
     "fbtTotal": "ჯამი",
     "fbtAdd": "{count, plural, one {# ნივთის კალათაში დამატება} other {# ნივთის კალათაში დამატება}}",
     "fbtAdded": "დამატებულია",
-    "addedToBag": "დაემატა კალათაში",
-    "addToCart": "დაამატე კალათაში"
+    "addToCart": "დაამატე კალათაში",
+    "addedToCart": "დაემატა კალათაში"
   },
   "cart": {
     "empty": "შენი კალათა ცარიელია",

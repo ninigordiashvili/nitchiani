@@ -5,7 +5,7 @@ import { useEffect, useState, type RefObject } from "react";
 import type { Product, ProductVariant } from "@/lib/shopify/types";
 import { BLUR_DATA_URL, safeImageSrc } from "@/lib/images";
 import { useOverlays } from "@/lib/ui/overlays";
-import { AddToBagButton } from "./AddToBagButton";
+import { AddToCartButton } from "./AddToCartButton";
 import { PriceDisplay } from "./PriceDisplay";
 
 /**
@@ -15,7 +15,7 @@ import { PriceDisplay } from "./PriceDisplay";
  * While visible, it raises `pdpCtaActive` in the overlays store so BottomNav steps aside;
  * on a product page the next action is purchase, not navigation.
  */
-export function StickyAddToBag({
+export function StickyAddToCart({
   product,
   variant,
   quantity = 1,
@@ -85,7 +85,7 @@ export function StickyAddToBag({
           </span>
           <PriceDisplay price={variant.price} compareAt={variant.compareAtPrice} size="sm" />
         </div>
-        <AddToBagButton
+        <AddToCartButton
           product={product}
           variant={variant}
           quantity={quantity}

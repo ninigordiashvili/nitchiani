@@ -89,7 +89,6 @@
     "durags": "Durags"
   },
   "product": {
-    "addToBag": "Add to bag",
     "outOfStock": "Out of stock",
     "selectOption": "Select an option",
     "quantity": "Quantity",
@@ -130,8 +129,8 @@
     "fbtTotal": "Total",
     "fbtAdd": "{count, plural, one {Add # item to bag} other {Add # items to bag}}",
     "fbtAdded": "Added",
-    "addedToBag": "Added to bag",
-    "addToCart": "Add to cart"
+    "addToCart": "Add to cart",
+    "addedToCart": "Added to cart"
   },
   "cart": {
     "empty": "Your bag is empty",

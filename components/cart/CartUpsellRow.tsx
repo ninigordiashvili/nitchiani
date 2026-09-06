@@ -124,7 +124,7 @@ function UpsellCard({ product, compact }: { product: Product; compact: boolean }
           <button
             type="button"
             onClick={onAdd}
-            aria-label={t("addToBag")}
+            aria-label={t("addToCart")}
             disabled={!variant?.availableForSale}
             className={cn(
               "absolute right-1.5 bottom-1.5 flex h-7 w-7 cursor-pointer items-center justify-center rounded-full transition-all",

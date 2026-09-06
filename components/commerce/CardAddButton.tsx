@@ -71,7 +71,7 @@ export function CardAddButton({
           quantity: 1,
         });
         // The drawer deliberately stays shut, so the toast is the only sign it worked.
-        toast.show(t("addedToBag"));
+        toast.show(t("addedToCart"));
       }}
       aria-label={label}
       className={cn(
