@@ -130,7 +130,8 @@
     "fbtTotal": "Total",
     "fbtAdd": "{count, plural, one {Add # item to bag} other {Add # items to bag}}",
     "fbtAdded": "Added",
-    "addedToBag": "Added to bag"
+    "addedToBag": "Added to bag",
+    "addToCart": "Add to cart"
   },
   "cart": {
     "empty": "Your bag is empty",
