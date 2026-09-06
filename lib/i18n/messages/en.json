@@ -43,7 +43,7 @@
     "durags": "Durags"
   },
   "promo": {
-    "shipping": "Free shipping in Tbilisi over ₾150",
+    "shipping": "Free delivery in Tbilisi from {amount}",
     "newDrop": "New drop every Friday"
   },
   "home": {
@@ -99,7 +99,6 @@
     "details": "Details",
     "shipping": "Shipping",
     "related": "You may also like",
-    "freeShipping": "Free shipping over ₾150",
     "secureCheckout": "Secure checkout",
     "quickView": "Quick view",
     "viewFullDetails": "View full details",

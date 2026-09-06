@@ -19,7 +19,14 @@ import { HowItWorksButton } from "@/components/cart/HowItWorksButton";
 import { useFocusTrap } from "@/lib/ui/use-focus-trap";
 import { useSwipeDismiss } from "@/lib/ui/use-swipe-dismiss";
 
-export function CartDrawer({ locale }: { locale: Locale }) {
+export function CartDrawer({
+  locale,
+  freeShippingThreshold,
+}: {
+  locale: Locale;
+  /** From the tenant's shipping method; null when it sets none. */
+  freeShippingThreshold: number | null;
+}) {
   const t = useTranslations();
   const cart = useCart();
   const open = cart.open;
@@ -173,7 +180,7 @@ export function CartDrawer({ locale }: { locale: Locale }) {
             </div>
 
             <div className="mx-4 border-t border-black/10 py-4">
-              <FreeShippingProgress subtotal={cart.subtotal} />
+              <FreeShippingProgress subtotal={cart.subtotal} threshold={freeShippingThreshold} />
               <CouponField />
               <div className="mb-1 flex items-center justify-between text-sm">
                 <span className="opacity-70">{t("cart.subtotal")}</span>

@@ -11,6 +11,7 @@ import { CookieConsentBanner } from "@/components/layout/CookieConsentBanner";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { PromoStrip } from "@/components/layout/PromoStrip";
+import { getFreeShippingThreshold } from "@/lib/echodesk/shipping";
 import { CartDrawer } from "@/components/layout/CartDrawer";
 import { BottomNav } from "@/components/layout/BottomNav";
 import { LocalePrompt } from "@/components/layout/LocalePrompt";
@@ -57,6 +58,9 @@ export default async function LocaleLayout({
   if (!isLocale(locale)) notFound();
   setRequestLocale(locale);
   const messages = await getMessages();
+  // Fetched once per render and handed to both places that advertise it, so the strip and the
+  // cart bar can't quote different numbers — or a number the shop no longer honours.
+  const freeShippingThreshold = await getFreeShippingThreshold(locale as Locale);
 
   return (
     <html
@@ -76,7 +80,7 @@ export default async function LocaleLayout({
                 <OverlaysProvider>
                 <div className="flex min-h-dvh flex-col">
                   <SkipToContent />
-                  <PromoStrip />
+                  <PromoStrip freeShippingThreshold={freeShippingThreshold} />
                   <LocalePrompt />
                   <Header locale={locale as Locale} />
                   {/* `id="main"` is the skip-link target; `tabIndex={-1}` makes it programmatically
@@ -91,7 +95,10 @@ export default async function LocaleLayout({
                     {children}
                   </main>
                   <Footer />
-                  <CartDrawer locale={locale as Locale} />
+                  <CartDrawer
+                    locale={locale as Locale}
+                    freeShippingThreshold={freeShippingThreshold}
+                  />
                   <SearchOverlay />
                   <QuickViewModal />
                   <BottomNav />

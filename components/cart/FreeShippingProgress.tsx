@@ -7,31 +7,38 @@ import { formatPrice } from "@/lib/money";
 import type { Money } from "@/lib/shopify/types";
 
 /**
- * Free-shipping threshold (in GEL). The same number is referenced in static copy
- * (`promo.shipping`, `product.freeShipping`) — keep them in sync if it ever changes.
- */
-export const FREE_SHIPPING_THRESHOLD_GEL = 150;
-
-/**
  * Slim progress bar shown above the cart subtotal. Two states:
  *  - Below threshold → "Add ₾X more for free shipping" + partial bar
  *  - At/above threshold → "You unlocked free shipping" + full bar with check icon
  *
+ * `threshold` comes from the tenant's shipping method rather than a constant here, so the bar
+ * counts towards the number the shop will actually honour. Null — no method, or one with no
+ * threshold — renders nothing: a bar promising free delivery the shop hasn't configured is
+ * worse than no bar.
+ *
  * The cart's transaction currency is always GEL (see `lib/cart/store.tsx`) so the comparison
  * stays in GEL even if the display layer is converting to USD elsewhere.
  */
-export function FreeShippingProgress({ subtotal }: { subtotal: Money }) {
+export function FreeShippingProgress({
+  subtotal,
+  threshold,
+}: {
+  subtotal: Money;
+  threshold: number | null;
+}) {
   const t = useTranslations("cart");
   const locale = useLocale() as Locale;
 
+  // After the hooks: bailing before them would change the hook order between renders.
+  if (threshold === null) return null;
   if (subtotal.currencyCode !== "GEL") return null;
 
   const amount = Number.parseFloat(subtotal.amount);
   if (Number.isNaN(amount)) return null;
 
-  const reached = amount >= FREE_SHIPPING_THRESHOLD_GEL;
-  const remaining = Math.max(0, FREE_SHIPPING_THRESHOLD_GEL - amount);
-  const pct = Math.min(100, (amount / FREE_SHIPPING_THRESHOLD_GEL) * 100);
+  const reached = amount >= threshold;
+  const remaining = Math.max(0, threshold - amount);
+  const pct = Math.min(100, (amount / threshold) * 100);
 
   return (
     <div className="mb-4">

@@ -175,3 +175,24 @@ export async function resolveShipping(
   const methods = await listShippingMethods();
   return pickFlatMethod(methods?.results ?? [], locale, subtotal);
 }
+
+/**
+ * The tenant's free-shipping threshold in GEL, or null when it sets none.
+ *
+ * Read rather than hardcoded because three places make this promise — the strip above the
+ * header, the progress bar in the cart, and the delivery line at checkout — and a constant
+ * in the code is a fourth copy that goes stale the moment the merchant edits the method.
+ * Null means the shop makes no such promise, and the places that advertise it stay quiet.
+ */
+export async function getFreeShippingThreshold(locale: Locale): Promise<number | null> {
+  const methods = await listShippingMethods();
+  const option = pickFlatMethod(methods?.results ?? [], locale, 0);
+  if (!option) return null;
+
+  const method = (methods?.results ?? []).find((m) => m.id === option.methodId);
+  const raw = method?.free_shipping_threshold;
+  if (!raw) return null;
+
+  const threshold = Number.parseFloat(raw);
+  return Number.isFinite(threshold) && threshold > 0 ? threshold : null;
+}
