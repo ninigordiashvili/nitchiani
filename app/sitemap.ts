@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next";
+import { CATEGORY_HANDLES } from "@/lib/categories";
 import { CAMPAIGNS } from "@/lib/campaigns";
 import { locales } from "@/lib/i18n/config";
 // import { JOURNAL_POSTS } from "@/lib/journal";  // hidden — see the journal loop below
@@ -17,16 +18,7 @@ import { getProducts } from "@/lib/shopify/client";
  * which is why each path is built with the locale segment baked in.
  */
 
-const COLLECTIONS = [
-  "best-sellers",
-  "new-arrivals",
-  "bonnets",
-  "loc-care",
-  "extensions",
-  "accessories",
-  "tools",
-  "piercings",
-];
+const COLLECTIONS = [...CATEGORY_HANDLES];
 
 const STATIC_PATHS = [
   "",

@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useEffect, useState, useTransition } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { getBestSellersAction } from "@/app/actions/recommendations";
+import { getRecommendedProductsAction } from "@/app/actions/recommendations";
 import { PriceDisplay } from "@/components/commerce/PriceDisplay";
 import { ProductCard } from "@/components/commerce/ProductCard";
 import { Link } from "@/lib/i18n/routing";
@@ -42,10 +42,10 @@ export function EmptyCartRecommendations({
   const useRecent = recentItems.length > 0;
 
   useEffect(() => {
-    // Skip the best-sellers fetch entirely when we have recently-viewed snapshots to show.
+    // Skip the recommendations fetch entirely when we have recently-viewed snapshots to show.
     if (useRecent) return;
     startTransition(async () => {
-      const result = await getBestSellersAction(locale, 4);
+      const result = await getRecommendedProductsAction(locale, 4);
       setProducts(result);
     });
   }, [locale, useRecent]);

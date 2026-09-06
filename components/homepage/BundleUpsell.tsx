@@ -6,6 +6,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/lib/i18n/routing";
 import type { Bundle } from "@/lib/bundles";
 import { useCart } from "@/lib/cart/store";
+import { useToast } from "@/lib/ui/toast";
 import { discountFor, findCoupon } from "@/lib/cart/coupons";
 import type { Locale } from "@/lib/i18n/config";
 import { BLUR_DATA_URL, safeImageSrc } from "@/lib/images";
@@ -29,24 +30,36 @@ export function BundleUpsell({
   products: Product[];
 }) {
   const t = useTranslations("home");
+  const tProduct = useTranslations("product");
   const locale = useLocale() as Locale;
   const cart = useCart();
+  const toast = useToast();
 
   const title = locale === "ka" ? bundle.titleKa : bundle.titleEn;
   const tagline = locale === "ka" ? bundle.taglineKa : bundle.taglineEn;
   const currencyCode = products[0]?.variants[0]?.price.currencyCode ?? "GEL";
 
-  const subtotalNum = products.reduce((sum, p) => {
+  // A quantity offer is N of one product; otherwise it's one of each.
+  const qty = bundle.minQuantity ?? 1;
+  const offerProducts = bundle.minQuantity ? products.slice(0, 1) : products;
+  // What the thumbnail row shows: one tile per unit for a quantity offer ("3 packs" reads as
+  // three tiles), one per product otherwise. The row is illustrative, so repeating the same
+  // photo is the point — it's the count being communicated, not variety.
+  const tiles = bundle.minQuantity
+    ? Array.from({ length: bundle.minQuantity }, () => offerProducts[0]).filter(Boolean)
+    : offerProducts;
+  const subtotalNum = offerProducts.reduce((sum, p) => {
     const v = p.variants[0];
-    return sum + Number.parseFloat(v?.price.amount ?? "0");
+    return sum + Number.parseFloat(v?.price.amount ?? "0") * qty;
   }, 0);
   const coupon = findCoupon(bundle.couponCode);
   const discountNum = coupon ? discountFor(subtotalNum, coupon) : 0;
   const bundleTotalNum = Math.max(0, subtotalNum - discountNum);
 
   const onAdd = () => {
-    for (const p of products) {
-      const v = p.variants.find((vv) => vv.availableForSale) ?? p.variants[0];
+    for (const p of offerProducts) {
+      // Same rule as the bundle rail: never add a variant that can't be sold.
+      const v = p.variants.find((vv) => vv.availableForSale);
       if (!v) continue;
       cart.addLine({
         variantId: v.id,
@@ -55,9 +68,17 @@ export function BundleUpsell({
         variantTitle: v.title,
         image: p.featuredImage,
         unitPrice: v.price,
+        maxQuantity: v.quantityAvailable,
+        quantity: qty,
       });
     }
-    cart.applyCoupon(bundle.couponCode);
+    // Fire and forget: the coupon is validated by the backend now, so this is async. A
+    // rejection surfaces in the cart's own error line rather than here — the products are
+    // in the bag either way, which is the part the shopper asked for.
+    void cart.applyCoupon(bundle.couponCode);
+    // Same confirmation as every other add-to-bag. This button is furthest from the header
+    // badge, so without it the offer gives no sign it did anything.
+    toast.show(tProduct("addedToCart"));
   };
 
   return (
@@ -77,8 +98,10 @@ export function BundleUpsell({
           <p className="mt-2 max-w-md text-sm opacity-70">{tagline}</p>
 
           <ul className="mt-5 flex items-center gap-2">
-            {products.map((p, i) => (
-              <li key={p.handle} className="flex items-center gap-2">
+            {tiles.map((p, i) => (
+              // Keyed by position: a quantity offer repeats one product, so the handle alone
+              // would duplicate keys across the row.
+              <li key={`${p.handle}-${i}`} className="flex items-center gap-2">
                 <Link
                   href={`/products/${p.handle}`}
                   className="group relative block h-16 w-16 flex-shrink-0 overflow-hidden rounded-md bg-white"
@@ -94,7 +117,7 @@ export function BundleUpsell({
                     className="object-contain transition-transform duration-500 ease-[var(--ease-brand)] group-hover:scale-105"
                   />
                 </Link>
-                {i < products.length - 1 ? (
+                {i < tiles.length - 1 ? (
                   <Plus size={14} className="flex-shrink-0 opacity-40" />
                 ) : null}
               </li>

@@ -1,20 +1,16 @@
 "use client";
 
 import { useTranslations } from "next-intl";
+import { CATEGORIES } from "@/lib/categories";
 import { Link, usePathname } from "@/lib/i18n/routing";
 import { cn } from "@/lib/utils";
 
-const CATEGORIES = [
-  { href: "/shop", labelKey: "allProducts" as const },
-  { href: "/shop/best-sellers", labelKey: "bestSellers" as const },
-  { href: "/shop/new-arrivals", labelKey: "newArrivals" as const },
-  { href: "/shop/bonnets", labelKey: "bonnets" as const },
-  { href: "/shop/loc-care", labelKey: "locCare" as const },
-  { href: "/shop/extensions", labelKey: "extensions" as const },
-  { href: "/shop/accessories", labelKey: "accessories" as const },
-  { href: "/shop/tools", labelKey: "tools" as const },
-  { href: "/shop/piercings", labelKey: "piercings" as const },
+// Shop-all first, then the category set from lib/categories.
+const CHIPS = [
+  { href: "/shop", labelKey: "allProducts" },
+  ...CATEGORIES.map((c) => ({ href: `/shop/${c.handle}`, labelKey: c.labelKey })),
 ];
+
 
 export function CategoryChips() {
   const t = useTranslations("nav");
@@ -28,7 +24,7 @@ export function CategoryChips() {
       className="container-shop no-scrollbar mt-4 flex snap-x snap-mandatory items-center gap-2 overflow-x-auto py-1"
       aria-label={t("browseCategories")}
     >
-      {CATEGORIES.map((c) => {
+      {CHIPS.map((c) => {
         const isActive = pathname === c.href;
         return (
           <Link

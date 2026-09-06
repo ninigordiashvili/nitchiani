@@ -4,6 +4,9 @@ import type { Locale } from "../i18n/config";
 // Default image used for any product that doesn't specify its own.
 const DEFAULT_PRODUCT_IMAGE = "/products/gold-wax.png";
 
+/** Hard ceiling on gallery length. Anything beyond this is dropped by `makeProduct`. */
+export const MAX_PRODUCT_IMAGES = 5;
+
 const img = (path: string | undefined, alt: string) => ({
   url: path ?? DEFAULT_PRODUCT_IMAGE,
   altText: alt,
@@ -129,7 +132,6 @@ export function localizeProduct(p: RawProduct, locale: Locale): Product {
       min: { amount: minPrice.toFixed(2), currencyCode: currency },
       max: { amount: maxPrice.toFixed(2), currencyCode: currency },
     },
-    isNew: p.isNew,
     isBestSeller: p.isBestSeller,
   };
 }
@@ -168,7 +170,12 @@ function makeProduct(p: {
   image?: string;
   /** Optional secondary image for the gallery. */
   imageAlt?: string;
-  isNew?: boolean;
+  /**
+   * Extra gallery shots, in display order after `image` and `imageAlt`. Paths under /public.
+   * The gallery is capped at MAX_PRODUCT_IMAGES (5) — anything past that is dropped rather
+   * than silently overflowing the thumbnail rail.
+   */
+  gallery?: string[];
   isBestSeller?: boolean;
   /** Option groups (e.g. Color, Size). Omit for a single-SKU product. */
   options?: RawProductOption[];
@@ -195,15 +202,17 @@ function makeProduct(p: {
     tags: p.tags ?? [],
     vendor: "Nitchiani",
     featuredImage: img(p.image, p.titleEn),
+    // Alt text is numbered per position so repeated shots of one product stay distinguishable
+    // to screen readers instead of announcing the same string several times over.
     images: [
       img(p.image, p.titleEn),
       ...(p.imageAlt ? [img(p.imageAlt, `${p.titleEn} alt`)] : []),
-    ],
+      ...(p.gallery ?? []).map((path, i) => img(path, `${p.titleEn} — view ${i + 2}`)),
+    ].slice(0, MAX_PRODUCT_IMAGES),
     basePrice: p.price,
     baseCompareAt: p.compareAt,
     rawOptions: p.options ?? [],
     rawVariants: p.variants ?? [{ optionValues: [], available: true }],
-    isNew: p.isNew,
     isBestSeller: p.isBestSeller,
     material: p.material,
   };
@@ -230,6 +239,9 @@ export const DUMMY_RAW_PRODUCTS: RawProduct[] = [
     productTypeKa: "ბონნეტები",
     price: 89,
     image: "/products/silk-bonnet-noir.png",
+    // Gallery demo: the same shot repeated so the thumbnail rail has something to show
+    // until real alternate angles land. Capped at MAX_PRODUCT_IMAGES with `image` above.
+    gallery: ["/products/silk-bonnet-noir.png", "/products/silk-bonnet-noir.png", "/products/silk-bonnet-noir.png", "/products/silk-bonnet-noir.png"],
     isBestSeller: true,
     tags: ["bonnets", "best-seller"],
     options: [
@@ -268,6 +280,9 @@ export const DUMMY_RAW_PRODUCTS: RawProduct[] = [
     price: 64,
     compareAt: 79,
     image: "/products/loc-care-oil-15ml.png",
+    // Gallery demo: the same shot repeated so the thumbnail rail has something to show
+    // until real alternate angles land. Capped at MAX_PRODUCT_IMAGES with `image` above.
+    gallery: ["/products/loc-care-oil-15ml.png", "/products/loc-care-oil-15ml.png", "/products/loc-care-oil-15ml.png", "/products/loc-care-oil-15ml.png"],
     isBestSeller: true,
     tags: ["loc-care", "best-seller"],
     options: [
@@ -367,7 +382,6 @@ export const DUMMY_RAW_PRODUCTS: RawProduct[] = [
     productTypeKa: "ექსტენშენები",
     price: 320,
     image: "/products/human-hair-extension-22-noir.png",
-    isNew: true,
     tags: ["extensions", "new"],
     options: [
       {
@@ -396,7 +410,6 @@ export const DUMMY_RAW_PRODUCTS: RawProduct[] = [
     productTypeKa: "ლოკსების მოვლა",
     price: 72,
     image: "/products/loc-detox-rinse.png",
-    isNew: true,
     tags: ["loc-care", "new"],
   }),
   makeProduct({
@@ -409,7 +422,6 @@ export const DUMMY_RAW_PRODUCTS: RawProduct[] = [
     productTypeKa: "ლოკსების მოვლა",
     price: 42,
     image: "/products/edge-control-mini.png",
-    isNew: true,
     tags: ["loc-care", "new"],
   }),
   makeProduct({
@@ -422,7 +434,6 @@ export const DUMMY_RAW_PRODUCTS: RawProduct[] = [
     productTypeKa: "აქსესუარები",
     price: 56,
     image: "/products/gold-loc-cuff-set.png",
-    isNew: true,
     tags: ["accessories", "new"],
     options: [
       {
@@ -456,7 +467,6 @@ export const DUMMY_RAW_PRODUCTS: RawProduct[] = [
     productTypeKa: "ბონნეტები",
     price: 52,
     image: "/products/silk-bonnet-noir.png",
-    isNew: true,
     tags: ["bonnets", "new"],
     options: [
       {
@@ -480,7 +490,6 @@ export const DUMMY_RAW_PRODUCTS: RawProduct[] = [
     productTypeKa: "ბონნეტები",
     price: 98,
     image: "/products/satin-pillowcase-cream.png",
-    isNew: true,
     tags: ["bonnets", "new"],
   }),
   makeProduct({
@@ -523,7 +532,6 @@ export const DUMMY_RAW_PRODUCTS: RawProduct[] = [
     productTypeKa: "ხელსაწყოები",
     price: 48,
     image: "/products/wood-loc-pick.png",
-    isNew: true,
     tags: ["tools", "new"],
     options: [
       {
@@ -603,7 +611,6 @@ export const DUMMY_RAW_PRODUCTS: RawProduct[] = [
     productTypeKa: "ექსტენშენები",
     price: 280,
     image: "/products/human-hair-extension-22-noir.png",
-    isNew: true,
     tags: ["extensions", "new"],
   }),
 
@@ -618,7 +625,6 @@ export const DUMMY_RAW_PRODUCTS: RawProduct[] = [
     productTypeKa: "აქსესუარები",
     price: 28,
     image: "/products/gold-loc-cuff-set.png",
-    isNew: true,
     tags: ["accessories", "new"],
   }),
   makeProduct({
@@ -676,7 +682,6 @@ export const DUMMY_RAW_PRODUCTS: RawProduct[] = [
     productTypeKa: "პირსინგი",
     price: 145,
     image: "/products/titanium-helix-stud.png",
-    isNew: true,
     tags: ["piercings", "titanium", "new"],
     material: "implant-titanium",
     options: [
@@ -746,88 +751,55 @@ export const DUMMY_RAW_PRODUCTS: RawProduct[] = [
   }),
 ];
 
-const productsByEnglishType = (englishType: string) =>
-  DUMMY_RAW_PRODUCTS.filter((p) => p.productTypeEn === englishType);
-
 export const DUMMY_RAW_COLLECTIONS: RawCollection[] = [
   {
-    id: "gid://nitchiani/Collection/best-sellers",
-    handle: "best-sellers",
-    titleEn: "Best Sellers",
-    titleKa: "ბესტსელერები",
-    descriptionEn: "Our most-loved pieces.",
-    descriptionKa: "ჩვენი ყველაზე საყვარელი ნივთები.",
-    products: DUMMY_RAW_PRODUCTS.filter((p) => p.isBestSeller),
+    id: "gid://nitchiani/Collection/hair-extensions",
+    handle: "hair-extensions",
+    titleEn: "Hair Extensions",
+    titleKa: "ხელოვნური თმა",
+    descriptionEn: "Braiding hair and extensions.",
+    descriptionKa: "ხელოვნური თმა და ექსტენშენები ნაწნავებისთვის.",
+    // Membership comes from lib/echodesk/categories.ts when the catalog is live.
+    products: [],
   },
   {
-    id: "gid://nitchiani/Collection/new-arrivals",
-    handle: "new-arrivals",
-    titleEn: "New Arrivals",
-    titleKa: "ახალი ჩამოსვლა",
-    descriptionEn: "Fresh from the studio.",
-    descriptionKa: "ახლადჩამოსული სტუდიოდან.",
-    products: DUMMY_RAW_PRODUCTS.filter((p) => p.isNew),
+    id: "gid://nitchiani/Collection/hair-care",
+    handle: "hair-care",
+    titleEn: "Hair Care",
+    titleKa: "თმის მოვლა",
+    descriptionEn: "Oils, wax and care for braids and locs.",
+    descriptionKa: "ზეთები, ჟელე და მოვლის საშუალებები ნაწნავებისა და ლოკსებისთვის.",
+    // Membership comes from lib/echodesk/categories.ts when the catalog is live.
+    products: [],
+  },
+  {
+    id: "gid://nitchiani/Collection/hair-accessories",
+    handle: "hair-accessories",
+    titleEn: "Hair Accessories",
+    titleKa: "თმის აქსესუარი",
+    descriptionEn: "Beads, cuffs, rings and tools.",
+    descriptionKa: "მძივები, რგოლები და აქსესუარები.",
+    // Membership comes from lib/echodesk/categories.ts when the catalog is live.
+    products: [],
   },
   {
     id: "gid://nitchiani/Collection/bonnets",
     handle: "bonnets",
     titleEn: "Bonnets",
-    titleKa: "ბონნეტები",
+    titleKa: "ბონეტი",
     descriptionEn: "Silk and satin bonnets for overnight protection.",
-    descriptionKa: "აბრეშუმისა და სატენის ბონნეტები ღამის დაცვისთვის.",
-    image: { url: "/categories/bonnets.png", altText: "Bonnets" },
-    products: productsByEnglishType("Bonnets"),
+    descriptionKa: "აბრეშუმისა და სატენის ბონეტები ღამის დაცვისთვის.",
+    // Membership comes from lib/echodesk/categories.ts when the catalog is live.
+    products: [],
   },
   {
-    id: "gid://nitchiani/Collection/loc-care",
-    handle: "loc-care",
-    titleEn: "Loc Care",
-    titleKa: "ლოკსების მოვლა",
-    descriptionEn: "Oils, rinses, gels — everything your locs need.",
-    descriptionKa: "ზეთები, ჩამოსარეცხები, გელები — ყველაფერი, რაც შენს ლოკსებს სჭირდება.",
-    image: { url: "/categories/loc-care.png", altText: "Loc Care" },
-    products: productsByEnglishType("Loc Care"),
-  },
-  {
-    id: "gid://nitchiani/Collection/accessories",
-    handle: "accessories",
-    titleEn: "Accessories",
-    titleKa: "აქსესუარები",
-    descriptionEn: "Pillowcases, cuffs, beads, and more.",
-    descriptionKa: "ბალიშის გარსები, მანჟეტები, მძივები და სხვა.",
-    image: { url: "/categories/accessories.png", altText: "Accessories" },
-    products: productsByEnglishType("Accessories"),
-  },
-  {
-    id: "gid://nitchiani/Collection/extensions",
-    handle: "extensions",
-    titleEn: "Extensions",
-    titleKa: "ექსტენშენები",
-    descriptionEn: "Premium human hair extensions, ethically sourced.",
-    descriptionKa: "პრემიუმ ბუნებრივი თმის ექსტენშენები, ეთიკური წარმოშობით.",
-    image: { url: "/categories/extensions.png", altText: "Extensions" },
-    products: productsByEnglishType("Extensions"),
-  },
-  {
-    id: "gid://nitchiani/Collection/tools",
-    handle: "tools",
-    titleEn: "Tools",
-    titleKa: "ხელსაწყოები",
-    descriptionEn: "Picks, combs, and styling tools.",
-    descriptionKa: "პიკები, სავარცხლები და სტილისტური ხელსაწყოები.",
-    image: { url: "https://picsum.photos/seed/nitchiani-tools/1200/900", altText: "Tools" },
-    products: productsByEnglishType("Tools"),
-  },
-  {
-    // Piercing accessories — scaffolded empty for now. Add products with `productType: "Piercings"`
-    // (and the matching localised type via `productTypeHandle: "piercings"`) when the line launches.
-    id: "gid://nitchiani/Collection/piercings",
-    handle: "piercings",
-    titleEn: "Piercings",
-    titleKa: "პირსინგი",
-    descriptionEn: "Hand-finished studs, hoops and cuffs — the same Tbilisi-studio craft as our hair pieces.",
-    descriptionKa: "ხელით დამზადებული საყურეები, რგოლები და მანჟეტები — იგივე თბილისური სტუდიური ხელობა, რაც ჩვენი თმის ნივთები.",
-    image: { url: "/categories/piercings.png", altText: "Piercings" },
-    products: productsByEnglishType("Piercings"),
+    id: "gid://nitchiani/Collection/durags",
+    handle: "durags",
+    titleEn: "Durags",
+    titleKa: "დურაგი",
+    descriptionEn: "Durags for laying and protecting.",
+    descriptionKa: "დურაგები თმის დასაცავად და გასასწორებლად.",
+    // Membership comes from lib/echodesk/categories.ts when the catalog is live.
+    products: [],
   },
 ];

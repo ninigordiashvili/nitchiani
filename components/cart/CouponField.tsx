@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronDown, Tag, X } from "lucide-react";
+import { Check, Tag, X } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 import { useCart } from "@/lib/cart/store";
@@ -9,9 +9,10 @@ import type { Locale } from "@/lib/i18n/config";
 import { cn } from "@/lib/utils";
 
 /**
- * Collapsible promo-code field. Idle state is a single "Have a promo code?" row so the
- * surface stays calm; user opens it intentionally. Applied state shows the active code as
- * a chip with a remove (×) button. Errors render inline beneath the input.
+ * Promo-code field, always visible. It used to sit behind a "Have a promo code?" disclosure,
+ * which kept the surface calm at the cost of hiding the discount from anyone not looking for
+ * it — a shopper holding a code had to guess that the row was a control. Applied state shows
+ * the active code as a chip with a remove (×) button; errors render inline beneath the input.
  *
  * Used in the cart drawer, cart page, and checkout — same component, same store-backed
  * state, so applying in one surface persists everywhere.
@@ -20,7 +21,6 @@ export function CouponField({ tone = "light" }: { tone?: "light" | "dark" } = {}
   const t = useTranslations("cart");
   const locale = useLocale() as Locale;
   const cart = useCart();
-  const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState("");
 
   const isDark = tone === "dark";
@@ -40,18 +40,31 @@ export function CouponField({ tone = "light" }: { tone?: "light" | "dark" } = {}
           isDark ? "border-white/15 bg-white/5" : "border-black/10",
         )}
       >
-        <div className="flex min-w-0 items-center gap-2">
-          <Tag size={14} className="flex-shrink-0 opacity-70" />
-          <span className={cn("text-xs font-medium tabular-nums", labelColor)}>
-            {cart.coupon.code}
+        <div className="flex min-w-0 flex-col gap-0.5">
+          <span className="flex min-w-0 items-center gap-2">
+            <Check size={14} className="flex-shrink-0" style={{ color: "var(--color-brand-maroon)" }} />
+            <span className={cn("text-xs font-medium tabular-nums", labelColor)}>
+              {cart.coupon.code}
+            </span>
+            <span
+              className="text-xs font-medium"
+              style={{ color: "var(--color-brand-maroon)" }}
+            >
+              {couponLabel(cart.coupon)}
+            </span>
           </span>
-          <span
-            className="text-xs font-medium"
-            style={{ color: "var(--color-brand-maroon)" }}
-          >
-            {couponLabel(cart.coupon)}
-          </span>
-          {discountAmount === 0 && cart.coupon.minSubtotal ? (
+          {/* Say plainly that it worked and by how much. The chip alone reads as "a code is
+              attached"; shoppers reported not realising the price had actually come down. */}
+          {discountAmount > 0 ? (
+            <span
+              role="status"
+              aria-live="polite"
+              className="text-[11px]"
+              style={{ color: "var(--color-brand-maroon)" }}
+            >
+              {t("promoCodeApplied", { amount: formatGel(discountAmount, locale) })}
+            </span>
+          ) : cart.coupon.minSubtotal ? (
             <span className="truncate text-[11px] opacity-60">
               {t("promoCodeMinimum", {
                 amount: formatGel(cart.coupon.minSubtotal, locale),
@@ -71,43 +84,21 @@ export function CouponField({ tone = "light" }: { tone?: "light" | "dark" } = {}
     );
   }
 
-  if (!open) {
-    return (
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        className={cn(
-          "mb-4 inline-flex items-center gap-1.5 text-xs underline-offset-2 hover:underline",
-          labelColor,
-          isDark ? "opacity-80" : "opacity-70",
-        )}
-      >
-        <Tag size={13} />
-        {t("havePromoCode")}
-        <ChevronDown size={13} />
-      </button>
-    );
-  }
-
-  return <CouponEditor tone={tone} draft={draft} setDraft={setDraft} onClose={() => setOpen(false)} />;
+  return <CouponEditor tone={tone} draft={draft} setDraft={setDraft} />;
 }
 
-/**
- * Active editor — extracted so the autofocus + escape handlers only mount when actually open,
- * which keeps the cleanup logic predictable.
- */
+/** The input itself. Kept separate so the field's own state and effects stay readable. */
 function CouponEditor({
   tone,
   draft,
   setDraft,
-  onClose,
 }: {
   tone: "light" | "dark";
   draft: string;
   setDraft: (value: string) => void;
-  onClose: () => void;
 }) {
   const t = useTranslations("cart");
+  const locale = useLocale() as Locale;
   const cart = useCart();
   const inputRef = useRef<HTMLInputElement>(null);
   const isDark = tone === "dark";
@@ -115,49 +106,37 @@ function CouponEditor({
     ? "text-[var(--color-brand-cream)]"
     : "text-[var(--color-brand-ink)]";
 
-  // Focus the input on mount and clear any stale error from a previous open/close cycle so
-  // the user doesn't reopen the field to an error they've already mentally moved past.
+  // Deliberately does NOT focus on mount. The field used to be opened by a tap, where taking
+  // focus was the point; now that it renders with the page, grabbing focus would scroll the
+  // checkout to its summary and raise the keyboard on mobile before the shopper has typed a
+  // thing. Only a stale error from a previous surface is cleared.
+  //
+  // `bundleLapsed` is exempt: that one is raised *by* the removal that swaps the chip for
+  // this editor, so this component mounts holding the very message it exists to show —
+  // clearing it here would make the code vanish with no explanation at all.
   useEffect(() => {
-    inputRef.current?.focus();
-    if (cart.couponError) cart.clearCouponError();
+    if (cart.couponError && cart.couponError !== "bundleLapsed") cart.clearCouponError();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  const close = () => {
-    setDraft("");
-    cart.clearCouponError();
-    onClose();
-  };
 
   // Plain handler — no `<form>` wrapper because the CouponField is rendered inside the
   // checkout's outer form and nested forms are invalid HTML (the inner one collapses, and
   // an inner submit button would fire the outer form's onSubmit — i.e. accidentally
   // place the order from the coupon Apply button).
-  const apply = () => {
+  const apply = async () => {
     const value = draft.trim();
     if (!value) return;
-    const ok = cart.applyCoupon(value);
+    const ok = await cart.applyCoupon(value);
     if (ok) setDraft("");
   };
 
   return (
     <div className="mb-4">
-      <div className="mb-2 flex items-center justify-between">
+      <div className="mb-2">
         <span className={cn("label-eyebrow inline-flex items-center gap-1.5", isDark && labelColor)}>
           <Tag size={12} />
           {t("promoCode")}
         </span>
-        <button
-          type="button"
-          onClick={close}
-          aria-label={t("close")}
-          className={cn(
-            "-mr-1 flex h-6 w-6 cursor-pointer items-center justify-center rounded-full opacity-50 transition-opacity hover:opacity-100",
-            isDark ? "text-[var(--color-brand-cream)]" : "text-[var(--color-brand-ink)]",
-          )}
-        >
-          <X size={14} />
-        </button>
       </div>
       <div
         className={cn(
@@ -176,9 +155,12 @@ function CouponEditor({
               e.stopPropagation();
               apply();
             } else if (e.key === "Escape") {
+              // Nothing to close any more, so Escape clears what was typed — and is stopped
+              // from bubbling, or it would shut the cart drawer this field sits inside.
               e.preventDefault();
               e.stopPropagation();
-              close();
+              setDraft("");
+              cart.clearCouponError();
             }
           }}
           placeholder={t("promoCodePlaceholder")}
@@ -215,9 +197,22 @@ function CouponEditor({
           className="mt-1.5 text-xs"
           style={{ color: "var(--color-brand-maroon)" }}
         >
-          {cart.couponError === "invalid"
-            ? t("promoCodeInvalid")
-            : t("promoCodeMinimumGeneric")}
+          {/* Localised from a reason key, never the backend's English sentence — on the
+              Georgian site an English rejection is worse than a vague Georgian one. The
+              minimum case names the actual threshold when we know it. */}
+          {cart.couponError === "bundleLapsed"
+            ? // The code was fine; the bag stopped qualifying. Said plainly, so its
+              // disappearance doesn't read as the shop losing the discount.
+              t("promoCodeLapsed")
+            : cart.couponError === "minimum" && cart.couponMinSubtotal
+            ? t("promoCodeMinimum", { amount: formatGel(cart.couponMinSubtotal, locale) })
+            : cart.couponError === "unavailable"
+              ? // Couldn't reach the backend — not the same as a bad code, so don't tell the
+                // shopper their coupon is invalid when we simply don't know.
+                t("promoCodeUnavailable")
+              : cart.couponReason && cart.couponReason !== "unknown"
+                ? t(`promoReason.${cart.couponReason}` as never)
+                : t("promoCodeInvalid")}
         </p>
       ) : null}
     </div>
@@ -226,5 +221,10 @@ function CouponEditor({
 
 function formatGel(amount: number, locale: Locale): string {
   const localeMap: Record<Locale, string> = { ka: "ka-GE", en: "en-US" };
-  return `₾${amount.toLocaleString(localeMap[locale])}`;
+  // Always two decimals: the totals row renders "−₾8.90" via the shared money formatter, and
+  // a bare `toLocaleString` gave "₾8.9" — the same discount printed two ways, inches apart.
+  return `₾${amount.toLocaleString(localeMap[locale], {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
 }

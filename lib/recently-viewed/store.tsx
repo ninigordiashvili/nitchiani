@@ -15,7 +15,12 @@ import type { ImageRef, Money } from "../shopify/types";
  * KB, well inside any browser's quota).
  */
 
-const STORAGE_KEY = "nitchiani:recent:v1";
+// Bump when stored snapshots stop matching the catalog.
+//   v2 → catalog moved to EchoDesk. Entries are copies of title/image/price taken at view
+//        time, so stale ones would render a rail of products the shop no longer sells,
+//        each linking to a 404.
+const STORAGE_KEY = "nitchiani:recent:v2";
+const LEGACY_STORAGE_KEYS = ["nitchiani:recent:v1"];
 const MAX_ITEMS = 12;
 /** Entries older than this are pruned on hydration / sync. 30 days fits the "recently"
  *  framing — a product viewed last month is no longer "recent" in any meaningful sense. */
@@ -62,6 +67,7 @@ export function RecentlyViewedProvider({ children }: { children: React.ReactNode
 
   useEffect(() => {
     try {
+      for (const key of LEGACY_STORAGE_KEYS) localStorage.removeItem(key);
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) {
         const parsed = JSON.parse(raw) as unknown;

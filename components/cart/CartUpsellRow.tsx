@@ -4,7 +4,7 @@ import { Plus } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { getBestSellersAction } from "@/app/actions/recommendations";
+import { getRecommendedProductsAction } from "@/app/actions/recommendations";
 import { PriceDisplay } from "@/components/commerce/PriceDisplay";
 import { Link } from "@/lib/i18n/routing";
 import { useCart } from "@/lib/cart/store";
@@ -20,7 +20,7 @@ import { cn } from "@/lib/utils";
  *   Cards are ~120px wide; user swipes through them.
  * - `variant="page"`   → responsive grid (2 → 4 cols) used on the standalone `/cart` page.
  *
- * Source is `getBestSellersAction` (same as EmptyCartRecommendations). We fetch 8, filter out
+ * Source is `getRecommendedProductsAction` (same as EmptyCartRecommendations). We fetch 8, filter out
  * anything already in the cart, and render up to 4. If nothing remains, the row is hidden.
  *
  * The whole card links to the PDP; the floating `+` button adds the first available variant
@@ -34,7 +34,7 @@ export function CartUpsellRow({ variant }: { variant: "drawer" | "page" }) {
 
   useEffect(() => {
     let cancelled = false;
-    getBestSellersAction(locale, 8).then((result) => {
+    getRecommendedProductsAction(locale, 8).then((result) => {
       if (!cancelled) setProducts(result);
     });
     return () => {
@@ -102,6 +102,7 @@ function UpsellCard({ product, compact }: { product: Product; compact: boolean }
       variantTitle: variant.title,
       image: product.featuredImage,
       unitPrice: variant.price,
+      maxQuantity: variant.quantityAvailable,
     });
     setJustAdded(true);
     setTimeout(() => setJustAdded(false), 1200);
@@ -123,7 +124,7 @@ function UpsellCard({ product, compact }: { product: Product; compact: boolean }
           <button
             type="button"
             onClick={onAdd}
-            aria-label={t("addToBag")}
+            aria-label={t("addToCart")}
             disabled={!variant?.availableForSale}
             className={cn(
               "absolute right-1.5 bottom-1.5 flex h-7 w-7 cursor-pointer items-center justify-center rounded-full transition-all",

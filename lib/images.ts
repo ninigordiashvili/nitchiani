@@ -5,6 +5,7 @@
  * doesn't throw an unconfigured-host runtime error.
  */
 const ALLOWED_HOSTS = [
+  "echodesk-media.fsn1.your-objectstorage.com",
   "cdn.shopify.com",
   "picsum.photos",
   "fastly.picsum.photos",
@@ -35,4 +36,19 @@ export function safeImageSrc(src: string | undefined | null): string {
     // malformed URL → fall through
   }
   return FALLBACK;
+}
+
+/**
+ * Drops repeated shots from a gallery, keeping first appearance order.
+ *
+ * Placeholder galleries pad themselves by repeating one photo, which is tolerable on the PDP
+ * where the rail is small and off to the side, but in a compact surface a row of identical
+ * thumbnails reads as a rendering bug rather than "more angles available". Callers that only
+ * want to offer a picker when it carries real information gate on this length being > 1, so
+ * the control stays hidden until genuinely distinct photos exist and appears on its own once
+ * they do.
+ */
+export function distinctImages<T extends { url: string }>(images: T[]): T[] {
+  const seen = new Set<string>();
+  return images.filter((img) => (seen.has(img.url) ? false : (seen.add(img.url), true)));
 }

@@ -3,6 +3,7 @@
 import { useState, type CSSProperties } from "react";
 import { useTranslations } from "next-intl";
 import { useWishlist } from "@/lib/wishlist/store";
+import { useToast } from "@/lib/ui/toast";
 import { cn } from "@/lib/utils";
 
 /**
@@ -30,6 +31,7 @@ export function WishlistButton({
 }) {
   const t = useTranslations("wishlist");
   const wishlist = useWishlist();
+  const toast = useToast();
   const saved = wishlist.has(handle);
   const [burstKey, setBurstKey] = useState(0);
 
@@ -38,7 +40,12 @@ export function WishlistButton({
     e.stopPropagation();
     const wasSaved = wishlist.has(handle);
     wishlist.toggle(handle);
-    if (!wasSaved) setBurstKey((k) => k + 1);
+    if (!wasSaved) {
+      setBurstKey((k) => k + 1);
+      // Confirm only on add, matching the burst above — removing is deliberately silent, and
+      // a toast for it would be a notification about something the user just chose to undo.
+      toast.show(t("added"), "maroon");
+    }
   };
 
   return (

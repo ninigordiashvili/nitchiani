@@ -23,8 +23,11 @@ export function ProductJsonLd({
     "http://localhost:3000";
 
   const url = `${baseUrl}/${locale}/products/${product.handle}`;
-  const summary = getReviewSummary(product.handle);
-  const reviews = getReviewsForProduct(product.handle, locale);
+  // Structured data must describe the product actually on sale. For a live product that
+  // means its own rating and no reviews unless the backend has some — publishing the sample
+  // map's invented testimonials as schema.org Review would be misrepresentation to search.
+  const summary = product.reviewSummary ?? getReviewSummary(product.handle);
+  const reviews = product.reviewSummary ? [] : getReviewsForProduct(product.handle, locale);
 
   const inStock = product.variants.some((v) => v.availableForSale);
   const variant = product.variants[0];

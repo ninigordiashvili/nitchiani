@@ -9,6 +9,8 @@ import {
   applySort,
   DEFAULT_SORT,
   EMPTY_FILTERS,
+  extractAttributeFacets,
+  parseAttributeParam,
   extractColors,
   isSortKey,
   type ProductFilters,
@@ -40,10 +42,14 @@ export function FilteredCollection({ products }: { products: Product[] }) {
       onSale: searchParams.get("onSale") === "1",
       availableOnly: searchParams.get("available") === "1",
       maxPrice: Number.isFinite(maxPriceNum) && maxPriceNum > 0 ? maxPriceNum : null,
+      attributes: parseAttributeParam(searchParams.get("attr")),
     };
   }, [searchParams]);
 
   const availableColors = useMemo(() => extractColors(products), [products]);
+  // Facets come from the products themselves, so an attribute added in the CMS shows up here
+  // with no code change — and one that isn't worth filtering by never appears.
+  const attributeFacets = useMemo(() => extractAttributeFacets(products), [products]);
 
   const visible = useMemo(() => {
     const filtered = applyFilters(products, filters);
@@ -56,6 +62,7 @@ export function FilteredCollection({ products }: { products: Product[] }) {
         totalCount={products.length}
         visibleCount={visible.length}
         availableColors={availableColors}
+        attributeFacets={attributeFacets}
         filters={filters}
         sort={sort}
       />
@@ -73,3 +80,5 @@ export function FilteredCollection({ products }: { products: Product[] }) {
     </>
   );
 }
+
+

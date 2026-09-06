@@ -7,15 +7,8 @@
     "shop": "Shop",
     "home": "Home",
     "allProducts": "All Products",
-    "allProductsDesc": "Every Nitchiani piece — bonnets, loc care, tools and extensions — in one place.",
-    "bestSellers": "Best Sellers",
-    "newArrivals": "New Arrivals",
+    "allProductsDesc": "Every Nitchiani piece — hair extensions, hair care, accessories, bonnets and durags — in one place.",
     "bonnets": "Bonnets",
-    "locCare": "Loc Care",
-    "accessories": "Accessories",
-    "extensions": "Extensions",
-    "tools": "Tools",
-    "piercings": "Piercings",
     "services": "Services",
     "journal": "Journal",
     "about": "About",
@@ -43,18 +36,20 @@
     "increaseQuantity": "Increase quantity",
     "breadcrumb": "Breadcrumb",
     "showImage": "Show image {n}",
-    "chatOnSite": "Chat with us here"
+    "chatOnSite": "Chat with us here",
+    "hairExtensions": "Hair Extensions",
+    "hairCare": "Hair Care",
+    "hairAccessories": "Hair Accessories",
+    "durags": "Durags"
   },
   "promo": {
-    "shipping": "Free shipping in Tbilisi over ₾150",
+    "shipping": "Free delivery in Tbilisi from {amount}",
     "newDrop": "New drop every Friday"
   },
   "home": {
     "uvp": "Shop for Braiders and Piercers",
     "shopByCategory": "Shop by category",
-    "bestSellers": "Best Sellers",
     "allProducts": "All Products",
-    "newArrivals": "New Arrivals",
     "viewAll": "View all",
     "newDrop": "The New Drop",
     "newDropSubtitle": "Limited collection · made by hand",
@@ -67,9 +62,9 @@
     "reviewsEyebrow": "Loved in Tbilisi",
     "reviewsTitle": "What customers are saying",
     "recentlyViewed": "Recently viewed",
-    "bundleEyebrow": "Starter kit",
+    "bundleEyebrow": "Offer",
     "bundleSave": "Save {amount}",
-    "bundleAddAll": "Add bundle to bag",
+    "bundleAddAll": "Add to bag",
     "bundleAdded": "Bundle added",
     "follow": "Follow",
     "services": "Our Services",
@@ -80,22 +75,20 @@
       "returns": "24-hour returns",
       "returnsDesc": "Even on opened items",
       "payment": "Secure checkout",
-      "paymentDesc": "BOG · TBC · Bank transfer"
+      "paymentDesc": "Visa / Mastercard · secure checkout"
     },
     "connectEyebrow": "Get in touch",
     "connectTitle": "Contact us",
     "connectDesc": "Follow us so you don't miss anything new."
   },
   "categories": {
+    "hairExtensions": "Hair Extensions",
+    "hairCare": "Hair Care",
+    "hairAccessories": "Hair Accessories",
     "bonnets": "Bonnets",
-    "locCare": "Loc Care",
-    "accessories": "Accessories",
-    "extensions": "Extensions",
-    "tools": "Tools",
-    "piercings": "Piercings"
+    "durags": "Durags"
   },
   "product": {
-    "addToBag": "Add to bag",
     "outOfStock": "Out of stock",
     "selectOption": "Select an option",
     "quantity": "Quantity",
@@ -106,11 +99,7 @@
     "details": "Details",
     "shipping": "Shipping",
     "related": "You may also like",
-    "freeShipping": "Free shipping over ₾150",
     "secureCheckout": "Secure checkout",
-    "badgeBestSeller": "Best Seller",
-    "badgeNew": "New",
-    "badgeSale": "Sale",
     "quickView": "Quick view",
     "viewFullDetails": "View full details",
     "share": "Share",
@@ -138,7 +127,9 @@
     "fbtThisItem": "This item",
     "fbtTotal": "Total",
     "fbtAdd": "{count, plural, one {Add # item to bag} other {Add # items to bag}}",
-    "fbtAdded": "Added"
+    "fbtAdded": "Added",
+    "addToCart": "Add to cart",
+    "addedToCart": "Added to cart"
   },
   "cart": {
     "empty": "Your bag is empty",
@@ -148,7 +139,7 @@
     "clearCartConfirm": "Remove everything?",
     "clearCartYes": "Yes",
     "clearCartCancel": "No",
-    "recommendationsHeader": "Best sellers — what others are loving",
+    "recommendationsHeader": "Popular right now",
     "subtotal": "Subtotal",
     "shipping": "Shipping",
     "shippingNote": "Calculated at checkout",
@@ -177,7 +168,18 @@
     "total": "Total",
     "checkout": "Checkout",
     "remove": "Remove",
-    "clearCartConfirmDesc": "This empties your cart. It can't be undone."
+    "clearCartConfirmDesc": "This empties your cart. It can't be undone.",
+    "promoCodeUnavailable": "Couldn't check that code right now — please try again",
+    "promoCodeApplied": "Applied — you save {amount}",
+    "promoReason": {
+      "notFound": "This code isn't valid",
+      "minimum": "Your order is below the minimum for this code",
+      "expired": "This code has expired",
+      "usageLimit": "This code has already been used",
+      "inactive": "This code isn't active right now"
+    },
+    "seeAllProducts": "See all products",
+    "promoCodeLapsed": "Promo code removed — the offer's condition is no longer met"
   },
   "checkout": {
     "title": "Checkout",
@@ -212,7 +214,49 @@
     "successTitle": "Order received",
     "successDesc": "We'll reach out by WhatsApp or email shortly",
     "orderNumber": "Order #{id}",
-    "trackOrder": "Track your order"
+    "trackOrder": "Track your order",
+    "errors": {
+      "rateLimited": "Too many attempts. Please wait a moment and try again.",
+      "invalidRequest": "Something in the form looks wrong. Please check your details and try again.",
+      "invalidSubtotal": "There's a problem with your cart total. Please refresh and try again.",
+      "codUnavailable": "Cash on delivery is unavailable. Please choose another payment method.",
+      "codPickupOnly": "Cash on delivery is only available for pickup orders. Please pay by card.",
+      "cartChanged": "Your cart total has changed. Please refresh your cart and try again.",
+      "cardUnavailable": "Card payments aren't available right now. Please choose another method.",
+      "bankTransferUnavailable": "Bank transfer isn't available. Please pay by card.",
+      "paymentSessionFailed": "We couldn't start the card payment. Please try again or choose another method.",
+      "promoInvalid": "That promo code isn't valid. Remove it and try again.",
+      "promoMinimum": "Your order is below the minimum for that promo code.",
+      "promoUnavailable": "We couldn't check that promo code. Please try again.",
+      "outOfStock": "Something in your cart is no longer available. Please review it and try again.",
+      "missingDetails": "Some required details are missing. Please check the form and try again.",
+      "orderFailed": "We couldn't place your order. Please try again or message us on WhatsApp.",
+      "insufficientStock": "Only {count} left of “{product}”. Please reduce the quantity in your bag.",
+      "insufficientStockNone": "“{product}” has sold out. Please remove it from your bag."
+    },
+    "cardGeneric": "Bank card",
+    "cardGenericDesc": "Visa / Mastercard · secure checkout",
+    "addressPlaceholder": "Start typing — e.g. 37 Chavchavadze Ave",
+    "pickOnMap": "Pick on map",
+    "hideMap": "Hide map",
+    "pinSet": "Location pinned",
+    "mapHint": "Drag the marker or tap the map to set the exact spot.",
+    "validation": {
+      "required": "This field is required",
+      "email": "Enter a valid email address",
+      "phone": "Enter a valid phone number",
+      "address": "Enter your address",
+      "postalCode": "Postal code is 4 digits"
+    },
+    "clarifyTitle": "Choose where you would like to clarify the details",
+    "clarifyMessage": "Hello, I would like to place an order using the bank transfer payment method. Where should I transfer the money?",
+    "clarifyCopied": "Message copied — paste it in the chat",
+    "clarifyCopy": "Copy message",
+    "delivery": "Delivery",
+    "deliveryFree": "Free",
+    "deliveryMethod": "Delivery method",
+    "deliveryDays": "{count} working days",
+    "pickupAt": "Collect at: {address}"
   },
   "services": {
     "title": "Our Services",
@@ -330,7 +374,6 @@
   "shop": {
     "sortLabel": "Sort",
     "sortFeatured": "Featured",
-    "sortNew": "New arrivals",
     "sortPriceAsc": "Price: low to high",
     "sortPriceDesc": "Price: high to low",
     "filterOnSale": "On sale",
@@ -353,7 +396,8 @@
     "emptyDesc": "Save pieces with the heart button — they'll be here when you're ready",
     "addAria": "Add to wishlist",
     "removeAria": "Remove from wishlist",
-    "browseShop": "Browse the shop"
+    "browseShop": "Browse the shop",
+    "added": "Added to wishlist"
   },
   "search": {
     "placeholder": "Search products...",
@@ -362,7 +406,7 @@
     "popularEyebrow": "Popular",
     "closeAria": "Close search",
     "clearAria": "Clear search",
-    "viewAllType": "View all {type}"
+    "viewAll": "See all"
   },
   "orderStatus": {
     "eyebrow": "Order status",
@@ -380,7 +424,13 @@
     "contactEyebrow": "Get help",
     "contactTitle": "Message us about your order",
     "contactDesc": "We reply within working hours — usually in minutes. Mention your order number if you have it.",
-    "openWhatsApp": "Open WhatsApp"
+    "openWhatsApp": "Open WhatsApp",
+    "lookupLabel": "Tracking code",
+    "lookupPlaceholder": "Paste the code from your confirmation email",
+    "lookupCta": "Track order",
+    "lookupHint": "Your confirmation email links straight here — the code is in that link.",
+    "notFoundTitle": "We couldn't find that order",
+    "notFoundDesc": "Check the code and try again. The surest way in is the tracking link in your confirmation email. If it still doesn't come up, message us and we'll look it up by hand."
   },
   "welcome": {
     "eyebrow": "Welcome offer",

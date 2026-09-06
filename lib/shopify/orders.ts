@@ -19,6 +19,9 @@ export type ManualOrderInput = {
   address: string;
   city: string;
   postalCode?: string;
+  /** Coordinates from the checkout map picker, when the customer used it. */
+  lat?: number;
+  lng?: number;
   notes?: string;
   paymentMethod: CheckoutPaymentMethod;
   locale: string;
@@ -26,8 +29,12 @@ export type ManualOrderInput = {
   subtotal: Money;
   /** Server-validated discount in the same currency as `subtotal`. Omit when no coupon applies. */
   discount?: Money;
-  /** Server-validated final amount (subtotal - discount). Falls back to `subtotal` when omitted. */
+  /** Server-validated final amount (subtotal - discount + shipping). Falls back to `subtotal` when omitted. */
   total?: Money;
+  /** Server-priced delivery. Omitted when the tenant charges none. */
+  shipping?: Money;
+  /** EchoDesk `shipping_method_id`, when a flat method priced the delivery. */
+  shippingMethodId?: number;
   /** Canonical coupon code that produced the discount. Used to attach a Shopify `discount_codes` entry. */
   couponCode?: string;
 };
@@ -66,206 +73,133 @@ function paymentMethodNote(method: CheckoutPaymentMethod): string {
 }
 
 /**
- * Creates a Shopify order via the REST Admin API with a manual payment status (pending).
- * Used for both bank-transfer and cash-on-delivery flows in Phase 1 of the storefront.
+ * Builds the Admin REST `order` payload shared by every checkout flow.
  *
- * Returns the Shopify order ID on success, or null when:
- * - Admin API credentials aren't configured (dev/local)
- * - Any cart line lacks a real numeric Shopify variant ID (e.g. dummy product data)
- * - Shopify rejects the request
+ * Both the manual (bank transfer / COD) and the card (BOG / TBC) flows create the same kind of
+ * pending Shopify order — they only differ in what the caller needs back. Keeping one builder
+ * means a field added for one flow can't silently go missing from the other, which is exactly
+ * how card orders used to lose their coupon.
  *
- * The caller is expected to fall back to a local pseudo-ID so the checkout UX still completes.
+ * Returns `null` when the order can't be represented in Shopify (see `postOrder`).
  */
-export async function createManualOrder(input: ManualOrderInput): Promise<string | null> {
-  if (!SHOPIFY_DOMAIN || !SHOPIFY_ADMIN_TOKEN) return null;
-
+function buildOrderPayload(input: ManualOrderInput) {
   const lineItems = input.lines.map((l) => ({
     variant_id: gidToNumericId(l.variantId),
     quantity: l.quantity,
     price: l.unitPrice.amount,
   }));
 
-  if (lineItems.some((li) => li.variant_id === null)) {
+  if (lineItems.some((li) => li.variant_id === null)) return null;
+
+  const noteLines: string[] = [paymentMethodNote(input.paymentMethod), `Locale: ${input.locale}`];
+  if (input.couponCode) noteLines.push(`Coupon: ${input.couponCode}`);
+  if (input.notes) noteLines.push(`Customer note: ${input.notes}`);
+
+  const discountAmount = input.discount ? Number.parseFloat(input.discount.amount) : 0;
+  const hasDiscount = !!input.couponCode && Number.isFinite(discountAmount) && discountAmount > 0;
+
+  const address = {
+    first_name: input.firstName,
+    last_name: input.lastName,
+    address1: input.address,
+    city: input.city,
+    zip: input.postalCode ?? "",
+    country: "Georgia",
+    country_code: "GE",
+    phone: input.phone,
+  };
+
+  return {
+    order: {
+      email: input.email,
+      phone: input.phone,
+      currency: input.subtotal.currencyCode,
+      financial_status: "pending",
+      send_receipt: false,
+      send_fulfillment_receipt: false,
+      tags: ["online-store", paymentMethodTag(input.paymentMethod), `lang:${input.locale}`].join(", "),
+      note: noteLines.join("\n"),
+      line_items: lineItems,
+      // Pass the server-validated coupon through to Shopify so the order ledger reflects the
+      // amount we actually charge at the gateway (and so refunds calculate correctly).
+      // `fixed_amount` is the simplest representation — Shopify accepts it for any discount type.
+      ...(hasDiscount
+        ? {
+            discount_codes: [
+              { code: input.couponCode, amount: discountAmount.toFixed(2), type: "fixed_amount" },
+            ],
+          }
+        : {}),
+      shipping_address: address,
+      billing_address: address,
+      note_attributes: [
+        { name: "payment_method", value: input.paymentMethod },
+        { name: "locale", value: input.locale },
+        ...(input.couponCode ? [{ name: "coupon_code", value: input.couponCode }] : []),
+      ],
+    },
+  };
+}
+
+/**
+ * Creates the Shopify order via the REST Admin API with a manual payment status (pending).
+ *
+ * Returns both the numeric ID and the human-readable name, or null when:
+ * - Admin API credentials aren't configured (dev/local)
+ * - Any cart line lacks a real numeric Shopify variant ID (e.g. dummy product data)
+ * - Shopify rejects the request
+ */
+async function postOrder(
+  input: ManualOrderInput,
+): Promise<{ id: number; name: string } | null> {
+  if (!SHOPIFY_DOMAIN || !SHOPIFY_ADMIN_TOKEN) return null;
+
+  const body = buildOrderPayload(input);
+  if (!body) {
     console.warn(
       "[shopify/orders] Skipping Admin API call — at least one variant ID is not a numeric Shopify GID. Wire the Storefront API client to populate real variant IDs.",
     );
     return null;
   }
 
-  const paymentTag = paymentMethodTag(input.paymentMethod);
-
-  const noteLines: string[] = [];
-  noteLines.push(paymentMethodNote(input.paymentMethod));
-  noteLines.push(`Locale: ${input.locale}`);
-  if (input.couponCode) noteLines.push(`Coupon: ${input.couponCode}`);
-  if (input.notes) noteLines.push(`Customer note: ${input.notes}`);
-
-  const discountAmount = input.discount ? Number.parseFloat(input.discount.amount) : 0;
-  const hasDiscount = input.couponCode && discountAmount > 0;
-
-  const body = {
-    order: {
-      email: input.email,
-      phone: input.phone,
-      currency: input.subtotal.currencyCode,
-      financial_status: "pending",
-      send_receipt: false,
-      send_fulfillment_receipt: false,
-      tags: ["online-store", paymentTag, `lang:${input.locale}`].join(", "),
-      note: noteLines.join("\n"),
-      line_items: lineItems,
-      // Pass the server-validated coupon through to Shopify so the order ledger reflects
-      // the actual discount applied (and so refunds calculate correctly). `fixed_amount`
-      // is the simplest representation — Shopify accepts it for any discount type.
-      ...(hasDiscount
-        ? {
-            discount_codes: [
-              {
-                code: input.couponCode,
-                amount: discountAmount.toFixed(2),
-                type: "fixed_amount",
-              },
-            ],
-          }
-        : {}),
-      shipping_address: {
-        first_name: input.firstName,
-        last_name: input.lastName,
-        address1: input.address,
-        city: input.city,
-        zip: input.postalCode ?? "",
-        country: "Georgia",
-        country_code: "GE",
-        phone: input.phone,
-      },
-      billing_address: {
-        first_name: input.firstName,
-        last_name: input.lastName,
-        address1: input.address,
-        city: input.city,
-        zip: input.postalCode ?? "",
-        country: "Georgia",
-        country_code: "GE",
-        phone: input.phone,
-      },
-      note_attributes: [
-        { name: "payment_method", value: input.paymentMethod },
-        { name: "locale", value: input.locale },
-        ...(input.couponCode
-          ? [{ name: "coupon_code", value: input.couponCode }]
-          : []),
-      ],
+  const res = await fetch(`https://${SHOPIFY_DOMAIN}/admin/api/${API_VERSION}/orders.json`, {
+    method: "POST",
+    headers: {
+      "X-Shopify-Access-Token": SHOPIFY_ADMIN_TOKEN,
+      "Content-Type": "application/json",
+      Accept: "application/json",
     },
-  };
-
-  const res = await fetch(
-    `https://${SHOPIFY_DOMAIN}/admin/api/${API_VERSION}/orders.json`,
-    {
-      method: "POST",
-      headers: {
-        "X-Shopify-Access-Token": SHOPIFY_ADMIN_TOKEN,
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-      body: JSON.stringify(body),
-      cache: "no-store",
-    },
-  );
+    body: JSON.stringify(body),
+    cache: "no-store",
+  });
 
   if (!res.ok) {
-    const text = await res.text();
-    console.error("[shopify/orders] Admin API rejected order:", res.status, text);
+    console.error("[shopify/orders] Admin API rejected order:", res.status, await res.text());
     return null;
   }
 
   const json = (await res.json()) as { order?: { id?: number; name?: string } };
   if (!json.order?.id) return null;
-
-  // Prefer the human-readable name (e.g. "#1042") for the success page if present.
-  return json.order.name ?? String(json.order.id);
+  return { id: json.order.id, name: json.order.name ?? String(json.order.id) };
 }
 
 /**
- * Variant of createManualOrder that returns the numeric Shopify order ID alongside the name.
- * Needed for BOG flow: we pass the numeric ID to BOG as external_order_id, then look it up later
- * from the webhook to mark it paid.
+ * Manual (bank-transfer / cash-on-delivery) flow. Returns the human-readable order name
+ * for the success page, or null so the caller can fall back to a local pseudo-ID.
+ */
+export async function createManualOrder(input: ManualOrderInput): Promise<string | null> {
+  const order = await postOrder(input);
+  return order ? order.name : null;
+}
+
+/**
+ * Card flow (BOG / TBC). Same order, but the caller also needs the numeric ID to hand the
+ * gateway as `external_order_id` and to look up again from the webhook.
  */
 export async function createPendingOrder(
   input: ManualOrderInput,
 ): Promise<{ id: number; name: string } | null> {
-  // We re-execute the same Admin API POST as createManualOrder but capture both id and name.
-  if (!SHOPIFY_DOMAIN || !SHOPIFY_ADMIN_TOKEN) return null;
-
-  const lineItems = input.lines.map((l) => ({
-    variant_id: gidToNumericId(l.variantId),
-    quantity: l.quantity,
-    price: l.unitPrice.amount,
-  }));
-  if (lineItems.some((li) => li.variant_id === null)) return null;
-
-  const tag = paymentMethodTag(input.paymentMethod);
-  const note = paymentMethodNote(input.paymentMethod);
-
-  const body = {
-    order: {
-      email: input.email,
-      phone: input.phone,
-      currency: input.subtotal.currencyCode,
-      financial_status: "pending",
-      send_receipt: false,
-      send_fulfillment_receipt: false,
-      tags: ["online-store", tag, `lang:${input.locale}`].join(", "),
-      note:
-        `${note}\nLocale: ${input.locale}` +
-        (input.notes ? `\nCustomer note: ${input.notes}` : ""),
-      line_items: lineItems,
-      shipping_address: {
-        first_name: input.firstName,
-        last_name: input.lastName,
-        address1: input.address,
-        city: input.city,
-        zip: input.postalCode ?? "",
-        country: "Georgia",
-        country_code: "GE",
-        phone: input.phone,
-      },
-      billing_address: {
-        first_name: input.firstName,
-        last_name: input.lastName,
-        address1: input.address,
-        city: input.city,
-        zip: input.postalCode ?? "",
-        country: "Georgia",
-        country_code: "GE",
-        phone: input.phone,
-      },
-      note_attributes: [
-        { name: "payment_method", value: input.paymentMethod },
-        { name: "locale", value: input.locale },
-      ],
-    },
-  };
-
-  const res = await fetch(
-    `https://${SHOPIFY_DOMAIN}/admin/api/${API_VERSION}/orders.json`,
-    {
-      method: "POST",
-      headers: {
-        "X-Shopify-Access-Token": SHOPIFY_ADMIN_TOKEN,
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-      body: JSON.stringify(body),
-      cache: "no-store",
-    },
-  );
-  if (!res.ok) {
-    console.error("[shopify/orders] pending order create failed:", res.status, await res.text());
-    return null;
-  }
-  const json = (await res.json()) as { order?: { id?: number; name?: string } };
-  if (!json.order?.id || !json.order.name) return null;
-  return { id: json.order.id, name: json.order.name };
+  return postOrder(input);
 }
 
 /**
@@ -497,11 +431,66 @@ export async function getOrderByName(rawName: string): Promise<OrderTracking | n
 }
 
 /**
- * Marks a previously-created Shopify order as paid (financial_status: paid).
- * Called by the BOG webhook once payment confirmation arrives.
+ * Outcome of a `markOrderPaid` attempt.
+ * - `marked`  — this call recorded the sale transaction (first time the order settled)
+ * - `already` — a successful sale/capture was already on the order; nothing was written
+ * - `failed`  — Shopify rejected the write, or Admin isn't configured
+ *
+ * Callers use the `marked` / `already` distinction to fire side effects (the confirmation
+ * email) exactly once, no matter how many times a gateway replays its callback.
  */
-export async function markOrderPaid(orderId: number, gateway: string): Promise<boolean> {
-  if (!SHOPIFY_DOMAIN || !SHOPIFY_ADMIN_TOKEN) return false;
+export type MarkPaidResult = "marked" | "already" | "failed";
+
+/** Transaction kinds that mean "the money has been taken". */
+const SETTLED_KINDS = new Set(["sale", "capture"]);
+
+/**
+ * Returns true when the order already carries a successful sale/capture transaction.
+ * Returns false when it doesn't — and also when we can't tell (a failed lookup), so that a
+ * transient Admin API blip degrades to the old behaviour rather than dropping a real payment.
+ */
+async function hasSettledTransaction(orderId: number): Promise<boolean> {
+  const res = await fetch(
+    `https://${SHOPIFY_DOMAIN}/admin/api/${API_VERSION}/orders/${orderId}/transactions.json`,
+    {
+      headers: { "X-Shopify-Access-Token": SHOPIFY_ADMIN_TOKEN as string, Accept: "application/json" },
+      cache: "no-store",
+    },
+  ).catch(() => null);
+
+  if (!res || !res.ok) {
+    console.warn("[shopify/orders] could not read transactions for", orderId, "— proceeding");
+    return false;
+  }
+
+  const json = (await res.json().catch(() => null)) as {
+    transactions?: Array<{ kind?: string; status?: string }>;
+  } | null;
+
+  return (json?.transactions ?? []).some(
+    (t) => t.status === "success" && SETTLED_KINDS.has(t.kind ?? ""),
+  );
+}
+
+/**
+ * Marks a previously-created Shopify order as paid by recording a sale transaction.
+ *
+ * Idempotent: both gateways replay their callbacks (BOG retries any non-2xx, and the TBC flow
+ * deliberately marks paid from the browser return *and* the async webhook), so a naive POST
+ * records the sale two or three times over — leaving the order looking overpaid in Shopify and
+ * emailing the customer a confirmation for each replay. We check for an existing successful
+ * sale/capture first and no-op if one is there.
+ */
+export async function markOrderPaid(
+  orderId: number,
+  gateway: string,
+): Promise<MarkPaidResult> {
+  if (!SHOPIFY_DOMAIN || !SHOPIFY_ADMIN_TOKEN) return "failed";
+
+  if (await hasSettledTransaction(orderId)) {
+    console.info("[shopify/orders] order already settled, skipping duplicate sale:", orderId);
+    return "already";
+  }
 
   const res = await fetch(
     `https://${SHOPIFY_DOMAIN}/admin/api/${API_VERSION}/orders/${orderId}/transactions.json`,
@@ -524,7 +513,7 @@ export async function markOrderPaid(orderId: number, gateway: string): Promise<b
 
   if (!res.ok) {
     console.error("[shopify/orders] mark paid failed:", res.status, await res.text());
-    return false;
+    return "failed";
   }
-  return true;
+  return "marked";
 }

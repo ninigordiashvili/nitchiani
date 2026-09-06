@@ -52,15 +52,19 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: false, error: "bad_external_order_id" }, { status: 400 });
   }
 
-  const ok = await markOrderPaid(numericId, "tbc_card").catch((err) => {
+  const result = await markOrderPaid(numericId, "tbc_card").catch((err) => {
     console.error("[tbc/webhook] markOrderPaid threw:", err);
-    return false;
+    return "failed" as const;
   });
 
   // Fire the confirmation email once TBC has confirmed payment. Same pattern as the BOG
   // webhook — fire-and-forget so a slow Shopify-Admin fetch or email-provider hiccup
   // doesn't cause TBC to retry the webhook.
-  if (ok) {
+  //
+  // Only on `marked`. The browser-return callback races this webhook and may well have
+  // settled the order first; `already` means the email has gone out and re-sending it would
+  // give the customer two confirmations for one order.
+  if (result === "marked") {
     void getOrderForConfirmation(numericId)
       .then((order) => {
         if (order) return sendOrderConfirmation(order);
@@ -72,5 +76,6 @@ export async function POST(req: Request) {
       });
   }
 
-  return NextResponse.json({ ok });
+  // `already` counts as acknowledged — the order is settled either way, so TBC can stop retrying.
+  return NextResponse.json({ ok: result !== "failed", result });
 }

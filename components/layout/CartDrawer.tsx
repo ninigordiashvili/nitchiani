@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 import { useEffect, useRef } from "react";
 import { Link } from "@/lib/i18n/routing";
 import { useCart } from "@/lib/cart/store";
+import { isAtStockLimit } from "@/lib/cart/stock";
 import type { Locale } from "@/lib/i18n/config";
 import { formatPrice } from "@/lib/money";
 import { BLUR_DATA_URL, safeImageSrc } from "@/lib/images";
@@ -18,7 +19,14 @@ import { HowItWorksButton } from "@/components/cart/HowItWorksButton";
 import { useFocusTrap } from "@/lib/ui/use-focus-trap";
 import { useSwipeDismiss } from "@/lib/ui/use-swipe-dismiss";
 
-export function CartDrawer({ locale }: { locale: Locale }) {
+export function CartDrawer({
+  locale,
+  freeShippingThreshold,
+}: {
+  locale: Locale;
+  /** From the tenant's shipping method; null when it sets none. */
+  freeShippingThreshold: number | null;
+}) {
   const t = useTranslations();
   const cart = useCart();
   const open = cart.open;
@@ -146,7 +154,8 @@ export function CartDrawer({ locale }: { locale: Locale }) {
                             type="button"
                             aria-label={t("nav.increaseQuantity")}
                             onClick={() => cart.updateQuantity(line.variantId, line.quantity + 1)}
-                            className="flex h-8 w-8 cursor-pointer items-center justify-center"
+                            disabled={isAtStockLimit(line.quantity, line.maxQuantity)}
+                            className="flex h-8 w-8 cursor-pointer items-center justify-center disabled:cursor-not-allowed disabled:opacity-30"
                           >
                             <Plus size={14} />
                           </button>
@@ -171,7 +180,7 @@ export function CartDrawer({ locale }: { locale: Locale }) {
             </div>
 
             <div className="mx-4 border-t border-black/10 py-4">
-              <FreeShippingProgress subtotal={cart.subtotal} />
+              <FreeShippingProgress subtotal={cart.subtotal} threshold={freeShippingThreshold} />
               <CouponField />
               <div className="mb-1 flex items-center justify-between text-sm">
                 <span className="opacity-70">{t("cart.subtotal")}</span>

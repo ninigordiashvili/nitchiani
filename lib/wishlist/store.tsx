@@ -2,8 +2,11 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 
-const STORAGE_KEY = "nitchiani:wishlist:v1";
-const LEGACY_STORAGE_KEYS: string[] = []; // populate when bumping versions
+// Bump when saved handles stop resolving, so a returning visitor doesn't keep a list of
+// products the shop no longer sells.
+//   v2 → catalog moved to EchoDesk; sample handles (silk-bonnet-noir, …) resolve to nothing
+const STORAGE_KEY = "nitchiani:wishlist:v2";
+const LEGACY_STORAGE_KEYS: string[] = ["nitchiani:wishlist:v1"];
 
 type WishlistState = {
   handles: string[];

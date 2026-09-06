@@ -1,7 +1,6 @@
 "use client";
 
 import Image from "next/image";
-import { useTranslations } from "next-intl";
 import { Link } from "@/lib/i18n/routing";
 import type { Product } from "@/lib/shopify/types";
 import { BLUR_DATA_URL } from "@/lib/images";
@@ -9,21 +8,21 @@ import { discountPercent } from "@/lib/money";
 import { getReviewSummary } from "@/lib/reviews";
 import { useQuickView } from "@/lib/ui/quick-view";
 import { PriceDisplay } from "./PriceDisplay";
-import { QuickViewButton } from "./QuickViewButton";
+import { CardAddButton } from "./CardAddButton";
 import { StarRating } from "./StarRating";
 import { WishlistButton } from "./WishlistButton";
 
 export function ProductCard({ product, priority = false }: { product: Product; priority?: boolean }) {
-  const t = useTranslations("product");
   const quickView = useQuickView();
   const variant = product.variants[0];
   const compareAt = variant?.compareAtPrice;
   const offPercent = discountPercent(variant?.price ?? product.priceRange.min, compareAt);
-  const summary = getReviewSummary(product.handle);
+  const summary = product.reviewSummary ?? getReviewSummary(product.handle);
 
-  // Funnel rule: clicking the card (image, title, price) opens the quick view first; the
-  // PDP is reached from inside the modal. We keep the `<Link>` so cmd-/middle-click still
-  // opens the PDP in a new tab, and crawlers continue to follow the href for SEO.
+  // Clicking the card (image, title, price) opens the quick view; the PDP is reached from
+  // inside the sheet. The plus button is the other gesture and adds straight to the bag —
+  // see `CardAddButton`. We keep the `<Link>` so cmd-/middle-click still opens the PDP in a
+  // new tab, and crawlers continue to follow the href for SEO.
   const onCardClick = (e: React.MouseEvent) => {
     // Honour modifier-/middle-clicks → let the browser take the link.
     if (e.defaultPrevented || e.metaKey || e.ctrlKey || e.shiftKey || e.button === 1) return;
@@ -49,18 +48,20 @@ export function ProductCard({ product, priority = false }: { product: Product; p
           blurDataURL={BLUR_DATA_URL}
           className="object-contain transition-transform duration-[400ms] ease-[var(--ease-brand)] group-hover:scale-105"
         />
-        {(product.isNew || product.isBestSeller || offPercent !== null) && (
-          <div className="absolute top-2 left-2 flex flex-col gap-1">
-            {offPercent !== null && <Badge tone="maroon">−{offPercent}%</Badge>}
-            {product.isBestSeller && <Badge>{t("badgeBestSeller")}</Badge>}
-            {product.isNew && <Badge>{t("badgeNew")}</Badge>}
+        {offPercent !== null && (
+          <div className="absolute top-2 left-2 flex items-center gap-1">
+            <Badge tone="maroon">−{offPercent}%</Badge>
+            {/* "SALE" is deliberately not translated — it reads as SALE on the Georgian
+                storefront too, the way the brand uses it. Hardcoded rather than pulled from
+                the message bundle so nobody "fixes" it into ფასდაკლება later. */}
+            <Badge>SALE</Badge>
           </div>
         )}
         <div className="absolute top-2 right-2">
           <WishlistButton handle={product.handle} />
         </div>
         <div className="absolute right-2 bottom-2">
-          <QuickViewButton product={product} />
+          <CardAddButton product={product} />
         </div>
       </div>
       <div className="pt-3 pb-1">

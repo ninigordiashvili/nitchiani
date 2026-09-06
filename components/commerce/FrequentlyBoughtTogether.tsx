@@ -62,7 +62,9 @@ export function FrequentlyBoughtTogether({
 
   const onAdd = () => {
     for (const p of selectedItems) {
-      const v = p.variants.find((vv) => vv.availableForSale) ?? p.variants[0];
+      // Only a sellable variant, and only if one exists: a bundle must never quietly
+      // slip a sold-out item into the bag alongside the ones the shopper picked.
+      const v = p.variants.find((vv) => vv.availableForSale);
       if (!v) continue;
       cart.addLine({
         variantId: v.id,
@@ -71,6 +73,7 @@ export function FrequentlyBoughtTogether({
         variantTitle: v.title,
         image: p.featuredImage,
         unitPrice: v.price,
+        maxQuantity: v.quantityAvailable,
       });
     }
   };

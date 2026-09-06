@@ -316,3 +316,31 @@
     bottom: calc(86px + var(--chat-lift)) !important;
   }
 }
+
+/* Retract the launcher while the page is scrolling — see ChatWidgetPlacement, which sets the
+   flag. Not media-scoped: the launcher sits on the product grid's card controls at every
+   width. `!important` for the same reason as the offsets above (the vendor styles the button
+   inline), and it also beats any attention animation the widget may run on itself. */
+html[data-chat-retracted="true"] button[aria-label="Open chat"],
+html[data-chat-retracted="true"] [aria-label="Chat prompt"] {
+  opacity: 0 !important;
+  transform: translateY(16px) scale(0.9) !important;
+  pointer-events: none !important;
+}
+
+button[aria-label="Open chat"],
+[aria-label="Chat prompt"] {
+  transition: opacity 0.2s ease, transform 0.2s ease !important;
+}
+
+/* Toast entry — rises and fades in. Skipped for reduced-motion, where it simply appears. */
+@keyframes toast-in {
+  /* Enters downward now that the toast sits at the top, so it reads as dropping in from the
+     edge it's anchored to rather than sliding away from it. */
+  from { opacity: 0; transform: translateY(-8px) scale(0.98); }
+  to   { opacity: 1; transform: none; }
+}
+.toast-in { animation: toast-in 0.22s var(--ease-brand); }
+@media (prefers-reduced-motion: reduce) {
+  .toast-in { animation: none; }
+}

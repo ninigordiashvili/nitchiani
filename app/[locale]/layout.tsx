@@ -11,6 +11,7 @@ import { CookieConsentBanner } from "@/components/layout/CookieConsentBanner";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { PromoStrip } from "@/components/layout/PromoStrip";
+import { getFreeShippingThreshold } from "@/lib/echodesk/shipping";
 import { CartDrawer } from "@/components/layout/CartDrawer";
 import { BottomNav } from "@/components/layout/BottomNav";
 import { LocalePrompt } from "@/components/layout/LocalePrompt";
@@ -19,12 +20,14 @@ import { SkipToContent } from "@/components/layout/SkipToContent";
 import { WelcomePopup } from "@/components/layout/WelcomePopup";
 import { SearchOverlay } from "@/components/search/SearchOverlay";
 import { QuickViewModal } from "@/components/commerce/QuickViewModal";
+import { ChatWidgetPlacement } from "@/components/ui/ChatWidgetPlacement";
 import { CartProvider } from "@/lib/cart/store";
 import { CookieConsentProvider } from "@/lib/ui/cookie-consent";
 import { CurrencyProvider } from "@/lib/currency/store";
 import { RecentlyViewedProvider } from "@/lib/recently-viewed/store";
 import { OverlaysProvider } from "@/lib/ui/overlays";
 import { QuickViewProvider } from "@/lib/ui/quick-view";
+import { ToastProvider } from "@/lib/ui/toast";
 import { WishlistProvider } from "@/lib/wishlist/store";
 import { isLocale, locales, type Locale } from "@/lib/i18n/config";
 
@@ -55,6 +58,9 @@ export default async function LocaleLayout({
   if (!isLocale(locale)) notFound();
   setRequestLocale(locale);
   const messages = await getMessages();
+  // Fetched once per render and handed to both places that advertise it, so the strip and the
+  // cart bar can't quote different numbers — or a number the shop no longer honours.
+  const freeShippingThreshold = await getFreeShippingThreshold(locale as Locale);
 
   return (
     <html
@@ -70,10 +76,11 @@ export default async function LocaleLayout({
           <RecentlyViewedProvider>
             <CartProvider>
               <QuickViewProvider>
+                <ToastProvider>
                 <OverlaysProvider>
                 <div className="flex min-h-dvh flex-col">
                   <SkipToContent />
-                  <PromoStrip />
+                  <PromoStrip freeShippingThreshold={freeShippingThreshold} />
                   <LocalePrompt />
                   <Header locale={locale as Locale} />
                   {/* `id="main"` is the skip-link target; `tabIndex={-1}` makes it programmatically
@@ -88,7 +95,10 @@ export default async function LocaleLayout({
                     {children}
                   </main>
                   <Footer />
-                  <CartDrawer locale={locale as Locale} />
+                  <CartDrawer
+                    locale={locale as Locale}
+                    freeShippingThreshold={freeShippingThreshold}
+                  />
                   <SearchOverlay />
                   <QuickViewModal />
                   <BottomNav />
@@ -105,8 +115,12 @@ export default async function LocaleLayout({
                     src="https://echodesk.ge/widget.js?t=wgt_live_uiW4-k34AQvHTgKP2hzgFVDa8sA6icAz"
                     strategy="afterInteractive"
                   />
+                  {/* Retracts the vendor's button while scrolling — it otherwise parks on the
+                      product grid's wishlist heart and quick-view control. */}
+                  <ChatWidgetPlacement />
                 </div>
                 </OverlaysProvider>
+                </ToastProvider>
               </QuickViewProvider>
             </CartProvider>
           </RecentlyViewedProvider>

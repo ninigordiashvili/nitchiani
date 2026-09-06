@@ -18,6 +18,12 @@ export type ProductVariant = {
   id: string;
   title: string;
   availableForSale: boolean;
+  /**
+   * Units the shop can actually ship, when the backend tracks them. `undefined` means
+   * untracked — treat it as no ceiling rather than as zero, or an untracked product becomes
+   * unbuyable.
+   */
+  quantityAvailable?: number;
   selectedOptions: { name: string; value: string }[];
   price: Money;
   compareAtPrice?: Money;
@@ -43,7 +49,6 @@ export type Product = {
   options: ProductOption[];
   variants: ProductVariant[];
   priceRange: { min: Money; max: Money };
-  isNew?: boolean;
   isBestSeller?: boolean;
   /**
    * Locale-stable slug derived from the English product type. Used for breadcrumb links
@@ -56,6 +61,26 @@ export type Product = {
    * for products in the Piercings category — drives the `MaterialTrust` panel on the PDP.
    */
   material?: string;
+  /**
+   * Rating summary as reported by the backend. Present only when the catalog is live —
+   * the sample catalog's ratings are derived from `lib/reviews.ts` instead.
+   */
+  reviewSummary?: { count: number; average: number };
+  /**
+   * Filterable attributes as declared by the backend — hair type, length, and whatever else
+   * the catalog defines later. Generic on purpose: the toolbar builds a chip row per
+   * attribute it finds, so a new one needs no code here.
+   */
+  attributes?: ProductAttribute[];
+};
+
+export type ProductAttribute = {
+  /** Stable key from the backend, used in the URL. */
+  key: string;
+  /** Localized label for the chip group heading. */
+  name: string;
+  /** Localized values this product carries for the attribute. */
+  values: string[];
 };
 
 export type Collection = {

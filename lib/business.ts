@@ -19,6 +19,9 @@ export const BUSINESS = {
   address: "[REGISTERED ADDRESS, Tbilisi, Georgia]",
   /** Public-facing contact email. */
   email: "Info@nitchiani.shop",
+  /** Numeric page id. Kept separate from the URL because Messenger links (`m.me/<id>`) need
+   *  the id on its own — see lib/contact-channels.ts. */
+  facebookPageId: "61593930928320",
   /** Official Facebook page. Numeric profile URL — the page has no vanity handle yet. */
   facebookUrl: "https://www.facebook.com/profile.php?id=61593930928320",
   /** Display name for the Facebook page (the URL carries no readable handle). */

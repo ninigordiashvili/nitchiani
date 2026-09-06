@@ -14,6 +14,11 @@ const isDev = process.env.NODE_ENV === "development";
  *  - EchoDesk live chat: script + iframe UI from `echodesk.ge`, config fetch to
  *    `api.echodesk.ge`. It uses no websockets, workers, remote fonts or images, so
  *    those directives stay untouched.
+ *  - Google Maps (checkout address picker): script from `maps.googleapis.com`, map tiles and
+ *    control sprites from `maps.gstatic.com`/`*.googleapis.com`/`*.ggpht.com`, Places and
+ *    Geocoding XHRs to `maps.googleapis.com`, Places (New) autocomplete RPCs to the separate
+ *    `places.googleapis.com` host, and its injected control stylesheet/fonts from
+ *    `fonts.googleapis.com`/`fonts.gstatic.com`. Without a key none of this loads at all.
  *  - Images come through next/image (self) plus the remote CDNs in `images.remotePatterns`.
  *  - Fonts are self-hosted by next/font, so `font-src 'self'`.
  *
@@ -22,11 +27,14 @@ const isDev = process.env.NODE_ENV === "development";
  */
 const csp = [
   `default-src 'self'`,
-  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""} https://*.cal.com https://echodesk.ge`,
-  `style-src 'self' 'unsafe-inline'`,
-  `img-src 'self' data: blob: https://cdn.shopify.com https://*.cdninstagram.com https://*.fbcdn.net https://picsum.photos https://fastly.picsum.photos https://*.cal.com`,
-  `font-src 'self' data:`,
-  `connect-src 'self' https://*.cal.com https://api.echodesk.ge${isDev ? " ws:" : ""}`,
+  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""} https://*.cal.com https://echodesk.ge https://maps.googleapis.com`,
+  // The Maps JS API injects its own stylesheet link for map controls.
+  `style-src 'self' 'unsafe-inline' https://fonts.googleapis.com`,
+  `img-src 'self' data: blob: https://echodesk-media.fsn1.your-objectstorage.com https://cdn.shopify.com https://*.cdninstagram.com https://*.fbcdn.net https://picsum.photos https://fastly.picsum.photos https://*.cal.com https://maps.gstatic.com https://maps.googleapis.com https://*.googleapis.com https://*.ggpht.com`,
+  `font-src 'self' data: https://fonts.gstatic.com`,
+  // `*.api.echodesk.ge` covers the tenant subdomain (nitchiani.api.echodesk.ge); the bare
+  // host alone does not match it, so client-side storefront calls would be blocked.
+  `connect-src 'self' https://*.cal.com https://api.echodesk.ge https://*.api.echodesk.ge https://maps.googleapis.com https://places.googleapis.com${isDev ? " ws:" : ""}`,
   `frame-src 'self' https://*.cal.com https://echodesk.ge`,
   `frame-ancestors 'self'`,
   `base-uri 'self'`,
@@ -50,6 +58,8 @@ const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "cdn.shopify.com" },
+      // EchoDesk product media (object storage behind their CMS).
+      { protocol: "https", hostname: "echodesk-media.fsn1.your-objectstorage.com" },
       { protocol: "https", hostname: "picsum.photos" },
       { protocol: "https", hostname: "fastly.picsum.photos" },
       { protocol: "https", hostname: "scontent.cdninstagram.com" },
@@ -60,6 +70,38 @@ const nextConfig: NextConfig = {
   experimental: {
     optimizePackageImports: ["lucide-react"],
   },
+  /**
+   * The category set was renamed (extensions → hair-extensions, loc-care → hair-care, …).
+   * These URLs were in the sitemap and are linked from the journal, so a plain 404 would throw
+   * away whatever ranking and bookmarks they'd earned. Permanent redirects to the closest
+   * equivalent; the two categories with no successor land on the shop index rather than
+   * pretending to be something they aren't.
+   *
+   * `:locale` keeps the visitor in the language they arrived in.
+   */
+  async redirects() {
+    const moved: Array<[string, string]> = [
+      ["extensions", "hair-extensions"],
+      ["loc-care", "hair-care"],
+      ["accessories", "hair-accessories"],
+    ];
+    return [
+      ...moved.map(([from, to]) => ({
+        source: `/:locale(ka|en)/shop/${from}`,
+        destination: `/:locale/shop/${to}`,
+        permanent: true,
+      })),
+      // Best Sellers and New Arrivals were removed outright — every product was flagged featured, so the
+      // collection had become the catalog under another name. It was in the sitemap, so it
+      // redirects rather than 404s.
+      ...["piercings", "tools", "best-sellers", "new-arrivals"].map((from) => ({
+        source: `/:locale(ka|en)/shop/${from}`,
+        destination: `/:locale/shop`,
+        permanent: true,
+      })),
+    ];
+  },
+
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },

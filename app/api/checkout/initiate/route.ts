@@ -1,6 +1,11 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { computeTotals, type ServerComputedTotals } from "@/lib/checkout/totals";
+import {
+  computeTotals,
+  computeTotalsWithEchoDesk,
+  withShipping,
+  type ServerComputedTotals,
+} from "@/lib/checkout/totals";
 import { sendOrderConfirmation } from "@/lib/email/order-confirmation";
 import {
   createManualOrder,
@@ -9,6 +14,12 @@ import {
 } from "@/lib/shopify/orders";
 import { createBogPaymentOrder, isBogConfigured } from "@/lib/payments/bog";
 import { createTbcPayment, getClientIp, isTbcConfigured } from "@/lib/payments/tbc";
+import {
+  createGuestOrder,
+  type GuestOrderOutcome,
+  toEchoDeskPaymentMethod,
+} from "@/lib/echodesk/orders";
+import { isEchoDeskConfigured } from "@/lib/echodesk/client";
 import { clientIp, rateLimit } from "@/lib/rate-limit";
 import { reportError } from "@/lib/observability";
 
@@ -28,12 +39,20 @@ const COD_ENABLED = process.env.NEXT_PUBLIC_COD_ENABLED === "true";
 
 const bodySchema = z.object({
   firstName: z.string().min(1),
-  lastName: z.string().optional(),
+  // Required for the same reason as the client schema: the backend refuses without it.
+  lastName: z.string().min(1),
   phone: z.string().min(6),
-  email: z.string().email().optional().or(z.literal("")),
+  // Required: EchoDesk's guest checkout lists `email` among its required fields.
+  email: z.string().email(),
   address: z.string().min(3),
   city: z.string().min(1),
   postalCode: z.string().optional(),
+  // Latitude/longitude from the address picker. Bounded to real coordinates so a malformed
+  // client can't push nonsense into the courier's map link.
+  /** The delivery method the shopper chose, when the shop offers more than one. */
+  shippingMethodId: z.number().int().positive().nullable().optional(),
+  lat: z.number().min(-90).max(90).optional(),
+  lng: z.number().min(-180).max(180).optional(),
   notes: z.string().optional(),
   paymentMethod: z.enum(["bank_transfer", "cod", "bog_card", "tbc_card"]),
   locale: z.string(),
@@ -44,10 +63,28 @@ const bodySchema = z.object({
   couponCode: z.string().nullable().optional(),
 });
 
+/**
+ * Errors are returned as stable keys, not sentences. The client translates them, so a
+ * Georgian shopper gets Georgian — and the wording can change without touching the API.
+ */
+function classifyOrderError(message: string): string {
+  if (/cash on delivery|pickup/i.test(message)) return "codPickupOnly";
+  if (/promo|coupon/i.test(message)) return "promoInvalid";
+  if (/stock|unavailable|quantity/i.test(message)) return "outOfStock";
+  if (/required|missing/i.test(message)) return "missingDetails";
+  console.warn("[api/checkout/initiate] unclassified backend error:", message);
+  return "orderFailed";
+}
+
 type CheckoutResponse =
-  | { orderId: string }
+  | { orderId: string; trackingToken?: string }
   | { redirectUrl: string }
-  | { error: string };
+  | {
+      error: string;
+      /** Present only for an over-limit line, so the client can name the product and the
+       *  number left instead of showing the catch-all message. */
+      stock?: { product: string; available: number };
+    };
 
 /** Build the order-creation payload the way `createManualOrder` / `createPendingOrder` expect. */
 function buildOrderInput(
@@ -56,11 +93,13 @@ function buildOrderInput(
 ): ManualOrderInput {
   return {
     firstName: payload.firstName,
-    lastName: payload.lastName ?? "",
+    lastName: payload.lastName,
     phone: payload.phone,
-    email: payload.email ?? "",
+    email: payload.email,
     address: payload.address,
     city: payload.city,
+    lat: payload.lat,
+    lng: payload.lng,
     postalCode: payload.postalCode,
     notes: payload.notes,
     paymentMethod: payload.paymentMethod,
@@ -73,6 +112,11 @@ function buildOrderInput(
         : undefined,
     total: { amount: totals.total.toFixed(2), currencyCode: payload.subtotal.currencyCode },
     couponCode: totals.coupon?.code,
+    shipping:
+      totals.shipping > 0
+        ? { amount: totals.shipping.toFixed(2), currencyCode: payload.subtotal.currencyCode }
+        : undefined,
+    shippingMethodId: totals.shippingMethodId ?? undefined,
   };
 }
 
@@ -83,7 +127,7 @@ export async function POST(req: Request): Promise<NextResponse<CheckoutResponse>
   const rl = rateLimit(`checkout:${clientIp(req)}`, { limit: 8, windowMs: 60_000 });
   if (!rl.ok) {
     return NextResponse.json(
-      { error: "Too many requests. Please wait a moment and try again." },
+      { error: "rateLimited" },
       { status: 429, headers: { "Retry-After": String(rl.retryAfter) } },
     );
   }
@@ -92,26 +136,38 @@ export async function POST(req: Request): Promise<NextResponse<CheckoutResponse>
   try {
     payload = bodySchema.parse(await req.json());
   } catch (err) {
-    return NextResponse.json(
-      { error: err instanceof Error ? err.message : "Invalid request" },
-      { status: 400 },
-    );
+    // A zod dump is neither translatable nor readable; the client form validates first, so
+    // reaching here means a hand-rolled request.
+    console.warn("[api/checkout/initiate] payload rejected:", err);
+    return NextResponse.json({ error: "invalidRequest" }, { status: 400 });
   }
 
   if (payload.paymentMethod === "cod" && !COD_ENABLED) {
     return NextResponse.json(
-      { error: "Cash on delivery is unavailable. Please choose another payment method." },
+      { error: "codUnavailable" },
       { status: 400 },
     );
   }
 
   // Server-side total computation. Recompute subtotal from the line items and validate the
   // coupon against the registry — never trust the client's `subtotal` / `discount` numbers.
-  const totalsResult = computeTotals(payload.lines, payload.couponCode);
+  // When EchoDesk owns the order it also owns the discount — see computeTotalsWithEchoDesk.
+  const totalsResult = isEchoDeskConfigured
+    ? await computeTotalsWithEchoDesk(payload.lines, payload.couponCode)
+    : computeTotals(payload.lines, payload.couponCode);
   if (!totalsResult.ok) {
     return NextResponse.json({ error: totalsResult.error }, { status: 400 });
   }
-  const totals = totalsResult.totals;
+  // Delivery is priced here, never taken from the request — the client shows an estimate, the
+  // server decides the charge. A pin makes it a live courier quote; without one it falls back
+  // to the tenant's flat method, and to nothing when neither is configured.
+  const totals = await withShipping(
+    totalsResult.totals,
+    payload.locale === "en" ? "en" : "ka",
+    { street: payload.address, city: payload.city, lat: payload.lat, lng: payload.lng },
+    payload.lines,
+    payload.shippingMethodId ?? null,
+  );
 
   // Cross-check the client's subtotal against ours — a small drift means catalog prices
   // changed since the cart was loaded, which is worth surfacing so the user can re-confirm.
@@ -125,12 +181,19 @@ export async function POST(req: Request): Promise<NextResponse<CheckoutResponse>
       totals.subtotal,
     );
     return NextResponse.json(
-      { error: "Cart total has changed. Please refresh your cart and try again." },
+      { error: "cartChanged" },
       { status: 409 },
     );
   }
 
   const orderInput = buildOrderInput(payload, totals);
+
+  // EchoDesk owns orders once it's configured. It brokers card payments itself, so the
+  // BOG/TBC branches below are bypassed entirely — the tenant decides which providers are
+  // live and hands back a `payment_url` when one applies.
+  if (isEchoDeskConfigured) {
+    return handleEchoDeskOrder(orderInput, totals);
+  }
 
   if (payload.paymentMethod === "bog_card") {
     return handleBogCard(orderInput, totals, req);
@@ -163,7 +226,7 @@ async function handleBogCard(
 ): Promise<NextResponse<CheckoutResponse>> {
   if (!isBogConfigured) {
     return NextResponse.json(
-      { error: "Card payments are not yet enabled. Please choose bank transfer or cash on delivery." },
+      { error: "cardUnavailable" },
       { status: 400 },
     );
   }
@@ -174,7 +237,7 @@ async function handleBogCard(
   });
   if (!pending) {
     return NextResponse.json(
-      { error: "Could not create order. Please try again or contact us on WhatsApp." },
+      { error: "orderFailed" },
       { status: 502 },
     );
   }
@@ -209,7 +272,7 @@ async function handleBogCard(
 
   if (!bog) {
     return NextResponse.json(
-      { error: "Card payment session could not be started. Please try a different method." },
+      { error: "paymentSessionFailed" },
       { status: 502 },
     );
   }
@@ -224,7 +287,7 @@ async function handleTbcCard(
 ): Promise<NextResponse<CheckoutResponse>> {
   if (!isTbcConfigured) {
     return NextResponse.json(
-      { error: "TBC card payments are not yet enabled. Please choose another method." },
+      { error: "cardUnavailable" },
       { status: 400 },
     );
   }
@@ -235,7 +298,7 @@ async function handleTbcCard(
   });
   if (!pending) {
     return NextResponse.json(
-      { error: "Could not create order. Please try again or contact us on WhatsApp." },
+      { error: "orderFailed" },
       { status: 502 },
     );
   }
@@ -246,7 +309,9 @@ async function handleTbcCard(
     externalOrderId: String(pending.id),
     totalAmount: totals.total,
     currency: orderInput.subtotal.currencyCode,
-    returnUrl: `${origin}/api/checkout/tbc/callback?order=${encodeURIComponent(pending.name)}&shopify=${pending.id}`,
+    // `locale` is what the callback reads to route the customer back into their own language —
+    // without it every shopper lands on the Georgian success page.
+    returnUrl: `${origin}/api/checkout/tbc/callback?order=${encodeURIComponent(pending.name)}&shopify=${pending.id}&locale=${encodeURIComponent(orderInput.locale)}`,
     callbackUrl: `${origin}/api/checkout/tbc/webhook?shopify=${pending.id}`,
     language: orderInput.locale === "en" ? "EN" : "KA",
     userIpAddress: getClientIp(req),
@@ -257,10 +322,78 @@ async function handleTbcCard(
 
   if (!tbc) {
     return NextResponse.json(
-      { error: "Card payment session could not be started. Please try a different method." },
+      { error: "paymentSessionFailed" },
       { status: 502 },
     );
   }
 
   return NextResponse.json({ redirectUrl: tbc.redirectUrl });
+}
+
+/**
+ * Places the order in EchoDesk and routes the shopper accordingly.
+ *
+ * The response tells us which of two worlds we're in: a `payment_url` means the tenant has a
+ * card provider live and the shopper still has to pay; its absence means the order is already
+ * booked (cash on delivery / bank transfer) and we can confirm immediately.
+ *
+ * `public_token` is carried through to the success page so the customer can track the order
+ * without an account — it's the credential, so it never appears in a log line.
+ */
+async function handleEchoDeskOrder(
+  orderInput: ManualOrderInput,
+  totals: ServerComputedTotals,
+): Promise<NextResponse<CheckoutResponse>> {
+  // Caught here rather than deep in the client so the shopper gets a useful instruction
+  // instead of "could not create order".
+  if (!toEchoDeskPaymentMethod(orderInput.paymentMethod)) {
+    return NextResponse.json(
+      { error: "bankTransferUnavailable" },
+      { status: 400 },
+    );
+  }
+
+  const outcome = await createGuestOrder(orderInput).catch((err) => {
+    reportError(err, {
+      op: "echodesk.createGuestOrder",
+      paymentMethod: orderInput.paymentMethod,
+      total: totals.total,
+    });
+    // Typed as the outcome union so a thrown request narrows the same way a rejected one
+    // does — otherwise the `stock` branch below is unreachable to the compiler.
+    return { ok: false, error: undefined } as GuestOrderOutcome;
+  });
+
+  if (!outcome.ok) {
+    // EchoDesk's 4xx text is English prose; classify it so the client can say it in the
+    // shopper's own language rather than rendering an English sentence on a Georgian page.
+    if (outcome.stock) {
+      // The one rejection we can explain precisely. The product name comes from the
+      // merchant's own catalogue, and the count is a number — no backend prose reaches
+      // the shopper, who reads our sentence in their own language.
+      return NextResponse.json(
+        { error: "insufficientStock", stock: outcome.stock },
+        { status: 400 },
+      );
+    }
+    return outcome.error
+      ? NextResponse.json({ error: classifyOrderError(outcome.error) }, { status: 400 })
+      : NextResponse.json({ error: "orderFailed" }, { status: 502 });
+  }
+  const order = outcome.order;
+
+  // Card flow: the gateway owns the next step.
+  if (order.paymentUrl) {
+    return NextResponse.json({ redirectUrl: order.paymentUrl });
+  }
+
+  const reference = order.orderNumber ?? String(order.id);
+
+  // Fire-and-forget confirmation, same as the manual flow: the order exists in EchoDesk either
+  // way, and an email-provider hiccup shouldn't block the response.
+  void sendOrderConfirmation({ ...orderInput, orderId: reference }).catch((err) => {
+    reportError(err, { op: "sendOrderConfirmation", orderId: reference });
+  });
+
+  return NextResponse.json({ orderId: reference, trackingToken: order.publicToken });
 }

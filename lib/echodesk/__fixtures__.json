@@ -1,0 +1,35 @@
+{
+  "id": 1,
+  "sku": "prod-001",
+  "slug": "prod-001",
+  "name": {
+    "en": "თმის ჟელე",
+    "ka": "თმის ჟელე"
+  },
+  "description": {
+    "en": "",
+    "ka": ""
+  },
+  "short_description": {
+    "en": "hair wax for braiding",
+    "ka": "hair wax for braiding"
+  },
+  "price": "10.00",
+  "compare_at_price": null,
+  "image": "https://echodesk-media.fsn1.your-objectstorage.com/media/gallery/nitchiani/20260420_105119_Screenshot_2026-04-20_at_14.51.09.png",
+  "images": [
+    {
+      "id": -1,
+      "image": "https://echodesk-media.fsn1.your-objectstorage.com/media/gallery/nitchiani/20260420_105119_Screenshot_2026-04-20_at_14.51.09.png",
+      "alt_text": null,
+      "sort_order": 0,
+      "created_at": "2026-04-20T10:54:27.479145Z"
+    }
+  ],
+  "variants": [],
+  "attribute_values": [],
+  "quantity": 50,
+  "is_in_stock": true,
+  "is_featured": true,
+  "status": "active"
+}

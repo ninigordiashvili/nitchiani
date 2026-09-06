@@ -15,10 +15,21 @@ export type Coupon = {
   minSubtotal?: number;
 };
 
-export type CouponError = "invalid" | "minimum";
+/**
+ * `unavailable` is deliberately separate from `invalid`: a code we couldn't check is not a
+ * code we know is bad, and telling a shopper their valid coupon is invalid loses the sale.
+ *
+ * `bundleLapsed` is not a rejection either — the code was good and the bag stopped meeting
+ * its condition. Saying so is what stops the removal looking like a glitch.
+ */
+export type CouponError = "invalid" | "minimum" | "unavailable" | "bundleLapsed";
 
 const COUPONS: Coupon[] = [
   { code: "WELCOME10", type: "percent", value: 10 },
+  // Pairs with the Ariel promo in lib/bundles.ts. `minSubtotal` is the closest this registry
+  // can get to "3 packs" — 3 x ₾80. EchoDesk is the authority when it's configured, so the
+  // same code has to exist there or the discount is refused at checkout.
+  { code: "ARIEL15", type: "amount", value: 15, minSubtotal: 240 },
   { code: "GEORGIA20", type: "amount", value: 20, minSubtotal: 100 },
   { code: "FRIDAY15", type: "percent", value: 15, minSubtotal: 80 },
   // Auto-applied by the homepage bundle CTAs. Paired with `lib/bundles.ts`.
@@ -45,5 +56,7 @@ export function discountFor(subtotal: number, coupon: Coupon): number {
 
 /** Short visual label, e.g. `−10%` or `−₾20`. */
 export function couponLabel(coupon: Coupon): string {
-  return coupon.type === "percent" ? `−${coupon.value}%` : `−₾${coupon.value}`;
+  // Amounts get two decimals so a backend-priced coupon reads as money ("−₾8.90") and matches
+  // the totals row; percentages stay bare ("−10%"), where a decimal would be noise.
+  return coupon.type === "percent" ? `−${coupon.value}%` : `−₾${coupon.value.toFixed(2)}`;
 }

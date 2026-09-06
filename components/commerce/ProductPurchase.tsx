@@ -4,9 +4,10 @@ import { Minus, Plus, Truck } from "lucide-react";
 import { useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import type { Product } from "@/lib/shopify/types";
-import { AddToBagButton } from "./AddToBagButton";
+import { clampToStock, isAtStockLimit } from "@/lib/cart/stock";
+import { AddToCartButton } from "./AddToCartButton";
 import { PriceDisplay } from "./PriceDisplay";
-import { StickyAddToBag } from "./StickyAddToBag";
+import { StickyAddToCart } from "./StickyAddToCart";
 import { VariantPicker } from "./VariantPicker";
 
 /**
@@ -21,9 +22,12 @@ import { VariantPicker } from "./VariantPicker";
 export function ProductPurchase({
   product,
   showSizeGuide = true,
+  onAdded,
 }: {
   product: Product;
   showSizeGuide?: boolean;
+  /** Passed straight to AddToCartButton — the quick-view sheet closes on it. */
+  onAdded?: () => void;
 }) {
   const t = useTranslations("product");
   const tNav = useTranslations("nav");
@@ -31,6 +35,7 @@ export function ProductPurchase({
     product.variants.find((v) => v.availableForSale) ?? product.variants[0],
   );
   const [quantity, setQuantity] = useState(1);
+
   const inlineCtaRef = useRef<HTMLDivElement>(null);
 
   return (
@@ -65,14 +70,15 @@ export function ProductPurchase({
           <button
             type="button"
             aria-label={tNav("increaseQuantity")}
-            onClick={() => setQuantity((q) => q + 1)}
-            className="flex h-full cursor-pointer items-center justify-center px-3"
+            onClick={() => setQuantity((q) => clampToStock(q + 1, selected?.quantityAvailable))}
+            disabled={isAtStockLimit(quantity, selected?.quantityAvailable)}
+            className="flex h-full cursor-pointer items-center justify-center px-3 disabled:cursor-not-allowed disabled:opacity-30"
           >
             <Plus size={14} />
           </button>
         </div>
         <div className="flex-1">
-          <AddToBagButton product={product} variant={selected} quantity={quantity} />
+          <AddToCartButton product={product} variant={selected} quantity={quantity} onAdded={onAdded} />
         </div>
       </div>
 
@@ -81,7 +87,7 @@ export function ProductPurchase({
         {t("shipsIn")}
       </p>
 
-      <StickyAddToBag
+      <StickyAddToCart
         product={product}
         variant={selected}
         quantity={quantity}

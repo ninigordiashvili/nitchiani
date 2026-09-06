@@ -6,7 +6,7 @@
  * Lives in the same `/shop/<slug>` URL space as collections. The route handler in
  * `app/[locale]/(shop)/shop/[collection]/page.tsx` checks campaigns first and falls
  * through to collections if no match — so campaign slugs must NOT collide with collection
- * handles (`best-sellers`, `new-arrivals`, `bonnets`, `loc-care`, `extensions`,
+ * handles (`bonnets`, `hair-care`, `hair-extensions`,
  * `accessories`, `tools`).
  *
  * When this grows past a handful, move to a CMS / Shopify metaobject. For now: hand-edited

@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
-import { Check, ClipboardCheck, ExternalLink, Package, RotateCcw, Truck } from "lucide-react";
+import { Check, ExternalLink } from "lucide-react";
 import { setRequestLocale, getTranslations } from "next-intl/server";
 import { WhatsAppIcon, getWhatsAppNumber } from "@/components/brand/WhatsAppIcon";
 import { getOrderByName, type OrderTracking } from "@/lib/shopify/orders";
+import { getTrackingByToken } from "@/lib/echodesk/tracking";
 import { localeAlternates } from "@/lib/seo";
 import type { Locale } from "@/lib/i18n/config";
 
@@ -44,23 +45,31 @@ export default async function OrderStatusPage({
   searchParams,
 }: {
   params: Promise<{ locale: Locale }>;
-  searchParams: Promise<{ order?: string }>;
+  searchParams: Promise<{ order?: string; token?: string }>;
 }) {
   const { locale } = await params;
-  const { order: orderParam } = await searchParams;
+  const { order: orderParam, token: tokenParam } = await searchParams;
   setRequestLocale(locale);
 
-  const [t, tCart, tCheckout, tWa] = await Promise.all([
+  const [t, tCheckout, tWa] = await Promise.all([
     getTranslations("orderStatus"),
-    getTranslations("cart"),
     getTranslations("checkout"),
     getTranslations("whatsapp"),
   ]);
 
   const whatsappNumber = getWhatsAppNumber();
 
-  // Attempt the live lookup only when an order param was supplied.
-  const order = orderParam ? await getOrderByName(orderParam).catch(() => null) : null;
+  // Two ways in, in order of reliability:
+  //   1. `?token=` — the order's public_token, from the confirmation email. Works without an
+  //      account and is the link we hand the customer at checkout.
+  //   2. `?order=` — legacy Shopify order-name lookup, kept so older links don't break.
+  //
+  // A pasted value could be either, so a token lookup is tried first and the name lookup is
+  // the fallback; a wrong guess costs one request, not a dead end.
+  const lookup = tokenParam ?? orderParam;
+  const order =
+    (lookup ? await getTrackingByToken(lookup, locale).catch(() => null) : null) ??
+    (orderParam ? await getOrderByName(orderParam).catch(() => null) : null);
 
   const message = orderParam
     ? tWa("orderMessage", { id: orderParam })
@@ -69,22 +78,41 @@ export default async function OrderStatusPage({
 
   return (
     <div className="container-shop pb-8 sm:pb-12">
+      {/* The page keeps one shape whether or not an order is loaded: heading, the lookup, then
+          the result beneath it. Swapping the whole page out on a hit meant the field vanished,
+          so checking a second order meant going back — and the result read as a different page
+          rather than an answer to what was just typed. */}
       <header className="mb-8 max-w-2xl">
         <p className="label-eyebrow mb-2">{t("eyebrow")}</p>
-        {orderParam ? (
-          <p className="mb-3 text-xs tabular-nums opacity-60">
-            {tCheckout("orderNumber", { id: orderParam })}
-          </p>
-        ) : null}
         <h1 className="font-display text-3xl leading-tight tracking-tight sm:text-4xl">
-          {order ? t("liveTitle") : t("title")}
+          {t("title")}
         </h1>
-        <p className="mt-4 text-sm opacity-80 sm:text-base">
-          {order ? t("liveIntro") : t("intro")}
-        </p>
+        <p className="mt-4 text-sm opacity-80 sm:text-base">{t("intro")}</p>
       </header>
 
-      {order ? <LiveTracking order={order} locale={locale} /> : <StaticTimeline tCart={tCart} />}
+      <OrderLookup t={t} defaultValue={lookup} />
+
+      {order ? (
+        <section className="mb-10">
+          <p className="label-eyebrow mb-2">{t("liveTitle")}</p>
+          <p className="mb-4 text-sm tabular-nums opacity-70">
+            {tCheckout("orderNumber", { id: order.name })}
+          </p>
+          <p className="mb-6 max-w-2xl text-sm opacity-80">{t("liveIntro")}</p>
+          <LiveTracking order={order} locale={locale} />
+        </section>
+      ) : lookup ? (
+        /* A code was supplied but nothing came back — say so plainly, directly under the
+           field it was typed into. */
+        <div
+          role="status"
+          className="mb-10 rounded-lg border p-5"
+          style={{ borderColor: "var(--border-soft)" }}
+        >
+          <p className="font-display text-lg tracking-tight">{t("notFoundTitle")}</p>
+          <p className="mt-2 max-w-md text-sm opacity-75">{t("notFoundDesc")}</p>
+        </div>
+      ) : null}
 
       <div className="rounded-lg border border-black/10 p-5 sm:p-6">
         <p className="label-eyebrow mb-2">{t("contactEyebrow")}</p>
@@ -101,44 +129,6 @@ export default async function OrderStatusPage({
         </a>
       </div>
     </div>
-  );
-}
-
-/** Static 4-step explainer — the page's original behaviour, kept as a fallback. */
-function StaticTimeline({
-  tCart,
-}: {
-  tCart: Awaited<ReturnType<typeof getTranslations<"cart">>>;
-}) {
-  const steps = [
-    { icon: ClipboardCheck, text: tCart("howItWorksStep1Title") },
-    { icon: Package, text: tCart("howItWorksStep2Title") },
-    { icon: Truck, text: tCart("howItWorksStep3Title") },
-    { icon: RotateCcw, text: tCart("howItWorksStep4Title") },
-  ];
-  return (
-    <ol className="mb-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-      {steps.map((step, i) => (
-        <li
-          key={i}
-          className="flex items-start gap-3 rounded-md border border-black/10 p-4"
-        >
-          <span
-            className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full"
-            style={{
-              background: "color-mix(in oklab, var(--color-brand-maroon) 10%, transparent)",
-              color: "var(--color-brand-maroon)",
-            }}
-          >
-            <step.icon size={16} />
-          </span>
-          <div>
-            <p className="text-[11px] tabular-nums opacity-50">0{i + 1}</p>
-            <p className="text-sm font-medium leading-tight">{step.text}</p>
-          </div>
-        </li>
-      ))}
-    </ol>
   );
 }
 
@@ -202,10 +192,9 @@ async function LiveTracking({
               >
                 {completed ? <Check size={16} /> : `0${stepNumber}`}
               </span>
-              <div>
-                <p className="text-[11px] tabular-nums opacity-50">0{stepNumber}</p>
-                <p className="text-sm font-medium leading-tight">{label}</p>
-              </div>
+              {/* The number already sits in the badge to the left — repeating it above the
+                  label rendered every step twice ("01 / 01 Order placed"). */}
+              <p className="self-center text-sm font-medium leading-tight">{label}</p>
             </li>
           );
         })}
@@ -258,5 +247,51 @@ async function LiveTracking({
         </ul>
       </div>
     </div>
+  );
+}
+
+/**
+ * Order-number lookup. A plain GET form submitting to this same route, so it works without
+ * JavaScript and leaves a shareable/bookmarkable `?order=` URL — which is also the link the
+ * confirmation email points at.
+ *
+ * Deliberately not behind an account: the order number is the credential. `getOrderByName`
+ * matches an exact name, so there is nothing to enumerate usefully, and the response exposes
+ * only fulfilment state — no address, no contact details, no payment data.
+ */
+function OrderLookup({
+  t,
+  defaultValue,
+}: {
+  t: Awaited<ReturnType<typeof getTranslations<"orderStatus">>>;
+  defaultValue?: string;
+}) {
+  return (
+    <form
+      method="get"
+      className="mb-10 rounded-lg border p-5 sm:p-6"
+      style={{ borderColor: "var(--border-soft)" }}
+    >
+      <label htmlFor="order-lookup" className="label-eyebrow mb-2 block">
+        {t("lookupLabel")}
+      </label>
+      <div className="flex flex-col gap-2 sm:flex-row">
+        <input
+          id="order-lookup"
+          name="token"
+          type="text"
+          autoComplete="off"
+          required
+          defaultValue={defaultValue ?? ""}
+          placeholder={t("lookupPlaceholder")}
+          className="w-full rounded-md border px-3 py-2.5 text-base outline-none focus:border-[var(--color-brand-ink)]"
+          style={{ borderColor: "var(--border-soft)", background: "var(--surface)" }}
+        />
+        <button type="submit" className="btn-primary shrink-0 justify-center">
+          {t("lookupCta")}
+        </button>
+      </div>
+      <p className="mt-2 text-xs opacity-60">{t("lookupHint")}</p>
+    </form>
   );
 }
