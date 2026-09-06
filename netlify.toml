@@ -1,0 +1,20 @@
+# Netlify build config, kept in the repo rather than only in the dashboard so the settings
+# travel with the code and can be reviewed like anything else.
+
+[build]
+  command = "npm run build"
+
+[build.environment]
+  # Netlify scans build output for the values of environment variables and fails the build
+  # when it finds them, on the assumption a secret leaked. `NEXT_PUBLIC_*` values are meant
+  # to be in the browser bundle — that is what the prefix means in Next.js — so finding them
+  # there is correct, not a leak.
+  #
+  # Only these two are exempted, by name. Blanket-disabling the scan would also stop it
+  # catching a genuine secret, which is the one thing it is for: the EchoDesk tenant URL and
+  # the Maps key are both public by design, and the Maps key is protected by its HTTP
+  # referrer allowlist rather than by being hidden.
+  #
+  # Anything without the NEXT_PUBLIC_ prefix — GOOGLE_MAPS_SERVER_KEY, the BOG and TBC
+  # secrets — stays scanned, and must never appear in client output.
+  SECRETS_SCAN_OMIT_KEYS = "NEXT_PUBLIC_ECHODESK_API_URL,NEXT_PUBLIC_GOOGLE_MAPS_API_KEY"
