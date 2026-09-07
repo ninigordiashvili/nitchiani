@@ -21,6 +21,7 @@ import {
 } from "@/lib/echodesk/orders";
 import { getStoreConfig, isEchoDeskConfigured } from "@/lib/echodesk/client";
 import { envPaymentAvailability, paymentAvailability } from "@/lib/echodesk/payments";
+import { paymentStep } from "@/lib/checkout/payment-step";
 import { clientIp, rateLimit } from "@/lib/rate-limit";
 import { reportError } from "@/lib/observability";
 
@@ -394,9 +395,23 @@ async function handleEchoDeskOrder(
   }
   const order = outcome.order;
 
+  const step = paymentStep(orderInput.paymentMethod, order.paymentUrl);
+
   // Card flow: the gateway owns the next step.
-  if (order.paymentUrl) {
-    return NextResponse.json({ redirectUrl: order.paymentUrl });
+  if (step.kind === "redirect") {
+    return NextResponse.json({ redirectUrl: step.url });
+  }
+
+  // A card order with no gateway session is unpaid. Reporting it as placed would clear the
+  // shopper's cart, send a confirmation email and show a success page for money that never
+  // moved — and the shop would find out when the parcel was expected.
+  if (step.kind === "failed") {
+    reportError(new Error("card order created without a payment url"), {
+      op: "echodesk.paymentUrlMissing",
+      orderId: String(order.id),
+      paymentMethod: orderInput.paymentMethod,
+    });
+    return NextResponse.json({ error: "paymentSessionFailed" }, { status: 502 });
   }
 
   const reference = order.orderNumber ?? String(order.id);
