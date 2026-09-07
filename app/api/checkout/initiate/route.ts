@@ -19,7 +19,8 @@ import {
   type GuestOrderOutcome,
   toEchoDeskPaymentMethod,
 } from "@/lib/echodesk/orders";
-import { isEchoDeskConfigured } from "@/lib/echodesk/client";
+import { getStoreConfig, isEchoDeskConfigured } from "@/lib/echodesk/client";
+import { envPaymentAvailability, paymentAvailability } from "@/lib/echodesk/payments";
 import { clientIp, rateLimit } from "@/lib/rate-limit";
 import { reportError } from "@/lib/observability";
 
@@ -32,10 +33,6 @@ const lineSchema = z.object({
   quantity: z.number().int().positive(),
 });
 
-// Mirrors NEXT_PUBLIC_COD_ENABLED on the checkout page. The client hides the option; this
-// is what actually refuses it, so a hand-rolled request can't book a cash-on-delivery order
-// while the service is withdrawn.
-const COD_ENABLED = process.env.NEXT_PUBLIC_COD_ENABLED === "true";
 
 const bodySchema = z.object({
   firstName: z.string().min(1),
@@ -142,7 +139,13 @@ export async function POST(req: Request): Promise<NextResponse<CheckoutResponse>
     return NextResponse.json({ error: "invalidRequest" }, { status: 400 });
   }
 
-  if (payload.paymentMethod === "cod" && !COD_ENABLED) {
+  // Asked of the tenant, not of an env var. The checkout page reads the same source, so the
+  // server can't refuse a method the site is offering — which is exactly what happened while
+  // this mirrored NEXT_PUBLIC_COD_ENABLED and EchoDesk said the opposite.
+  const availability = isEchoDeskConfigured
+    ? paymentAvailability(await getStoreConfig())
+    : envPaymentAvailability();
+  if (payload.paymentMethod === "cod" && !availability.cashOnDelivery) {
     return NextResponse.json(
       { error: "codUnavailable" },
       { status: 400 },
@@ -161,13 +164,22 @@ export async function POST(req: Request): Promise<NextResponse<CheckoutResponse>
   // Delivery is priced here, never taken from the request — the client shows an estimate, the
   // server decides the charge. A pin makes it a live courier quote; without one it falls back
   // to the tenant's flat method, and to nothing when neither is configured.
-  const totals = await withShipping(
+  const shipped = await withShipping(
     totalsResult.totals,
     payload.locale === "en" ? "en" : "ka",
     { street: payload.address, city: payload.city, lat: payload.lat, lng: payload.lng },
     payload.lines,
     payload.shippingMethodId ?? null,
   );
+  // Delivery couldn't be priced. Refuse rather than charge nothing — the shop prices by
+  // courier quote, so an unpriceable order is one we'd ship for free by accident.
+  if (!shipped.totals) {
+    return NextResponse.json(
+      { error: shipped.reason === "needsLocation" ? "deliveryNeedsLocation" : "deliveryUnavailable" },
+      { status: 400 },
+    );
+  }
+  const totals = shipped.totals;
 
   // Cross-check the client's subtotal against ours — a small drift means catalog prices
   // changed since the cart was loaded, which is worth surfacing so the user can re-confirm.

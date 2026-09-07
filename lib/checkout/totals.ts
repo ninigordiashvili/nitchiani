@@ -1,7 +1,7 @@
 import { bundleForCoupon, bundleShortfall } from "@/lib/bundles";
 import { discountFor, findCoupon, type Coupon } from "@/lib/cart/coupons";
 import { classifyPromoMessage, validatePromo } from "@/lib/echodesk/promo";
-import { quoteItems, resolveShipping } from "@/lib/echodesk/shipping";
+import { quoteItems, resolveShipping, type ShippingResolution } from "@/lib/echodesk/shipping";
 import type { Locale } from "@/lib/i18n/config";
 
 /**
@@ -155,26 +155,48 @@ export async function withShipping(
   lines: TotalsLine[],
   /** The method the shopper chose; null lets the shop's default apply. */
   chosenMethodId: number | null = null,
-): Promise<ServerComputedTotals> {
+): Promise<
+  | { totals: ServerComputedTotals; reason: null }
+  /** Delivery couldn't be priced; the caller turns this into an error the shopper can act on. */
+  | { totals: null; reason: Exclude<ShippingResolution["status"], "priced" | "unpriced"> }
+> {
   const items = quoteItems(
     lines.map((l) => ({ variantId: l.variantId ?? "", quantity: l.quantity })),
   );
 
-  const option = await resolveShipping(
+  const resolution = await resolveShipping(
     locale,
     totals.subtotal,
     { items, street: address.street, city: address.city, lat: address.lat, lng: address.lng },
     chosenMethodId,
   );
-  if (!option || option.price <= 0) {
-    return { ...totals, shipping: 0, shippingMethodId: option?.methodId ?? null };
+
+  // The shop prices delivery by courier quote alone and this order can't be quoted. Refusing
+  // is the point: the alternative is shipping free without meaning to, which nobody notices
+  // until the money has gone.
+  if (resolution.status !== "priced" && resolution.status !== "unpriced") {
+    return { totals: null, reason: resolution.status };
+  }
+  if (resolution.status === "unpriced") {
+    return { totals: { ...totals, shipping: 0, shippingMethodId: null }, reason: null };
+  }
+
+  const option = resolution.option;
+  if (option.price <= 0) {
+    return {
+      totals: { ...totals, shipping: 0, shippingMethodId: option.methodId },
+      reason: null,
+    };
   }
 
   const shipping = Math.round(option.price * 100) / 100;
   return {
-    ...totals,
-    shipping,
-    shippingMethodId: option.methodId,
-    total: Math.round((totals.total + shipping) * 100) / 100,
+    totals: {
+      ...totals,
+      shipping,
+      shippingMethodId: option.methodId,
+      total: Math.round((totals.total + shipping) * 100) / 100,
+    },
+    reason: null,
   };
 }

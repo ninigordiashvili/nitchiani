@@ -232,7 +232,9 @@
       "missingDetails": "ზოგიერთი სავალდებულო ველი შევსებული არ არის. გთხოვ, გადაამოწმე ფორმა და სცადე ხელახლა.",
       "orderFailed": "შეკვეთის განთავსება ვერ მოხერხდა. სცადე ხელახლა ან მოგვწერე WhatsApp-ზე.",
       "insufficientStock": "„{product}“ მარაგში დარჩა მხოლოდ {count}. გთხოვ, შეამცირე რაოდენობა კალათაში.",
-      "insufficientStockNone": "„{product}“ ამოიწურა. გთხოვ, ამოშალე კალათიდან."
+      "insufficientStockNone": "„{product}“ ამოიწურა. გთხოვ, ამოშალე კალათიდან.",
+      "deliveryNeedsLocation": "მიწოდების ფასის დასათვლელად აირჩიე მისამართი რუკაზე.",
+      "deliveryUnavailable": "მიწოდების ფასი ვერ დაითვალა. გთხოვ, სცადე ხელახლა."
     },
     "cardGeneric": "ბანკის ბარათი",
     "cardGenericDesc": "Visa / Mastercard · უსაფრთხო გადახდა",

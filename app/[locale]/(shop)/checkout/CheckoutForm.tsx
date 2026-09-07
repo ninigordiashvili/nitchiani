@@ -33,7 +33,7 @@ import type { DeliveryChoice } from "@/lib/echodesk/shipping";
 import type { EchoDeskStoreConfig } from "@/lib/echodesk/types";
 import { ClarifyDetailsModal } from "@/components/checkout/ClarifyDetailsModal";
 import { getShippingQuoteAction } from "@/app/actions/shipping";
-import { quoteItems, type ShippingOption } from "@/lib/echodesk/shipping";
+import { quoteItems, type ShippingResolution } from "@/lib/echodesk/shipping";
 import { PhoneInput } from "@/components/commerce/PhoneInput";
 
 /**
@@ -152,7 +152,7 @@ export function CheckoutForm({
    * Only an estimate: the order route prices it again and that is what gets charged. Both ask
    * the same endpoint with the same address, so they agree.
    */
-  const [shipping, setShipping] = useState<ShippingOption | null>(null);
+  const [shipping, setShipping] = useState<ShippingResolution>({ status: "unpriced" });
 
   /**
    * The delivery method the shopper picked. Defaults to the shop's first, which is what the
@@ -211,7 +211,7 @@ export function CheckoutForm({
     const timer = setTimeout(() => {
       const items = quoteItems(cart.lines);
       if (items.length === 0 || !addressValue?.trim() || !cityValue?.trim()) {
-        setShipping(null);
+        setShipping({ status: "unpriced" });
         return;
       }
       void getShippingQuoteAction(
@@ -221,9 +221,9 @@ export function CheckoutForm({
         items,
       )
         .then(setShipping)
-        // A quote we couldn't get must never block checkout; the order route decides the
-        // charge regardless.
-        .catch(() => setShipping(null));
+        // A failed lookup shouldn't crash the page; the order route decides the charge and
+        // will refuse the order itself if delivery genuinely can't be priced.
+        .catch(() => setShipping({ status: "unpriced" }));
     }, 500);
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -237,11 +237,12 @@ export function CheckoutForm({
    * round trip. `shipping.price === 0` means the server applied the free-shipping threshold,
    * which overrides the method's own price.
    */
+  const priced = shipping.status === "priced" ? shipping.option : null;
   const shippingAmount = (() => {
-    if (shipping?.source === "quote") return shipping.price;
-    if (!shipping) return 0;
-    if (shipping.price === 0) return 0;
-    return chosen ? chosen.price : shipping.price;
+    if (!priced) return 0;
+    if (priced.source === "quote") return priced.price;
+    if (priced.price === 0) return 0;
+    return chosen ? chosen.price : priced.price;
   })();
   const displayTotal = {
     amount: (Number.parseFloat(cart.total.amount) + shippingAmount).toFixed(2),
@@ -719,21 +720,32 @@ export function CheckoutForm({
           {/* Only shown when delivery is actually priced. With no courier and no configured
               method there is nothing to say, and a "Delivery ₾0" row would imply a choice
               the shop hasn't made. */}
-          {shipping ? (
+          {priced ? (
             <div className="mt-1 flex items-center justify-between text-sm">
               <span className="opacity-70">
                 {t("checkout.delivery")}
-                {shipping.label ? ` · ${shipping.label}` : ""}
+                {priced.label ? ` · ${priced.label}` : ""}
               </span>
               <span className="tabular-nums">
-                {shipping.price > 0
+                {priced.price > 0
                   ? formatPrice(
-                      { amount: shipping.price.toFixed(2), currencyCode: cart.total.currencyCode },
+                      { amount: priced.price.toFixed(2), currencyCode: cart.total.currencyCode },
                       locale,
                     )
                   : t("checkout.deliveryFree")}
               </span>
             </div>
+          ) : shipping.status === "needsLocation" || shipping.status === "unavailable" ? (
+            /* Delivery can't be priced yet. Said here, next to the total it affects, rather
+               than left for the shopper to discover when the order is refused. */
+            <p
+              className="mt-1 text-xs"
+              style={{ color: "var(--color-brand-maroon)" }}
+            >
+              {shipping.status === "needsLocation"
+                ? t("checkout.errors.deliveryNeedsLocation")
+                : t("checkout.errors.deliveryUnavailable")}
+            </p>
           ) : null}
           <div className="mt-3 flex items-center justify-between border-t border-black/10 pt-3">
             <span className="font-medium">{t("cart.total")}</span>

@@ -123,17 +123,18 @@ describe("withShipping", () => {
   const address = { street: "ჭავჭავაძის 28", city: "თბილისი" };
   const lines = [{ productHandle: "3", unitPrice: { amount: "100.00" }, quantity: 1 }];
 
-  it("charges nothing when the tenant prices no delivery", async () => {
-    // Today's state: QuickShipper off, and the one configured method is a blank placeholder.
+  it("charges nothing when no backend is configured", async () => {
+    // Tests run without NEXT_PUBLIC_ECHODESK_API_URL, so nothing can be looked up and the
+    // shop is treated as charging no delivery — not as "we couldn't work it out".
     const out = await withShipping(base, "ka", address, lines);
-    expect(out.shipping).toBe(0);
-    expect(out.total).toBe(90);
-    expect(out.shippingMethodId).toBeNull();
+    expect(out.reason).toBeNull();
+    expect(out.totals?.shipping).toBe(0);
+    expect(out.totals?.total).toBe(90);
   });
 
-  it("leaves the goods total untouched when it adds nothing", async () => {
+  it("leaves the goods figures untouched", async () => {
     const out = await withShipping(base, "ka", address, lines);
-    expect(out.subtotal).toBe(100);
-    expect(out.discount).toBe(10);
+    expect(out.totals?.subtotal).toBe(100);
+    expect(out.totals?.discount).toBe(10);
   });
 });

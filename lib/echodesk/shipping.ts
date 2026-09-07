@@ -1,6 +1,6 @@
 import type { Locale } from "../i18n/config";
 import { parseEchoDeskGid } from "./adapt";
-import { listShippingMethods } from "./client";
+import { getStoreConfig, listShippingMethods } from "./client";
 import type { EchoDeskShippingMethod } from "./types";
 
 /**
@@ -163,26 +163,69 @@ export async function quoteGuestShipping(input: QuoteInput): Promise<ShippingOpt
 }
 
 /** Live quote when there's a pin, flat method otherwise, nothing when neither is available. */
+/**
+ * The outcome of pricing delivery, rather than just a price or null.
+ *
+ * Null used to mean two very different things — "this shop charges nothing" and "this shop
+ * charges by distance and we don't know where you are" — and both came out as free delivery.
+ * That is fine for the first and a silent giveaway for the second.
+ */
+export type ShippingResolution =
+  | { status: "priced"; option: ShippingOption }
+  /** Courier pricing needs coordinates and none were given: ask for the map pin. */
+  | { status: "needsLocation" }
+  /** Coordinates were given but the courier couldn't be reached or refused to quote. */
+  | { status: "unavailable" }
+  /** The shop configures no delivery charge at all. */
+  | { status: "unpriced" };
+
+/**
+ * The decision itself, separated from the fetching so it can be tested without a network:
+ * given what we managed to look up, which of the four outcomes is it?
+ */
+export function decideShipping(input: {
+  quote: ShippingOption | null;
+  flat: ShippingOption | null;
+  hasPin: boolean;
+  courierOnly: boolean;
+}): ShippingResolution {
+  if (input.quote) return { status: "priced", option: input.quote };
+  if (input.flat) return { status: "priced", option: input.flat };
+  // No flat fallback. If the shop delivers by courier quote alone, an order can only be
+  // priced from a pin — so say which of the two problems it is rather than shipping free.
+  if (!input.courierOnly) return { status: "unpriced" };
+  return input.hasPin ? { status: "unavailable" } : { status: "needsLocation" };
+}
+
 export async function resolveShipping(
   locale: Locale,
   subtotal: number,
   input: Omit<QuoteInput, "lat" | "lng"> & { lat?: number; lng?: number },
   chosenMethodId: number | null = null,
-): Promise<ShippingOption | null> {
+): Promise<ShippingResolution> {
   const methods = (await listShippingMethods())?.results ?? [];
 
   // An explicitly chosen method wins over a courier quote: picking collection at the store
   // and then being charged for a courier would be the worst of both.
   if (chosenMethodId !== null) {
     const picked = methods.find((m) => m.id === chosenMethodId);
-    if (picked) return pickFlatMethod([picked], locale, subtotal);
+    const option = picked ? pickFlatMethod([picked], locale, subtotal) : null;
+    if (option) return { status: "priced", option };
   }
 
-  if (input.lat !== undefined && input.lng !== undefined) {
-    const quote = await quoteGuestShipping({ ...input, lat: input.lat, lng: input.lng });
-    if (quote) return quote;
-  }
-  return pickFlatMethod(methods, locale, subtotal);
+  const hasPin = input.lat !== undefined && input.lng !== undefined;
+  const quote = hasPin
+    ? await quoteGuestShipping({ ...input, lat: input.lat as number, lng: input.lng as number })
+    : null;
+  const flat = pickFlatMethod(methods, locale, subtotal);
+
+  // Only asked when it changes the answer — a shop with a flat method never needs to know.
+  const courierOnly =
+    quote || flat
+      ? false
+      : (await getStoreConfig())?.shipping?.quickshipper_enabled === true;
+
+  return decideShipping({ quote, flat, hasPin, courierOnly });
 }
 
 /**

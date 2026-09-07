@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { pickFlatMethod } from "./shipping";
+import { decideShipping, pickFlatMethod } from "./shipping";
 import type { EchoDeskShippingMethod } from "./types";
 
 const method = (over: Partial<EchoDeskShippingMethod> = {}): EchoDeskShippingMethod => ({
@@ -56,5 +56,47 @@ describe("pickFlatMethod", () => {
   it("rejects a malformed price instead of charging NaN", () => {
     expect(pickFlatMethod([method({ price: "abc" })], "ka", 100)).toBeNull();
     expect(pickFlatMethod([method({ price: "-5.00" })], "ka", 100)).toBeNull();
+  });
+});
+
+describe("decideShipping", () => {
+  const option = (price: number, source: "quote" | "flat") => ({
+    price, label: null, methodId: null, estimatedDays: null, source,
+  });
+
+  it("uses the courier quote when there is one", () => {
+    const out = decideShipping({
+      quote: option(12, "quote"), flat: option(8, "flat"), hasPin: true, courierOnly: true,
+    });
+    expect(out).toEqual({ status: "priced", option: option(12, "quote") });
+  });
+
+  it("falls back to the flat method when the quote fails", () => {
+    const out = decideShipping({
+      quote: null, flat: option(8, "flat"), hasPin: true, courierOnly: false,
+    });
+    expect(out.status).toBe("priced");
+  });
+
+  it("asks for the map pin when the shop prices by courier alone", () => {
+    // The reason this exists: without it, this order would ship free.
+    expect(
+      decideShipping({ quote: null, flat: null, hasPin: false, courierOnly: true }),
+    ).toEqual({ status: "needsLocation" });
+  });
+
+  it("reports unavailable when a pin was given but no quote came back", () => {
+    // Different problem, different message — asking for a pin they already dropped is
+    // an instruction they cannot follow.
+    expect(
+      decideShipping({ quote: null, flat: null, hasPin: true, courierOnly: true }),
+    ).toEqual({ status: "unavailable" });
+  });
+
+  it("charges nothing when the shop configures no delivery at all", () => {
+    // Not the same as "we don't know" — this shop genuinely doesn't charge.
+    expect(
+      decideShipping({ quote: null, flat: null, hasPin: false, courierOnly: false }),
+    ).toEqual({ status: "unpriced" });
   });
 });
