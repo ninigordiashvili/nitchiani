@@ -258,7 +258,8 @@
     "deliveryFree": "Free",
     "deliveryMethod": "Delivery method",
     "deliveryDays": "{count} working days",
-    "pickupAt": "Collect at: {address}"
+    "pickupAt": "Collect at: {address}",
+    "comingSoon": "Coming soon"
   },
   "services": {
     "title": "Our Services",

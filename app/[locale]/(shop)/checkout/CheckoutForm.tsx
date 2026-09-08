@@ -28,7 +28,7 @@ import { BLUR_DATA_URL, safeImageSrc } from "@/lib/images";
 import { CouponField } from "@/components/cart/CouponField";
 import { HowItWorksButton } from "@/components/cart/HowItWorksButton";
 import { AddressPicker } from "@/components/checkout/AddressPicker";
-import type { PaymentAvailability } from "@/lib/echodesk/payments";
+import { cardLabelKeys, type PaymentAvailability } from "@/lib/echodesk/payments";
 import type { DeliveryChoice } from "@/lib/echodesk/shipping";
 import type { EchoDeskStoreConfig } from "@/lib/echodesk/types";
 import { ClarifyDetailsModal } from "@/components/checkout/ClarifyDetailsModal";
@@ -90,14 +90,21 @@ const TBC_ENABLED = process.env.NEXT_PUBLIC_TBC_ENABLED === "true";
  * real bank on the gateway's own page a moment later.
  */
 const ECHODESK_BACKED = Boolean(process.env.NEXT_PUBLIC_ECHODESK_API_URL);
-const CARD_LABEL_KEY = ECHODESK_BACKED ? "checkout.cardGeneric" : "checkout.bogCard";
-const CARD_DESC_KEY = ECHODESK_BACKED ? "checkout.cardGenericDesc" : "checkout.bogCardDesc";
+/**
+ * TBC is announced on the page before it is connected, so the design is finished ahead of the
+ * integration. It renders disabled with a "coming soon" badge rather than clickable: a payment
+ * button that does nothing costs orders on the one page where that is most expensive.
+ *
+ * It disappears on its own once TBC appears in the tenant's live providers. Two things are
+ * needed before that happens — TBC credentials in EchoDesk, and EchoDesk shipping per-order
+ * provider selection, which guest checkout cannot express today.
+ */
+const TBC_ANNOUNCED = true;
 /**
  * Under EchoDesk both card flags route to the same place, so the second option would be the
  * same payment offered twice under two bank names. Show one card choice, and only show the
  * separate TBC entry on the legacy path where it really is a different integration.
  */
-const SHOW_SEPARATE_TBC = !ECHODESK_BACKED && TBC_ENABLED;
 // Cash on delivery is temporarily withdrawn. Unlike the card flags above — which gate on
 // merchant credentials existing — this one is a business decision, so it defaults OFF and
 
@@ -134,6 +141,12 @@ export function CheckoutForm({
    * bank transfer last — it is the one that always works, because it needs no gateway, so
    * it is the right floor rather than the right default.
    */
+  // Names the bank the shopper will actually be sent to, read from the tenant rather than
+  // hardcoded — if the provider is switched, the label follows instead of going quietly wrong.
+  const cardLabels = cardLabelKeys(payments.providers);
+  // Announced but not connected: shown disabled until TBC is live on the tenant.
+  const showTbcPreview = TBC_ANNOUNCED && !payments.providers.includes("tbc");
+
   const defaultPaymentMethod: CheckoutInput["paymentMethod"] = payments.card
     ? "bog_card"
     : payments.cashOnDelivery
@@ -390,15 +403,7 @@ export function CheckoutForm({
               active={paymentMethod === "bog_card"}
               onClick={() => setValue("paymentMethod", "bog_card")}
               icon={<CreditCard size={14} />}
-              label={t(CARD_LABEL_KEY)}
-            />
-          ) : null}
-          {SHOW_SEPARATE_TBC ? (
-            <ExpressPill
-              active={paymentMethod === "tbc_card"}
-              onClick={() => setValue("paymentMethod", "tbc_card")}
-              icon={<CreditCard size={14} />}
-              label={t("checkout.tbcCard")}
+              label={t(cardLabels.title)}
             />
           ) : null}
           <ExpressPill
@@ -621,17 +626,18 @@ export function CheckoutForm({
                   active={paymentMethod === "bog_card"}
                   onSelect={() => setValue("paymentMethod", "bog_card")}
                   icon={<CreditCard size={20} />}
-                  title={t(CARD_LABEL_KEY)}
-                  desc={t(CARD_DESC_KEY)}
+                  title={t(cardLabels.title)}
+                  desc={t(cardLabels.desc)}
                 />
               ) : null}
-              {SHOW_SEPARATE_TBC ? (
+              {showTbcPreview ? (
                 <PaymentOption
-                  active={paymentMethod === "tbc_card"}
-                  onSelect={() => setValue("paymentMethod", "tbc_card")}
+                  active={false}
+                  onSelect={() => {}}
                   icon={<CreditCard size={20} />}
                   title={t("checkout.tbcCard")}
                   desc={t("checkout.tbcCardDesc")}
+                  comingSoonLabel={t("checkout.comingSoon")}
                 />
               ) : null}
               <PaymentOption
@@ -962,32 +968,52 @@ function PaymentOption({
   icon,
   title,
   desc,
+  /** Rendered but not selectable — a method the shop has announced and not yet connected. */
+  comingSoonLabel,
 }: {
   active: boolean;
   onSelect: () => void;
   icon: React.ReactNode;
   title: string;
   desc: string;
+  comingSoonLabel?: string;
 }) {
+  const disabled = Boolean(comingSoonLabel);
   return (
     <button
       type="button"
-      onClick={onSelect}
+      onClick={disabled ? undefined : onSelect}
+      disabled={disabled}
       className={cn(
         "flex w-full items-start gap-3 rounded-md border p-4 text-left transition-colors",
-        active
-          ? "border-[var(--color-brand-ink)] bg-[var(--color-brand-cream-2)]"
-          : "border-black/15 hover:border-black/40",
+        disabled
+          ? "cursor-not-allowed border-black/10 opacity-55"
+          : active
+            ? "border-[var(--color-brand-ink)] bg-[var(--color-brand-cream-2)]"
+            : "border-black/15 hover:border-black/40",
       )}
     >
       <span
-        className="flex h-9 w-9 items-center justify-center rounded-full"
+        className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full"
         style={{ background: "var(--color-brand-cream-2)" }}
       >
         {icon}
       </span>
-      <div>
-        <p className="text-sm font-medium">{title}</p>
+      <div className="min-w-0">
+        <p className="flex items-center gap-2 text-sm font-medium">
+          {title}
+          {comingSoonLabel ? (
+            <span
+              className="rounded-full px-2 py-0.5 text-[10px] font-medium tracking-[0.08em] uppercase"
+              style={{
+                background: "color-mix(in oklab, var(--color-brand-maroon) 12%, transparent)",
+                color: "var(--color-brand-maroon)",
+              }}
+            >
+              {comingSoonLabel}
+            </span>
+          ) : null}
+        </p>
         <p className="text-xs opacity-70">{desc}</p>
       </div>
     </button>

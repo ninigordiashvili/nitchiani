@@ -258,7 +258,8 @@
     "deliveryFree": "უფასო",
     "deliveryMethod": "მიწოდების მეთოდი",
     "deliveryDays": "{count} სამუშაო დღე",
-    "pickupAt": "აიღე მაღაზიიდან: {address}"
+    "pickupAt": "აიღე მაღაზიიდან: {address}",
+    "comingSoon": "მალე"
   },
   "services": {
     "title": "ჩვენი სერვისები",
