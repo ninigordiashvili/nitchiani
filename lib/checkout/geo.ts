@@ -9,6 +9,9 @@
  * the exact spot — the point of asking for a pin at all.
  */
 
+/** Prefixed to a collection order's notes so it can't be mistaken for a delivery. */
+export const PICKUP_MARKER = "🏪 თვითმიტანა / PICKUP AT STORE — კურიერი არ გამოიძახოთ";
+
 /** Six decimals is ~10cm — past that the digits are noise on a delivery address. */
 export function mapsLink(lat: number, lng: number): string {
   return `https://www.google.com/maps?q=${lat.toFixed(6)},${lng.toFixed(6)}`;
@@ -35,9 +38,22 @@ export function composeNotes(
   notes: string | undefined,
   lat?: number,
   lng?: number,
+  pickup = false,
 ): string | undefined {
-  const base = notes?.trim() ?? "";
-  if (!isUsableCoordinate(lat, lng)) return base || undefined;
-  const pin = `📍 ${mapsLink(lat as number, lng as number)}`;
-  return base ? `${base}\n\n${pin}` : pin;
+  const parts: string[] = [];
+  const base = notes?.trim();
+  if (base) parts.push(base);
+
+  // Collection has nowhere structured to go: EchoDesk's guest checkout carries no pickup
+  // field, so the order otherwise arrives looking like a delivery to the customer's own
+  // address. Whoever packs it would send a courier for a parcel someone is coming to fetch.
+  // Notes are the one field a person actually reads, so the marker goes there — first, so it
+  // is the first thing seen.
+  if (pickup) parts.unshift(PICKUP_MARKER);
+  // A pin is meaningless for collection: nobody is travelling to it.
+  else if (isUsableCoordinate(lat, lng)) {
+    parts.push(`📍 ${mapsLink(lat as number, lng as number)}`);
+  }
+
+  return parts.length > 0 ? parts.join("\n\n") : undefined;
 }

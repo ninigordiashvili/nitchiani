@@ -117,6 +117,7 @@ function buildOrderInput(
         ? { amount: totals.shipping.toFixed(2), currencyCode: payload.subtotal.currencyCode }
         : undefined,
     shippingMethodId: totals.shippingMethodId ?? undefined,
+    pickup: payload.pickup ?? false,
   };
 }
 

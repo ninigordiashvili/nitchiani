@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { composeNotes, isUsableCoordinate, mapsLink } from "./geo";
+import { composeNotes, isUsableCoordinate, mapsLink, PICKUP_MARKER } from "./geo";
 
 describe("mapsLink", () => {
   it("builds a link a courier can open", () => {
@@ -57,5 +57,29 @@ describe("composeNotes", () => {
     expect(composeNotes(undefined)).toBeUndefined();
     expect(composeNotes("")).toBeUndefined();
     expect(composeNotes("  ", 0, 0)).toBeUndefined();
+  });
+});
+
+describe("composeNotes for collection", () => {
+  it("marks the order so nobody sends a courier", () => {
+    const out = composeNotes("Ring twice", undefined, undefined, true);
+    expect(out?.startsWith(PICKUP_MARKER)).toBe(true);
+    expect(out).toContain("Ring twice");
+  });
+
+  it("marks it even with no note of their own", () => {
+    expect(composeNotes(undefined, undefined, undefined, true)).toBe(PICKUP_MARKER);
+  });
+
+  it("drops the map pin for collection", () => {
+    // A pin is meaningless when nobody is travelling to it, and next to a pickup marker it
+    // reads as a delivery address.
+    const out = composeNotes(undefined, 41.7151, 44.8271, true);
+    expect(out).toBe(PICKUP_MARKER);
+    expect(out).not.toContain("google.com/maps");
+  });
+
+  it("still carries the pin for a delivery", () => {
+    expect(composeNotes(undefined, 41.7151, 44.8271, false)).toContain("google.com/maps");
   });
 });
