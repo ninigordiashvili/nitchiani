@@ -256,10 +256,13 @@
     "clarifyCopy": "Copy message",
     "delivery": "Delivery",
     "deliveryFree": "Free",
-    "deliveryMethod": "Delivery method",
     "deliveryDays": "{count} working days",
-    "pickupAt": "Collect at: {address}",
-    "comingSoon": "Coming soon"
+    "comingSoon": "Coming soon",
+    "receiveHow": "How would you like to receive it?",
+    "pickupAtStore": "Pickup at store",
+    "pickupDetails": "Pickup address",
+    "courierDelivery": "Courier delivery",
+    "courierPricedByAddress": "priced by address"
   },
   "services": {
     "title": "Our Services",

@@ -174,6 +174,15 @@ export function CheckoutForm({
   const [methodId, setMethodId] = useState<number | null>(delivery[0]?.methodId ?? null);
   const chosen = delivery.find((m) => m.methodId === methodId) ?? null;
 
+  /**
+   * Collection at the store instead of delivery. Free, and needs no address pricing at all —
+   * so it also sidesteps the courier quote and the map pin it would otherwise require.
+   *
+   * Courier is the default even where collection is offered: most orders are delivered, and
+   * defaulting to collection would quietly send parcels nobody is coming to fetch.
+   */
+  const [isPickup, setIsPickup] = useState(false);
+
   // Mobile-only two-step flow: 1 = contact/shipping, 2 = payment + place order.
   // Desktop ignores `step` entirely because both fieldsets are rendered side-by-side via
   // the existing `lg:grid-cols-[1fr_360px]` layout.
@@ -252,6 +261,7 @@ export function CheckoutForm({
    */
   const priced = shipping.status === "priced" ? shipping.option : null;
   const shippingAmount = (() => {
+    if (isPickup) return 0;
     if (!priced) return 0;
     if (priced.source === "quote") return priced.price;
     if (priced.price === 0) return 0;
@@ -316,7 +326,8 @@ export function CheckoutForm({
             quantity: l.quantity,
           })),
           subtotal: cart.subtotal,
-          shippingMethodId: methodId,
+          shippingMethodId: isPickup ? null : methodId,
+          pickup: isPickup,
           couponCode: cart.coupon?.code ?? null,
           discount: cart.discount,
           total: cart.total,
@@ -548,14 +559,15 @@ export function CheckoutForm({
                   );
                 })()}
               </Field>
-              {/* Only when the shop offers a real choice. One method is not a decision, and a
-                  radio group with a single option is furniture. Collection at the store shows
-                  up here too — EchoDesk's guest checkout has no pickup flag, so a shop that
-                  offers it adds a method priced 0 and the order carries that method id. */}
-              {delivery.length > 1 ? (
+              {/* How the order is received, when the shop offers a choice: collection at the
+                  store, or a courier. Collection comes from the tenant's pickup settings — it
+                  is not a shipping method, so a shop can offer it without configuring one.
+
+                  Hidden entirely when there is nothing to choose between. */}
+              {(pickup || delivery.length > 1) ? (
                 <fieldset className="sm:col-span-2">
                   <legend className="mb-1.5 block text-[13px] font-medium text-[var(--color-brand-ink)]">
-                    {t("checkout.deliveryMethod")}
+                    {t("checkout.receiveHow")}
                   </legend>
                   <div className="grid gap-2">
                     {delivery.map((m) => (
@@ -563,7 +575,7 @@ export function CheckoutForm({
                         key={m.methodId}
                         className={cn(
                           "flex cursor-pointer items-center justify-between gap-3 rounded-md border px-3 py-2.5 text-sm transition-colors",
-                          methodId === m.methodId
+                          !isPickup && methodId === m.methodId
                             ? "border-[var(--color-brand-ink)] bg-black/[0.03]"
                             : "border-black/15 hover:border-black/30",
                         )}
@@ -571,10 +583,13 @@ export function CheckoutForm({
                         <span className="flex items-center gap-2">
                           <input
                             type="radio"
-                            name="deliveryMethod"
+                            name="receiveHow"
                             className="accent-[var(--color-brand-ink)]"
-                            checked={methodId === m.methodId}
-                            onChange={() => setMethodId(m.methodId)}
+                            checked={!isPickup && methodId === m.methodId}
+                            onChange={() => {
+                              setIsPickup(false);
+                              setMethodId(m.methodId);
+                            }}
                           />
                           <span>
                             {m.label}
@@ -595,14 +610,73 @@ export function CheckoutForm({
                         </span>
                       </label>
                     ))}
+
+                    {/* Courier stays selectable even with no flat method configured — the price
+                        then comes from the courier quote, which needs the address below. */}
+                    {delivery.length === 0 ? (
+                      <label
+                        className={cn(
+                          "flex cursor-pointer items-center justify-between gap-3 rounded-md border px-3 py-2.5 text-sm transition-colors",
+                          !isPickup
+                            ? "border-[var(--color-brand-ink)] bg-black/[0.03]"
+                            : "border-black/15 hover:border-black/30",
+                        )}
+                      >
+                        <span className="flex items-center gap-2">
+                          <input
+                            type="radio"
+                            name="receiveHow"
+                            className="accent-[var(--color-brand-ink)]"
+                            checked={!isPickup}
+                            onChange={() => setIsPickup(false)}
+                          />
+                          <span>{t("checkout.courierDelivery")}</span>
+                        </span>
+                        <span className="text-xs opacity-60">{t("checkout.courierPricedByAddress")}</span>
+                      </label>
+                    ) : null}
+
+                    {pickup ? (
+                      <label
+                        className={cn(
+                          "flex cursor-pointer items-start justify-between gap-3 rounded-md border px-3 py-2.5 text-sm transition-colors",
+                          isPickup
+                            ? "border-[var(--color-brand-ink)] bg-black/[0.03]"
+                            : "border-black/15 hover:border-black/30",
+                        )}
+                      >
+                        <span className="flex items-start gap-2">
+                          <input
+                            type="radio"
+                            name="receiveHow"
+                            className="mt-0.5 accent-[var(--color-brand-ink)]"
+                            checked={isPickup}
+                            onChange={() => setIsPickup(true)}
+                          />
+                          <span>
+                            <span className="block">{t("checkout.pickupAtStore")}</span>
+                            <span className="block text-xs opacity-60">
+                              {[pickup.address, pickup.city].filter(Boolean).join(", ")}
+                            </span>
+                          </span>
+                        </span>
+                        <span className="tabular-nums">{t("checkout.deliveryFree")}</span>
+                      </label>
+                    ) : null}
                   </div>
-                  {/* Where to come, for whoever picked collection. */}
-                  {pickup?.address ? (
-                    <p className="mt-2 text-xs opacity-70">
-                      {t("checkout.pickupAt", {
-                        address: [pickup.address, pickup.city].filter(Boolean).join(", "),
-                      })}
-                    </p>
+
+                  {/* Everything the shopper needs to actually turn up — shown only once they
+                      have chosen collection, so it isn't noise for everyone else. */}
+                  {isPickup && pickup ? (
+                    <div className="mt-2 rounded-md bg-black/[0.03] px-3 py-2.5 text-xs leading-relaxed">
+                      <p className="mb-1 font-medium">{t("checkout.pickupDetails")}</p>
+                      {pickup.contact_name ? <p>{pickup.contact_name}</p> : null}
+                      <p>{[pickup.address, pickup.city].filter(Boolean).join(", ")}</p>
+                      {pickup.phone ? <p className="tabular-nums">{pickup.phone}</p> : null}
+                      {pickup.extra_instructions ? (
+                        <p className="mt-1 opacity-70">{pickup.extra_instructions}</p>
+                      ) : null}
+                    </div>
                   ) : null}
                 </fieldset>
               ) : null}
@@ -735,7 +809,12 @@ export function CheckoutForm({
           {/* Only shown when delivery is actually priced. With no courier and no configured
               method there is nothing to say, and a "Delivery ₾0" row would imply a choice
               the shop hasn't made. */}
-          {priced ? (
+          {isPickup ? (
+            <div className="mt-1 flex items-center justify-between text-sm">
+              <span className="opacity-70">{t("checkout.pickupAtStore")}</span>
+              <span className="tabular-nums">{t("checkout.deliveryFree")}</span>
+            </div>
+          ) : priced ? (
             <div className="mt-1 flex items-center justify-between text-sm">
               <span className="opacity-70">
                 {t("checkout.delivery")}
@@ -750,7 +829,7 @@ export function CheckoutForm({
                   : t("checkout.deliveryFree")}
               </span>
             </div>
-          ) : shipping.status === "needsLocation" || shipping.status === "unavailable" ? (
+          ) : !isPickup && (shipping.status === "needsLocation" || shipping.status === "unavailable") ? (
             /* Delivery can't be priced yet. Said here, next to the total it affects, rather
                than left for the shopper to discover when the order is refused. */
             <p

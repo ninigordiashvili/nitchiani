@@ -256,10 +256,13 @@
     "clarifyCopy": "შეტყობინების კოპირება",
     "delivery": "მიწოდება",
     "deliveryFree": "უფასო",
-    "deliveryMethod": "მიწოდების მეთოდი",
     "deliveryDays": "{count} სამუშაო დღე",
-    "pickupAt": "აიღე მაღაზიიდან: {address}",
-    "comingSoon": "მალე"
+    "comingSoon": "მალე",
+    "receiveHow": "როგორ გსურს მიღება?",
+    "pickupAtStore": "თვითონ გამოვიტან მაღაზიიდან",
+    "pickupDetails": "გამოტანის მისამართი",
+    "courierDelivery": "კურიერით მიწოდება",
+    "courierPricedByAddress": "ფასი მისამართის მიხედვით"
   },
   "services": {
     "title": "ჩვენი სერვისები",

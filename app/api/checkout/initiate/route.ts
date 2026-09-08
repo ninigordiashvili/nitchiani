@@ -49,6 +49,8 @@ const bodySchema = z.object({
   // client can't push nonsense into the courier's map link.
   /** The delivery method the shopper chose, when the shop offers more than one. */
   shippingMethodId: z.number().int().positive().nullable().optional(),
+  /** Collection at the store rather than delivery: free, and never courier-quoted. */
+  pickup: z.boolean().optional(),
   lat: z.number().min(-90).max(90).optional(),
   lng: z.number().min(-180).max(180).optional(),
   notes: z.string().optional(),
@@ -165,7 +167,12 @@ export async function POST(req: Request): Promise<NextResponse<CheckoutResponse>
   // Delivery is priced here, never taken from the request — the client shows an estimate, the
   // server decides the charge. A pin makes it a live courier quote; without one it falls back
   // to the tenant's flat method, and to nothing when neither is configured.
-  const shipped = await withShipping(
+  // Collection costs nothing and needs no quote, so it skips pricing entirely — asking a
+  // courier what it would charge to deliver an order nobody is delivering can only produce
+  // a wrong number or a spurious "we need your location".
+  const shipped = payload.pickup
+    ? ({ totals: { ...totalsResult.totals, shipping: 0, shippingMethodId: null }, reason: null } as const)
+    : await withShipping(
     totalsResult.totals,
     payload.locale === "en" ? "en" : "ka",
     { street: payload.address, city: payload.city, lat: payload.lat, lng: payload.lng },
