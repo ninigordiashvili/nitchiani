@@ -406,6 +406,15 @@ export function CheckoutForm({
               label={t(cardLabels.title)}
             />
           ) : null}
+          {showTbcPreview ? (
+            <ExpressPill
+              active={false}
+              onClick={() => {}}
+              icon={<CreditCard size={14} />}
+              label={t("checkout.tbcCard")}
+              comingSoonLabel={t("checkout.comingSoon")}
+            />
+          ) : null}
           <ExpressPill
             active={paymentMethod === "bank_transfer"}
             onClick={() => setValue("paymentMethod", "bank_transfer")}
@@ -913,26 +922,44 @@ function ExpressPill({
   onClick,
   icon,
   label,
+  /** Announced but not connected — matches the disabled option in the payment list. */
+  comingSoonLabel,
 }: {
   active: boolean;
   onClick: () => void;
   icon: React.ReactNode;
   label: string;
+  comingSoonLabel?: string;
 }) {
+  const disabled = Boolean(comingSoonLabel);
   return (
     <button
       type="button"
-      onClick={onClick}
-      aria-pressed={active}
+      onClick={disabled ? undefined : onClick}
+      disabled={disabled}
+      aria-pressed={disabled ? undefined : active}
       className={cn(
-        "inline-flex cursor-pointer items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs transition-colors",
-        active
-          ? "border-[var(--text-primary)] bg-[var(--text-primary)] text-[var(--surface)]"
-          : "border-black/15 hover:border-black/40",
+        "inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs transition-colors",
+        disabled
+          ? "cursor-not-allowed border-black/10 opacity-55"
+          : active
+            ? "cursor-pointer border-[var(--text-primary)] bg-[var(--text-primary)] text-[var(--surface)]"
+            : "cursor-pointer border-black/15 hover:border-black/40",
       )}
     >
       {icon}
       <span>{label}</span>
+      {comingSoonLabel ? (
+        <span
+          className="rounded-full px-1.5 py-0.5 text-[9px] font-medium tracking-[0.08em] uppercase"
+          style={{
+            background: "color-mix(in oklab, var(--color-brand-maroon) 12%, transparent)",
+            color: "var(--color-brand-maroon)",
+          }}
+        >
+          {comingSoonLabel}
+        </span>
+      ) : null}
     </button>
   );
 }
