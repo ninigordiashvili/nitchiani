@@ -27,6 +27,33 @@ export type ShippingOption = {
   methodId: number | null;
   estimatedDays: number | null;
   source: "quote" | "flat";
+  /**
+   * Every courier the quote returned, cheapest first. QuickShipper prices several — Georgian
+   * Post, Wolt, Glovo and so on — and the shopper picks; the top-level fields describe
+   * whichever is selected.
+   */
+  couriers?: Courier[];
+  /** Identifies the chosen courier back to the backend. */
+  courierId?: number | null;
+  feeId?: string | null;
+};
+
+/** One courier from a QuickShipper quote. */
+export type Courier = {
+  /**
+   * Identity for selection. `provider_id` alone is not unique: Go Delivery is quoted three
+   * times — scooter, car and truck — under one provider id at three prices, so keying on it
+   * charged the cheapest whichever the shopper picked. The fee id is the tier.
+   */
+  key: string;
+  id: number;
+  /** `provider_fee_id` — identifies the exact speed/price tier, not just the company. */
+  feeId: string | null;
+  name: string;
+  /** e.g. "45-60 min." or "4 working days delivery". */
+  speed: string | null;
+  logoUrl: string | null;
+  price: number;
 };
 
 /**
@@ -44,6 +71,27 @@ export function quoteItems(
     })
     .filter((i): i is { productId: number; quantity: number } => i !== null);
 }
+
+/** The bit of EchoDesk's quote response we rely on. */
+type EchoDeskQuote = {
+  price?: number | string;
+  cost?: number | string;
+  amount?: number | string;
+  provider_id?: number;
+  provider_name?: string;
+  provider_fee_id?: string;
+  estimated_days?: number;
+  courier?: string;
+  provider?: string;
+  options?: {
+    provider_id: number;
+    provider_name?: string;
+    provider_fee_id?: string;
+    provider_logo_url?: string;
+    display_name?: string;
+    price: number | string;
+  }[];
+};
 
 export type QuoteInput = {
   items: { productId: number; quantity: number }[];
@@ -133,28 +181,44 @@ export async function quoteGuestShipping(input: QuoteInput): Promise<ShippingOpt
       else console.error("[echodesk/shipping] quote rejected:", res.status, await res.text());
       return null;
     }
-    const data = (await res.json()) as {
-      price?: number | string;
-      cost?: number | string;
-      amount?: number | string;
-      estimated_days?: number;
-      courier?: string;
-      provider?: string;
-    };
-    // The endpoint documents only "Quote computed", not the body's field names, so read the
-    // plausible ones rather than guessing a single shape and returning NaN if it differs.
+    const data = (await res.json()) as EchoDeskQuote;
+
+    // `options` is the real answer: QuickShipper prices every courier that will take the
+    // parcel, and the top level merely repeats whichever the backend picked as default.
+    // Reading only the top level would hide the choice and quietly charge the default.
+    const couriers = (data.options ?? [])
+      .map((o) => ({
+        key: `${o.provider_id}:${o.provider_fee_id ?? ""}`,
+        id: o.provider_id,
+        feeId: o.provider_fee_id ?? null,
+        name: (o.provider_name ?? "").trim(),
+        speed: (o.display_name ?? "").trim() || null,
+        logoUrl: o.provider_logo_url ?? null,
+        price: typeof o.price === "string" ? Number.parseFloat(o.price) : o.price,
+      }))
+      .filter((c) => c.name && Number.isFinite(c.price) && c.price >= 0)
+      .sort((a, b) => a.price - b.price);
+
     const raw = data.price ?? data.cost ?? data.amount;
-    const price = typeof raw === "string" ? Number.parseFloat(raw) : raw;
+    const topPrice = typeof raw === "string" ? Number.parseFloat(raw) : raw;
+    const fallback = couriers[0];
+    const price =
+      topPrice !== undefined && Number.isFinite(topPrice) ? topPrice : fallback?.price;
+
     if (price === undefined || !Number.isFinite(price) || price < 0) {
-      console.error("[echodesk/shipping] quote had no readable price:", JSON.stringify(data));
+      console.error("[echodesk/shipping] quote had no readable price:", JSON.stringify(data).slice(0, 300));
       return null;
     }
+
     return {
       price,
-      label: data.courier ?? data.provider ?? null,
+      label: data.provider_name ?? data.courier ?? data.provider ?? null,
       methodId: null,
       estimatedDays: data.estimated_days ?? null,
       source: "quote",
+      couriers: couriers.length > 1 ? couriers : undefined,
+      courierId: data.provider_id ?? fallback?.id ?? null,
+      feeId: data.provider_fee_id ?? fallback?.feeId ?? null,
     };
   } catch (err) {
     console.error("[echodesk/shipping] quote threw:", err);

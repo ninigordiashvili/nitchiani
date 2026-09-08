@@ -39,6 +39,7 @@ export function composeNotes(
   lat?: number,
   lng?: number,
   pickup = false,
+  courierName?: string | null,
 ): string | undefined {
   const parts: string[] = [];
   const base = notes?.trim();
@@ -50,9 +51,15 @@ export function composeNotes(
   // Notes are the one field a person actually reads, so the marker goes there — first, so it
   // is the first thing seen.
   if (pickup) parts.unshift(PICKUP_MARKER);
-  // A pin is meaningless for collection: nobody is travelling to it.
-  else if (isUsableCoordinate(lat, lng)) {
-    parts.push(`📍 ${mapsLink(lat as number, lng as number)}`);
+  else {
+    // Guest checkout carries no courier field — `quickshipper_provider_id` exists only on the
+    // authenticated order endpoint — so the shopper's choice would otherwise be lost and the
+    // shop would book whichever courier the quote defaulted to.
+    if (courierName?.trim()) parts.unshift(`🚚 ${courierName.trim()}`);
+    // A pin is meaningless for collection: nobody is travelling to it.
+    if (isUsableCoordinate(lat, lng)) {
+      parts.push(`📍 ${mapsLink(lat as number, lng as number)}`);
+    }
   }
 
   return parts.length > 0 ? parts.join("\n\n") : undefined;

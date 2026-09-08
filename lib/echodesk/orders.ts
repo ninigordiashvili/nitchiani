@@ -121,7 +121,7 @@ export async function createGuestOrder(
     // The map pin travels in the notes: guest checkout has no coordinate fields (see
     // lib/checkout/geo.ts), and a pin the courier can't see is a pin we didn't need.
     ...(() => {
-      const notes = composeNotes(input.notes, input.lat, input.lng, input.pickup);
+      const notes = composeNotes(input.notes, input.lat, input.lng, input.pickup, input.courierName);
       return notes ? { notes } : {};
     })(),
   };

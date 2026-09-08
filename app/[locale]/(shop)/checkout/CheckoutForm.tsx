@@ -183,6 +183,12 @@ export function CheckoutForm({
    */
   const [isPickup, setIsPickup] = useState(false);
 
+  /**
+   * The courier the shopper picked from the quote. Null means "whichever the quote led with",
+   * which is the cheapest — a sensible default nobody has to think about.
+   */
+  const [courierKey, setCourierKey] = useState<string | null>(null);
+
   // Mobile-only two-step flow: 1 = contact/shipping, 2 = payment + place order.
   // Desktop ignores `step` entirely because both fieldsets are rendered side-by-side via
   // the existing `lg:grid-cols-[1fr_360px]` layout.
@@ -242,7 +248,10 @@ export function CheckoutForm({
         { street: addressValue, city: cityValue, lat: latValue, lng: lngValue },
         items,
       )
-        .then(setShipping)
+        .then((r) => {
+          setShipping(r);
+          setCourierKey(null);
+        })
         // A failed lookup shouldn't crash the page; the order route decides the charge and
         // will refuse the order itself if delivery genuinely can't be priced.
         .catch(() => setShipping({ status: "unpriced" }));
@@ -260,10 +269,13 @@ export function CheckoutForm({
    * which overrides the method's own price.
    */
   const priced = shipping.status === "priced" ? shipping.option : null;
+  const couriers = priced?.couriers ?? [];
+  const chosenCourier = couriers.find((c) => c.key === courierKey) ?? null;
   const shippingAmount = (() => {
     if (isPickup) return 0;
     if (!priced) return 0;
-    if (priced.source === "quote") return priced.price;
+    // A picked courier decides; otherwise the quote's own default.
+    if (priced.source === "quote") return chosenCourier ? chosenCourier.price : priced.price;
     if (priced.price === 0) return 0;
     return chosen ? chosen.price : priced.price;
   })();
@@ -328,6 +340,7 @@ export function CheckoutForm({
           subtotal: cart.subtotal,
           shippingMethodId: isPickup ? null : methodId,
           pickup: isPickup,
+          courierKey: isPickup ? null : (chosenCourier?.key ?? null),
           couponCode: cart.coupon?.code ?? null,
           discount: cart.discount,
           total: cart.total,
@@ -665,6 +678,64 @@ export function CheckoutForm({
                     ) : null}
                   </div>
 
+                  {/* Every courier the quote priced, cheapest first. QuickShipper returns
+                      several — Georgian Post, Wolt, Glovo — at different prices and speeds,
+                      and which one is worth it is the shopper's call, not ours. Hidden when
+                      the quote returned only one, since that is not a choice. */}
+                  {!isPickup && couriers.length > 1 ? (
+                    <div className="mt-2 grid gap-2">
+                      {couriers.map((c) => {
+                        const selected = chosenCourier
+                          ? chosenCourier.key === c.key
+                          : c.key === `${priced?.courierId ?? ""}:${priced?.feeId ?? ""}`;
+                        return (
+                          <label
+                            key={c.key}
+                            className={cn(
+                              "flex cursor-pointer items-center justify-between gap-3 rounded-md border px-3 py-2 text-sm transition-colors",
+                              selected
+                                ? "border-[var(--color-brand-ink)] bg-black/[0.03]"
+                                : "border-black/15 hover:border-black/30",
+                            )}
+                          >
+                            <span className="flex min-w-0 items-center gap-2">
+                              <input
+                                type="radio"
+                                name="courier"
+                                className="accent-[var(--color-brand-ink)]"
+                                checked={selected}
+                                onChange={() => setCourierKey(c.key)}
+                              />
+                              {c.logoUrl ? (
+                                // Courier logos come from QuickShipper's own CDN, so plain
+                                // <img>: next/image would need every host allow-listed and a
+                                // new courier would silently render nothing.
+                                // eslint-disable-next-line @next/next/no-img-element
+                                <img
+                                  src={c.logoUrl}
+                                  alt=""
+                                  width={20}
+                                  height={20}
+                                  className="h-5 w-5 flex-shrink-0 rounded object-contain"
+                                />
+                              ) : null}
+                              <span className="min-w-0 truncate">
+                                {c.name}
+                                {c.speed ? <span className="opacity-60"> · {c.speed}</span> : null}
+                              </span>
+                            </span>
+                            <span className="flex-shrink-0 tabular-nums">
+                              {formatPrice(
+                                { amount: c.price.toFixed(2), currencyCode: cart.subtotal.currencyCode },
+                                locale,
+                              )}
+                            </span>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  ) : null}
+
                   {/* Everything the shopper needs to actually turn up — shown only once they
                       have chosen collection, so it isn't noise for everyone else. */}
                   {isPickup && pickup ? (
@@ -818,12 +889,14 @@ export function CheckoutForm({
             <div className="mt-1 flex items-center justify-between text-sm">
               <span className="opacity-70">
                 {t("checkout.delivery")}
-                {priced.label ? ` · ${priced.label}` : ""}
+                {chosenCourier?.name ?? priced.label ? ` · ${chosenCourier?.name ?? priced.label}` : ""}
               </span>
               <span className="tabular-nums">
-                {priced.price > 0
+                {/* `shippingAmount`, not the quote's default — the line and the total have to
+                    agree about what the chosen courier costs. */}
+                {shippingAmount > 0
                   ? formatPrice(
-                      { amount: priced.price.toFixed(2), currencyCode: cart.total.currencyCode },
+                      { amount: shippingAmount.toFixed(2), currencyCode: cart.total.currencyCode },
                       locale,
                     )
                   : t("checkout.deliveryFree")}

@@ -51,6 +51,8 @@ const bodySchema = z.object({
   shippingMethodId: z.number().int().positive().nullable().optional(),
   /** Collection at the store rather than delivery: free, and never courier-quoted. */
   pickup: z.boolean().optional(),
+  /** Identifies the courier tier chosen from the quote (`provider_id:provider_fee_id`). */
+  courierKey: z.string().max(64).nullable().optional(),
   lat: z.number().min(-90).max(90).optional(),
   lng: z.number().min(-180).max(180).optional(),
   notes: z.string().optional(),
@@ -118,6 +120,7 @@ function buildOrderInput(
         : undefined,
     shippingMethodId: totals.shippingMethodId ?? undefined,
     pickup: payload.pickup ?? false,
+    courierName: totals.courierName ?? undefined,
   };
 }
 
@@ -179,6 +182,7 @@ export async function POST(req: Request): Promise<NextResponse<CheckoutResponse>
     { street: payload.address, city: payload.city, lat: payload.lat, lng: payload.lng },
     payload.lines,
     payload.shippingMethodId ?? null,
+    payload.courierKey ?? null,
   );
   // Delivery couldn't be priced. Refuse rather than charge nothing — the shop prices by
   // courier quote, so an unpriceable order is one we'd ship for free by accident.

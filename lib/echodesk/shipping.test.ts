@@ -100,3 +100,50 @@ describe("decideShipping", () => {
     ).toEqual({ status: "unpriced" });
   });
 });
+
+describe("courier choice pricing", () => {
+  // Shaped exactly like the live quote: a default at the top, every courier in `options`.
+  const couriers = [
+    { key: "16:57", id: 16, feeId: "57", name: "Georgian Post", speed: "4 working days delivery", logoUrl: null, price: 8.01 },
+    { key: "23:104", id: 23, feeId: "104", name: "OnWay", speed: "1-2 working days", logoUrl: null, price: 8.21 },
+    { key: "9:31", id: 9, feeId: "31", name: "Wolt", speed: "45-60 min.", logoUrl: null, price: 16 },
+  ];
+  const quote = {
+    price: 8.01, label: "Georgian Post", methodId: null, estimatedDays: null,
+    source: "quote" as const, couriers, courierId: 16, feeId: "57",
+  };
+
+  it("leads with the quote's default", () => {
+    expect(decideShipping({ quote, flat: null, hasPin: true, courierOnly: true })).toEqual({
+      status: "priced",
+      option: quote,
+    });
+  });
+
+  it("carries every courier through, so the shopper can choose", () => {
+    const out = decideShipping({ quote, flat: null, hasPin: true, courierOnly: true });
+    expect(out.status === "priced" && out.option.couriers?.map((c) => c.name)).toEqual([
+      "Georgian Post",
+      "OnWay",
+      "Wolt",
+    ]);
+  });
+
+  it("prefers a live quote over a flat method even when both exist", () => {
+    const flat = { price: 8, label: "Courier", methodId: 1, estimatedDays: 2, source: "flat" as const };
+    const out = decideShipping({ quote, flat, hasPin: true, courierOnly: false });
+    expect(out.status === "priced" && out.option.source).toBe("quote");
+  });
+});
+
+  it("tells apart tiers that share a provider id", () => {
+    // Go Delivery is quoted three times under one provider id — scooter, car, truck — at
+    // three prices. Keying on the provider alone charged the cheapest whichever was picked.
+    const go = [
+      { key: "31:200", id: 31, feeId: "200", name: "Go Delivery", speed: "scooter", logoUrl: null, price: 12.47 },
+      { key: "31:201", id: 31, feeId: "201", name: "Go Delivery", speed: "car", logoUrl: null, price: 13.1 },
+      { key: "31:202", id: 31, feeId: "202", name: "Go Delivery", speed: "truck", logoUrl: null, price: 19.47 },
+    ];
+    expect(new Set(go.map((c) => c.key)).size).toBe(3);
+    expect(new Set(go.map((c) => c.id)).size).toBe(1);
+  });
