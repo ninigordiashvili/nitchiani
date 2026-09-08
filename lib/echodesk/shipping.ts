@@ -1,6 +1,7 @@
 import type { Locale } from "../i18n/config";
 import { parseEchoDeskGid } from "./adapt";
 import { getStoreConfig, listShippingMethods } from "./client";
+import { demoQuote, isShippingDemo } from "./shipping-demo";
 import type { EchoDeskShippingMethod } from "./types";
 
 /**
@@ -278,9 +279,14 @@ export async function resolveShipping(
   }
 
   const hasPin = input.lat !== undefined && input.lng !== undefined;
-  const quote = hasPin
+  const live = hasPin
     ? await quoteGuestShipping({ ...input, lat: input.lat as number, lng: input.lng as number })
     : null;
+  // Sample prices stand in only where a real quote produced nothing, so live data always
+  // wins and the switch turns itself off the day the credentials work. See shipping-demo.ts.
+  // Deliberately not gated on the pin: the picker needs a working Maps key, and the point of
+  // the demo is to show the shipping step when the pieces around it are not connected yet.
+  const quote = live ?? (isShippingDemo ? demoQuote() : null);
   const flat = pickFlatMethod(methods, locale, subtotal);
 
   // Only asked when it changes the answer — a shop with a flat method never needs to know.
