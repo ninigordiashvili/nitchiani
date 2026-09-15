@@ -7,8 +7,13 @@ import { ImageResponse } from "next/og";
  * automatically — pages that set their own `openGraph.images` in `generateMetadata`
  * (products, services, campaigns) override this for their route. Brand palette mirrors the
  * CSS tokens in `globals.css`: teal-black background, cream wordmark, maroon accent.
+ *
+ * The strapline stays in Latin script for both locales. Satori renders this at the edge from
+ * the fonts it is handed, and the built-in stack has no Georgian glyphs — a Georgian line
+ * would come out as boxes on every share. Setting one would mean fetching a Georgian face as
+ * an ArrayBuffer here; worth doing if the card is ever aimed at Georgian social specifically.
  */
-export const alt = "Nitchiani — Premium braids, locs & haircare · Tbilisi";
+export const alt = "Nitchiani — Synthetic hair, curls & loc care · Tbilisi";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -41,7 +46,7 @@ export default function OpengraphImage() {
           }}
         />
         <div style={{ fontSize: 36, opacity: 0.85, letterSpacing: "0.01em" }}>
-          Premium braids, locs &amp; haircare · Tbilisi
+          Synthetic hair, curls &amp; loc care · Tbilisi
         </div>
       </div>
     ),

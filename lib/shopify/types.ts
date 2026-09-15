@@ -79,6 +79,11 @@ export type ProductAttribute = {
   key: string;
   /** Localized label for the chip group heading. */
   name: string;
+  /** Unit for numeric attributes, already appended to `values` — kept separately so a
+      caller that formats its own display (a filter chip, say) isn't forced to strip it. */
+  unit?: string;
+  /** Display order set by the merchant in EchoDesk; 0 until they touch it. */
+  sortOrder?: number;
   /** Localized values this product carries for the attribute. */
   values: string[];
 };

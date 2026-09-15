@@ -8,7 +8,12 @@ export function CategoryCardGrid() {
   const t = useTranslations("categories");
 
   return (
-    <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-4 lg:grid-cols-5">
+    // `auto-fit` on the wide breakpoint rather than a fixed count. The grid was pinned to
+    // five columns for the five categories that existed when it was written; hiding one
+    // left a card-shaped hole on the right of the row. `auto-fit` lays out as many 200px
+    // tracks as fit, collapses the empty ones and lets the rest share the width — so the
+    // row fills edge to edge whether there are four categories or six.
+    <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-4 lg:[grid-template-columns:repeat(auto-fit,minmax(200px,1fr))]">
       {CATEGORIES.map((c) => (
         <Link
           key={c.handle}

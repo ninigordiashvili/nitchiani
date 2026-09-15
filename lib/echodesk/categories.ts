@@ -14,12 +14,20 @@ import { CATEGORY_HANDLES } from "../categories";
  * honest default. A silent wrong guess is worse than a visible absence.
  */
 export const PRODUCT_CATEGORIES: Record<string, string[]> = {
-  // თმის ჟელე — a hair-care product (wax for braiding)
-  "prod-001": ["hair-care"],
-  // არიელი — synthetic braiding hair
-  "prod-002": ["hair-extensions"],
-  "prod-003": ["hair-extensions"],
-  a: ["hair-extensions"],
+  // Braiding hair. EchoDesk derives the slug from the SKU, so these read as product codes
+  // rather than names — see the note below about renaming them.
+  "b-hs3089p-22": ["hair-extensions"], // არიელი 22″
+  "b-hs3226p-24": ["hair-extensions"], // ანა 24″
+  // The remaining four styles, added here so they land in the category the moment they go
+  // live rather than sitting under All products until someone notices.
+  "b-hs1047p-28": ["hair-extensions"], // არიელი სწორი 28″
+  "b-h-ha4397p-24": ["hair-extensions"], // მანასი 24″
+  "b-h-ha4422-24": ["hair-extensions"], // მონიკა 24″
+  "b-h-ha4204p-20": ["hair-extensions"], // კრო-ალისია 20″
+  // Lorenti care products.
+  "lor-wax-08": ["hair-care"], // Gel Wax 08
+  "lor-2ph": ["hair-care"], // 2 Phase conditioner
+  "lor-2ph-03": ["hair-care"], // 2 Phase · keratin
 };
 
 export function categoriesFor(slug: string): string[] {

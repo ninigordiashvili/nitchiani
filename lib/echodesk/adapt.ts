@@ -186,8 +186,27 @@ export function adaptAttributes(
     ).filter(Boolean);
 
     if (values.length === 0) continue;
-    out.push({ key: attr.key, name: pick(attr.name, locale) || attr.key, values });
+
+    // "300" on its own is a number the shopper has to guess the unit for — grams? pieces?
+    // EchoDesk knows it is grams, so say so. Appended to the value rather than the label
+    // because it belongs to the measurement, and a label reading "წონა (გრამი)" puts the
+    // unit on the wrong side of the colon.
+    const unit = attr.unit?.trim() || undefined;
+    const withUnit = unit ? values.map((v) => `${v} ${unit}`) : values;
+
+    out.push({
+      key: attr.key,
+      name: pick(attr.name, locale) || attr.key,
+      unit,
+      values: withUnit,
+      sortOrder: typeof attr.sort_order === "number" ? attr.sort_order : 0,
+    });
   }
 
-  return out;
+  // Merchant order first, then the order EchoDesk returned. `sort_order` is 0 everywhere
+  // until someone sets it, so a stable sort is what keeps the default from shuffling.
+  return out
+    .map((a, i) => ({ a, i }))
+    .sort((x, y) => (x.a.sortOrder ?? 0) - (y.a.sortOrder ?? 0) || x.i - y.i)
+    .map(({ a }) => a);
 }

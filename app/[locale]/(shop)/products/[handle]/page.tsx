@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { setRequestLocale, getTranslations } from "next-intl/server";
 import { FrequentlyBoughtTogether } from "@/components/commerce/FrequentlyBoughtTogether";
+import { ProductInfoTabs } from "@/components/commerce/ProductInfoTabs";
+import { ProductSpecList } from "@/components/commerce/ProductSpecList";
 import { MaterialTrust } from "@/components/commerce/MaterialTrust";
 import { PdpAssurance } from "@/components/commerce/PdpAssurance";
 import { ProductAccordion } from "@/components/commerce/ProductAccordion";
@@ -105,6 +107,8 @@ export default async function ProductPage({
             />
           </div>
 
+          <ProductSpecList attributes={product.attributes} />
+
           <div className="mt-5">
             <ProductPurchase product={product} />
           </div>
@@ -114,16 +118,14 @@ export default async function ProductPage({
               buyer at the moment they're choosing variants. */}
           <MaterialTrust materialHandle={product.material} locale={locale} />
 
-          <div className="mt-8 border-t border-black/10 pt-6">
-            {/* Description stays plain — it's the primary product copy, shouldn't require a tap. */}
-            <p className="label-eyebrow mb-2">{tProduct("description")}</p>
-            <p className="max-w-prose text-sm leading-relaxed opacity-85">
-              {product.description}
-            </p>
+          {/* Description and the data sheet, as two tabs. Renders nothing when the product
+              has neither, which is most of the catalogue until EchoDesk is filled in. */}
+          <ProductInfoTabs description={product.description} attributes={product.attributes} />
 
+          <div className="mt-8">
             {/* Secondary details collapse to keep the PDP scannable. */}
             {product.howToUse || product.whatsInside || product.aftercare ? (
-              <div className="mt-6 border-t border-black/10">
+              <div className="border-t border-black/10">
                 {product.howToUse ? (
                   <ProductAccordion title={tProduct("howToUse")}>
                     <p className="max-w-prose text-sm leading-relaxed opacity-85">

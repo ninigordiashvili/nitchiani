@@ -1,0 +1,33 @@
+import type { Locale } from "@/lib/i18n/config";
+
+/**
+ * The title and description search engines show, per locale.
+ *
+ * Separate from `lib/i18n/messages/*.json` because these are not UI strings: they are never
+ * rendered on the page, they are written to a length (a title over ~60 characters is cut off
+ * mid-word in results, a description over ~160 likewise), and they are the one piece of copy
+ * chosen for what people type into Google rather than for how it reads on screen.
+ *
+ * The Georgian copy leads with the products, not the studio: the shop sells hair, and the
+ * braiding service is no longer offered. It also spends its words on the phrases customers
+ * actually search — "ხელოვნური თმები", "კულულები", "ხუჭუჭები", "აფრო ხვეულები" — rather than
+ * on the in-house vocabulary used elsewhere on the site.
+ */
+type SeoCopy = { title: string; description: string };
+
+const COPY: Record<Locale, SeoCopy> = {
+  ka: {
+    title: "ხელოვნური თმები, კულულები და ხუჭუჭები — Nitchiani",
+    description:
+      "ხელოვნური თმები აფრო ხვეულებისთვის — კულულები, ხუჭუჭები და ნაწნავებისთვის თმა. ბონეტი, დურაგი და თმის მოვლის საშუალებები. მიწოდება მთელ საქართველოში.",
+  },
+  en: {
+    title: "Nitchiani — Synthetic hair, curls & loc care · Tbilisi",
+    description:
+      "Synthetic hair for afro curls, kinky and braiding textures. Bonnets, durags, oils and loc-care essentials, delivered across Georgia.",
+  },
+};
+
+export function seoCopy(locale: Locale): SeoCopy {
+  return COPY[locale] ?? COPY.en;
+}

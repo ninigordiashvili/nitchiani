@@ -1,6 +1,6 @@
 "use server";
 
-import { resolveShipping, type ShippingOption } from "@/lib/echodesk/shipping";
+import { resolveShipping, type ShippingResolution } from "@/lib/echodesk/shipping";
 import type { Locale } from "@/lib/i18n/config";
 
 /**
@@ -18,7 +18,7 @@ export async function getShippingQuoteAction(
   subtotal: number,
   address: { street: string; city: string; lat?: number; lng?: number },
   items: { productId: number; quantity: number }[],
-): Promise<ShippingOption | null> {
-  if (!address.street.trim() || !address.city.trim()) return null;
+): Promise<ShippingResolution> {
+  if (!address.street.trim() || !address.city.trim()) return { status: "unpriced" };
   return resolveShipping(locale, subtotal, { ...address, items });
 }

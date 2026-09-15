@@ -10,8 +10,11 @@ describe("product → category map", () => {
   });
 
   it("places the live tenant's products", () => {
-    expect(categoriesFor("prod-001")).toEqual(["hair-care"]);
-    expect(categoriesFor("prod-002")).toEqual(["hair-extensions"]);
+    // EchoDesk derives the slug from the SKU, so these read as product codes rather than
+    // names. When a slug is renamed in the panel, this test is what catches the map going
+    // stale — the product would otherwise just quietly stop appearing in its category.
+    expect(categoriesFor("b-hs3089p-22")).toEqual(["hair-extensions"]); // არიელი 22″
+    expect(categoriesFor("b-hs3226p-24")).toEqual(["hair-extensions"]); // ანა 24″
   });
 
   it("returns nothing for an unmapped product rather than guessing", () => {

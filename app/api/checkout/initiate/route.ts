@@ -19,7 +19,9 @@ import {
   type GuestOrderOutcome,
   toEchoDeskPaymentMethod,
 } from "@/lib/echodesk/orders";
-import { isEchoDeskConfigured } from "@/lib/echodesk/client";
+import { getStoreConfig, isEchoDeskConfigured } from "@/lib/echodesk/client";
+import { envPaymentAvailability, paymentAvailability } from "@/lib/echodesk/payments";
+import { paymentStep } from "@/lib/checkout/payment-step";
 import { clientIp, rateLimit } from "@/lib/rate-limit";
 import { reportError } from "@/lib/observability";
 
@@ -32,10 +34,6 @@ const lineSchema = z.object({
   quantity: z.number().int().positive(),
 });
 
-// Mirrors NEXT_PUBLIC_COD_ENABLED on the checkout page. The client hides the option; this
-// is what actually refuses it, so a hand-rolled request can't book a cash-on-delivery order
-// while the service is withdrawn.
-const COD_ENABLED = process.env.NEXT_PUBLIC_COD_ENABLED === "true";
 
 const bodySchema = z.object({
   firstName: z.string().min(1),
@@ -46,11 +44,14 @@ const bodySchema = z.object({
   email: z.string().email(),
   address: z.string().min(3),
   city: z.string().min(1),
-  postalCode: z.string().optional(),
   // Latitude/longitude from the address picker. Bounded to real coordinates so a malformed
   // client can't push nonsense into the courier's map link.
   /** The delivery method the shopper chose, when the shop offers more than one. */
   shippingMethodId: z.number().int().positive().nullable().optional(),
+  /** Collection at the store rather than delivery: free, and never courier-quoted. */
+  pickup: z.boolean().optional(),
+  /** Identifies the courier tier chosen from the quote (`provider_id:provider_fee_id`). */
+  courierKey: z.string().max(64).nullable().optional(),
   lat: z.number().min(-90).max(90).optional(),
   lng: z.number().min(-180).max(180).optional(),
   notes: z.string().optional(),
@@ -100,7 +101,6 @@ function buildOrderInput(
     city: payload.city,
     lat: payload.lat,
     lng: payload.lng,
-    postalCode: payload.postalCode,
     notes: payload.notes,
     paymentMethod: payload.paymentMethod,
     locale: payload.locale,
@@ -117,6 +117,8 @@ function buildOrderInput(
         ? { amount: totals.shipping.toFixed(2), currencyCode: payload.subtotal.currencyCode }
         : undefined,
     shippingMethodId: totals.shippingMethodId ?? undefined,
+    pickup: payload.pickup ?? false,
+    courierName: totals.courierName ?? undefined,
   };
 }
 
@@ -142,7 +144,13 @@ export async function POST(req: Request): Promise<NextResponse<CheckoutResponse>
     return NextResponse.json({ error: "invalidRequest" }, { status: 400 });
   }
 
-  if (payload.paymentMethod === "cod" && !COD_ENABLED) {
+  // Asked of the tenant, not of an env var. The checkout page reads the same source, so the
+  // server can't refuse a method the site is offering — which is exactly what happened while
+  // this mirrored NEXT_PUBLIC_COD_ENABLED and EchoDesk said the opposite.
+  const availability = isEchoDeskConfigured
+    ? paymentAvailability(await getStoreConfig())
+    : envPaymentAvailability();
+  if (payload.paymentMethod === "cod" && !availability.cashOnDelivery) {
     return NextResponse.json(
       { error: "codUnavailable" },
       { status: 400 },
@@ -161,13 +169,28 @@ export async function POST(req: Request): Promise<NextResponse<CheckoutResponse>
   // Delivery is priced here, never taken from the request — the client shows an estimate, the
   // server decides the charge. A pin makes it a live courier quote; without one it falls back
   // to the tenant's flat method, and to nothing when neither is configured.
-  const totals = await withShipping(
+  // Collection costs nothing and needs no quote, so it skips pricing entirely — asking a
+  // courier what it would charge to deliver an order nobody is delivering can only produce
+  // a wrong number or a spurious "we need your location".
+  const shipped = payload.pickup
+    ? ({ totals: { ...totalsResult.totals, shipping: 0, shippingMethodId: null }, reason: null } as const)
+    : await withShipping(
     totalsResult.totals,
     payload.locale === "en" ? "en" : "ka",
     { street: payload.address, city: payload.city, lat: payload.lat, lng: payload.lng },
     payload.lines,
     payload.shippingMethodId ?? null,
+    payload.courierKey ?? null,
   );
+  // Delivery couldn't be priced. Refuse rather than charge nothing — the shop prices by
+  // courier quote, so an unpriceable order is one we'd ship for free by accident.
+  if (!shipped.totals) {
+    return NextResponse.json(
+      { error: shipped.reason === "needsLocation" ? "deliveryNeedsLocation" : "deliveryUnavailable" },
+      { status: 400 },
+    );
+  }
+  const totals = shipped.totals;
 
   // Cross-check the client's subtotal against ours — a small drift means catalog prices
   // changed since the cart was loaded, which is worth surfacing so the user can re-confirm.
@@ -382,9 +405,23 @@ async function handleEchoDeskOrder(
   }
   const order = outcome.order;
 
+  const step = paymentStep(orderInput.paymentMethod, order.paymentUrl);
+
   // Card flow: the gateway owns the next step.
-  if (order.paymentUrl) {
-    return NextResponse.json({ redirectUrl: order.paymentUrl });
+  if (step.kind === "redirect") {
+    return NextResponse.json({ redirectUrl: step.url });
+  }
+
+  // A card order with no gateway session is unpaid. Reporting it as placed would clear the
+  // shopper's cart, send a confirmation email and show a success page for money that never
+  // moved — and the shop would find out when the parcel was expected.
+  if (step.kind === "failed") {
+    reportError(new Error("card order created without a payment url"), {
+      op: "echodesk.paymentUrlMissing",
+      orderId: String(order.id),
+      paymentMethod: orderInput.paymentMethod,
+    });
+    return NextResponse.json({ error: "paymentSessionFailed" }, { status: 502 });
   }
 
   const reference = order.orderNumber ?? String(order.id);

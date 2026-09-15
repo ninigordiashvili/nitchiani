@@ -3,18 +3,23 @@ import { NextResponse } from "next/server";
 /**
  * Refreshes the long-lived Instagram access token.
  *
- * Triggered by Vercel cron (see vercel.json) on the 1st of every month at 03:00 UTC, ~30 days
- * before the current 60-day token expires. Vercel cron sends `Authorization: Bearer ${CRON_SECRET}`,
- * which we verify here.
+ * NOTHING CALLS THIS ON A SCHEDULE. It was written for Vercel cron, declared in a vercel.json
+ * that has been removed — the site is hosted on Netlify, where that file did nothing, so the
+ * monthly refresh has never run. That costs nothing today because INSTAGRAM_ACCESS_TOKEN is
+ * unset and `lib/instagram.ts` falls back to a plain profile link. The moment a token is set,
+ * it expires 60 days later and the feed dies silently unless this is scheduled.
  *
- * The route returns the new token in the response body and logs it. Because Vercel env vars
- * cannot be mutated from runtime code, you (or a downstream service) must update INSTAGRAM_ACCESS_TOKEN
- * with the new value. Common patterns:
- *   - Read the new token from Vercel logs and update the env var manually
- *   - Hook this route up to a Slack/Telegram webhook for notification
- *   - Move token storage to Vercel KV / Edge Config (mutable) and read from there in lib/instagram.ts
+ * To schedule it on Netlify: a Scheduled Function (netlify.toml `[functions."name".schedule]`,
+ * or `@netlify/functions` `schedule()`) hitting this path with the bearer token below.
  *
- * Manual trigger for testing: curl -H "Authorization: Bearer $CRON_SECRET" https://yourdomain/api/instagram/refresh-token
+ * The route returns the new token in the response body and logs it. Host env vars cannot be
+ * mutated from runtime code, so you (or a downstream service) must write the new value back to
+ * INSTAGRAM_ACCESS_TOKEN. Common patterns:
+ *   - Read the new token from the deploy logs and update the env var by hand
+ *   - Hook this route up to a Slack/Telegram webhook so the value reaches you
+ *   - Move token storage somewhere mutable and read from there in lib/instagram.ts
+ *
+ * Manual trigger: curl -H "Authorization: Bearer $CRON_SECRET" https://yourdomain/api/instagram/refresh-token
  */
 export async function GET(req: Request) {
   if (!authorized(req)) {

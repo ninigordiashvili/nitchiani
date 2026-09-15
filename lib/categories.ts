@@ -20,7 +20,11 @@ export type CategoryDef = {
 export const CATEGORIES: CategoryDef[] = [
   { handle: "hair-extensions", labelKey: "hairExtensions", image: "/categories/extensions.png" },
   { handle: "hair-care", labelKey: "hairCare", image: "/categories/hair-care.png" },
-  { handle: "hair-accessories", labelKey: "hairAccessories", image: "/categories/accessories.png" },
+  // Out of stock and hidden until it is restocked — commenting it out here removes it from
+  // the chip row, the card grid, the mobile menu, the footer and the sitemap at once, since
+  // all five read this array. The collection shell in lib/shopify/dummy.ts is commented out
+  // alongside it so /shop/hair-accessories 404s rather than showing an empty category.
+  // { handle: "hair-accessories", labelKey: "hairAccessories", image: "/categories/accessories.png" },
   { handle: "bonnets", labelKey: "bonnets", image: "/categories/bonnets.png" },
   { handle: "durags", labelKey: "durags", image: "/categories/durags.png" },
 ];

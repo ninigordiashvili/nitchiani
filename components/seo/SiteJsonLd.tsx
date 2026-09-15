@@ -24,7 +24,10 @@ export function SiteJsonLd({ locale }: { locale: Locale }) {
 
   const business = {
     "@context": "https://schema.org",
-    "@type": "HairSalon",
+    // `OnlineStore`, not `HairSalon`. The salon type told Google this was a place you visit
+    // for a service, which is what the shop used to be and no longer is — it surfaced the
+    // brand against "hair salon Tbilisi" instead of against people shopping for hair.
+    "@type": "OnlineStore",
     "@id": `${SITE_URL}/#business`,
     name: "Nitchiani",
     url: SITE_URL,
@@ -39,7 +42,10 @@ export function SiteJsonLd({ locale }: { locale: Locale }) {
       addressCountry: "GE",
       ...(hasStreet ? { streetAddress: BUSINESS.address } : {}),
     },
-    areaServed: "Tbilisi",
+    // The whole country: couriers deliver nationwide, and "Tbilisi" quietly told Google not
+    // to show the shop to anyone outside it.
+    areaServed: "GE",
+    foundingDate: "2021",
     sameAs: [`https://instagram.com/${instagram}`, BUSINESS.facebookUrl],
   };
 

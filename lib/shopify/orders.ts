@@ -35,6 +35,10 @@ export type ManualOrderInput = {
   shipping?: Money;
   /** EchoDesk `shipping_method_id`, when a flat method priced the delivery. */
   shippingMethodId?: number;
+  /** Collection at the store rather than delivery. */
+  pickup?: boolean;
+  /** Courier the shopper chose from the quote, recorded in the notes for the back office. */
+  courierName?: string;
   /** Canonical coupon code that produced the discount. Used to attach a Shopify `discount_codes` entry. */
   couponCode?: string;
 };
