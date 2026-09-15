@@ -43,9 +43,9 @@ export const TERMS_SECTIONS: LegalSection[] = [
     headingEn: "2. About us",
     headingKa: "2. ჩვენ შესახებ",
     bodyEn:
-      `Nitchiani is a brand based in Tbilisi, Georgia, specialising in hand-crafted braids, locs and haircare. The Site is operated by ${BUSINESS.legalName}, registered in Georgia under ID ${BUSINESS.registrationId}, with its registered address at ${BUSINESS.address}. You can reach us at ${BUSINESS.email} or via WhatsApp using the number displayed in the site footer.`,
+      `Nitchiani is an online shop based in Tbilisi, Georgia, selling synthetic hair for afro curls and braids, hair-care products and accessories. The Site is operated by ${BUSINESS.legalName}, registered in Georgia under ID ${BUSINESS.registrationId}, with its registered address at ${BUSINESS.address}. You can reach us at ${BUSINESS.email} or via WhatsApp using the number displayed in the site footer.`,
     bodyKa:
-      `Nitchiani არის თბილისში დაფუძნებული ბრენდი, რომელიც სპეციალიზდება ხელით ნაკეთ ფრჩხებში, ლოკსებში და თმის მოვლის პროდუქტებში. საიტს ოპერირებას უწევს ${BUSINESS.legalName}, რეგისტრირებული საქართველოში საიდენტიფიკაციო ნომრით ${BUSINESS.registrationId}, იურიდიული მისამართით ${BUSINESS.address}. დაგვიკავშირდით — ${BUSINESS.email} ან WhatsApp ნომრით, რომელიც გამოქვეყნებულია საიტის ფუტერში.`,
+      `Nitchiani არის თბილისში დაფუძნებული ონლაინ მაღაზია, რომელიც ყიდის ხელოვნურ თმას აფრო ხვეულებისა და ნაწნავებისთვის, თმის მოვლის საშუალებებსა და აქსესუარებს. საიტს ოპერირებას უწევს ${BUSINESS.legalName}, რეგისტრირებული საქართველოში საიდენტიფიკაციო ნომრით ${BUSINESS.registrationId}, იურიდიული მისამართით ${BUSINESS.address}. დაგვიკავშირდით — ${BUSINESS.email} ან WhatsApp ნომრით, რომელიც გამოქვეყნებულია საიტის ფუტერში.`,
   },
   {
     headingEn: "3. Eligibility",
@@ -83,9 +83,9 @@ export const TERMS_SECTIONS: LegalSection[] = [
     headingEn: "7. Shipping and delivery",
     headingKa: "7. მიწოდება",
     bodyEn:
-      "Orders are hand-prepared at our Tbilisi studio and dispatched within 1–3 business days. Standard delivery inside Tbilisi typically arrives in 1–3 business days; deliveries to the broader region of Georgia take 3–7 business days. International orders, where available, are quoted separately. Risk of loss passes to you on delivery to the address you provided. If no one is available at the address, the courier will follow their own retry policy, after which the order may be returned to us.",
+      "Orders are packed and dispatched from Tbilisi within 1–3 business days. Standard delivery inside Tbilisi typically arrives in 1–3 business days; deliveries to the broader region of Georgia take 3–7 business days. International orders, where available, are quoted separately. Risk of loss passes to you on delivery to the address you provided. If no one is available at the address, the courier will follow their own retry policy, after which the order may be returned to us.",
     bodyKa:
-      "შეკვეთები მზადდება ხელით ჩვენს თბილისის სტუდიოში და იგზავნება 1-3 სამუშაო დღეში. სტანდარტული მიწოდება თბილისში ხდება 1-3 სამუშაო დღეში; სხვა რეგიონებში მიწოდება — 3-7 სამუშაო დღეში. საერთაშორისო შეკვეთები (სადაც ხელმისაწვდომია) იანგარიშება ცალკე. დაკარგვის რისკი თქვენზე გადადის ნივთის ჩაბარების მომენტში მითითებულ მისამართზე. თუ მისამართზე არავინ იქნება, კურიერი იმოქმედებს თავისი წესების შესაბამისად — შემდგომში შეკვეთა შესაძლოა დაბრუნდეს ჩვენთან.",
+      "შეკვეთები იგზავნება თბილისიდან 1-3 სამუშაო დღეში. სტანდარტული მიწოდება თბილისში ხდება 1-3 სამუშაო დღეში; სხვა რეგიონებში მიწოდება — 3-7 სამუშაო დღეში. საერთაშორისო შეკვეთები (სადაც ხელმისაწვდომია) იანგარიშება ცალკე. დაკარგვის რისკი თქვენზე გადადის ნივთის ჩაბარების მომენტში მითითებულ მისამართზე. თუ მისამართზე არავინ იქნება, კურიერი იმოქმედებს თავისი წესების შესაბამისად — შემდგომში შეკვეთა შესაძლოა დაბრუნდეს ჩვენთან.",
   },
   {
     headingEn: "8. Right of withdrawal (24 hours)",
@@ -139,7 +139,7 @@ export const TERMS_SECTIONS: LegalSection[] = [
     headingEn: "14. Contact",
     headingKa: "14. კონტაქტი",
     bodyEn:
-      `Questions about these terms or about your order are welcome at ${BUSINESS.email} or via WhatsApp using the number in the footer. We usually respond within a few hours during studio working days.`,
+      `Questions about these terms or about your order are welcome at ${BUSINESS.email} or via WhatsApp using the number in the footer. We usually respond within a few hours during working days.`,
     bodyKa:
       `კითხვები ამ პირობებთან ან თქვენს შეკვეთასთან დაკავშირებით — ${BUSINESS.email} ან WhatsApp ფუტერში მითითებული ნომრით. ჩვეულებრივ ვპასუხობთ რამდენიმე საათში სამუშაო დღეების განმავლობაში.`,
   },
@@ -240,7 +240,7 @@ export const PRIVACY_SECTIONS: LegalSection[] = [
     headingEn: "12. Contact",
     headingKa: "12. კონტაქტი",
     bodyEn:
-      `Privacy questions and rights requests are welcome at ${BUSINESS.email} or via WhatsApp using the number in the footer. We answer most within a few hours during studio working days; rights requests get a written reply within 30 days.`,
+      `Privacy questions and rights requests are welcome at ${BUSINESS.email} or via WhatsApp using the number in the footer. We answer most within a few hours during working days; rights requests get a written reply within 30 days.`,
     bodyKa:
       `კონფიდენციალურობასთან დაკავშირებული შეკითხვები და უფლებების მოთხოვნები — ${BUSINESS.email} ან WhatsApp ფუტერში მითითებული ნომრით. უმეტესობას ვპასუხობთ რამდენიმე საათში სამუშაო დღეებში; უფლებების მოთხოვნებზე — წერილობით 30 დღის განმავლობაში.`,
   },
@@ -277,7 +277,7 @@ export const REFUND_SECTIONS: LegalSection[] = [
     headingEn: "4. How to start a return",
     headingKa: "4. როგორ დავიწყო დაბრუნება",
     bodyEn:
-      `Email ${BUSINESS.email} or WhatsApp us with your order number and which items you want to return. We'll send back a confirmation and the return address within a few hours during studio working days. Once you've shipped the package, send us the courier tracking number so we can keep an eye on it.`,
+      `Email ${BUSINESS.email} or WhatsApp us with your order number and which items you want to return. We'll send back a confirmation and the return address within a few hours during working days. Once you've shipped the package, send us the courier tracking number so we can keep an eye on it.`,
     bodyKa:
       `მოგვწერე ${BUSINESS.email}-ზე ან WhatsApp-ით შეკვეთის ნომრით და მიუთითე რომელი ნივთები გსურს დააბრუნო. რამდენიმე საათში სამუშაო დღეებში მიიღებ დადასტურებას და დაბრუნების მისამართს. გაგზავნის შემდეგ გაგვიგზავნე ტრეკინგის ნომერი, რომ შევძლოთ თვალყურის დევნება.`,
   },
@@ -325,7 +325,7 @@ export const REFUND_SECTIONS: LegalSection[] = [
     headingEn: "10. Contact",
     headingKa: "10. კონტაქტი",
     bodyEn:
-      `Return questions are welcome at ${BUSINESS.email} or via WhatsApp using the number in the footer. We answer most within a few hours during studio working days.`,
+      `Return questions are welcome at ${BUSINESS.email} or via WhatsApp using the number in the footer. We answer most within a few hours during working days.`,
     bodyKa:
       `დაბრუნებასთან დაკავშირებული შეკითხვები — ${BUSINESS.email} ან WhatsApp ფუტერში მითითებული ნომრით. უმეტესობას ვპასუხობთ რამდენიმე საათში სამუშაო დღეებში.`,
   },

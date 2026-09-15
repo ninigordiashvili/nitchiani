@@ -1,13 +1,16 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { SITE_URL } from "@/lib/seo";
+import { seoCopy } from "@/lib/seo-copy";
 
-const DESCRIPTION =
-  "Hand-crafted braids, dreadlocks and loc-care essentials from a Tbilisi studio. Shop bonnets, oils, extensions and book a session.";
+// Fallback only. Every page under /[locale] overrides both from `lib/seo-copy.ts`; this is
+// what a route outside the locale tree would carry, and it is English because that is the
+// safer guess for a request that never told us otherwise.
+const { title: TITLE, description: DESCRIPTION } = seoCopy("en");
 
 export const metadata: Metadata = {
   title: {
-    default: "Nitchiani — Premium braids, locs & haircare · Tbilisi",
+    default: TITLE,
     template: "%s · Nitchiani",
   },
   description: DESCRIPTION,
@@ -20,7 +23,7 @@ export const metadata: Metadata = {
   // which Next also wires up as the Twitter image automatically.
   twitter: {
     card: "summary_large_image",
-    title: "Nitchiani — Premium braids, locs & haircare · Tbilisi",
+    title: TITLE,
     description: DESCRIPTION,
   },
 };

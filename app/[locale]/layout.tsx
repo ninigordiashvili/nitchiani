@@ -5,6 +5,8 @@ import { getMessages, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { manrope, notoSansGeorgian, notoSerifGeorgian, tenorSans } from "@/lib/fonts";
 import { SiteJsonLd } from "@/components/seo/SiteJsonLd";
+import { seoCopy } from "@/lib/seo-copy";
+import { Analytics } from "@/components/analytics/Analytics";
 import { ogLocale } from "@/lib/seo";
 import { BackButton } from "@/components/layout/BackButton";
 import { CookieConsentBanner } from "@/components/layout/CookieConsentBanner";
@@ -42,9 +44,18 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale } = await params;
   if (!isLocale(locale)) return {};
-  // Default og:locale for every page. Pages that set their own `openGraph` re-spread
-  // `ogLocale(locale)` (Next picks the deepest openGraph, it does not deep-merge).
-  return { openGraph: ogLocale(locale) };
+  // Title and description live here rather than in the root layout so each language gets its
+  // own. Before this the Georgian site carried the English title, which is the copy Google
+  // showed to people searching in Georgian — the one audience the shop actually has.
+  const { title, description } = seoCopy(locale);
+  return {
+    title: { default: title, template: "%s · Nitchiani" },
+    description,
+    // Default og:locale for every page. Pages that set their own `openGraph` re-spread
+    // `ogLocale(locale)` (Next picks the deepest openGraph, it does not deep-merge).
+    openGraph: { ...ogLocale(locale), title, description },
+    twitter: { card: "summary_large_image", title, description },
+  };
 }
 
 export default async function LocaleLayout({
@@ -69,8 +80,10 @@ export default async function LocaleLayout({
     >
       <body>
         <SiteJsonLd locale={locale as Locale} />
+        {/* Inside the consent provider — it reads the decision and stays silent until accepted. */}
         <NextIntlClientProvider locale={locale} messages={messages}>
           <CookieConsentProvider>
+            <Analytics />
       <CurrencyProvider>
         <WishlistProvider>
           <RecentlyViewedProvider>

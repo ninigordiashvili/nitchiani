@@ -19,6 +19,7 @@ import { validatePromo } from "@/lib/echodesk/promo";
 import type { Locale } from "@/lib/i18n/config";
 import type { Product } from "@/lib/shopify/types";
 import { localeAlternates } from "@/lib/seo";
+import { seoCopy } from "@/lib/seo-copy";
 
 export async function generateMetadata({
   params,
@@ -27,11 +28,11 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale } = await params;
   // `absolute` so the home page keeps the full brand title instead of the "%s · Nitchiani"
-  // template; only the canonical/hreflang differ from the site defaults.
+  // template; only the canonical/hreflang differ from the site defaults. The string itself
+  // comes from `seoCopy` — hardcoded here it silently outranked the locale layout's title,
+  // and the Georgian home page went on serving the English one.
   return {
-    title: {
-      absolute: "Nitchiani — Premium braids, locs & haircare · Tbilisi",
-    },
+    title: { absolute: seoCopy(locale).title },
     alternates: localeAlternates(locale, ""),
   };
 }
@@ -117,6 +118,16 @@ export default async function HomePage({
 
   return (
     <div className="pb-0 sm:pb-12">
+      {/* The page's one `h1`, and until now it had none — the design opens straight into
+          category chips, and the only heading near the top belonged to `UvpBanner`, which
+          renders once per visitor and then never again. An `h1` that disappears on the
+          second visit is worse than none, so this one sits outside that gate.
+
+          Visually hidden rather than drawn: the homepage is deliberately wordless at the
+          top, and this is the sentence a screen reader announces on arrival and the one
+          search engines read as the page's subject. Same words either audience gets. */}
+      <h1 className="sr-only">{t("h1")}</h1>
+
       {/* 1 — Brand UVP banner. One-time-only — only renders for visitors who haven't yet
           scrolled past it (gated by the `uvp-seen` cookie). Dismisses itself on first
           scroll and writes the cookie so subsequent visits skip it entirely. */}

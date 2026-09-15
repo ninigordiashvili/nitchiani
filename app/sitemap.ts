@@ -4,7 +4,7 @@ import { CAMPAIGNS } from "@/lib/campaigns";
 import { locales } from "@/lib/i18n/config";
 // import { JOURNAL_POSTS } from "@/lib/journal";  // hidden — see the journal loop below
 // import { SERVICES } from "@/lib/services";  // hidden — see the services loop below
-import { getProducts } from "@/lib/shopify/client";
+import { getProducts, getProductsByHandles } from "@/lib/shopify/client";
 
 /**
  * Sitemap for the full catalog. Emits one entry per public URL, with `alternates.languages`
@@ -70,7 +70,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   for (const col of COLLECTIONS) {
     entries.push(buildEntry(baseUrl, `/shop/${col}`, 0.7));
   }
+  // Only campaigns that resolve to real products. The campaign page calls `notFound()` when
+  // its handles match nothing, so listing one here advertised a dead URL to Google — and
+  // because the framework still answers those with 200, it reads as a soft 404 rather than an
+  // honest one. `spring-drop-26` pointed at three demo handles that were never in the shop.
   for (const c of CAMPAIGNS) {
+    const live = await getProductsByHandles(c.handles, locales[0]).catch(() => []);
+    if (live.length === 0) continue;
     // Campaigns are usually time-bound and drive paid/social traffic — high priority while live.
     entries.push(buildEntry(baseUrl, `/shop/${c.slug}`, 0.8));
   }
