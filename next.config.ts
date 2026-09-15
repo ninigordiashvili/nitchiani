@@ -30,14 +30,14 @@ const isDev = process.env.NODE_ENV === "development";
  */
 const csp = [
   `default-src 'self'`,
-  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""} https://*.cal.com https://echodesk.ge https://maps.googleapis.com`,
+  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""} https://*.cal.com https://echodesk.ge https://maps.googleapis.com https://www.googletagmanager.com`,
   // The Maps JS API injects its own stylesheet link for map controls.
   `style-src 'self' 'unsafe-inline' https://fonts.googleapis.com`,
-  `img-src 'self' data: blob: https://echodesk-media.fsn1.your-objectstorage.com https://cdn.shopify.com https://*.cdninstagram.com https://*.fbcdn.net https://picsum.photos https://fastly.picsum.photos https://*.cal.com https://maps.gstatic.com https://maps.googleapis.com https://*.googleapis.com https://*.ggpht.com https://static.quickshipper.app https://test-static.quickshipper.app`,
+  `img-src 'self' data: blob: https://echodesk-media.fsn1.your-objectstorage.com https://cdn.shopify.com https://*.cdninstagram.com https://*.fbcdn.net https://picsum.photos https://fastly.picsum.photos https://*.cal.com https://maps.gstatic.com https://maps.googleapis.com https://*.googleapis.com https://*.ggpht.com https://static.quickshipper.app https://test-static.quickshipper.app https://www.google-analytics.com`,
   `font-src 'self' data: https://fonts.gstatic.com`,
   // `*.api.echodesk.ge` covers the tenant subdomain (nitchiani.api.echodesk.ge); the bare
   // host alone does not match it, so client-side storefront calls would be blocked.
-  `connect-src 'self' https://*.cal.com https://api.echodesk.ge https://*.api.echodesk.ge https://maps.googleapis.com https://places.googleapis.com${isDev ? " ws:" : ""}`,
+  `connect-src 'self' https://*.cal.com https://api.echodesk.ge https://*.api.echodesk.ge https://maps.googleapis.com https://places.googleapis.com https://www.google-analytics.com https://*.google-analytics.com https://*.analytics.google.com https://www.googletagmanager.com${isDev ? " ws:" : ""}`,
   `frame-src 'self' https://*.cal.com https://echodesk.ge`,
   `frame-ancestors 'self'`,
   `base-uri 'self'`,
