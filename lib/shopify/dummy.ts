@@ -757,8 +757,10 @@ export const DUMMY_RAW_COLLECTIONS: RawCollection[] = [
     handle: "hair-extensions",
     titleEn: "Hair Extensions",
     titleKa: "ხელოვნური თმა",
-    descriptionEn: "Braiding hair and extensions.",
-    descriptionKa: "ხელოვნური თმა და ექსტენშენები ნაწნავებისთვის.",
+    descriptionEn:
+      "Synthetic braiding hair in water wave, deep wave, bone straight and kinky textures. One 300g pack of 3 pieces covers a full head. Lengths run from 20 to 28 inches. The fibre is heat-resistant, so it takes hot tools without melting and keeps its curl. Around 25 shades — naturals, blondes, ombré blends and brights. All from one factory, so colour and texture stay consistent between orders. Held in stock in Tbilisi and delivered across Georgia in 1–3 working days.",
+    descriptionKa:
+      "ხელოვნური თმა ნაწნავებისა და ხვეულებისთვის — water wave, deep wave, სწორი და kinky ტექსტურები. ერთი შეკვრა (3 ცალი, 300 გრამი) სრული თავისთვის საკმარისია. სიგრძე 20-დან 28 დუიმამდე (50–70 სმ). ბოჭკო სითბოგამძლეა — უთოსა და ფენს უძლებს და ხვეულს ინარჩუნებს. დაახლოებით 25 ფერი: ნატურალური, ქერა, ომბრე და ნათელი ტონები. ყველა ერთი ქარხნიდან, ამიტომ ფერი და ტექსტურა შეკვეთიდან შეკვეთამდე იგივე რჩება. მარაგი თბილისშია, მიწოდება საქართველოში 1–3 სამუშაო დღეში.",
     // Membership comes from lib/echodesk/categories.ts when the catalog is live.
     products: [],
   },
@@ -767,28 +769,34 @@ export const DUMMY_RAW_COLLECTIONS: RawCollection[] = [
     handle: "hair-care",
     titleEn: "Hair Care",
     titleKa: "თმის მოვლა",
-    descriptionEn: "Oils, wax and care for braids and locs.",
-    descriptionKa: "ზეთები, ჟელე და მოვლის საშუალებები ნაწნავებისა და ლოკსებისთვის.",
+    descriptionEn:
+      "Two Lorenti essentials for everyday care. The 400ml two-phase leave-in conditioner comes in biotin and keratin — it sprays on, needs no rinsing, makes detangling easier and shields hair from heat tools and daily wear. The 150ml Gel Wax Ultra Hold holds a style all day without greasy residue, for laying edges and finishing a look. Both suit all hair types and lengths. Held in stock in Tbilisi and delivered across Georgia in 1–3 working days.",
+    descriptionKa:
+      "ორი Lorenti-ის საშუალება ყოველდღიური მოვლისთვის. 400 მლ ორფაზიანი ლივ-ინ კონდიციონერი — ბიოტინითა და კერატინით — სპრეით იფრქვევა, ჩამობანა არ სჭირდება, აადვილებს დავარცხნას და იცავს თერმული და ყოველდღიური ზემოქმედებისგან. 150 მლ Gel Wax Ultra Hold მთელი დღე ინარჩუნებს ფორმას ცხიმიანი ნარჩენის გარეშე — კიდეების დასაწყობად და ვარცხნილობის დასასრულებლად. ორივე ყველა ტიპისა და სიგრძის თმას უხდება. მარაგი თბილისშია, მიწოდება საქართველოში 1–3 სამუშაო დღეში.",
     // Membership comes from lib/echodesk/categories.ts when the catalog is live.
     products: [],
   },
-  {
-    id: "gid://nitchiani/Collection/hair-accessories",
-    handle: "hair-accessories",
-    titleEn: "Hair Accessories",
-    titleKa: "თმის აქსესუარი",
-    descriptionEn: "Beads, cuffs, rings and tools.",
-    descriptionKa: "მძივები, რგოლები და აქსესუარები.",
-    // Membership comes from lib/echodesk/categories.ts when the catalog is live.
-    products: [],
-  },
+  // Hidden while out of stock — see the matching entry in lib/categories.ts. Kept rather than
+  // deleted so restocking is one uncomment in each file; the copy here was never written from
+  // real stock, so replace it when the accessories are actually known.
+  // {
+  //   id: "gid://nitchiani/Collection/hair-accessories",
+  //   handle: "hair-accessories",
+  //   titleEn: "Hair Accessories",
+  //   titleKa: "თმის აქსესუარი",
+  //   descriptionEn: "Beads, cuffs, rings and tools.",
+  //   descriptionKa: "მძივები, რგოლები და აქსესუარები.",
+  //   products: [],
+  // },
   {
     id: "gid://nitchiani/Collection/bonnets",
     handle: "bonnets",
     titleEn: "Bonnets",
     titleKa: "ბონეტი",
-    descriptionEn: "Silk and satin bonnets for overnight protection.",
-    descriptionKa: "აბრეშუმისა და სატენის ბონეტები ღამის დაცვისთვის.",
+    descriptionEn:
+      "Satin bonnets in two sizes — a standard cut and an extra-long one made for braids, locs and extensions that shouldn't be folded away. The adjustable bow ties to your own head size and holds all night without slipping, and the roomy interior takes thick hair without leaving pressure marks. Satin cuts friction, so hair keeps its moisture and wakes up smooth. Hand wash cold, air dry. Held in stock in Tbilisi and delivered across Georgia in 1–3 working days.",
+    descriptionKa:
+      "სატენის ბონეტი ორ ზომაში — სტანდარტული და გრძელი, რომელიც ნაწნავებს, ლოკსებსა და ხელოვნურ თმას მოხრის გარეშე იტევს. რეგულირებადი ბაფთა თავის ზომაზე იკვრება და მთელი ღამე არ სრიალებს; შიგნიდან ფართოა, ამიტომ სქელ თმაზე კვალს არ ტოვებს. სატენი ხახუნს ამცირებს — თმა ტენიანობას ინარჩუნებს და დილით გლუვი რჩება. ირეცხება ხელით, ცივ წყალში; შრება ბუნებრივად. მარაგი თბილისშია, მიწოდება საქართველოში 1–3 სამუშაო დღეში.",
     // Membership comes from lib/echodesk/categories.ts when the catalog is live.
     products: [],
   },
@@ -797,8 +805,10 @@ export const DUMMY_RAW_COLLECTIONS: RawCollection[] = [
     handle: "durags",
     titleEn: "Durags",
     titleKa: "დურაგი",
-    descriptionEn: "Durags for laying and protecting.",
-    descriptionKa: "დურაგები თმის დასაცავად და გასასწორებლად.",
+    descriptionEn:
+      "Satin durags in one size, with 100cm straps long enough to wrap twice and still tie comfortably. The elastic ties give steady compression without digging in, and the ultra-smooth satin reduces friction so wave patterns set cleanly. Breathable and light enough for all-day wear, not only overnight. Several colours. Held in stock in Tbilisi and delivered across Georgia in 1–3 working days.",
+    descriptionKa:
+      "სატენის დურაგი ერთ ზომაში, 100 სმ სიგრძის ზონრებით — თავისუფლად შემოეხვევა და მოსახერხებლად იკვრება. ელასტიური ზონრები საჭირო შეკუმშვას ინარჩუნებს ისე, რომ არ ჭრის; სატენის გლუვი ზედაპირი ხახუნს ამცირებს და ტალღების ფორმას ასწორებს. სუნთქვადი და მსუბუქია — მთელი დღე იტარება, არა მხოლოდ ღამით. რამდენიმე ფერი. მარაგი თბილისშია, მიწოდება საქართველოში 1–3 სამუშაო დღეში.",
     // Membership comes from lib/echodesk/categories.ts when the catalog is live.
     products: [],
   },

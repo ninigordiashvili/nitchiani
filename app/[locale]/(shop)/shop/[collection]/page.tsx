@@ -7,7 +7,7 @@ import { FilteredCollection } from "@/components/commerce/FilteredCollection";
 import { CategoryChips } from "@/components/homepage/CategoryChips";
 import { getCampaignBySlug } from "@/lib/campaigns";
 import { getCollectionByHandle, getProductsByHandles } from "@/lib/shopify/client";
-import { localeAlternates, ogLocale } from "@/lib/seo";
+import { localeAlternates, metaDescription, ogLocale } from "@/lib/seo";
 import type { Locale } from "@/lib/i18n/config";
 
 export async function generateMetadata({
@@ -38,9 +38,9 @@ export async function generateMetadata({
   if (!collection) return {};
   return {
     title: collection.title,
-    description:
-      collection.description ||
-      `Shop ${collection.title} at Nitchiani — premium braids, locs & haircare from Tbilisi.`,
+    description: collection.description
+      ? metaDescription(collection.description)
+      : `Shop ${collection.title} at Nitchiani — synthetic hair and care, shipped from Tbilisi.`,
     alternates,
     openGraph: {
       ...ogLocale(locale),
