@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -14,6 +14,7 @@ import {
   Check,
   CreditCard,
   Loader2,
+  Plus,
   ShieldCheck,
   Trash2,
   Wallet,
@@ -28,6 +29,7 @@ import { BLUR_DATA_URL, safeImageSrc } from "@/lib/images";
 import { CouponField } from "@/components/cart/CouponField";
 import { HowItWorksButton } from "@/components/cart/HowItWorksButton";
 import { AddressPicker } from "@/components/checkout/AddressPicker";
+import { CityPicker } from "@/components/checkout/CityPicker";
 import { cardLabelKeys, type PaymentAvailability } from "@/lib/echodesk/payments";
 import type { DeliveryChoice } from "@/lib/echodesk/shipping";
 import type { EchoDeskStoreConfig } from "@/lib/echodesk/types";
@@ -67,13 +69,6 @@ const buildCheckoutSchema = (t: Translate) => z.object({
   lat: z.number().optional(),
   lng: z.number().optional(),
   city: z.string().min(1, t("checkout.validation.required")),
-  // Georgian post codes are 4 digits; the input strips non-digits so we only need to allow
-  // an empty string (optional) or the 4-digit canonical form.
-  postalCode: z
-    .string()
-    .regex(/^\d{4}$/, t("checkout.validation.postalCode"))
-    .optional()
-    .or(z.literal("")),
   notes: z.string().optional(),
   paymentMethod: z.enum(["bank_transfer", "cod", "bog_card", "tbc_card"]),
 });
@@ -188,6 +183,10 @@ export function CheckoutForm({
    * which is the cheapest — a sensible default nobody has to think about.
    */
   const [courierKey, setCourierKey] = useState<string | null>(null);
+  // True only while a quote is actually in flight — not during the debounce, or every
+  // keystroke would flash a spinner at the shopper.
+  const [quoting, setQuoting] = useState(false);
+  const [noteOpen, setNoteOpen] = useState(false);
 
   // Mobile-only two-step flow: 1 = contact/shipping, 2 = payment + place order.
   // Desktop ignores `step` entirely because both fieldsets are rendered side-by-side via
@@ -206,7 +205,8 @@ export function CheckoutForm({
   } = useForm<CheckoutInput>({
     resolver: zodResolver(checkoutSchema),
     defaultValues: {
-      city: "Tbilisi",
+      // No city is pre-filled. A value the shopper did not choose is one they have to
+      // notice and clear, and it silently ships every unread order to the capital.
       paymentMethod: defaultPaymentMethod,
     },
   });
@@ -228,6 +228,8 @@ export function CheckoutForm({
 
   const paymentMethod = watch("paymentMethod");
   const addressValue = watch("address");
+  const notesValue = watch("notes");
+  const addressRef = useRef<HTMLLabelElement>(null);
   const cityValue = watch("city");
   const latValue = watch("lat");
   const lngValue = watch("lng");
@@ -240,8 +242,10 @@ export function CheckoutForm({
       const items = quoteItems(cart.lines);
       if (items.length === 0 || !addressValue?.trim() || !cityValue?.trim()) {
         setShipping({ status: "unpriced" });
+        setQuoting(false);
         return;
       }
+      setQuoting(true);
       void getShippingQuoteAction(
         locale,
         Number.parseFloat(subtotalAmount),
@@ -252,6 +256,7 @@ export function CheckoutForm({
           setShipping(r);
           setCourierKey(null);
         })
+        .finally(() => setQuoting(false))
         // A failed lookup shouldn't crash the page; the order route decides the charge and
         // will refuse the order itself if delivery genuinely can't be priced.
         .catch(() => setShipping({ status: "unpriced" }));
@@ -320,6 +325,16 @@ export function CheckoutForm({
   };
 
   const onSubmit = async (values: CheckoutInput) => {
+    // The server refuses an unpinned courier order with 400 `deliveryNeedsLocation`, and
+    // rightly — but letting the round-trip deliver that verdict means the shopper fills the
+    // whole form, picks a payment method, presses the button and only then learns what was
+    // missing, in a message at the other end of the page. Caught here instead, next to the
+    // field that fixes it and before anything is sent.
+    if (!isPickup && shipping.status === "needsLocation") {
+      setSubmitError(t("checkout.errors.deliveryNeedsLocation"));
+      addressRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      return;
+    }
     setSubmitting(true);
     setSubmitError(null);
     try {
@@ -384,7 +399,6 @@ export function CheckoutForm({
         phone: values.phone,
         address: values.address,
         city: values.city,
-        postalCode: values.postalCode,
       });
 
       if (data.redirectUrl) {
@@ -415,46 +429,6 @@ export function CheckoutForm({
       <h1 className="font-display mb-6 text-3xl tracking-tight sm:mb-8 sm:text-4xl">
         {t("checkout.title")}
       </h1>
-
-      {/* Express checkout row — quick payment-method picker at the top of the page. Decoratively
-          doubles as a "we accept these" trust strip; functionally pre-selects in the radio
-          group below so the user doesn't have to scroll to choose. */}
-      <div className="mb-8 border-b border-black/10 pb-6">
-        <p className="label-eyebrow mb-3">{t("checkout.expressCheckout")}</p>
-        <div className="flex flex-wrap gap-2">
-          {payments.card ? (
-            <ExpressPill
-              active={paymentMethod === "bog_card"}
-              onClick={() => setValue("paymentMethod", "bog_card")}
-              icon={<CreditCard size={14} />}
-              label={t(cardLabels.title)}
-            />
-          ) : null}
-          {showTbcPreview ? (
-            <ExpressPill
-              active={false}
-              onClick={() => {}}
-              icon={<CreditCard size={14} />}
-              label={t("checkout.tbcCard")}
-              comingSoonLabel={t("checkout.comingSoon")}
-            />
-          ) : null}
-          <ExpressPill
-            active={paymentMethod === "bank_transfer"}
-            onClick={() => setValue("paymentMethod", "bank_transfer")}
-            icon={<Banknote size={14} />}
-            label={t("checkout.bankTransfer")}
-          />
-          {payments.cashOnDelivery ? (
-            <ExpressPill
-              active={paymentMethod === "cod"}
-              onClick={() => setValue("paymentMethod", "cod")}
-              icon={<Wallet size={14} />}
-              label={t("checkout.cod")}
-            />
-          ) : null}
-        </div>
-      </div>
 
       {/* Mobile step indicator. Desktop has both fieldsets visible at once so the indicator
           is irrelevant there — `sm:hidden` removes it from the wider layout entirely. */}
@@ -499,7 +473,7 @@ export function CheckoutForm({
 
           {/* Shipping fieldset — hidden on mobile step 2; always visible on sm+. */}
           <fieldset className={cn("mb-8", step === 2 && "hidden sm:block")}>
-            <legend className="font-display mb-4 text-xl">{t("checkout.shipping")}</legend>
+            <legend className="font-display mb-4 text-xl">{t("checkout.contactSection")}</legend>
             <div className="grid gap-3 sm:grid-cols-2">
               <Field label={t("checkout.firstName")} error={errors.firstName?.message} required>
                 <input className={inputCls} aria-required {...register("firstName")} />
@@ -525,7 +499,17 @@ export function CheckoutForm({
               <Field label={t("checkout.email")} error={errors.email?.message} required>
                 <input className={inputCls} type="email" aria-required {...register("email")} />
               </Field>
-              <Field label={t("checkout.address")} error={errors.address?.message} className="sm:col-span-2" required>
+            </div>
+          </fieldset>
+
+          {/* Where it goes, kept apart from who to reach. The first fieldset is answered from
+              memory; this one needs the map, and mixing them made one long block where the
+              pin — the only field a courier actually navigates by — read as one more optional
+              line among six. */}
+          <fieldset className={cn("mb-8", step === 2 && "hidden sm:block")}>
+            <legend className="font-display mb-4 text-xl">{t("checkout.deliverySection")}</legend>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Field label={t("checkout.address")} error={errors.address?.message} ref={addressRef} className="sm:col-span-2" required>
                 <Controller
                   control={control}
                   name="address"
@@ -535,14 +519,15 @@ export function CheckoutForm({
                       onChange={field.onChange}
                       onBlur={field.onBlur}
                       ariaInvalid={errors.address ? true : undefined}
+                      // Only when the pin is what stands between the shopper and a price:
+                      // a shop with a flat method prices fine without one, and shouting
+                      // "required" there would be a lie.
+                      pinRequired={!isPickup && shipping.status === "needsLocation"}
                       onPlace={(place) => {
                         // City and postcode are only overwritten when Google actually
                         // returned them, so picking a place can't blank a value the
                         // customer typed by hand.
                         if (place.city) setValue("city", place.city, { shouldValidate: true });
-                        if (place.postalCode) {
-                          setValue("postalCode", place.postalCode, { shouldValidate: true });
-                        }
                         setValue("lat", place.lat);
                         setValue("lng", place.lng);
                       }}
@@ -550,27 +535,25 @@ export function CheckoutForm({
                   )}
                 />
               </Field>
-              <Field label={t("checkout.city")} error={errors.city?.message} required>
-                <input className={inputCls} aria-required {...register("city")} />
-              </Field>
-              <Field label={t("checkout.postalCode")} error={errors.postalCode?.message}>
-                {(() => {
-                  const field = register("postalCode");
-                  return (
-                    <input
-                      className={inputCls}
-                      inputMode="numeric"
-                      pattern="\d*"
-                      maxLength={4}
-                      autoComplete="postal-code"
-                      {...field}
-                      onChange={(e) => {
-                        e.target.value = e.target.value.replace(/\D/g, "").slice(0, 4);
-                        field.onChange(e);
-                      }}
+              {/* Full width, not half. Sharing a row with the address was the other option and it
+                  fails on this form: the address carries a suggestions dropdown and, when the
+                  pin is still missing, a bordered button and a line of explanation beneath it —
+                  so the two cells end up wildly different heights and the city label floats
+                  beside a paragraph. Half a field with a hole next to it looked unfinished
+                  once the postcode went, so it takes the whole row. */}
+              <Field label={t("checkout.city")} error={errors.city?.message} className="sm:col-span-2" required>
+                <Controller
+                  control={control}
+                  name="city"
+                  render={({ field }) => (
+                    <CityPicker
+                      value={field.value ?? ""}
+                      onChange={field.onChange}
+                      onBlur={field.onBlur}
+                      ariaInvalid={errors.city ? true : undefined}
                     />
-                  );
-                })()}
+                  )}
+                />
               </Field>
               {/* How the order is received, when the shop offers a choice: collection at the
                   store, or a courier. Collection comes from the tenant's pickup settings — it
@@ -587,9 +570,9 @@ export function CheckoutForm({
                       <label
                         key={m.methodId}
                         className={cn(
-                          "flex cursor-pointer items-center justify-between gap-3 rounded-md border px-3 py-2.5 text-sm transition-colors",
+                          "flex cursor-pointer items-center justify-between gap-3 rounded-md border bg-white/60 px-3 py-2.5 text-sm transition-colors",
                           !isPickup && methodId === m.methodId
-                            ? "border-[var(--color-brand-ink)] bg-black/[0.03]"
+                            ? "border-[var(--color-brand-ink)]"
                             : "border-black/15 hover:border-black/30",
                         )}
                       >
@@ -629,9 +612,9 @@ export function CheckoutForm({
                     {delivery.length === 0 ? (
                       <label
                         className={cn(
-                          "flex cursor-pointer items-center justify-between gap-3 rounded-md border px-3 py-2.5 text-sm transition-colors",
+                          "flex cursor-pointer items-center justify-between gap-3 rounded-md border bg-white/60 px-3 py-2.5 text-sm transition-colors",
                           !isPickup
-                            ? "border-[var(--color-brand-ink)] bg-black/[0.03]"
+                            ? "border-[var(--color-brand-ink)]"
                             : "border-black/15 hover:border-black/30",
                         )}
                       >
@@ -652,9 +635,9 @@ export function CheckoutForm({
                     {pickup ? (
                       <label
                         className={cn(
-                          "flex cursor-pointer items-start justify-between gap-3 rounded-md border px-3 py-2.5 text-sm transition-colors",
+                          "flex cursor-pointer items-start justify-between gap-3 rounded-md border bg-white/60 px-3 py-2.5 text-sm transition-colors",
                           isPickup
-                            ? "border-[var(--color-brand-ink)] bg-black/[0.03]"
+                            ? "border-[var(--color-brand-ink)]"
                             : "border-black/15 hover:border-black/30",
                         )}
                       >
@@ -682,7 +665,26 @@ export function CheckoutForm({
                       several — Georgian Post, Wolt, Glovo — at different prices and speeds,
                       and which one is worth it is the shopper's call, not ours. Hidden when
                       the quote returned only one, since that is not a choice. */}
-                  {!isPickup && couriers.length > 1 ? (
+                  {/* While the quote is in flight the row below is either empty or still
+                      showing the last address's couriers, so the shopper gets no sign that
+                      anything is happening — the list simply appears, seconds later. Skeleton
+                      rows the same height as the real ones keep the form from jumping when
+                      they arrive. */}
+                  {!isPickup && quoting ? (
+                    <div className="mt-2 grid gap-2" aria-live="polite">
+                      <p className="flex items-center gap-1.5 text-xs opacity-60">
+                        <Loader2 size={12} className="animate-spin" aria-hidden />
+                        {t("checkout.calculatingDelivery")}
+                      </p>
+                      {[0, 1, 2].map((i) => (
+                        <div
+                          key={i}
+                          aria-hidden
+                          className="h-[42px] animate-pulse rounded-md border border-black/10 bg-black/[0.04]"
+                        />
+                      ))}
+                    </div>
+                  ) : !isPickup && couriers.length > 1 ? (
                     <div className="mt-2 grid gap-2">
                       {couriers.map((c) => {
                         const selected = chosenCourier
@@ -692,9 +694,9 @@ export function CheckoutForm({
                           <label
                             key={c.key}
                             className={cn(
-                              "flex cursor-pointer items-center justify-between gap-3 rounded-md border px-3 py-2 text-sm transition-colors",
+                              "flex cursor-pointer items-center justify-between gap-3 rounded-md border bg-white/60 px-3 py-2 text-sm transition-colors",
                               selected
-                                ? "border-[var(--color-brand-ink)] bg-black/[0.03]"
+                                ? "border-[var(--color-brand-ink)]"
                                 : "border-black/15 hover:border-black/30",
                             )}
                           >
@@ -752,9 +754,30 @@ export function CheckoutForm({
                 </fieldset>
               ) : null}
 
-              <Field label={t("checkout.notes")} error={errors.notes?.message} className="sm:col-span-2">
-                <textarea className={cn(inputCls, "min-h-20 resize-y")} {...register("notes")} />
-              </Field>
+              {/* Collapsed by default. It is optional, five rows tall, and sat between the
+                  delivery choice and the payment methods — on a phone that is a screenful of
+                  nothing between the two decisions that matter. Opens on demand, and stays
+                  open when it already holds text so a restored draft is never hidden. */}
+              <div className="sm:col-span-2">
+                {noteOpen || notesValue ? (
+                  <Field label={t("checkout.notes")} error={errors.notes?.message}>
+                    <textarea
+                      className={cn(inputCls, "min-h-20 resize-y")}
+                      autoFocus
+                      {...register("notes")}
+                    />
+                  </Field>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setNoteOpen(true)}
+                    className="inline-flex cursor-pointer items-center gap-1.5 text-xs underline-offset-2 opacity-80 hover:underline hover:opacity-100"
+                  >
+                    <Plus size={13} aria-hidden />
+                    {t("checkout.addNote")}
+                  </button>
+                )}
+              </div>
             </div>
           </fieldset>
 
@@ -885,6 +908,13 @@ export function CheckoutForm({
               <span className="opacity-70">{t("checkout.pickupAtStore")}</span>
               <span className="tabular-nums">{t("checkout.deliveryFree")}</span>
             </div>
+          ) : quoting ? (
+            /* The total below is about to move. Saying so beats letting it change under the
+               shopper's eyes with no warning. */
+            <div className="mt-1 flex items-center justify-between text-sm" aria-live="polite">
+              <span className="opacity-70">{t("checkout.delivery")}</span>
+              <Loader2 size={13} className="animate-spin opacity-50" aria-hidden />
+            </div>
           ) : priced ? (
             <div className="mt-1 flex items-center justify-between text-sm">
               <span className="opacity-70">
@@ -904,10 +934,20 @@ export function CheckoutForm({
             </div>
           ) : !isPickup && (shipping.status === "needsLocation" || shipping.status === "unavailable") ? (
             /* Delivery can't be priced yet. Said here, next to the total it affects, rather
-               than left for the shopper to discover when the order is refused. */
+               than left for the shopper to discover when the order is refused.
+
+               Two states, two voices. `unavailable` is a dead end — the shop cannot deliver
+               there — and earns the maroon. `needsLocation` only means "not finished yet",
+               and it shows on arrival, before the shopper has done anything at all: in
+               maroon that read as a mistake they had already made. Neutral until they try
+               to submit, at which point `submitError` says it in the louder voice. */
             <p
               className="mt-1 text-xs"
-              style={{ color: "var(--color-brand-maroon)" }}
+              style={
+                shipping.status === "unavailable"
+                  ? { color: "var(--color-brand-maroon)" }
+                  : { opacity: 0.7 }
+              }
             >
               {shipping.status === "needsLocation"
                 ? t("checkout.errors.deliveryNeedsLocation")
@@ -999,17 +1039,21 @@ function Field({
   className,
   required = false,
   children,
+  ref,
 }: {
   label: string;
   error?: string;
   className?: string;
+  /** So a failed submit can scroll the offending field into view. React 19 takes `ref`
+      as an ordinary prop — no forwardRef needed. */
+  ref?: React.Ref<HTMLLabelElement>;
   /** Draws the maroon asterisk. Pair it with `aria-required` on the control itself —
       the asterisk is `aria-hidden`, so on its own it tells assistive tech nothing. */
   required?: boolean;
   children: React.ReactNode;
 }) {
   return (
-    <label className={cn("block", className)}>
+    <label ref={ref} className={cn("block", className)}>
       {/* Sentence-case 13px form label — the editorial `label-eyebrow` (11px tracked uppercase)
           looks great as a section eyebrow but is hard to scan on a mobile form. Keep the
           eyebrow style for section headings; forms get this calmer treatment. */}
@@ -1054,7 +1098,7 @@ function PaymentTrust({ cardAvailable }: { cardAvailable: boolean }) {
           {cardMethods.map((label) => (
             <span
               key={label}
-              className="rounded border border-black/15 px-2 py-0.5 text-[10px] font-medium tracking-[0.14em]"
+              className="rounded border border-black/15 bg-white/60 px-2 py-0.5 text-[10px] font-medium tracking-[0.14em]"
             >
               {label}
             </span>
@@ -1066,53 +1110,6 @@ function PaymentTrust({ cardAvailable }: { cardAvailable: boolean }) {
         <span>{t("secureCheckout")}</span>
       </div>
     </div>
-  );
-}
-
-function ExpressPill({
-  active,
-  onClick,
-  icon,
-  label,
-  /** Announced but not connected — matches the disabled option in the payment list. */
-  comingSoonLabel,
-}: {
-  active: boolean;
-  onClick: () => void;
-  icon: React.ReactNode;
-  label: string;
-  comingSoonLabel?: string;
-}) {
-  const disabled = Boolean(comingSoonLabel);
-  return (
-    <button
-      type="button"
-      onClick={disabled ? undefined : onClick}
-      disabled={disabled}
-      aria-pressed={disabled ? undefined : active}
-      className={cn(
-        "inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs transition-colors",
-        disabled
-          ? "cursor-not-allowed border-black/10 opacity-55"
-          : active
-            ? "cursor-pointer border-[var(--text-primary)] bg-[var(--text-primary)] text-[var(--surface)]"
-            : "cursor-pointer border-black/15 hover:border-black/40",
-      )}
-    >
-      {icon}
-      <span>{label}</span>
-      {comingSoonLabel ? (
-        <span
-          className="rounded-full px-1.5 py-0.5 text-[9px] font-medium tracking-[0.08em] uppercase"
-          style={{
-            background: "color-mix(in oklab, var(--color-brand-maroon) 12%, transparent)",
-            color: "var(--color-brand-maroon)",
-          }}
-        >
-          {comingSoonLabel}
-        </span>
-      ) : null}
-    </button>
   );
 }
 
@@ -1164,11 +1161,11 @@ function PaymentOption({
       onClick={disabled ? undefined : onSelect}
       disabled={disabled}
       className={cn(
-        "flex w-full items-start gap-3 rounded-md border p-4 text-left transition-colors",
+        "flex w-full items-start gap-3 rounded-md border bg-white/60 p-4 text-left transition-colors",
         disabled
           ? "cursor-not-allowed border-black/10 opacity-55"
           : active
-            ? "border-[var(--color-brand-ink)] bg-[var(--color-brand-cream-2)]"
+            ? "border-[var(--color-brand-ink)] ring-1 ring-[var(--color-brand-ink)]"
             : "border-black/15 hover:border-black/40",
       )}
     >

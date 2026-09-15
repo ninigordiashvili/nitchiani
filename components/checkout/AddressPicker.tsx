@@ -1,6 +1,6 @@
 "use client";
 
-import { Loader2, MapPin, X } from "lucide-react";
+import { Check, Loader2, MapPin } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { GEORGIA_LATLNG_BOUNDS, isInGeorgia } from "@/lib/maps/bounds";
@@ -34,6 +34,26 @@ type Suggestion = { id: string; primary: string; secondary: string };
  * the drop-in `PlaceAutocompleteElement` also lets the dropdown inherit the store's styling
  * instead of Google's.
  */
+/** What either lookup hands back. Street text is what the field shows; city fills its own. */
+type GeocodedPlace = { address: string | null; city: string | null };
+
+/**
+ * Street + number, never Google's `formatted_address`.
+ *
+ * The formatted line repeats the city, the postcode and "Georgia", all of which either have
+ * their own field or aren't wanted — pasted whole into the address box it reads as a machine
+ * filled the form in, and it lands on the parcel label twice.
+ */
+function streetFrom(components: google.maps.GeocoderAddressComponent[]): string {
+  const of = (type: string) => components.find((c) => c.types.includes(type))?.long_name;
+  return [of("route"), of("street_number")].filter(Boolean).join(" ");
+}
+
+function cityFrom(components: google.maps.GeocoderAddressComponent[]): string | null {
+  const of = (type: string) => components.find((c) => c.types.includes(type))?.long_name;
+  return of("locality") ?? of("administrative_area_level_1") ?? null;
+}
+
 export function AddressPicker({
   value,
   onChange,
@@ -41,6 +61,9 @@ export function AddressPicker({
   onBlur,
   className,
   ariaInvalid,
+  /** The shop prices delivery from the pin alone, so an order without one cannot be placed.
+   *  Drives the affordance below: a required action must not look like an optional link. */
+  pinRequired = false,
 }: {
   value: string;
   onChange: (value: string) => void;
@@ -49,6 +72,7 @@ export function AddressPicker({
   onBlur?: () => void;
   className?: string;
   ariaInvalid?: boolean;
+  pinRequired?: boolean;
 }) {
   const t = useTranslations("checkout");
   const locale = useLocale();
@@ -88,12 +112,44 @@ export function AddressPicker({
     return loaded;
   }, [maps, locale]);
 
+  // Open the map on its own, but only once and only when the order genuinely cannot be
+  // priced without a pin. A map that is always open costs a billed Maps load for every
+  // visitor who reaches checkout — including the ones collecting at the store, the ones a
+  // flat rate already covers, and the ones who never finish — and on a phone it puts 224px
+  // of tiles between the address and the payment methods for no gain.
+  //
+  // `pinRequired` goes false the moment a pin lands, so this fires once and never closes
+  // what it opened; and because it latches, a shopper who dismisses the map is not fought
+  // with by having it spring back.
+  // The address text a pin wrote. The suggestions effect keys off `value`, so a reverse
+  // geocode looks exactly like typing: the list refilled and dropped open over the map the
+  // instant the marker landed, offering to "correct" the address the shopper had just
+  // pointed at. Remembering the string lets that one update pass without a lookup.
+  const fromPinRef = useRef<string | null>(null);
+
+  const autoOpenedRef = useRef(false);
+  useEffect(() => {
+    if (!pinRequired || autoOpenedRef.current || mapUnavailable || !isMapsConfigured) return;
+    autoOpenedRef.current = true;
+    void (async () => {
+      await ensureMaps();
+      setMapOpen(true);
+    })();
+  }, [pinRequired, mapUnavailable, ensureMaps]);
+
   // Debounced suggestion fetch. 250ms is long enough that a fast typist spends one request
   // per word rather than per letter — this endpoint is billed per session, and per request
   // when a session is abandoned.
   useEffect(() => {
     if (!maps || value.trim().length < 3) {
       setSuggestions([]);
+      return;
+    }
+    // Written by the pin, not typed — nothing to suggest, and a billed Places request for a
+    // place the shopper has already chosen on the map.
+    if (fromPinRef.current === value) {
+      setSuggestions([]);
+      setOpen(false);
       return;
     }
     const seq = ++seqRef.current;
@@ -179,6 +235,49 @@ export function AddressPicker({
   );
 
   /** Reverse-geocode after the pin is dragged so the written address follows the marker. */
+  /** The SDK's geocoder — accepted from a referrer-restricted key, so it needs no extra one. */
+  const geocodeViaSdk = useCallback(
+    async (lat: number, lng: number): Promise<GeocodedPlace | null> => {
+      if (!maps) return null;
+      try {
+        const { Geocoder } = (await maps.importLibrary("geocoding")) as google.maps.GeocodingLibrary;
+        const { results } = await new Geocoder().geocode({
+          location: { lat, lng },
+          language: locale,
+        });
+        const best = results[0];
+        if (!best) return null;
+        return {
+          address: streetFrom(best.address_components) || best.formatted_address,
+          city: cityFrom(best.address_components),
+        };
+      } catch (err) {
+        // ZERO_RESULTS over a field, quota, a key without Geocoding enabled — all fall
+        // through to the proxy rather than losing the address text.
+        console.warn("[maps] SDK reverse geocode failed:", err);
+        return null;
+      }
+    },
+    [maps, locale],
+  );
+
+  /** The server-side key path. Answers 501 when that key isn't configured. */
+  const geocodeViaProxy = useCallback(
+    async (lat: number, lng: number): Promise<GeocodedPlace | null> => {
+      try {
+        const res = await fetch(
+          `/api/geocode?lat=${lat}&lng=${lng}&language=${encodeURIComponent(locale)}`,
+        );
+        if (!res.ok) return null;
+        const data = (await res.json()) as { address?: string | null; city?: string | null };
+        return { address: data.address ?? null, city: data.city ?? null };
+      } catch {
+        return null;
+      }
+    },
+    [locale],
+  );
+
   const applyLatLng = useCallback(
     async (lat: number, lng: number) => {
       // Belt and braces behind the map's own restriction: a coordinate from outside the
@@ -186,38 +285,36 @@ export function AddressPicker({
       // an order pinned to another country.
       if (!isInGeorgia(lat, lng)) return;
       setPinned({ lat, lng });
+      // Shut it now, before the geocode returns — the list may already be open from the
+      // typing that preceded the pin, and it sits directly over the map.
+      setOpen(false);
+      setSuggestions([]);
       // Record the pin first and unconditionally. Naming it is a nicety; the coordinates are
       // what actually get the courier there, and they must survive a failed lookup.
       onPlace({ address: value, lat, lng });
 
       try {
-        // Our own route, not Google directly: the Geocoding API rejects any browser key with
-        // referrer restrictions, and dropping those would expose the public Maps key.
-        // See app/api/geocode/route.ts.
-        const res = await fetch(
-          `/api/geocode?lat=${lat}&lng=${lng}&language=${encodeURIComponent(locale)}`,
-        );
-        if (!res.ok) return; // includes 501 when no server key is configured
-        const data = (await res.json()) as {
-          address?: string | null;
-          city?: string | null;
-          postalCode?: string | null;
-        };
-        if (!data.address) return;
+        // Two ways to turn the pin into words, tried in order.
+        //
+        // The SDK's own Geocoder first: it bills against the Maps JavaScript API and is
+        // accepted from a key carrying HTTP referrer restrictions, which is exactly the key
+        // already loaded for the map. That matters because the *REST* Geocoding API refuses
+        // such keys outright — "API keys with referer restrictions cannot be used with this
+        // API" — which is what /api/geocode exists to work around, using a separate
+        // server-side key. Where that key is configured the proxy still runs, as a fallback;
+        // where it isn't, this path means the address text is rewritten anyway.
+        const data = (await geocodeViaSdk(lat, lng)) ?? (await geocodeViaProxy(lat, lng));
+        if (!data?.address) return;
+        fromPinRef.current = data.address;
         onChange(data.address);
-        onPlace({
-          address: data.address,
-          city: data.city ?? undefined,
-          postalCode: data.postalCode ?? undefined,
-          lat,
-          lng,
-        });
+        setOpen(false);
+        onPlace({ address: data.address, city: data.city ?? undefined, lat, lng });
       } catch (err) {
         // Keep the coordinates even if the words fail — a pin alone still delivers.
         console.warn("[maps] reverse geocode failed:", err);
       }
     },
-    [locale, onChange, onPlace, value],
+    [locale, onChange, onPlace, value, geocodeViaSdk, geocodeViaProxy],
   );
 
   // Build the map lazily, the first time it is opened.
@@ -413,32 +510,94 @@ export function AddressPicker({
         </ul>
       ) : null}
 
-      <div className="mt-1.5 flex items-center gap-3">
-        {mapUnavailable ? null : (
-        <button
-          type="button"
-          onClick={async () => {
-            await ensureMaps();
-            setMapOpen((v) => !v);
-          }}
-          className="inline-flex cursor-pointer items-center gap-1.5 text-xs underline-offset-2 opacity-80 hover:underline hover:opacity-100"
-        >
-          {mapOpen ? <X size={13} aria-hidden /> : <MapPin size={13} aria-hidden />}
-          {mapOpen ? t("hideMap") : t("pickOnMap")}
-        </button>
-        )}
-        {pinned ? (
-          <span className="text-xs opacity-60">{t("pinSet")}</span>
-        ) : null}
-      </div>
+      {/* Two very different states share this row. Once the pin is set, or the shop never
+          needed one, it is a quiet text link. While a required pin is still missing it
+          becomes a bordered button carrying its own "required" chip and a line saying why —
+          because the typed address above looks like a complete answer, and without this the
+          only thing distinguishing the step that actually prices the order was a 12px link. */}
+      {(() => {
+        const mustPin = pinRequired && !pinned && !mapUnavailable;
+        return (
+          <div className="mt-1.5">
+            <div className="flex flex-wrap items-center gap-3">
+              {mapUnavailable || mapOpen ? null : (
+                <button
+                  type="button"
+                  onClick={async () => {
+                    await ensureMaps();
+                    setMapOpen(true);
+                  }}
+                  className={cn(
+                    "inline-flex cursor-pointer items-center gap-1.5 transition-colors",
+                    mustPin
+                      ? "rounded-md border px-3 py-2 text-[13px] font-medium"
+                      : "text-xs underline-offset-2 opacity-80 hover:underline hover:opacity-100",
+                  )}
+                  style={
+                    mustPin
+                      ? {
+                          borderColor: "var(--color-brand-maroon)",
+                          color: "var(--color-brand-maroon)",
+                          background:
+                            "color-mix(in oklab, var(--color-brand-maroon) 7%, transparent)",
+                        }
+                      : undefined
+                  }
+                >
+                  <MapPin size={mustPin ? 15 : 13} aria-hidden />
+                  {t("pickOnMap")}
+                  {mustPin ? (
+                    <span
+                      className="rounded-full px-1.5 py-0.5 text-[9px] font-medium tracking-[0.08em] uppercase"
+                      style={{
+                        background: "color-mix(in oklab, var(--color-brand-maroon) 15%, transparent)",
+                      }}
+                    >
+                      {t("pinRequired")}
+                    </span>
+                  ) : null}
+                </button>
+              )}
+              {pinned ? (
+                <span className="inline-flex items-center gap-1 text-xs opacity-70">
+                  <Check size={13} aria-hidden />
+                  {t("pinSet")}
+                </span>
+              ) : null}
+            </div>
+            {/* Only while the map is shut. Open, the same sentence already sits under the
+                tiles in maroon, and printing it twice made the form look like it was
+                nagging. */}
+            {mustPin && !mapOpen ? (
+              <p className="mt-1.5 text-xs opacity-70">{t("pinWhy")}</p>
+            ) : null}
+          </div>
+        );
+      })()}
 
       {mapOpen ? (
         <div className="mt-2">
           <div
             ref={mapNodeRef}
-            className="h-56 w-full overflow-hidden rounded-md border border-black/15 bg-black/5"
+            className={cn(
+              "h-56 w-full overflow-hidden rounded-md border bg-black/5",
+              // A still-missing pin keeps its outline while the map is open. Without this the
+              // requirement went quiet the instant the map appeared — the chip below is gated
+              // on the collapsed state — leaving the one unfinished step as the least marked
+              // thing on the page.
+              pinRequired && !pinned ? "border-[var(--color-brand-maroon)]" : "border-black/15",
+            )}
           />
-          <p className="mt-1.5 text-xs opacity-60">{t("mapHint")}</p>
+          <p
+            className="mt-1.5 text-xs"
+            style={
+              pinRequired && !pinned
+                ? { color: "var(--color-brand-maroon)" }
+                : { opacity: 0.6 }
+            }
+          >
+            {pinRequired && !pinned ? t("pinWhy") : t("mapHint")}
+          </p>
         </div>
       ) : null}
     </div>

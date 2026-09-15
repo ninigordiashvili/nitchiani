@@ -22,7 +22,6 @@ export type SavedContact = {
   phone: string;
   address: string;
   city: string;
-  postalCode?: string;
 };
 
 function isValid(raw: unknown): raw is SavedContact {
@@ -34,8 +33,7 @@ function isValid(raw: unknown): raw is SavedContact {
     typeof r.email === "string" &&
     typeof r.phone === "string" &&
     typeof r.address === "string" &&
-    typeof r.city === "string" &&
-    (r.postalCode === undefined || typeof r.postalCode === "string")
+    typeof r.city === "string"
   );
 }
 
@@ -63,7 +61,6 @@ export function saveContact(contact: SavedContact): void {
       phone: contact.phone,
       address: contact.address,
       city: contact.city,
-      postalCode: contact.postalCode,
     };
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(safe));
   } catch {
