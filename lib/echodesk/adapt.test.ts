@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { adaptProduct, parseEchoDeskGid, pick } from "./adapt";
+import { adaptAttributes, adaptProduct, parseEchoDeskGid, pick } from "./adapt";
 import type { EchoDeskProduct } from "./types";
 // Captured verbatim from the live tenant (nitchiani.api.echodesk.ge, product 1) so the
 // adapter is tested against a real payload rather than an idealised one.
@@ -63,5 +63,33 @@ describe("parseEchoDeskGid", () => {
     expect(parseEchoDeskGid("gid://nitchiani/Variant/silk-bonnet-noir-0")).toBeNull();
     expect(parseEchoDeskGid("gid://shopify/ProductVariant/123")).toBeNull();
     expect(parseEchoDeskGid("")).toBeNull();
+  });
+});
+
+describe("attribute units", () => {
+  const numeric = (unit: string | undefined, value: unknown) => [
+    {
+      attribute: { key: "weight", name: { ka: "წონა", en: "Weight" }, attribute_type: "number", is_filterable: true, unit },
+      value,
+    },
+  ];
+
+  it("appends the unit EchoDesk declares", () => {
+    const [attr] = adaptAttributes(numeric("გრამი", 300) as never, "ka");
+    expect(attr.values).toEqual(["300 გრამი"]);
+    expect(attr.unit).toBe("გრამი");
+  });
+
+  it("leaves the value alone when no unit is set", () => {
+    // Select attributes come back with unit: "" — appending would give "1B " with a
+    // trailing space that shows up in the filter chip.
+    const [attr] = adaptAttributes(numeric("", 300) as never, "ka");
+    expect(attr.values).toEqual(["300"]);
+    expect(attr.unit).toBeUndefined();
+  });
+
+  it("ignores a unit that is only whitespace", () => {
+    const [attr] = adaptAttributes(numeric("   ", 55) as never, "ka");
+    expect(attr.values).toEqual(["55"]);
   });
 });

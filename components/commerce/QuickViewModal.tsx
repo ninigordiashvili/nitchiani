@@ -12,6 +12,7 @@ import { useOverlays } from "@/lib/ui/overlays";
 import { useQuickView } from "@/lib/ui/quick-view";
 import { useSwipeDismiss } from "@/lib/ui/use-swipe-dismiss";
 import { ProductPurchase } from "./ProductPurchase";
+import { ProductSpecList } from "./ProductSpecList";
 import { WishlistButton } from "./WishlistButton";
 
 /**
@@ -102,9 +103,12 @@ export function QuickViewModal() {
         }}
       >
         {product ? (
-          <div className="flex flex-col sm:grid sm:grid-cols-2">
-            {/* Image */}
-            <div className="relative aspect-square w-full bg-white sm:rounded-l-2xl sm:rounded-tr-none">
+          <div className="flex flex-col sm:grid sm:grid-cols-2 sm:items-stretch">
+            {/* Image. Square on mobile, where it stacks above the details and its own height is
+                all it has to fill. On sm+ the two sit side by side and the details column is
+                the taller of the pair, so a fixed square left a band of the sheet's cream under
+                the white photo — `h-full` lets the white run the full height of the row. */}
+            <div className="relative aspect-square w-full bg-white sm:aspect-auto sm:h-full sm:rounded-l-2xl sm:rounded-tr-none">
               <Image
                 src={shown?.url ?? product.featuredImage.url}
                 alt={shown?.altText ?? product.featuredImage.altText}
@@ -168,7 +172,7 @@ export function QuickViewModal() {
                 so it occupies the first 48px of this panel — more than the 28px of `sm:p-7`.
                 Without it the title row, and the heart on it, ride up underneath the X. Mobile
                 keeps p-5 because there the close button is over the image, not in here. */}
-            <div className="relative flex flex-col p-5 sm:p-7 sm:pt-16">
+            <div className="relative flex flex-col justify-center p-5 sm:p-7 sm:pt-14">
               <button
                 type="button"
                 onClick={quickView.close}
@@ -207,7 +211,16 @@ export function QuickViewModal() {
                   as tall as the product image beside it, so on a short product the quantity
                   stepper and Add to bag were floating in the middle with dead space under
                   them; anchored low they sit where the eye ends up and near the thumb. */}
-              <div className="mt-auto pt-5">
+              {/* The three facts that decide whether this is the right product at all. Quick
+                  view exists so a shopper can answer that without leaving the grid — without
+                  them the sheet shows a name and a price, which is what the card already
+                  showed. Capped tighter than the PDP because this panel is short. */}
+              <ProductSpecList attributes={product.attributes} limit={3} />
+
+              {/* `mt-auto` was pushing the purchase block to the foot of the panel, which on a
+                  short product opened a gap under the specs. With the spec list filling that
+                  space the slack reads as a layout bug rather than breathing room. */}
+              <div className="pt-5">
                 <ProductPurchase product={product} showSizeGuide={false} onAdded={quickView.close} />
               </div>
 
@@ -217,7 +230,7 @@ export function QuickViewModal() {
                   quickView.close();
                   overlays.setSearchOpen(false);
                 }}
-                className="inline-flex items-center gap-1 self-center pt-6 text-xs font-medium tracking-[0.16em] uppercase opacity-80 hover:opacity-100"
+                className="inline-flex items-center gap-1 self-center pt-4 text-xs font-medium tracking-[0.16em] uppercase opacity-80 hover:opacity-100"
               >
                 {t("product.viewFullDetails")}
                 <ArrowRight size={14} />

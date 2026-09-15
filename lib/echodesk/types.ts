@@ -34,6 +34,11 @@ export type EchoDeskAttributeValue = {
     name?: LocalizedText;
     attribute_type?: string;
     is_filterable?: boolean;
+    /** Set on `number` attributes — "გრამი", "სმ". Empty string on the select types. */
+    unit?: string;
+    /** Merchant-controlled display order. Defaults to 0 for every attribute until someone
+        sets it, so ties fall back to the order EchoDesk returned. */
+    sort_order?: number;
     /** Allowed values for select/multiselect, each carrying its own translations. */
     options?: Array<LocalizedText & { value?: string }>;
   };
