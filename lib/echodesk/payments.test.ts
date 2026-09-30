@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { cardLabelKeys, paymentAvailability } from "./payments";
+import { cardOptions, paymentAvailability, providerForMethod } from "./payments";
 
 describe("paymentAvailability", () => {
   it("reads the tenant's switches", () => {
@@ -48,20 +48,41 @@ describe("paymentAvailability", () => {
   });
 });
 
-describe("cardLabelKeys", () => {
-  it("names the bank when exactly one is live", () => {
-    // What the shop wants today: the option says BOG because BOG is what they'll land on.
-    expect(cardLabelKeys(["bog"]).title).toBe("checkout.bogCard");
-    expect(cardLabelKeys(["tbc"]).title).toBe("checkout.tbcCard");
+describe("cardOptions", () => {
+  it("offers one option per live bank, TBC through Flitt", () => {
+    // The shop today: BOG and Flitt, TBC's gateway.
+    expect(cardOptions(["bog", "flitt"]).map((o) => [o.method, o.provider, o.title])).toEqual([
+      ["bog_card", "bog", "checkout.bogCard"],
+      ["tbc_card", "flitt", "checkout.tbcCard"],
+    ]);
   });
 
-  it("stays neutral when several are live", () => {
-    // Naming one of two would be wrong half the time.
-    expect(cardLabelKeys(["bog", "tbc"]).title).toBe("checkout.cardGeneric");
+  it("falls back to TBC's direct API when Flitt isn't live, and never offers TBC twice", () => {
+    expect(cardOptions(["tbc"]).map((o) => o.provider)).toEqual(["tbc"]);
+    expect(cardOptions(["flitt", "tbc"]).map((o) => o.provider)).toEqual(["flitt"]);
   });
 
-  it("stays neutral for a provider we have no wording for", () => {
-    expect(cardLabelKeys(["flitt"]).title).toBe("checkout.cardGeneric");
-    expect(cardLabelKeys([]).title).toBe("checkout.cardGeneric");
+  it("drops a bank the shop has switched off", () => {
+    expect(cardOptions(["bog"]).map((o) => o.method)).toEqual(["bog_card"]);
+    expect(cardOptions(["flitt"]).map((o) => o.method)).toEqual(["tbc_card"]);
+  });
+
+  it("stays neutral for a provider we have no bank wording for", () => {
+    expect(cardOptions(["paddle"])).toEqual([
+      { method: "bog_card", title: "checkout.cardGeneric", desc: "checkout.cardGenericDesc" },
+    ]);
+    expect(cardOptions([])).toEqual([]);
+  });
+});
+
+describe("providerForMethod", () => {
+  it("names the bank to charge for the option picked", () => {
+    expect(providerForMethod("bog_card", ["bog", "flitt"])).toEqual({ provider: "bog" });
+    expect(providerForMethod("tbc_card", ["bog", "flitt"])).toEqual({ provider: "flitt" });
+  });
+
+  it("refuses a bank that isn't live instead of substituting another", () => {
+    // A stale page offering TBC must not end up charged through BOG.
+    expect(providerForMethod("tbc_card", ["bog"])).toBeNull();
   });
 });

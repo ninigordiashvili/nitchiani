@@ -1,7 +1,7 @@
 "use client";
 
 import { Facebook, Instagram, Mail, MapPin, Phone } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { CATEGORIES } from "@/lib/categories";
 import { Link } from "@/lib/i18n/routing";
 import {
@@ -11,12 +11,17 @@ import {
 } from "@/components/brand/WhatsAppIcon";
 import { Logo } from "@/components/brand/Logo";
 import { TrustStrip } from "@/components/homepage/TrustStrip";
-import { BUSINESS, BUSINESS_DETAILS_FILLED } from "@/lib/business";
+import { BUSINESS, BUSINESS_DETAILS_FILLED, businessAddress } from "@/lib/business";
+import { CardBrandLogos } from "@/components/commerce/CardBrandLogos";
 import { useCookieConsent } from "@/lib/ui/cookie-consent";
 // import { NewsletterForm } from "./NewsletterForm";  // hidden — see the footer body
 
 export function Footer() {
   const t = useTranslations();
+  const locale = useLocale();
+  // Shown with the phone and email: card acquirers require a published address, and it's
+  // the registered one, so it doesn't wait on the rest of the legal block below.
+  const address = businessAddress(locale);
   const year = new Date().getFullYear();
   const whatsappNumber = getWhatsAppNumber();
   const instagramHandle = process.env.NEXT_PUBLIC_INSTAGRAM_HANDLE ?? "Nitchiani.shop";
@@ -79,8 +84,8 @@ export function Footer() {
               ))}
             </ul>
             <p className="flex items-center gap-1.5 text-xs opacity-60 sm:hidden">
-              <MapPin size={13} className="opacity-70" />
-              {t("footer.tbilisi")}
+              <MapPin size={13} className="flex-shrink-0 opacity-70" />
+              {address}
             </p>
           </div>
 
@@ -92,7 +97,7 @@ export function Footer() {
             <ul className="space-y-2.5 text-sm opacity-85">
               <li className="flex items-start gap-2">
                 <MapPin size={14} className="mt-0.5 flex-shrink-0 opacity-70" />
-                <span>{t("footer.tbilisi")}</span>
+                <span>{address}</span>
               </li>
               <li>
                 <a
@@ -196,7 +201,7 @@ export function Footer() {
             block returns on its own — no code change needed at incorporation. */}
         {BUSINESS_DETAILS_FILLED ? (
         <div className="mt-10 border-t border-white/10 pt-6 text-[11px] leading-relaxed opacity-55 sm:text-xs">
-          <p className="font-medium opacity-90">{BUSINESS.legalName}</p>
+          <p className="font-medium opacity-90">{locale === "ka" ? BUSINESS.legalName.ka : BUSINESS.legalName.en}</p>
           <p>
             {t("footer.regId")}: <span className="tabular-nums">{BUSINESS.registrationId}</span>
             {BUSINESS.vatId ? (
@@ -206,7 +211,7 @@ export function Footer() {
               </>
             ) : null}
           </p>
-          <p>{BUSINESS.address}</p>
+          <p>{address}</p>
           <p>
             <a href={`mailto:${BUSINESS.email}`} className="underline-offset-2 hover:underline">
               {BUSINESS.email}
@@ -217,10 +222,10 @@ export function Footer() {
 
         <div className="mt-6 flex flex-col items-center justify-between gap-3 border-t border-white/10 pt-6 text-center text-xs opacity-60 sm:flex-row sm:items-center sm:text-left">
           <p>© {year} Nitchiani. {t("footer.rights")}.</p>
-          {/* Card brands, not banks: EchoDesk picks the gateway, bank transfer is refused at
-              checkout, and TBC isn't enabled on the tenant — naming any of them here would
-              advertise payment methods a shopper can't actually use. Matches the trust strip. */}
-          <p>Visa · Mastercard</p>
+          {/* Card brands, not banks: the banks on offer can change in EchoDesk without a
+              deploy, and the checkout names them. The logos rather than the words, because
+              that's what the card acquirer asks to see. */}
+          <CardBrandLogos size="sm" />
         </div>
       </div>
     </footer>

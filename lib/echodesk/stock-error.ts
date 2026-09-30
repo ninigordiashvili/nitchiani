@@ -36,3 +36,20 @@ export function parseInsufficientStock(raw: string | undefined): InsufficientSto
 
   return { product, available };
 }
+
+/**
+ * Reads the product id out of EchoDesk's "that product is gone" rejection:
+ *
+ *   {"error": "Product with id 1 not found or inactive."}
+ *
+ * A bag is kept in the browser, so it can outlive the product it holds — deleted, recreated
+ * under a new id, or switched off. The id is all the backend gives us; the caller matches it
+ * back to the bag line to name the product in the shopper's own terms.
+ */
+const MISSING_PATTERN = /Product with id\s+(\d+)\s+not found or inactive/i;
+
+export function parseMissingProduct(raw: string | undefined): number | null {
+  if (!raw) return null;
+  const match = MISSING_PATTERN.exec(raw);
+  return match ? Number.parseInt(match[1], 10) : null;
+}

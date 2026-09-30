@@ -1,6 +1,17 @@
+import type { Metadata } from "next";
 import { SearchX } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/lib/i18n/routing";
+
+/**
+ * Its own title, in the page's language. Without one a missing product took the homepage
+ * headline plus the "· Nitchiani" template — "… — Nitchiani · Nitchiani" — which is also
+ * what a shared dead link previewed as.
+ */
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("notFound");
+  return { title: t("title") };
+}
 
 /**
  * Branded 404. Triggered by `notFound()` calls inside locale routes (e.g. the PDP page

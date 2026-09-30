@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { setRequestLocale, getTranslations } from "next-intl/server";
 import { PRIVACY_LAST_UPDATED, PRIVACY_SECTIONS } from "@/lib/legal";
 import type { Locale } from "@/lib/i18n/config";
+import { localeAlternates } from "@/lib/seo";
 
 export async function generateMetadata({
   params,
@@ -13,6 +14,9 @@ export async function generateMetadata({
   return {
     title: t("metaTitle"),
     description: t("metaDescription"),
+    // Without it the page named no canonical address at all, so the Georgian and English
+    // versions weren't tied to each other.
+    alternates: localeAlternates(locale, "/privacy"),
   };
 }
 

@@ -2,9 +2,10 @@
 
 import { Ruler, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useFocusTrap } from "@/lib/ui/use-focus-trap";
 import { useSwipeDismiss } from "@/lib/ui/use-swipe-dismiss";
+import { cn } from "@/lib/utils";
 
 /**
  * Inline "Size guide" link + modal. Self-contained — owns its own open state, scroll lock,
@@ -17,6 +18,10 @@ import { useSwipeDismiss } from "@/lib/ui/use-swipe-dismiss";
  */
 export function SizeGuideButton() {
   const t = useTranslations("product");
+  // Georgian shoppers measure in centimetres; inches are for the English page only.
+  const locale = useLocale();
+  const showInches = locale !== "ka";
+  const cmUnit = locale === "ka" ? "სმ" : "cm";
   const tNav = useTranslations("nav");
   const [open, setOpen] = useState(false);
   const { dragOffset, handlers } = useSwipeDismiss({
@@ -101,9 +106,9 @@ export function SizeGuideButton() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-black/10">
-                  <SizeRow size="S" measure="52–55 cm" />
-                  <SizeRow size="M" measure="56–58 cm" />
-                  <SizeRow size="L" measure="59–62 cm" />
+                  <SizeRow size="S" measure={`52–55 ${cmUnit}`} />
+                  <SizeRow size="M" measure={`56–58 ${cmUnit}`} />
+                  <SizeRow size="L" measure={`59–62 ${cmUnit}`} />
                 </tbody>
               </table>
               <p className="mt-2 text-xs opacity-60">{t("sizeGuideBonnetHint")}</p>
@@ -114,16 +119,16 @@ export function SizeGuideButton() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="text-left text-[10px] tracking-[0.14em] uppercase opacity-60">
-                    <th className="pb-2 font-medium">{t("sizeGuideLengthIn")}</th>
+                    {showInches ? <th className="pb-2 font-medium">{t("sizeGuideLengthIn")}</th> : null}
                     <th className="pb-2 font-medium">{t("sizeGuideLengthCm")}</th>
                     <th className="pb-2 font-medium">{t("sizeGuideFallsAt")}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-black/10">
-                  <LengthRow inches="14&quot;" cm="36 cm" falls={t("sizeGuideChest")} />
-                  <LengthRow inches="18&quot;" cm="46 cm" falls={t("sizeGuideMidBack")} />
-                  <LengthRow inches="22&quot;" cm="56 cm" falls={t("sizeGuideWaist")} />
-                  <LengthRow inches="26&quot;" cm="66 cm" falls={t("sizeGuideLowerBack")} />
+                  <LengthRow inches={showInches ? "14″" : null} cm={`36 ${cmUnit}`} falls={t("sizeGuideChest")} />
+                  <LengthRow inches={showInches ? "18″" : null} cm={`46 ${cmUnit}`} falls={t("sizeGuideMidBack")} />
+                  <LengthRow inches={showInches ? "22″" : null} cm={`56 ${cmUnit}`} falls={t("sizeGuideWaist")} />
+                  <LengthRow inches={showInches ? "26″" : null} cm={`66 ${cmUnit}`} falls={t("sizeGuideLowerBack")} />
                 </tbody>
               </table>
               <p className="mt-2 text-xs opacity-60">{t("sizeGuideLengthHint")}</p>
@@ -153,14 +158,15 @@ function LengthRow({
   cm,
   falls,
 }: {
-  inches: string;
+  /** Null hides the column — the Georgian page shows centimetres only. */
+  inches: string | null;
   cm: string;
   falls: string;
 }) {
   return (
     <tr>
-      <td className="py-2 font-medium tabular-nums">{inches}</td>
-      <td className="py-2 tabular-nums opacity-80">{cm}</td>
+      {inches !== null ? <td className="py-2 font-medium tabular-nums">{inches}</td> : null}
+      <td className={cn("py-2 tabular-nums", inches !== null ? "opacity-80" : "font-medium")}>{cm}</td>
       <td className="py-2 opacity-80">{falls}</td>
     </tr>
   );

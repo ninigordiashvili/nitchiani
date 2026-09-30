@@ -14,6 +14,7 @@ import { ClearCartButton } from "@/components/cart/ClearCartButton";
 import { CouponField } from "@/components/cart/CouponField";
 import { EmptyCartRecommendations } from "@/components/cart/EmptyCartRecommendations";
 import { HowItWorksButton } from "@/components/cart/HowItWorksButton";
+import { RemovedUnavailableNotice } from "@/components/cart/RemovedUnavailableNotice";
 
 export default function CartPage() {
   const t = useTranslations();
@@ -23,6 +24,7 @@ export default function CartPage() {
   if (cart.lines.length === 0) {
     return (
       <div className="container-shop py-8 sm:py-12">
+        <RemovedUnavailableNotice className="mb-6" />
         <EmptyCartRecommendations variant="page" />
       </div>
     );
@@ -30,6 +32,7 @@ export default function CartPage() {
 
   return (
     <div className="container-shop py-8 sm:py-12">
+      <RemovedUnavailableNotice className="mb-6" />
       <div className="mb-6 flex items-end justify-between gap-4">
         <h1 className="font-display text-3xl tracking-tight sm:text-4xl">
           {t("nav.cart")}

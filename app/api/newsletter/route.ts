@@ -7,7 +7,7 @@ import { clientIp, rateLimit } from "@/lib/rate-limit";
  * Newsletter subscription endpoint. Posts the supplied email to Resend's audiences API and
  * normalises the response into a small payload the footer form understands:
  *   { ok: true, status: "added" | "already" }     — show the success state
- *   { ok: false, error: "<message>" }             — show inline error
+ *   { ok: false, error: "<message or key>" }      — show inline error
  *
  * Consent is implicit in the form submission — the form ships visible disclosure copy
  * (see `footer.newsletterConsent` translation) immediately above the submit button.
@@ -32,10 +32,11 @@ export async function POST(req: Request) {
   try {
     payload = schema.parse(await req.json());
   } catch (err) {
-    return NextResponse.json(
-      { ok: false, error: err instanceof Error ? err.message : "Invalid request" },
-      { status: 400 },
-    );
+    // A stable key, not the zod dump: `err.message` is the whole validation tree serialised
+    // as JSON, which told any caller our schema and told a person nothing. The footer form
+    // shows its own translated message and never read this text anyway.
+    console.warn("[api/newsletter] payload rejected:", err);
+    return NextResponse.json({ ok: false, error: "invalidEmail" }, { status: 400 });
   }
 
   const result = await addNewsletterContact({

@@ -50,17 +50,54 @@ export function envPaymentAvailability(): PaymentAvailability {
   };
 }
 
+/** The card choices checkout's form knows. Each names one bank. */
+export type CardMethod = "bog_card" | "tbc_card";
+
+export type CardOption = {
+  method: CardMethod;
+  /**
+   * What EchoDesk is asked to charge through (`payment_provider`). Undefined only for the
+   * single neutral option, which lets EchoDesk use the shop's default.
+   */
+  provider?: string;
+  title: string;
+  desc: string;
+};
+
 /**
- * Message keys for a provider's option, so the card choice names the bank the shopper will
- * actually land on rather than a bank we guessed.
+ * One card option per bank the shop has live, so the shopper picks the bank and lands on
+ * that bank's page.
+ *
+ * TBC is reached through Flitt, TBC's own card gateway, whenever Flitt is live; EchoDesk's
+ * separate `tbc` provider (TBC's direct API) is the fallback. Both are the same bank to the
+ * shopper, so they share one option — offering "TBC" twice would be the same payment under
+ * two names.
  */
-export function cardLabelKeys(providers: string[]): { title: string; desc: string } {
-  if (providers.length === 1 && providers[0] === "bog") {
-    return { title: "checkout.bogCard", desc: "checkout.bogCardDesc" };
+export function cardOptions(providers: string[]): CardOption[] {
+  const options: CardOption[] = [];
+  if (providers.includes("bog")) {
+    options.push({ method: "bog_card", provider: "bog", title: "checkout.bogCard", desc: "checkout.bogCardDesc" });
   }
-  if (providers.length === 1 && providers[0] === "tbc") {
-    return { title: "checkout.tbcCard", desc: "checkout.tbcCardDesc" };
+  const tbcProvider = providers.includes("flitt") ? "flitt" : providers.includes("tbc") ? "tbc" : null;
+  if (tbcProvider) {
+    options.push({ method: "tbc_card", provider: tbcProvider, title: "checkout.tbcCard", desc: "checkout.tbcCardDesc" });
   }
-  // Several live, or one we have no wording for: stay neutral rather than name it wrongly.
-  return { title: "checkout.cardGeneric", desc: "checkout.cardGenericDesc" };
+  // A live provider we have no bank wording for: one neutral option rather than none, and
+  // rather than a guessed bank name.
+  if (options.length === 0 && providers.length > 0) {
+    options.push({ method: "bog_card", title: "checkout.cardGeneric", desc: "checkout.cardGenericDesc" });
+  }
+  return options;
+}
+
+/**
+ * The provider to send for the card method the shopper chose. Null means the shop can't take
+ * that method right now — it must refuse the order, never charge through some other bank.
+ */
+export function providerForMethod(
+  method: string,
+  providers: string[],
+): { provider?: string } | null {
+  const option = cardOptions(providers).find((o) => o.method === method);
+  return option ? { provider: option.provider } : null;
 }

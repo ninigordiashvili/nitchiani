@@ -24,8 +24,16 @@ export type ServerComputedTotals = {
   coupon: Coupon | null;
   /** `shipping_method_id` to send with the order, when a flat method priced it. */
   shippingMethodId: number | null;
-  /** The courier chosen from a quote. Guest checkout has no field for it — see orders.ts. */
+  /**
+   * The courier tier chosen from a QuickShipper quote, as the order's
+   * `quickshipper_provider_*` fields. Null throughout when a flat method priced delivery —
+   * the two are alternatives, and sending both would describe an order twice.
+   */
   courierName?: string | null;
+  courierId?: number | null;
+  courierFeeId?: string | null;
+  /** GEL, for the chosen tier — what EchoDesk records as the shipping charge. */
+  courierPrice?: number | null;
 };
 
 /** Minimal shape `computeTotals` needs from a cart line — a superset of the checkout line schema. */
@@ -199,20 +207,27 @@ export async function withShipping(
         feeId: picked.feeId,
       }
     : resolution.option;
-  if (option.price <= 0) {
-    return {
-      totals: { ...totals, shipping: 0, shippingMethodId: option.methodId },
-      reason: null,
-    };
-  }
+  const shipping = option.price > 0 ? Math.round(option.price * 100) / 100 : 0;
 
-  const shipping = Math.round(option.price * 100) / 100;
+  // Carried whenever the price came from a courier quote, including a quote that came back
+  // free: the parcel still has to be booked with that courier, and dropping the id because
+  // the charge was zero leaves the back office guessing who is collecting it.
+  const courier =
+    option.source === "quote"
+      ? {
+          courierName: option.label,
+          courierId: option.courierId ?? null,
+          courierFeeId: option.feeId ?? null,
+          courierPrice: shipping,
+        }
+      : { courierName: null, courierId: null, courierFeeId: null, courierPrice: null };
+
   return {
     totals: {
       ...totals,
       shipping,
       shippingMethodId: option.methodId,
-      courierName: option.source === "quote" ? option.label : null,
+      ...courier,
       total: Math.round((totals.total + shipping) * 100) / 100,
     },
     reason: null,

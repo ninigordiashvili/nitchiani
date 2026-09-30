@@ -19,7 +19,7 @@
  * by `\n\n` at render time (same convention as the journal posts).
  */
 
-import { BUSINESS } from "./business";
+import { BUSINESS, businessAddress } from "./business";
 
 export type LegalSection = {
   headingEn: string;
@@ -43,9 +43,9 @@ export const TERMS_SECTIONS: LegalSection[] = [
     headingEn: "2. About us",
     headingKa: "2. ჩვენ შესახებ",
     bodyEn:
-      `Nitchiani is an online shop based in Tbilisi, Georgia, selling synthetic hair for afro curls and braids, hair-care products and accessories. The Site is operated by ${BUSINESS.legalName}, registered in Georgia under ID ${BUSINESS.registrationId}, with its registered address at ${BUSINESS.address}. You can reach us at ${BUSINESS.email} or via WhatsApp using the number displayed in the site footer.`,
+      `Nitchiani is an online shop based in Tbilisi, Georgia, selling synthetic hair for afro curls and braids, hair-care products and accessories. The Site is operated by ${BUSINESS.legalName.en}, an individual entrepreneur registered in Georgia (ID code ${BUSINESS.registrationId}), with its registered address at ${businessAddress("en")}. You can reach us at ${BUSINESS.email} or via WhatsApp using the number displayed in the site footer.`,
     bodyKa:
-      `Nitchiani არის თბილისში დაფუძნებული ონლაინ მაღაზია, რომელიც ყიდის ხელოვნურ თმას აფრო ხვეულებისა და ნაწნავებისთვის, თმის მოვლის საშუალებებსა და აქსესუარებს. საიტს ოპერირებას უწევს ${BUSINESS.legalName}, რეგისტრირებული საქართველოში საიდენტიფიკაციო ნომრით ${BUSINESS.registrationId}, იურიდიული მისამართით ${BUSINESS.address}. დაგვიკავშირდით — ${BUSINESS.email} ან WhatsApp ნომრით, რომელიც გამოქვეყნებულია საიტის ფუტერში.`,
+      `Nitchiani არის თბილისში დაფუძნებული ონლაინ მაღაზია, რომელიც ყიდის ხელოვნურ თმას აფრო ხვეულებისა და ნაწნავებისთვის, თმის მოვლის საშუალებებსა და აქსესუარებს. საიტს ოპერირებას უწევს ${BUSINESS.legalName.ka} (ინდივიდუალური მეწარმე, საიდენტიფიკაციო კოდი ${BUSINESS.registrationId}), იურიდიული მისამართი: ${businessAddress("ka")}. დაგვიკავშირდით — ${BUSINESS.email} ან WhatsApp ნომრით, რომელიც გამოქვეყნებულია საიტის ფუტერში.`,
   },
   {
     headingEn: "3. Eligibility",
@@ -75,17 +75,17 @@ export const TERMS_SECTIONS: LegalSection[] = [
     headingEn: "6. Payment",
     headingKa: "6. გადახდა",
     bodyEn:
-      "We accept the payment methods displayed at checkout, which include Bank of Georgia and TBC card processing, bank transfer, and cash on delivery (Tbilisi area only, subject to confirmation). For card payments, processing is handled by the respective payment provider and is subject to their terms. Payment confirmation may take up to one business day for bank-transfer orders; we will hold the items for you during that window.",
+      "We accept the payment methods displayed at checkout, which are Visa and Mastercard cards, paid through Bank of Georgia or TBC Bank, and bank transfer. We do not accept cash on delivery. For card payments, processing is handled by the respective payment provider and is subject to their terms. Payment confirmation may take up to one business day for bank-transfer orders; we will hold the items for you during that window.",
     bodyKa:
-      "ჩვენ ვიღებთ გადახდის იმ მეთოდებს, რომლებიც ნაჩვენებია გადახდის გვერდზე: Bank of Georgia და TBC ბანკის ბარათები, ბანკის გადარიცხვა და ნაღდი ფული მიწოდებისას (მხოლოდ თბილისში, წინასწარი დადასტურებით). ბარათით გადახდა მუშავდება შესაბამისი გადახდის სერვისის მიერ და ექვემდებარება მათ პირობებს. ბანკის გადარიცხვით გადახდის შემთხვევაში ანგარიშსწორების დადასტურებას შესაძლოა დასჭირდეს ერთ სამუშაო დღემდე — ამ პერიოდის განმავლობაში ვინახავთ ნივთებს თქვენთვის.",
+      "ჩვენ ვიღებთ გადახდის იმ მეთოდებს, რომლებიც ნაჩვენებია გადახდის გვერდზე: Visa და Mastercard ბარათები Bank of Georgia-ს ან TBC ბანკის მეშვეობით და ბანკის გადარიცხვა. ნაღდი ფულით გადახდა მიწოდებისას არ ხორციელდება. ბარათით გადახდა მუშავდება შესაბამისი გადახდის სერვისის მიერ და ექვემდებარება მათ პირობებს. ბანკის გადარიცხვით გადახდის შემთხვევაში ანგარიშსწორების დადასტურებას შესაძლოა დასჭირდეს ერთ სამუშაო დღემდე — ამ პერიოდის განმავლობაში ვინახავთ ნივთებს თქვენთვის.",
   },
   {
     headingEn: "7. Shipping and delivery",
     headingKa: "7. მიწოდება",
     bodyEn:
-      "Orders are packed and dispatched from Tbilisi within 1–3 business days. Standard delivery inside Tbilisi typically arrives in 1–3 business days; deliveries to the broader region of Georgia take 3–7 business days. International orders, where available, are quoted separately. Risk of loss passes to you on delivery to the address you provided. If no one is available at the address, the courier will follow their own retry policy, after which the order may be returned to us.",
+      `Orders are packed and dispatched from Tbilisi within 1–3 business days. Standard delivery inside Tbilisi typically arrives in 1–3 business days; deliveries to the broader region of Georgia take 3–7 business days. International orders, where available, are quoted separately. Risk of loss passes to you on delivery to the address you provided. If no one is available at the address, the courier will follow their own retry policy, after which the order may be returned to us. You can also collect your order free of charge from our store at ${businessAddress("en")}: choose "Pickup at store" at checkout, where the address and a contact phone number are shown. For pickup orders, risk of loss passes to you when you collect the order.`,
     bodyKa:
-      "შეკვეთები იგზავნება თბილისიდან 1-3 სამუშაო დღეში. სტანდარტული მიწოდება თბილისში ხდება 1-3 სამუშაო დღეში; სხვა რეგიონებში მიწოდება — 3-7 სამუშაო დღეში. საერთაშორისო შეკვეთები (სადაც ხელმისაწვდომია) იანგარიშება ცალკე. დაკარგვის რისკი თქვენზე გადადის ნივთის ჩაბარების მომენტში მითითებულ მისამართზე. თუ მისამართზე არავინ იქნება, კურიერი იმოქმედებს თავისი წესების შესაბამისად — შემდგომში შეკვეთა შესაძლოა დაბრუნდეს ჩვენთან.",
+      `შეკვეთები იგზავნება თბილისიდან 1-3 სამუშაო დღეში. სტანდარტული მიწოდება თბილისში ხდება 1-3 სამუშაო დღეში; სხვა რეგიონებში მიწოდება — 3-7 სამუშაო დღეში. საერთაშორისო შეკვეთები (სადაც ხელმისაწვდომია) იანგარიშება ცალკე. დაკარგვის რისკი თქვენზე გადადის ნივთის ჩაბარების მომენტში მითითებულ მისამართზე. თუ მისამართზე არავინ იქნება, კურიერი იმოქმედებს თავისი წესების შესაბამისად — შემდგომში შეკვეთა შესაძლოა დაბრუნდეს ჩვენთან. შეკვეთის გატანა ასევე შეგიძლიათ უფასოდ, ჩვენი მაღაზიიდან მისამართზე ${businessAddress("ka")} — გადახდისას აირჩიეთ „თვითონ გამოვიტან მაღაზიიდან“; მისამართი და საკონტაქტო ტელეფონი იქვეა მითითებული. ამ შემთხვევაში დაკარგვის რისკი თქვენზე გადადის შეკვეთის გატანის მომენტში.`,
   },
   {
     headingEn: "8. Right of withdrawal (24 hours)",
@@ -93,7 +93,7 @@ export const TERMS_SECTIONS: LegalSection[] = [
     bodyEn:
       `Under the consumer protection legislation of Georgia, if you are a consumer (not buying for business purposes) you may withdraw from a distance-selling contract within 24 hours of receiving the goods, without giving any reason. To exercise this right, notify us by email at ${BUSINESS.email} or WhatsApp before the 24-hour window closes, and return the item in its original, unused, resaleable condition with all packaging. Return shipping is the customer's responsibility unless the item arrived defective. Once we receive the returned item we issue the refund using the original payment method within 14 days. Hygiene-sensitive items (e.g., opened hair-care bottles, used hair tools) are not eligible for return for hygiene reasons; this exception is allowed under the same legislation.`,
     bodyKa:
-      `საქართველოს მომხმარებლის უფლებების დაცვის შესახებ კანონმდებლობის შესაბამისად, თუ თქვენ ხართ მომხმარებელი (არ ყიდულობთ კომერციული მიზნებისთვის), შეგიძლიათ უარი თქვათ დისტანციური ნასყიდობის ხელშეკრულებაზე ნივთის მიღებიდან 24 საათის განმავლობაში, მიზეზის მითითების გარეშე. ამ უფლების გამოყენებისთვის გვაცნობეთ ფოსტით ${BUSINESS.email} ან WhatsApp-ით 24-საათიანი ვადის გასვლამდე და დააბრუნეთ ნივთი თავდაპირველ, გამოუყენებელ, გასაყიდი მდგომარეობით, ყველა შესაფუთი ნივთით ერთად. დაბრუნების ღირებულება ეკისრება მომხმარებელს, გარდა იმ შემთხვევებისა, როდესაც ნივთი ჩამოვიდა დეფექტით. დაბრუნებული ნივთის მიღების შემდეგ ანაზღაურებას ვაუვადებთ თავდაპირველი გადახდის მეთოდით 14 დღის განმავლობაში. ჰიგიენისადმი მგრძნობიარე ნივთები (მაგ., გახსნილი თმის მოვლის ფლაკონები, გამოყენებული ხელსაწყოები) არ ექვემდებარება დაბრუნებას ჰიგიენური მიზეზებიდან გამომდინარე — ეს გამონაკლისი ნებადართულია იმავე კანონმდებლობით.`,
+      `საქართველოს მომხმარებლის უფლებების დაცვის შესახებ კანონმდებლობის შესაბამისად, თუ თქვენ ხართ მომხმარებელი (არ ყიდულობთ კომერციული მიზნებისთვის), შეგიძლიათ უარი თქვათ დისტანციური ნასყიდობის ხელშეკრულებაზე ნივთის მიღებიდან 24 საათის განმავლობაში, მიზეზის მითითების გარეშე. ამ უფლების გამოყენებისთვის გვაცნობეთ ფოსტით ${BUSINESS.email} ან WhatsApp-ით 24-საათიანი ვადის გასვლამდე და დააბრუნეთ ნივთი თავდაპირველ, გამოუყენებელ, გასაყიდი მდგომარეობით, ყველა შესაფუთი ნივთით ერთად. დაბრუნების ღირებულება ეკისრება მომხმარებელს, გარდა იმ შემთხვევებისა, როდესაც ნივთი ჩამოვიდა დეფექტით. დაბრუნებული ნივთის მიღების შემდეგ თანხას დაგიბრუნებთ თავდაპირველი გადახდის მეთოდით 14 დღის განმავლობაში. ჰიგიენისადმი მგრძნობიარე ნივთები (მაგ., გახსნილი თმის მოვლის ფლაკონები, გამოყენებული ხელსაწყოები) არ ექვემდებარება დაბრუნებას ჰიგიენური მიზეზებიდან გამომდინარე — ეს გამონაკლისი ნებადართულია იმავე კანონმდებლობით.`,
   },
   {
     headingEn: "9. Defective or incorrect items",
@@ -152,9 +152,9 @@ export const PRIVACY_SECTIONS: LegalSection[] = [
     headingEn: "1. Who we are",
     headingKa: "1. ვინ ვართ",
     bodyEn:
-      `This Privacy Policy explains how Nitchiani — operated by ${BUSINESS.legalName}, registered in Georgia under ID ${BUSINESS.registrationId}, with its registered address at ${BUSINESS.address} — collects, uses and protects the personal data you provide when you use nitchiani.shop (the "Site"). We are the data controller for the data described below. For questions reach us at ${BUSINESS.email}.`,
+      `This Privacy Policy explains how Nitchiani — operated by ${BUSINESS.legalName.en}, an individual entrepreneur registered in Georgia (ID code ${BUSINESS.registrationId}), with its registered address at ${businessAddress("en")} — collects, uses and protects the personal data you provide when you use nitchiani.shop (the "Site"). We are the data controller for the data described below. For questions reach us at ${BUSINESS.email}.`,
     bodyKa:
-      `ეს კონფიდენციალურობის პოლიტიკა განმარტავს, როგორ აგროვებს, იყენებს და იცავს Nitchiani — ოპერირებული ${BUSINESS.legalName}-ის მიერ, რეგისტრირებული საქართველოში ნომრით ${BUSINESS.registrationId}, მისამართით ${BUSINESS.address} — იმ პერსონალურ მონაცემებს, რომელსაც გვაწვდი nitchiani.shop-ის ("საიტი") გამოყენებისას. ჩვენ ვართ ქვემოთ აღწერილი მონაცემების მაკონტროლებელი. შეკითხვებზე — ${BUSINESS.email}.`,
+      `ეს კონფიდენციალურობის პოლიტიკა განმარტავს, როგორ აგროვებს, იყენებს და იცავს Nitchiani იმ პერსონალურ მონაცემებს, რომელსაც გვაწვდი nitchiani.shop-ის ("საიტი") გამოყენებისას. საიტის ოპერატორია ${BUSINESS.legalName.ka} (ინდივიდუალური მეწარმე, საიდენტიფიკაციო კოდი ${BUSINESS.registrationId}, მისამართი: ${businessAddress("ka")}). ჩვენ ვართ ქვემოთ აღწერილი მონაცემების მაკონტროლებელი. შეკითხვებზე — ${BUSINESS.email}.`,
   },
   {
     headingEn: "2. What data we collect",
@@ -293,9 +293,9 @@ export const REFUND_SECTIONS: LegalSection[] = [
     headingEn: "6. Refund processing",
     headingKa: "6. ანაზღაურების დამუშავება",
     bodyEn:
-      "Once we receive your returned items and confirm the condition, we issue the refund within 14 days using the same payment method you used at checkout. Card refunds typically settle in 3–10 business days depending on your bank; bank-transfer refunds settle in 1–3 business days; cash-on-delivery refunds go to a bank account you provide. We refund the price of the returned items only — original shipping fees aren't refunded for change-of-mind returns. For defective items we refund shipping in both directions.",
+      "Once we receive your returned items and confirm the condition, we issue the refund within 14 days using the same payment method you used at checkout. Card refunds typically settle in 3–10 business days depending on your bank; bank-transfer refunds settle in 1–3 business days. We refund the price of the returned items only — original shipping fees aren't refunded for change-of-mind returns. For defective items we refund shipping in both directions.",
     bodyKa:
-      "დაბრუნებული ნივთების მიღების და მდგომარეობის დადასტურების შემდეგ ანაზღაურებას ვაუვადებთ 14 დღის განმავლობაში გადახდის იმავე მეთოდით, რომელიც გამოიყენე გადახდისას. ბარათით ანაზღაურება ჩვეულებრივ ხდება 3-10 სამუშაო დღეში ბანკიდან გამომდინარე; ბანკის გადარიცხვით — 1-3 სამუშაო დღეში; ნაღდი ანგარიშსწორებით შეკვეთებზე — შენ მიერ მითითებულ ანგარიშზე. ვაუვადებთ მხოლოდ დაბრუნებული ნივთების ფასს — თავდაპირველი მიწოდების საფასური არ ანაზღაურდება გადაწყვეტილების შეცვლის შემთხვევაში. დეფექტიანი ნივთების შემთხვევაში ვაუვადებთ მიწოდებას ორივე მიმართულებით.",
+      "დაბრუნებული ნივთების მიღების და მდგომარეობის დადასტურების შემდეგ თანხას დაგიბრუნებთ 14 დღის განმავლობაში გადახდის იმავე მეთოდით, რომელიც გამოიყენე გადახდისას. ბარათით ანაზღაურება ჩვეულებრივ ხდება 3-10 სამუშაო დღეში ბანკიდან გამომდინარე; ბანკის გადარიცხვით — 1-3 სამუშაო დღეში. ვანაზღაურებთ მხოლოდ დაბრუნებული ნივთების ფასს — თავდაპირველი მიწოდების საფასური არ ანაზღაურდება გადაწყვეტილების შეცვლის შემთხვევაში. დეფექტიანი ნივთების შემთხვევაში ვანაზღაურებთ მიწოდების ღირებულებას ორივე მიმართულებით.",
   },
   {
     headingEn: "7. Defective, damaged or incorrect items",

@@ -4,6 +4,7 @@ import type {
   EchoDeskStoreConfig,
   Paginated,
 } from "./types";
+import type { ProductLookup } from "./cart-check";
 
 /**
  * EchoDesk storefront API client.
@@ -65,6 +66,25 @@ export async function getProductBySlug(slug: string): Promise<EchoDeskProduct | 
   if (!match) return null;
   // The list serialiser omits images/variants, so re-read the detail record for the PDP.
   return (await get<EchoDeskProduct>(`/products/${match.id}/`)) ?? match;
+}
+
+/**
+ * One product, fresh, telling "gone" apart from "couldn't ask". The shared `get` folds both
+ * into null, which is fine for rendering but not for deciding to remove something from a bag.
+ */
+export async function lookupProduct(id: number): Promise<ProductLookup> {
+  if (!API_URL) return null;
+  try {
+    const res = await fetch(`${API_URL}/api/ecommerce/client/products/${id}/`, {
+      headers: { Accept: "application/json" },
+      cache: "no-store",
+    });
+    if (res.status === 404) return "missing";
+    if (!res.ok) return null;
+    return (await res.json()) as EchoDeskProduct;
+  } catch {
+    return null;
+  }
 }
 
 export function listShippingMethods(): Promise<Paginated<EchoDeskShippingMethod> | null> {

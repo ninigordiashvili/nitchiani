@@ -1,7 +1,19 @@
+import type { Metadata } from "next";
 import { setRequestLocale, getTranslations } from "next-intl/server";
 import { ArrowLeft, XCircle } from "lucide-react";
 import { Link } from "@/lib/i18n/routing";
 import type { Locale } from "@/lib/i18n/config";
+import { SettlePendingPayment } from "@/components/cart/SettlePendingPayment";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: Locale }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "checkout" });
+  return { title: t("failedTitle") };
+}
 
 export default async function CheckoutFailed({
   params,
@@ -20,6 +32,7 @@ export default async function CheckoutFailed({
 
   return (
     <div className="container-shop flex min-h-[60vh] flex-col items-center justify-center gap-4 py-12 text-center">
+      <SettlePendingPayment outcome="failed" />
       <XCircle size={48} className="opacity-70" />
       <h1 className="font-display text-3xl tracking-tight sm:text-4xl">
         {t("failedTitle")}

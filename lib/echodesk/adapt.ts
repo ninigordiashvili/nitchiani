@@ -10,9 +10,9 @@ import type { EchoDeskAttributeValue, EchoDeskProduct, LocalizedText } from "./t
  * It also keeps the sample catalog and the live one interchangeable, which is what lets the
  * site keep working while the tenant is still being filled in.
  *
- * The numeric EchoDesk id is preserved inside the variant GID (`gid://echodesk/Variant/<id>`)
- * because cart, checkout and shipping-quote calls all key on it — losing it here would mean
- * a second lookup at checkout.
+ * The numeric EchoDesk ids are preserved inside the variant GID
+ * (`gid://echodesk/Variant/<id>?product=<id>`) because cart, checkout and shipping-quote calls
+ * all key on them — losing them here would mean a second lookup at checkout.
  */
 
 const CURRENCY = "GEL";
@@ -53,7 +53,9 @@ export function adaptProduct(p: EchoDeskProduct, locale: Locale): Product {
   // variant to the bag, never a bare product.
   const variants: ProductVariant[] = (p.variants ?? []).length
     ? p.variants!.map((v) => ({
-        id: `gid://echodesk/Variant/${v.id}`,
+        // The parent product rides along: guest checkout and the courier quote both want
+        // `product_id`, and a variant id in that field names some other product entirely.
+        id: `gid://echodesk/Variant/${v.id}?product=${p.id}`,
         title: pick(v.name, locale) || "One Size",
         availableForSale: v.is_in_stock ?? (v.quantity ?? 0) > 0,
         quantityAvailable: v.quantity ?? undefined,
@@ -107,6 +109,9 @@ export function adaptProduct(p: EchoDeskProduct, locale: Locale): Product {
     handle: p.slug,
     title,
     description: pick(p.description, locale) || pick(p.short_description, locale),
+    shortDescription: pick(p.short_description, locale) || undefined,
+    seoTitle: pick(p.meta_title, locale) || undefined,
+    seoDescription: pick(p.meta_description, locale) || undefined,
     tags: [],
     vendor: "Nitchiani",
     productType,
@@ -137,18 +142,60 @@ export function adaptProduct(p: EchoDeskProduct, locale: Locale): Product {
 /**
  * Reads an EchoDesk reference back out of a cart line's id.
  *
- * `gid://echodesk/Variant/12` → { kind: "variant", id: 12 }
- * `gid://echodesk/Product/12` → { kind: "product", id: 12 }
+ * `gid://echodesk/Variant/3?product=12` → { kind: "variant", id: 3, productId: 12 }
+ * `gid://echodesk/Product/12`           → { kind: "product", id: 12, productId: 12 }
  *
  * Checkout needs the distinction: a variant row sends both `product_id` and `variant_id`,
- * a product row sends `product_id` alone.
+ * a product row sends `product_id` alone. `productId` is null only for a variant saved
+ * before the parent was recorded — such a line can't be ordered, because its product is
+ * unknown.
  */
-export function parseEchoDeskGid(
-  gid: string,
-): { kind: "product" | "variant"; id: number } | null {
-  const m = /^gid:\/\/echodesk\/(Product|Variant)\/(\d+)$/.exec(gid);
+export type EchoDeskRef = { kind: "product" | "variant"; id: number; productId: number | null };
+
+export function parseEchoDeskGid(gid: string): EchoDeskRef | null {
+  const m = /^gid:\/\/echodesk\/(Product|Variant)\/(\d+)(?:\?product=(\d+))?$/.exec(gid);
   if (!m) return null;
-  return { kind: m[1] === "Product" ? "product" : "variant", id: Number.parseInt(m[2], 10) };
+  const id = Number.parseInt(m[2], 10);
+  if (m[1] === "Product") {
+    // A product gid never carries a parent; one that does is malformed, not a variant.
+    return m[3] ? null : { kind: "product", id, productId: id };
+  }
+  return { kind: "variant", id, productId: m[3] ? Number.parseInt(m[3], 10) : null };
+}
+
+/**
+ * EchoDesk stores an attribute's unit as one plain string — not a `{ka, en}` pair like every
+ * other label — and the merchant types it in Georgian. Shown as-is, the English site read
+ * "Volume: 150 მლ".
+ *
+ * So the common units are translated here for English. Anything not in the table is shown
+ * unchanged: a Georgian unit the English reader can't parse is still better than a number
+ * with no unit at all.
+ */
+const EN_UNITS: Record<string, string> = {
+  "მლ": "ml",
+  "მილილიტრი": "ml",
+  "ლ": "L",
+  "ლიტრი": "L",
+  "გ": "g",
+  "გრ": "g",
+  "გრამი": "g",
+  "კგ": "kg",
+  "კილოგრამი": "kg",
+  "მმ": "mm",
+  "მილიმეტრი": "mm",
+  "სმ": "cm",
+  "სანტიმეტრი": "cm",
+  "მ": "m",
+  "მეტრი": "m",
+  "ც": "pcs",
+  "ცალი": "pcs",
+};
+
+export function localizeUnit(unit: string, locale: Locale): string {
+  if (locale !== "en") return unit;
+  // "მლ." and "მლ" are the same unit; the abbreviation dot is the only variation seen in practice.
+  return EN_UNITS[unit.replace(/\.$/, "")] ?? unit;
 }
 
 /**
@@ -191,7 +238,8 @@ export function adaptAttributes(
     // EchoDesk knows it is grams, so say so. Appended to the value rather than the label
     // because it belongs to the measurement, and a label reading "წონა (გრამი)" puts the
     // unit on the wrong side of the colon.
-    const unit = attr.unit?.trim() || undefined;
+    const rawUnit = attr.unit?.trim();
+    const unit = rawUnit ? localizeUnit(rawUnit, locale) : undefined;
     const withUnit = unit ? values.map((v) => `${v} ${unit}`) : values;
 
     out.push({

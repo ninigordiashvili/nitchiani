@@ -6,6 +6,9 @@ import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { loadSavedContact, saveContact } from "@/lib/checkout/saved-contact";
+import { rememberPendingPayment } from "@/lib/cart/pending-payment";
+import { RemovedUnavailableNotice } from "@/components/cart/RemovedUnavailableNotice";
+import { CardBrandLogos } from "@/components/commerce/CardBrandLogos";
 import {
   AlertCircle,
   ArrowLeft,
@@ -30,7 +33,7 @@ import { CouponField } from "@/components/cart/CouponField";
 import { HowItWorksButton } from "@/components/cart/HowItWorksButton";
 import { AddressPicker } from "@/components/checkout/AddressPicker";
 import { CityPicker } from "@/components/checkout/CityPicker";
-import { cardLabelKeys, type PaymentAvailability } from "@/lib/echodesk/payments";
+import { type CardOption, cardOptions, type PaymentAvailability } from "@/lib/echodesk/payments";
 import type { DeliveryChoice } from "@/lib/echodesk/shipping";
 import type { EchoDeskStoreConfig } from "@/lib/echodesk/types";
 import { ClarifyDetailsModal } from "@/components/checkout/ClarifyDetailsModal";
@@ -45,7 +48,11 @@ import { PhoneInput } from "@/components/commerce/PhoneInput";
  */
 type Translate = ReturnType<typeof useTranslations>;
 
-const buildCheckoutSchema = (t: Translate) => z.object({
+/**
+ * `pickup` relaxes the address and city: a shopper collecting from the store has nowhere to
+ * be delivered to, and demanding an address from them only invents one nobody will use.
+ */
+const buildCheckoutSchema = (t: Translate, { pickup }: { pickup: boolean }) => z.object({
   firstName: z.string().min(1, t("checkout.validation.required")),
   // Required: EchoDesk rejects an order without it ("Missing required fields: last_name"),
   // so leaving it optional here only moves the failure to the last step of checkout.
@@ -63,43 +70,17 @@ const buildCheckoutSchema = (t: Translate) => z.object({
     .string()
     .min(1, t("checkout.validation.required"))
     .email(t("checkout.validation.email")),
-  address: z.string().min(3, t("checkout.validation.address")),
+  address: pickup ? z.string().optional() : z.string().min(3, t("checkout.validation.address")),
   // Coordinates from the Places picker or a dragged map pin. Optional throughout: many
   // Tbilisi buildings aren't in Places, and typed-only addresses must still check out.
   lat: z.number().optional(),
   lng: z.number().optional(),
-  city: z.string().min(1, t("checkout.validation.required")),
+  city: pickup ? z.string().optional() : z.string().min(1, t("checkout.validation.required")),
   notes: z.string().optional(),
   paymentMethod: z.enum(["bank_transfer", "cod", "bog_card", "tbc_card"]),
 });
 type CheckoutInput = z.infer<ReturnType<typeof buildCheckoutSchema>>;
 
-const TBC_ENABLED = process.env.NEXT_PUBLIC_TBC_ENABLED === "true";
-
-/**
- * When EchoDesk is the backend it chooses the card gateway itself and hands back a
- * `payment_url` — we neither pick it nor are told which one it is. Naming a bank in the
- * option would be a guess: the tenant can be switched from BOG to TBC without any change
- * here, and the label would then be quietly wrong on the one screen where trust matters
- * most. So under EchoDesk the card option is provider-neutral, and the customer sees the
- * real bank on the gateway's own page a moment later.
- */
-const ECHODESK_BACKED = Boolean(process.env.NEXT_PUBLIC_ECHODESK_API_URL);
-/**
- * TBC is announced on the page before it is connected, so the design is finished ahead of the
- * integration. It renders disabled with a "coming soon" badge rather than clickable: a payment
- * button that does nothing costs orders on the one page where that is most expensive.
- *
- * It disappears on its own once TBC appears in the tenant's live providers. Two things are
- * needed before that happens — TBC credentials in EchoDesk, and EchoDesk shipping per-order
- * provider selection, which guest checkout cannot express today.
- */
-const TBC_ANNOUNCED = true;
-/**
- * Under EchoDesk both card flags route to the same place, so the second option would be the
- * same payment offered twice under two bank names. Show one card choice, and only show the
- * separate TBC entry on the legacy path where it really is a different integration.
- */
 // Cash on delivery is temporarily withdrawn. Unlike the card flags above — which gate on
 // merchant credentials existing — this one is a business decision, so it defaults OFF and
 
@@ -129,21 +110,17 @@ export function CheckoutForm({
     const path = `checkout.errors.${key}`;
     return t.has(path as never) ? t(path as never) : t("checkout.errors.orderFailed");
   };
-  const checkoutSchema = useMemo(() => buildCheckoutSchema(t), [t]);
-
   /**
    * What the form opens on. Card when the shop can take it, then cash on delivery, and
    * bank transfer last — it is the one that always works, because it needs no gateway, so
    * it is the right floor rather than the right default.
    */
-  // Names the bank the shopper will actually be sent to, read from the tenant rather than
-  // hardcoded — if the provider is switched, the label follows instead of going quietly wrong.
-  const cardLabels = cardLabelKeys(payments.providers);
-  // Announced but not connected: shown disabled until TBC is live on the tenant.
-  const showTbcPreview = TBC_ANNOUNCED && !payments.providers.includes("tbc");
+  // One option per bank the shop has live, read from the tenant — a bank switched off in
+  // EchoDesk drops out here without a deploy.
+  const cards = payments.card ? cardOptions(payments.providers) : [];
 
-  const defaultPaymentMethod: CheckoutInput["paymentMethod"] = payments.card
-    ? "bog_card"
+  const defaultPaymentMethod: CheckoutInput["paymentMethod"] = cards[0]
+    ? cards[0].method
     : payments.cashOnDelivery
       ? "cod"
       : "bank_transfer";
@@ -179,6 +156,14 @@ export function CheckoutForm({
   const [isPickup, setIsPickup] = useState(false);
 
   /**
+   * The schema follows `isPickup`, but react-hook-form keeps the resolver it was created
+   * with. So the resolver reads the current schema through a ref rather than capturing one.
+   */
+  const checkoutSchema = useMemo(() => buildCheckoutSchema(t, { pickup: isPickup }), [t, isPickup]);
+  const schemaRef = useRef(checkoutSchema);
+  schemaRef.current = checkoutSchema;
+
+  /**
    * The courier the shopper picked from the quote. Null means "whichever the quote led with",
    * which is the cheapest — a sensible default nobody has to think about.
    */
@@ -201,9 +186,10 @@ export function CheckoutForm({
     watch,
     setValue,
     reset,
+    clearErrors,
     formState: { errors },
   } = useForm<CheckoutInput>({
-    resolver: zodResolver(checkoutSchema),
+    resolver: (values, context, options) => zodResolver(schemaRef.current)(values, context, options),
     defaultValues: {
       // No city is pre-filled. A value the shopper did not choose is one they have to
       // notice and clear, and it silently ships every unread order to the capital.
@@ -225,6 +211,12 @@ export function CheckoutForm({
     // whatever the shopper has typed, and the shop's payment settings don't change mid-visit.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [reset]);
+
+  // An "enter your address" left over from a delivery attempt would read as still required
+  // once the shopper has switched to collecting it themselves.
+  useEffect(() => {
+    if (isPickup) clearErrors(["address", "city"]);
+  }, [isPickup, clearErrors]);
 
   const paymentMethod = watch("paymentMethod");
   const addressValue = watch("address");
@@ -292,6 +284,7 @@ export function CheckoutForm({
   if (cart.lines.length === 0) {
     return (
       <div className="container-shop flex min-h-[60vh] flex-col items-center justify-center gap-3 py-12 text-center">
+        <RemovedUnavailableNotice className="mb-3 max-w-md" />
         <h1 className="font-display text-3xl">{t("cart.empty")}</h1>
         <p className="text-sm opacity-70">{t("cart.emptyDesc")}</p>
         {/* Without this the screen is a dead end: it says the bag is empty and offers no way
@@ -364,6 +357,8 @@ export function CheckoutForm({
       const data = (await res.json()) as {
         /** Set when a line exceeded stock — lets us name the product and what's left. */
         stock?: { product: string; available: number };
+        /** Set when a line names a product the shop no longer sells. */
+        unavailable?: { product?: string };
         orderId?: string;
         /** Public order token, when the backend issues one — used to build the tracking link. */
         trackingToken?: string;
@@ -386,22 +381,36 @@ export function CheckoutForm({
               : t("checkout.errors.insufficientStockNone", { product }),
           );
         }
+        // Also exact: a product removed from the shop since it went in the bag. Without this
+        // the shopper only saw "couldn't place the order", with nothing to change.
+        if (data.unavailable) {
+          throw new Error(
+            data.unavailable.product
+              ? t("checkout.errors.itemUnavailableNamed", { product: data.unavailable.product })
+              : t("checkout.errors.itemUnavailable"),
+          );
+        }
         throw new Error(translateCheckoutError(data.error));
       }
 
       // Persist the contact + shipping fields for the next checkout. We save BEFORE the
       // redirect so card-payment users (who leave the site to BOG/TBC) still benefit on
       // their next visit even though we never reach the success page handler here.
+      // A pickup order may leave the address blank; that shouldn't erase the address saved
+      // from an earlier delivery, which the next order will want back.
+      const previous = loadSavedContact();
       saveContact({
         firstName: values.firstName,
         lastName: values.lastName,
         email: values.email ?? "",
         phone: values.phone,
-        address: values.address,
-        city: values.city,
+        address: values.address?.trim() || previous?.address || "",
+        city: values.city?.trim() || previous?.city || "",
       });
 
       if (data.redirectUrl) {
+        // The bag stays until the payment is confirmed — see lib/cart/pending-payment.ts.
+        rememberPendingPayment(data.trackingToken);
         // BOG hosted payment page — clear cart only after payment confirms via webhook,
         // but redirect now so the customer can complete payment.
         window.location.href = data.redirectUrl;
@@ -426,6 +435,7 @@ export function CheckoutForm({
 
   return (
     <div className="container-shop pb-8 sm:pb-12">
+      <RemovedUnavailableNotice className="mb-4" />
       <h1 className="font-display mb-6 text-3xl tracking-tight sm:mb-8 sm:text-4xl">
         {t("checkout.title")}
       </h1>
@@ -509,52 +519,58 @@ export function CheckoutForm({
           <fieldset className={cn("mb-8", step === 2 && "hidden sm:block")}>
             <legend className="font-display mb-4 text-xl">{t("checkout.deliverySection")}</legend>
             <div className="grid gap-3 sm:grid-cols-2">
-              <Field label={t("checkout.address")} error={errors.address?.message} ref={addressRef} className="sm:col-span-2" required>
-                <Controller
-                  control={control}
-                  name="address"
-                  render={({ field }) => (
-                    <AddressPicker
-                      value={field.value ?? ""}
-                      onChange={field.onChange}
-                      onBlur={field.onBlur}
-                      ariaInvalid={errors.address ? true : undefined}
-                      // Only when the pin is what stands between the shopper and a price:
-                      // a shop with a flat method prices fine without one, and shouting
-                      // "required" there would be a lie.
-                      pinRequired={!isPickup && shipping.status === "needsLocation"}
-                      onPlace={(place) => {
-                        // City and postcode are only overwritten when Google actually
-                        // returned them, so picking a place can't blank a value the
-                        // customer typed by hand.
-                        if (place.city) setValue("city", place.city, { shouldValidate: true });
-                        setValue("lat", place.lat);
-                        setValue("lng", place.lng);
-                      }}
+              {/* Collection needs no address, so the fields go rather than sit there as optional
+                  clutter. What was typed is kept, and comes back if the shopper switches to delivery. */}
+              {!isPickup ? (
+                <>
+                  <Field label={t("checkout.address")} error={errors.address?.message} ref={addressRef} className="sm:col-span-2" required>
+                    <Controller
+                      control={control}
+                      name="address"
+                      render={({ field }) => (
+                        <AddressPicker
+                          value={field.value ?? ""}
+                          onChange={field.onChange}
+                          onBlur={field.onBlur}
+                          ariaInvalid={errors.address ? true : undefined}
+                          // Only when the pin is what stands between the shopper and a price:
+                          // a shop with a flat method prices fine without one, and shouting
+                          // "required" there would be a lie.
+                          pinRequired={!isPickup && shipping.status === "needsLocation"}
+                          onPlace={(place) => {
+                            // City and postcode are only overwritten when Google actually
+                            // returned them, so picking a place can't blank a value the
+                            // customer typed by hand.
+                            if (place.city) setValue("city", place.city, { shouldValidate: true });
+                            setValue("lat", place.lat);
+                            setValue("lng", place.lng);
+                          }}
+                        />
+                      )}
                     />
-                  )}
-                />
-              </Field>
-              {/* Full width, not half. Sharing a row with the address was the other option and it
-                  fails on this form: the address carries a suggestions dropdown and, when the
-                  pin is still missing, a bordered button and a line of explanation beneath it —
-                  so the two cells end up wildly different heights and the city label floats
-                  beside a paragraph. Half a field with a hole next to it looked unfinished
-                  once the postcode went, so it takes the whole row. */}
-              <Field label={t("checkout.city")} error={errors.city?.message} className="sm:col-span-2" required>
-                <Controller
-                  control={control}
-                  name="city"
-                  render={({ field }) => (
-                    <CityPicker
-                      value={field.value ?? ""}
-                      onChange={field.onChange}
-                      onBlur={field.onBlur}
-                      ariaInvalid={errors.city ? true : undefined}
+                  </Field>
+                  {/* Full width, not half. Sharing a row with the address was the other option and it
+                      fails on this form: the address carries a suggestions dropdown and, when the
+                      pin is still missing, a bordered button and a line of explanation beneath it —
+                      so the two cells end up wildly different heights and the city label floats
+                      beside a paragraph. Half a field with a hole next to it looked unfinished
+                      once the postcode went, so it takes the whole row. */}
+                  <Field label={t("checkout.city")} error={errors.city?.message} className="sm:col-span-2" required>
+                    <Controller
+                      control={control}
+                      name="city"
+                      render={({ field }) => (
+                        <CityPicker
+                          value={field.value ?? ""}
+                          onChange={field.onChange}
+                          onBlur={field.onBlur}
+                          ariaInvalid={errors.city ? true : undefined}
+                        />
+                      )}
                     />
-                  )}
-                />
-              </Field>
+                  </Field>
+                </>
+              ) : null}
               {/* How the order is received, when the shop offers a choice: collection at the
                   store, or a courier. Collection comes from the tenant's pickup settings — it
                   is not a shipping method, so a shop can offer it without configuring one.
@@ -798,25 +814,16 @@ export function CheckoutForm({
           <fieldset className={cn(step === 1 && "hidden sm:block")}>
             <legend className="font-display mb-4 text-xl">{t("checkout.paymentMethod")}</legend>
             <div className="space-y-3">
-              {payments.card ? (
+              {cards.map((c) => (
                 <PaymentOption
-                  active={paymentMethod === "bog_card"}
-                  onSelect={() => setValue("paymentMethod", "bog_card")}
+                  key={c.method}
+                  active={paymentMethod === c.method}
+                  onSelect={() => setValue("paymentMethod", c.method)}
                   icon={<CreditCard size={20} />}
-                  title={t(cardLabels.title)}
-                  desc={t(cardLabels.desc)}
+                  title={t(c.title)}
+                  desc={t(c.desc)}
                 />
-              ) : null}
-              {showTbcPreview ? (
-                <PaymentOption
-                  active={false}
-                  onSelect={() => {}}
-                  icon={<CreditCard size={20} />}
-                  title={t("checkout.tbcCard")}
-                  desc={t("checkout.tbcCardDesc")}
-                  comingSoonLabel={t("checkout.comingSoon")}
-                />
-              ) : null}
+              ))}
               <PaymentOption
                 active={paymentMethod === "bank_transfer"}
                 onSelect={() => setValue("paymentMethod", "bank_transfer")}
@@ -1017,7 +1024,7 @@ export function CheckoutForm({
             )}
           </button>
 
-          <PaymentTrust cardAvailable={payments.card} />
+          <PaymentTrust cards={cards} />
 
           <div className="mt-4 flex justify-center">
             <HowItWorksButton />
@@ -1076,25 +1083,20 @@ function Field({
  * card processor is enabled — otherwise BOG/TBC/Visa/Mastercard would be misleading next to a
  * bank-transfer-only flow. The shield + "Secure checkout" line always renders.
  */
-function PaymentTrust({ cardAvailable }: { cardAvailable: boolean }) {
+function PaymentTrust({ cards }: { cards: CardOption[] }) {
   const t = useTranslations("product");
-  const cardMethods: string[] = [];
-  // Gated on the tenant, not just on the integration: with cards switched off, Visa and
-  // Mastercard pills under the button advertise a method the shop cannot take.
-  if (cardAvailable) {
-    // Same reasoning as CARD_LABEL_KEY: don't advertise a bank we don't choose.
-    if (ECHODESK_BACKED) cardMethods.push("Visa/Mastercard");
-    else {
-      cardMethods.push("BOG");
-      if (TBC_ENABLED) cardMethods.push("TBC");
-    }
-  }
-  if (cardMethods.length > 0) cardMethods.push("VISA", "MASTERCARD");
+  // The banks actually on offer, from the same options the shopper picks between — so the
+  // strip can't advertise a bank the shop has switched off. None when cards are off: Visa and
+  // Mastercard logos under a bank-transfer-only button would promise a method the shop can't take.
+  const cardMethods: string[] = cards.flatMap((c) =>
+    !c.provider ? [] : c.method === "bog_card" ? ["BOG"] : ["TBC"],
+  );
 
   return (
     <div className="mt-3 space-y-1.5">
-      {cardMethods.length > 0 ? (
+      {cards.length > 0 ? (
         <div className="flex flex-wrap items-center justify-center gap-1.5">
+          <CardBrandLogos size="sm" />
           {cardMethods.map((label) => (
             <span
               key={label}

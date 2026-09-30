@@ -24,6 +24,8 @@ export type ManualOrderInput = {
   lng?: number;
   notes?: string;
   paymentMethod: CheckoutPaymentMethod;
+  /** EchoDesk `payment_provider` for a card order — which bank charges it. */
+  paymentProvider?: string;
   locale: string;
   lines: ManualOrderLine[];
   subtotal: Money;
@@ -37,8 +39,19 @@ export type ManualOrderInput = {
   shippingMethodId?: number;
   /** Collection at the store rather than delivery. */
   pickup?: boolean;
-  /** Courier the shopper chose from the quote, recorded in the notes for the back office. */
+  /**
+   * The courier tier the shopper chose from the QuickShipper quote.
+   *
+   * The four travel together and mean nothing apart: EchoDesk books the courier from
+   * `courierId` + `courierFeeId` — the fee id is the tier, since one provider is quoted at
+   * several speeds and prices — while the name and price are what the order shows. Absent
+   * when delivery was priced by a flat method, or not priced at all.
+   */
   courierName?: string;
+  courierId?: number;
+  courierFeeId?: string;
+  /** GEL, as quoted for the chosen tier. */
+  courierPrice?: number;
   /** Canonical coupon code that produced the discount. Used to attach a Shopify `discount_codes` entry. */
   couponCode?: string;
 };

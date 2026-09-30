@@ -62,11 +62,19 @@ export type RawProduct = Omit<
   rawVariants: RawProductVariant[];
 };
 
-type RawCollection = Omit<Collection, "title" | "description" | "products"> & {
+type RawCollection = Omit<Collection, "title" | "description" | "seoTitle" | "seoDescription" | "products"> & {
   titleKa: string;
   titleEn: string;
   descriptionKa: string;
   descriptionEn: string;
+  /**
+   * What search results show, when the page's own heading and intro don't fit: the heading is
+   * a word or two, and the intro runs longer than the ~155 characters Google displays.
+   */
+  seoTitleKa?: string;
+  seoTitleEn?: string;
+  seoDescriptionKa?: string;
+  seoDescriptionEn?: string;
   products: RawProduct[];
 };
 
@@ -143,6 +151,8 @@ export function localizeCollection(c: RawCollection, locale: Locale): Collection
     handle: c.handle,
     title: ka ? c.titleKa : c.titleEn,
     description: ka ? c.descriptionKa : c.descriptionEn,
+    seoTitle: ka ? c.seoTitleKa : c.seoTitleEn,
+    seoDescription: ka ? c.seoDescriptionKa : c.seoDescriptionEn,
     image: c.image,
     products: c.products.map((p) => localizeProduct(p, locale)),
   };
@@ -758,9 +768,13 @@ export const DUMMY_RAW_COLLECTIONS: RawCollection[] = [
     titleEn: "Hair Extensions",
     titleKa: "ხელოვნური თმა",
     descriptionEn:
-      "Synthetic braiding hair in water wave, deep wave, bone straight and kinky textures. One 300g pack of 3 pieces covers a full head. Lengths run from 20 to 28 inches. The fibre is heat-resistant, so it takes hot tools without melting and keeps its curl. Around 25 shades — naturals, blondes, ombré blends and brights. All from one factory, so colour and texture stay consistent between orders. Held in stock in Tbilisi and delivered across Georgia in 1–3 working days.",
+      "Synthetic braiding hair in water wave, deep wave, bone straight and kinky textures. One 300g pack of 3 pieces covers a full head. Lengths run from 20 to 28 inches (50–70 cm).\n\nThe fibre is heat-resistant, so it takes hot tools without melting and keeps its curl. Around 25 shades — naturals, blondes, ombré blends and brights. All from one manufacturer, so colour and texture stay consistent between orders.\n\nHeld in stock in Tbilisi; delivery takes 1–3 working days in Tbilisi and 3–7 working days to the rest of Georgia.",
     descriptionKa:
-      "ხელოვნური თმა ნაწნავებისა და ხვეულებისთვის — water wave, deep wave, სწორი და kinky ტექსტურები. ერთი შეკვრა (3 ცალი, 300 გრამი) სრული თავისთვის საკმარისია. სიგრძე 20-დან 28 დუიმამდე (50–70 სმ). ბოჭკო სითბოგამძლეა — უთოსა და ფენს უძლებს და ხვეულს ინარჩუნებს. დაახლოებით 25 ფერი: ნატურალური, ქერა, ომბრე და ნათელი ტონები. ყველა ერთი ქარხნიდან, ამიტომ ფერი და ტექსტურა შეკვეთიდან შეკვეთამდე იგივე რჩება. მარაგი თბილისშია, მიწოდება საქართველოში 1–3 სამუშაო დღეში.",
+      "ხელოვნური თმა ნაწნავებისა და ხვეულებისთვის — ტალღოვანი (water wave), ღრმა ტალღა (deep wave), სწორი (bone straight) და კინკი (kinky) ტექსტურებით. ერთი შეკვრა (3 ცალი, 300 გრამი) მთელი თავისთვის საკმარისია. სიგრძე — 50-დან 70 სმ-მდე.\n\nბოჭკო სითბოს მიმართ მდგრადია: უძლებს თმის უთოსა და ფენს და ინარჩუნებს ხვეულ ფორმას. დაახლოებით 25 ფერი: ნატურალური, ქერა, ომბრე და კაშკაშა ტონები. ყველა ერთი მწარმოებლისაა, ამიტომ ფერი და ტექსტურა შეკვეთიდან შეკვეთამდე უცვლელი რჩება.\n\nმარაგი თბილისშია; მიწოდება თბილისში 1–3 სამუშაო დღეში, საქართველოს სხვა რეგიონებში — 3–7 სამუშაო დღეში.",
+    seoTitleKa: "ხელოვნური თმა ნაწნავებისა და ხვეულებისთვის",
+    seoTitleEn: "Synthetic Braiding Hair Extensions in Georgia",
+    seoDescriptionKa: "ხელოვნური თმა ნაწნავებისა და ხვეულებისთვის: ტალღოვანი, სწორი და კინკი ტექსტურები, 50–70 სმ. მიწოდება მთელ საქართველოში ან უფასო გატანა თბილისში.",
+    seoDescriptionEn: "Synthetic braiding hair in wavy, straight and kinky textures, 50–70 cm. Delivery across Georgia or free pickup from our store in Tbilisi.",
     // Membership comes from lib/echodesk/categories.ts when the catalog is live.
     products: [],
   },
@@ -770,9 +784,13 @@ export const DUMMY_RAW_COLLECTIONS: RawCollection[] = [
     titleEn: "Hair Care",
     titleKa: "თმის მოვლა",
     descriptionEn:
-      "Two Lorenti essentials for everyday care. The 400ml two-phase leave-in conditioner comes in biotin and keratin — it sprays on, needs no rinsing, makes detangling easier and shields hair from heat tools and daily wear. The 150ml Gel Wax Ultra Hold holds a style all day without greasy residue, for laying edges and finishing a look. Both suit all hair types and lengths. Held in stock in Tbilisi and delivered across Georgia in 1–3 working days.",
+      "Two Lorenti essentials for everyday care. The 400ml two-phase leave-in conditioner comes in biotin and keratin versions — it sprays on, needs no rinsing, makes detangling easier and shields hair from heat tools and daily wear.\n\nThe 150ml Gel Wax Ultra Hold holds a style all day without greasy residue, for laying edges and finishing a look. Both suit all hair types and lengths.\n\nHeld in stock in Tbilisi; delivery takes 1–3 working days in Tbilisi and 3–7 working days to the rest of Georgia.",
     descriptionKa:
-      "ორი Lorenti-ის საშუალება ყოველდღიური მოვლისთვის. 400 მლ ორფაზიანი ლივ-ინ კონდიციონერი — ბიოტინითა და კერატინით — სპრეით იფრქვევა, ჩამობანა არ სჭირდება, აადვილებს დავარცხნას და იცავს თერმული და ყოველდღიური ზემოქმედებისგან. 150 მლ Gel Wax Ultra Hold მთელი დღე ინარჩუნებს ფორმას ცხიმიანი ნარჩენის გარეშე — კიდეების დასაწყობად და ვარცხნილობის დასასრულებლად. ორივე ყველა ტიპისა და სიგრძის თმას უხდება. მარაგი თბილისშია, მიწოდება საქართველოში 1–3 სამუშაო დღეში.",
+      "Lorenti-ს ორი საშუალება ყოველდღიური მოვლისთვის. 400 მლ ორფაზიანი ლივ-ინ კონდიციონერი (ბიოტინით ან კერატინით) სპრეის სახით გამოიყენება და ჩამორეცხვას არ საჭიროებს: აადვილებს დავარცხნას და თმას იცავს თერმული და ყოველდღიური ზემოქმედებისგან.\n\n150 მლ Gel Wax Ultra Hold ვარცხნილობას მთელი დღე ინარჩუნებს, ცხიმიანი კვალის გარეშე — თმის კიდეების (edges) დასალაგებლად და ვარცხნილობის საბოლოო ფიქსაციისთვის. ორივე შესაფერისია ყველა ტიპისა და სიგრძის თმისთვის.\n\nმარაგი თბილისშია; მიწოდება თბილისში 1–3 სამუშაო დღეში, საქართველოს სხვა რეგიონებში — 3–7 სამუშაო დღეში.",
+    seoTitleKa: "თმის მოვლა — Lorenti კონდიციონერი და თმის ცვილი",
+    seoTitleEn: "Hair Care — Lorenti Leave-In Conditioner & Wax",
+    seoDescriptionKa: "Lorenti-ს ორფაზიანი ლივ-ინ კონდიციონერი და თმის ცვილი ყოველდღიური მოვლისთვის. მიწოდება მთელ საქართველოში ან უფასო გატანა თბილისში.",
+    seoDescriptionEn: "Lorenti two-phase leave-in conditioner and ultra-hold hair wax for everyday care. Delivery across Georgia or free pickup in Tbilisi.",
     // Membership comes from lib/echodesk/categories.ts when the catalog is live.
     products: [],
   },
@@ -794,9 +812,13 @@ export const DUMMY_RAW_COLLECTIONS: RawCollection[] = [
     titleEn: "Bonnets",
     titleKa: "ბონეტი",
     descriptionEn:
-      "Satin bonnets in two sizes — a standard cut and an extra-long one made for braids, locs and extensions that shouldn't be folded away. The adjustable bow ties to your own head size and holds all night without slipping, and the roomy interior takes thick hair without leaving pressure marks. Satin cuts friction, so hair keeps its moisture and wakes up smooth. Hand wash cold, air dry. Held in stock in Tbilisi and delivered across Georgia in 1–3 working days.",
+      "A soft and comfortable head covering designed for sleeping and everyday use. Its smooth, satin-like fabric helps reduce friction between the hair and pillow, helping maintain the hair’s shape and a neat appearance.\n\nSuitable for different hair types, including curly, wavy, and straight hair. The bonnet provides a comfortable fit while helping protect and maintain your hair throughout the night.",
     descriptionKa:
-      "სატენის ბონეტი ორ ზომაში — სტანდარტული და გრძელი, რომელიც ნაწნავებს, ლოკსებსა და ხელოვნურ თმას მოხრის გარეშე იტევს. რეგულირებადი ბაფთა თავის ზომაზე იკვრება და მთელი ღამე არ სრიალებს; შიგნიდან ფართოა, ამიტომ სქელ თმაზე კვალს არ ტოვებს. სატენი ხახუნს ამცირებს — თმა ტენიანობას ინარჩუნებს და დილით გლუვი რჩება. ირეცხება ხელით, ცივ წყალში; შრება ბუნებრივად. მარაგი თბილისშია, მიწოდება საქართველოში 1–3 სამუშაო დღეში.",
+      "ბონეტი არის რბილი და კომფორტული თავსაბურავი, რომელიც იდეალურია ძილისა და ყოველდღიური გამოყენებისთვის. მისი გლუვი, სატინის მსგავსი ქსოვილი ამცირებს თმის ხახუნს ბალიშთან და ხელს უწყობს თმის ფორმისა და მოწესრიგებული იერსახის შენარჩუნებას.\n\nშესაფერისია სხვადასხვა ტიპის თმისთვის, მათ შორის ხვეული, ტალღოვანი და სწორი თმისთვის. ბონეტი კომფორტულად თავსდება თავზე და ხელს უწყობს თმის მოვლას ძილის დროს.",
+    seoTitleKa: "ატლასის ბონეტები — თმის დაცვა ძილის დროს",
+    seoTitleEn: "Satin Hair Bonnets for Sleep & Hair Protection",
+    seoDescriptionKa: "ატლასის ბონეტები, რომლებიც ამცირებს ხახუნს და ძილის დროს თმის ფორმას ინარჩუნებს. მიწოდება მთელ საქართველოში ან უფასო გატანა თბილისში.",
+    seoDescriptionEn: "Satin bonnets that reduce friction and keep your hair's shape overnight. Delivery across Georgia or free pickup from our store in Tbilisi.",
     // Membership comes from lib/echodesk/categories.ts when the catalog is live.
     products: [],
   },
@@ -806,9 +828,13 @@ export const DUMMY_RAW_COLLECTIONS: RawCollection[] = [
     titleEn: "Durags",
     titleKa: "დურაგი",
     descriptionEn:
-      "Satin durags in one size, with 100cm straps long enough to wrap twice and still tie comfortably. The elastic ties give steady compression without digging in, and the ultra-smooth satin reduces friction so wave patterns set cleanly. Breathable and light enough for all-day wear, not only overnight. Several colours. Held in stock in Tbilisi and delivered across Georgia in 1–3 working days.",
+      "A practical and comfortable accessory designed for everyday use. Its fitted shape comfortably wraps around the head and helps maintain a neat and well-groomed hairstyle. The long adjustable ties allow you to secure the durag according to your preferred fit and comfort.\n\nPerfect for everyday styling as well as part of your hair-care routine. Available in a variety of colors, making it easy to match with your personal style.",
     descriptionKa:
-      "სატენის დურაგი ერთ ზომაში, 100 სმ სიგრძის ზონრებით — თავისუფლად შემოეხვევა და მოსახერხებლად იკვრება. ელასტიური ზონრები საჭირო შეკუმშვას ინარჩუნებს ისე, რომ არ ჭრის; სატენის გლუვი ზედაპირი ხახუნს ამცირებს და ტალღების ფორმას ასწორებს. სუნთქვადი და მსუბუქია — მთელი დღე იტარება, არა მხოლოდ ღამით. რამდენიმე ფერი. მარაგი თბილისშია, მიწოდება საქართველოში 1–3 სამუშაო დღეში.",
+      "დურაგი არის პრაქტიკული და კომფორტული აქსესუარი ყოველდღიური გამოყენებისთვის. მისი ფორმა მჭიდროდ ერგება თავს და ხელს უწყობს თმის მოწესრიგებული იერსახის შენარჩუნებას. გრძელი შესაკრავი ნაწილები საშუალებას გაძლევთ, დურაგი სასურველი სიმჭიდროვით მოირგოთ.\n\nშესაფერისია როგორც ყოველდღიური სტილისთვის, ასევე თმის მოვლის რუტინაში გამოსაყენებლად. ხელმისაწვდომია სხვადასხვა ფერში, რათა მარტივად შეუხამოთ თქვენს ინდივიდუალურ სტილს.",
+    seoTitleKa: "ატლასის დურაგები თმისთვის, გრძელი შესაკრავებით",
+    seoTitleEn: "Satin Durags with Long Ties — Wave Caps for Hair",
+    seoDescriptionKa: "ატლასის დურაგები გრძელი შესაკრავებით, ყოველდღიური სტილისა და თმის მოვლისთვის, სხვადასხვა ფერში. მიწოდება მთელ საქართველოში ან გატანა თბილისში.",
+    seoDescriptionEn: "Satin durags with long ties for everyday style and hair care, in a range of colours. Delivery across Georgia or free pickup in Tbilisi.",
     // Membership comes from lib/echodesk/categories.ts when the catalog is live.
     products: [],
   },

@@ -29,10 +29,10 @@ const REVALIDATE = 300;
 export async function getReviews(productGid: string): Promise<LocalizedReview[] | null> {
   if (!API_URL) return null;
   const ref = parseEchoDeskGid(productGid);
-  if (!ref) return null;
+  if (!ref?.productId) return null;
 
   const res = await fetch(
-    `${API_URL}/api/ecommerce/client/products/${ref.id}/reviews/`,
+    `${API_URL}/api/ecommerce/client/products/${ref.productId}/reviews/`,
     { headers: { Accept: "application/json" }, next: { revalidate: REVALIDATE } },
   ).catch(() => null);
 

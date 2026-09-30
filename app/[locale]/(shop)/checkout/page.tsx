@@ -1,4 +1,5 @@
-import { setRequestLocale } from "next-intl/server";
+import type { Metadata } from "next";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import { CheckoutForm } from "./CheckoutForm";
 import { getStoreConfig, listShippingMethods } from "@/lib/echodesk/client";
 import { envPaymentAvailability, paymentAvailability } from "@/lib/echodesk/payments";
@@ -16,6 +17,16 @@ import type { Locale } from "@/lib/i18n/config";
  * could choose was the one the backend would refuse. Reading it here means the answer comes
  * from the same place the order is placed, and a change in EchoDesk needs no deploy.
  */
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: Locale }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "checkout" });
+  return { title: t("title") };
+}
+
 export default async function CheckoutPage({
   params,
 }: {

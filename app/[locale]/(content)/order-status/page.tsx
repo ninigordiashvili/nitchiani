@@ -13,11 +13,9 @@ export async function generateMetadata({
   params: Promise<{ locale: Locale }>;
 }): Promise<Metadata> {
   const { locale } = await params;
-  const title = locale === "ka" ? "შეკვეთის სტატუსი" : "Order status";
-  const description =
-    locale === "ka"
-      ? "თვალი ადევნეთ თქვენს Nitchiani შეკვეთას — გადახდიდან მიწოდებამდე."
-      : "Track your Nitchiani order — from payment confirmation to delivery.";
+  const t = await getTranslations({ locale, namespace: "orderStatus" });
+  const title = t("metaTitle");
+  const description = t("metaDescription");
   return {
     title,
     description,

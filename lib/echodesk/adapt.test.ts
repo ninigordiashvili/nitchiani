@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { adaptAttributes, adaptProduct, parseEchoDeskGid, pick } from "./adapt";
+import { adaptAttributes, adaptProduct, localizeUnit, parseEchoDeskGid, pick } from "./adapt";
 import type { EchoDeskProduct } from "./types";
 // Captured verbatim from the live tenant (nitchiani.api.echodesk.ge, product 1) so the
 // adapter is tested against a real payload rather than an idealised one.
@@ -24,7 +24,7 @@ describe("adaptProduct — real tenant payload", () => {
     expect(p.variants[0].availableForSale).toBe(true);
     // The id must survive AND be tagged as a product, so checkout sends it as product_id
     // rather than variant_id.
-    expect(parseEchoDeskGid(p.variants[0].id)).toEqual({ kind: "product", id: 1 });
+    expect(parseEchoDeskGid(p.variants[0].id)).toEqual({ kind: "product", id: 1, productId: 1 });
   });
 
   it("falls back to the single list image when the detail gallery is absent", () => {
@@ -54,8 +54,26 @@ describe("pick", () => {
 
 describe("parseEchoDeskGid", () => {
   it("distinguishes product rows from variant rows", () => {
-    expect(parseEchoDeskGid("gid://echodesk/Product/7")).toEqual({ kind: "product", id: 7 });
-    expect(parseEchoDeskGid("gid://echodesk/Variant/7")).toEqual({ kind: "variant", id: 7 });
+    expect(parseEchoDeskGid("gid://echodesk/Product/7")).toEqual({ kind: "product", id: 7, productId: 7 });
+    expect(parseEchoDeskGid("gid://echodesk/Variant/3?product=7")).toEqual({
+      kind: "variant",
+      id: 3,
+      productId: 7,
+    });
+  });
+
+  it("keeps a variant's parent product apart from the variant itself", () => {
+    // Checkout sent the variant id as `product_id`, naming an unrelated product or none.
+    const p = adaptProduct(
+      { id: 7, name: { en: "Wax" }, slug: "wax", price: "10", variants: [{ id: 3, name: { en: "150ml" } }] },
+      "en",
+    );
+    expect(parseEchoDeskGid(p.variants[0].id)).toEqual({ kind: "variant", id: 3, productId: 7 });
+  });
+
+  it("marks a variant saved without its parent as unorderable", () => {
+    expect(parseEchoDeskGid("gid://echodesk/Variant/7")).toEqual({ kind: "variant", id: 7, productId: null });
+    expect(parseEchoDeskGid("gid://echodesk/Product/7?product=9")).toBeNull();
   });
 
   it("rejects anything that isn't an EchoDesk gid", () => {
@@ -91,5 +109,27 @@ describe("attribute units", () => {
   it("ignores a unit that is only whitespace", () => {
     const [attr] = adaptAttributes(numeric("   ", 55) as never, "ka");
     expect(attr.values).toEqual(["55"]);
+  });
+
+  it("translates a Georgian unit on the English site", () => {
+    // EchoDesk keeps the unit as one string, typed in Georgian — this read "150 მლ" in English.
+    const [attr] = adaptAttributes(numeric("მლ", 150) as never, "en");
+    expect(attr.values).toEqual(["150 ml"]);
+  });
+
+  it("keeps the Georgian unit on the Georgian site", () => {
+    const [attr] = adaptAttributes(numeric("მლ", 150) as never, "ka");
+    expect(attr.values).toEqual(["150 მლ"]);
+  });
+});
+
+describe("localizeUnit", () => {
+  it("reads through an abbreviation dot", () => {
+    expect(localizeUnit("მლ.", "en")).toBe("ml");
+    expect(localizeUnit("გრამი", "en")).toBe("g");
+  });
+
+  it("passes an unknown unit through rather than dropping it", () => {
+    expect(localizeUnit("კოლოფი", "en")).toBe("კოლოფი");
   });
 });

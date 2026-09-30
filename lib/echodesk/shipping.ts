@@ -68,7 +68,8 @@ export function quoteItems(
   return lines
     .map((l) => {
       const parsed = parseEchoDeskGid(l.variantId);
-      return parsed ? { productId: parsed.id, quantity: l.quantity } : null;
+      // The parent product, not the variant: the quote is priced per product.
+      return parsed?.productId ? { productId: parsed.productId, quantity: l.quantity } : null;
     })
     .filter((i): i is { productId: number; quantity: number } => i !== null);
 }
@@ -330,11 +331,10 @@ export type DeliveryChoice = {
 /**
  * Every delivery method the shop offers, for the chooser at checkout.
  *
- * This is also how collection at the store is expressed. EchoDesk's guest checkout has no
- * pickup field — the only lever on an order is `shipping_method_id` — so a shop that wants
- * pickup adds a method priced 0 and names it accordingly. That way the order carries a real
- * method the back office can act on, rather than a courier order with a note attached and
- * nobody told not to dispatch.
+ * Collection at the store can appear here too, as a method priced 0. That is now a display
+ * choice rather than the only way to express it: the order itself carries
+ * `delivery_method: "pickup"` (see orders.ts), so the back office knows not to dispatch even
+ * if the shop never configured a pickup method.
  */
 export function deliveryChoices(
   methods: EchoDeskShippingMethod[],
