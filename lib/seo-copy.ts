@@ -22,9 +22,9 @@ const COPY: Record<Locale, SeoCopy> = {
       "ხელოვნური თმები აფრო ხვეულებისთვის — კულულები, ხუჭუჭები და ნაწნავებისთვის თმა. ბონეტი, დურაგი და თმის მოვლის საშუალებები. მიწოდება მთელ საქართველოში.",
   },
   en: {
-    title: "Nitchiani — Synthetic hair, curls & loc care · Tbilisi",
+    title: "Nitchiani — Synthetic Hair, Bonnets & Durags · Tbilisi",
     description:
-      "Synthetic hair for afro curls, kinky and braiding textures. Bonnets, durags, oils and loc-care essentials, delivered across Georgia.",
+      "Synthetic hair for afro curls, kinky and braiding textures, plus hair care, satin bonnets and durags. Delivery across Georgia or free pickup in Tbilisi.",
   },
 };
 

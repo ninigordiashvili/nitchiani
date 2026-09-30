@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseInsufficientStock } from "./stock-error";
+import { parseInsufficientStock, parseMissingProduct } from "./stock-error";
 
 describe("parseInsufficientStock", () => {
   it("reads the real rejection the backend sends", () => {
@@ -39,5 +39,16 @@ describe("parseInsufficientStock", () => {
     expect(parseInsufficientStock("Missing required fields: last_name")).toBeNull();
     expect(parseInsufficientStock("Insufficient stock for Bonnet.")).toBeNull();
     expect(parseInsufficientStock("Insufficient stock for . Available: 2")).toBeNull();
+  });
+});
+
+describe("parseMissingProduct", () => {
+  it("reads the id out of EchoDesk's gone-product rejection", () => {
+    expect(parseMissingProduct("Product with id 1 not found or inactive.")).toBe(1);
+  });
+
+  it("ignores every other rejection", () => {
+    expect(parseMissingProduct("Insufficient stock for Wax. Available: 1, Requested: 2")).toBeNull();
+    expect(parseMissingProduct(undefined)).toBeNull();
   });
 });

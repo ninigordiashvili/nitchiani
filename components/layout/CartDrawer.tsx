@@ -16,6 +16,7 @@ import { CouponField } from "@/components/cart/CouponField";
 import { EmptyCartRecommendations } from "@/components/cart/EmptyCartRecommendations";
 import { FreeShippingProgress } from "@/components/cart/FreeShippingProgress";
 import { HowItWorksButton } from "@/components/cart/HowItWorksButton";
+import { RemovedUnavailableNotice } from "@/components/cart/RemovedUnavailableNotice";
 import { useFocusTrap } from "@/lib/ui/use-focus-trap";
 import { useSwipeDismiss } from "@/lib/ui/use-swipe-dismiss";
 
@@ -98,6 +99,8 @@ export function CartDrawer({
             </button>
           </div>
         </div>
+
+        <RemovedUnavailableNotice className="mx-4 mt-3" />
 
         {cart.lines.length === 0 ? (
           <div className="flex-1 overflow-y-auto">

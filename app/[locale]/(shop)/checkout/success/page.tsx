@@ -1,7 +1,19 @@
+import type { Metadata } from "next";
 import { setRequestLocale, getTranslations } from "next-intl/server";
 import { ArrowLeft, CheckCircle2 } from "lucide-react";
 import { Link } from "@/lib/i18n/routing";
 import type { Locale } from "@/lib/i18n/config";
+import { SettlePendingPayment } from "@/components/cart/SettlePendingPayment";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: Locale }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "checkout" });
+  return { title: t("successTitle") };
+}
 
 export default async function CheckoutSuccess({
   params,
@@ -20,6 +32,7 @@ export default async function CheckoutSuccess({
 
   return (
     <div className="container-shop flex min-h-[60vh] flex-col items-center justify-center gap-4 py-12 text-center">
+      <SettlePendingPayment outcome="paid" />
       <CheckCircle2 size={48} className="text-[var(--color-brand-maroon)]" />
       <h1 className="font-display text-3xl tracking-tight sm:text-4xl">
         {t("successTitle")}

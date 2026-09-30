@@ -28,6 +28,15 @@ export const PRODUCT_CATEGORIES: Record<string, string[]> = {
   "lor-wax-08": ["hair-care"], // Gel Wax 08
   "lor-2ph": ["hair-care"], // 2 Phase conditioner
   "lor-2ph-03": ["hair-care"], // 2 Phase · keratin
+  // Bonnets.
+  "long_satin_bonnet_for_hair_black_gold": ["bonnets"], // გრძელი ატლასის ქუდი — შავი & ოქროსფერი
+  "4_piece_satin_hair_bonnets_for_women_hair_protection_caps_with_tie_assorted_colors": ["bonnets"], // 4 ცალი ატლასის ბონეტი
+  "long_satin_bonnet_for_hair_gold": ["bonnets"], // გრძელი ატლასის ქუდი — ოქროსფერი
+  "satin_bonnet_for_hair_brown": ["bonnets"], // ატლასის ქუდი — ყავისფერი
+  // Durags.
+  "satin_durag_wave_cap_with_long_tail_wide_backstraps": ["durags"], // ატლასის დურაგი
+  "satin_durag_wave_cap_with_long_tail_wide_backstraps_red": ["durags"], // ატლასის დურაგი — წითელი
+  "satin_durag_wave_cap_with_long_tail_wide_backstraps_6_piece_set": ["durags"], // ატლასის დურაგი — 6 ცალი
 };
 
 export function categoriesFor(slug: string): string[] {

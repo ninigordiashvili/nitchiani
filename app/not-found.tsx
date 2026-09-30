@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { SearchX } from "lucide-react";
 import "./globals.css";
 import { manrope, notoSansGeorgian, notoSerifGeorgian, tenorSans } from "@/lib/fonts";
@@ -17,6 +18,14 @@ import messages from "@/lib/i18n/messages/ka.json";
  * because there is no locale segment here to give next-intl a request context. Locale routes
  * that call `notFound()` still get the fully-chromed `app/[locale]/not-found.tsx`.
  */
+/**
+ * Georgian, like the copy below. Left alone this inherited the root layout's title, which is
+ * English (the root layout has no locale to pick with), so a Georgian 404 said so in English.
+ */
+export const metadata: Metadata = {
+  title: messages.notFound.title,
+};
+
 export default function RootNotFound() {
   const t = messages.notFound;
 

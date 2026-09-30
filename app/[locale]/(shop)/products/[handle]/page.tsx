@@ -19,7 +19,9 @@ import { StarRating } from "@/components/commerce/StarRating";
 import { TrackRecentlyViewed } from "@/components/commerce/TrackRecentlyViewed";
 import { getProductByHandle, getRelatedProducts } from "@/lib/shopify/client";
 import { getReviewSummary } from "@/lib/reviews";
-import { localeAlternates, ogLocale } from "@/lib/seo";
+import { localeAlternates, ogLocale, productSeo } from "@/lib/seo";
+import { categoriesFor } from "@/lib/echodesk/categories";
+import { CATEGORIES } from "@/lib/categories";
 import type { Locale } from "@/lib/i18n/config";
 
 export async function generateMetadata({
@@ -29,17 +31,27 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale, handle } = await params;
   const product = await getProductByHandle(handle, locale);
-  if (!product) return {};
+  // Unreachable in practice — layout.tsx has already 404'd an unknown handle — but it keeps
+  // the lookup's null case honest if this ever renders without that layout.
+  if (!product) notFound();
 
-  // Trim the description to a SERP-friendly length; fall back to a branded line so a
-  // product with an empty description still ships a unique, non-template meta description.
-  const description = product.description
-    ? product.description.replace(/\s+/g, " ").trim().slice(0, 160)
-    : `${product.title} — premium braids, locs & haircare from the Nitchiani studio in Tbilisi.`;
+  // The category's name rounds out a short product name in search results.
+  const categoryHandle = categoriesFor(handle)[0];
+  const categoryKey = CATEGORIES.find((c) => c.handle === categoryHandle)?.labelKey;
+  const tCategories = await getTranslations({ locale, namespace: "categories" });
+  const { title, description } = productSeo({
+    name: product.title,
+    seoTitle: product.seoTitle,
+    seoDescription: product.seoDescription,
+    shortDescription: product.shortDescription,
+    description: product.description,
+    category: categoryKey ? tCategories(categoryKey as never) : undefined,
+    locale,
+  });
   const image = product.featuredImage?.url ?? product.images[0]?.url;
 
   return {
-    title: product.title,
+    title,
     description,
     alternates: localeAlternates(locale, `/products/${handle}`),
     openGraph: {

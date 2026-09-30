@@ -9,14 +9,20 @@
  * legal copy intact even if the env file is missing.
  */
 export const BUSINESS = {
-  /** Legal entity name as registered with the Public Service Hall of Georgia. */
-  legalName: "[LEGAL ENTITY NAME]",
-  /** 9- or 11-digit identification number from your registration certificate. */
-  registrationId: "[REGISTRATION NUMBER]",
+  /**
+   * Name as registered with the Public Registry. A sole proprietor (ინდივიდუალური მეწარმე),
+   * not a company — hence "ი/მ", and "IE" (individual entrepreneur) in English.
+   */
+  legalName: { ka: "ი/მ ნინი გორდიაშვილი", en: "IE Nini Gordiashvili" },
+  /** Identification code. For a sole proprietor this is the 11-digit personal number. */
+  registrationId: "01024088873",
   /** Optional — only if you're VAT-registered. */
   vatId: undefined as string | undefined,
-  /** Registered legal address (street, city, country). */
-  address: "[REGISTERED ADDRESS, Tbilisi, Georgia]",
+  /**
+   * Registered address — street and number, per language. The city and country are added by
+   * `businessAddress`, so they can't disagree between the two languages.
+   */
+  street: { ka: "სულხან ცინცაძის ქუჩა 17", en: "17 Sulkhan Tsintsadze St" },
   /** Public-facing contact email. */
   email: "Info@nitchiani.shop",
   /** Numeric page id. Kept separate from the URL because Messenger links (`m.me/<id>`) need
@@ -30,6 +36,13 @@ export const BUSINESS = {
 
 /** Convenience boolean — true once the placeholders have been replaced with real data. */
 export const BUSINESS_DETAILS_FILLED =
-  !BUSINESS.legalName.startsWith("[") &&
+  !BUSINESS.legalName.ka.startsWith("[") &&
   !BUSINESS.registrationId.startsWith("[") &&
-  !BUSINESS.address.startsWith("[");
+  !BUSINESS.street.ka.startsWith("[");
+
+/** The full registered address, in the reader's language. */
+export function businessAddress(locale: string): string {
+  return locale === "ka"
+    ? `${BUSINESS.street.ka}, თბილისი, საქართველო`
+    : `${BUSINESS.street.en}, Tbilisi, Georgia`;
+}

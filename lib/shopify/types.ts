@@ -34,6 +34,11 @@ export type Product = {
   handle: string;
   title: string;
   description: string;
+  /** The short description on its own — the one written to be quoted, e.g. in search results. */
+  shortDescription?: string;
+  /** Search-result title and description from the backend, when the merchant set them. */
+  seoTitle?: string;
+  seoDescription?: string;
   /** Optional usage guidance — rendered as the "How to use" PDP section when present. */
   howToUse?: string;
   /** Optional ingredient/material copy — rendered as the "What's inside" PDP section. */
@@ -93,6 +98,9 @@ export type Collection = {
   handle: string;
   title: string;
   description: string;
+  /** Search-result title and description, when set; the page falls back to its own. */
+  seoTitle?: string;
+  seoDescription?: string;
   image?: ImageRef;
   products: Product[];
 };

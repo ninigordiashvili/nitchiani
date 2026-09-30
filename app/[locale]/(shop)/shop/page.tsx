@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { connection } from "next/server";
 import { setRequestLocale, getTranslations } from "next-intl/server";
 import { Suspense } from "react";
 import { FilteredCollection } from "@/components/commerce/FilteredCollection";
@@ -15,8 +16,11 @@ export async function generateMetadata({
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "nav" });
   return {
-    title: t("allProducts"),
-    description: t("allProductsDesc"),
+    // Its own title and description for search results: the on-page heading is too short to
+    // say what the shop sells, and the on-page intro is longer than the ~155 characters Google
+    // shows before cutting off.
+    title: t("allProductsMetaTitle"),
+    description: t("allProductsMetaDesc"),
     alternates: localeAlternates(locale, "/shop"),
   };
 }
@@ -28,6 +32,14 @@ export default async function ShopPage({
 }) {
   const { locale } = await params;
   setRequestLocale(locale);
+
+  // Rendered per request, like /shop/[collection]. `FilteredCollection` reads the URL
+  // (`?sort=`, `?color=`), and in a statically built page anything that does is skipped at
+  // build time and drawn in the browser instead — so this page shipped as an empty <Suspense>,
+  // with no products in the HTML Google indexes or a slow phone paints first. Per-request
+  // rendering fills the grid on the server. The catalog fetch is still cached (see
+  // lib/echodesk/client.ts), so this costs a render, not an EchoDesk call.
+  await connection();
 
   const [products, t] = await Promise.all([
     getProducts(locale, 50),

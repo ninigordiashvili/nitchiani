@@ -78,3 +78,71 @@ export function metaDescription(text: string, limit = 160): string {
   const cut = clean.slice(0, limit);
   return cut.slice(0, cut.lastIndexOf(" ")).trim() + "…";
 }
+
+const BRAND_SUFFIX = " · Nitchiani";
+
+/**
+ * Search-result title and description for a product page.
+ *
+ * What the merchant sets in EchoDesk (`meta_title`, `meta_description`) always wins. Without
+ * it, both are built from the product so every page still gets a usable result:
+ *
+ * - Title: the name. A short one ("ანა — ტალღისებრი თმა, 60სმ") gets its category added, so
+ *   the result says what the thing is; a long one drops the brand suffix instead of being cut
+ *   off by Google mid-name.
+ * - Description: the short description, trimmed at a sentence rather than mid-word, with the
+ *   delivery line added when there's room — it answers the question a shopper has next.
+ */
+export function productSeo(p: {
+  name: string;
+  seoTitle?: string;
+  seoDescription?: string;
+  shortDescription?: string;
+  description?: string;
+  category?: string;
+  locale: string;
+}): { title: string | { absolute: string }; description: string } {
+  const ka = p.locale === "ka";
+  const delivery = ka
+    ? "მიწოდება მთელ საქართველოში ან უფასო გატანა თბილისში."
+    : "Delivery across Georgia or free pickup in Tbilisi.";
+
+  let title: string | { absolute: string } = p.seoTitle || p.name;
+  if (!p.seoTitle) {
+    const withCategory = p.category ? `${p.name} | ${p.category}` : p.name;
+    const alreadyNamed = p.category && p.name.toLowerCase().includes(p.category.toLowerCase());
+    if ((p.name + BRAND_SUFFIX).length < 45 && p.category && !alreadyNamed && (withCategory + BRAND_SUFFIX).length <= 62) {
+      title = withCategory;
+    } else if ((p.name + BRAND_SUFFIX).length > 62) {
+      // The template would push the brand past what Google shows; the name matters more.
+      title = { absolute: p.name };
+    }
+  }
+
+  let description = p.seoDescription || "";
+  if (!description) {
+    const source = (p.shortDescription || p.description || "").replace(/\s+/g, " ").trim();
+    // Whole sentences that leave room for the delivery line read better than a longer
+    // snippet cut off mid-sentence, so try that first.
+    const room = 155 - delivery.length - 1;
+    const sentences = source.match(/[^.!?]+[.!?]+(\s|$)/g) ?? [];
+    let lead = "";
+    for (const sentence of sentences) {
+      if ((lead + sentence).trim().length > room) break;
+      lead += sentence;
+    }
+    lead = lead.trim();
+    const withDelivery = lead.length >= 50 ? `${lead} ${delivery}` : "";
+    if (source) {
+      const trimmed = metaDescription(source, 155);
+      const plain =
+        (trimmed + " " + delivery).length <= 155 && !trimmed.endsWith("…")
+          ? `${trimmed} ${delivery}`
+          : trimmed;
+      // More of the product's own text beats the delivery line, as long as it ends cleanly.
+      description =
+        withDelivery && (trimmed.endsWith("…") || trimmed.length <= lead.length) ? withDelivery : plain;
+    } else description = `${p.name}. ${delivery}`;
+  }
+  return { title, description };
+}

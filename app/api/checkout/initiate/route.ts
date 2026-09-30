@@ -20,7 +20,9 @@ import {
   toEchoDeskPaymentMethod,
 } from "@/lib/echodesk/orders";
 import { getStoreConfig, isEchoDeskConfigured } from "@/lib/echodesk/client";
-import { envPaymentAvailability, paymentAvailability } from "@/lib/echodesk/payments";
+import { parseEchoDeskGid } from "@/lib/echodesk/adapt";
+import { envPaymentAvailability, paymentAvailability, providerForMethod } from "@/lib/echodesk/payments";
+import type { EchoDeskStoreConfig } from "@/lib/echodesk/types";
 import { paymentStep } from "@/lib/checkout/payment-step";
 import { clientIp, rateLimit } from "@/lib/rate-limit";
 import { reportError } from "@/lib/observability";
@@ -42,8 +44,9 @@ const bodySchema = z.object({
   phone: z.string().min(6),
   // Required: EchoDesk's guest checkout lists `email` among its required fields.
   email: z.string().email(),
-  address: z.string().min(3),
-  city: z.string().min(1),
+  // Required for delivery only — see the refinement at the end of the schema.
+  address: z.string().optional(),
+  city: z.string().optional(),
   // Latitude/longitude from the address picker. Bounded to real coordinates so a malformed
   // client can't push nonsense into the courier's map link.
   /** The delivery method the shopper chose, when the shop offers more than one. */
@@ -62,7 +65,30 @@ const bodySchema = z.object({
   subtotal: z.object({ amount: z.string(), currencyCode: z.string() }),
   /** Optional coupon. Server re-validates against the coupon registry; client `discount` is ignored. */
   couponCode: z.string().nullable().optional(),
+}).superRefine((body, ctx) => {
+  // A courier needs somewhere to go; a shopper collecting from the store doesn't.
+  if (body.pickup) return;
+  if ((body.address?.trim().length ?? 0) < 3) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["address"], message: "address required" });
+  }
+  if (!body.city?.trim()) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["city"], message: "city required" });
+  }
 });
+
+/**
+ * The address a pickup order is booked against. EchoDesk requires one on every order, so a
+ * pickup without one borrows the store's own — which is, after all, where the parcel goes.
+ */
+function pickupAddress(
+  payload: z.infer<typeof bodySchema>,
+  store: EchoDeskStoreConfig["pickup"] | undefined,
+): { address: string; city: string } {
+  return {
+    address: payload.address?.trim() || store?.address?.trim() || "Pickup at store",
+    city: payload.city?.trim() || store?.city?.trim() || "Tbilisi",
+  };
+}
 
 /**
  * Errors are returned as stable keys, not sentences. The client translates them, so a
@@ -70,6 +96,8 @@ const bodySchema = z.object({
  */
 function classifyOrderError(message: string): string {
   if (/cash on delivery|pickup/i.test(message)) return "codPickupOnly";
+  // A bank switched off, or its credentials removed, between page load and order.
+  if (/payment provider/i.test(message)) return "cardUnavailable";
   if (/promo|coupon/i.test(message)) return "promoInvalid";
   if (/stock|unavailable|quantity/i.test(message)) return "outOfStock";
   if (/required|missing/i.test(message)) return "missingDetails";
@@ -79,26 +107,34 @@ function classifyOrderError(message: string): string {
 
 type CheckoutResponse =
   | { orderId: string; trackingToken?: string }
-  | { redirectUrl: string }
+  /** `trackingToken` lets the bag find the order again once the shopper is back from the bank. */
+  | { redirectUrl: string; trackingToken?: string }
   | {
       error: string;
       /** Present only for an over-limit line, so the client can name the product and the
        *  number left instead of showing the catch-all message. */
       stock?: { product: string; available: number };
+      /** Present when a bag line names a product the shop no longer sells. `product` is
+       *  omitted when the id couldn't be matched back to a line. */
+      unavailable?: { product?: string };
     };
 
 /** Build the order-creation payload the way `createManualOrder` / `createPendingOrder` expect. */
 function buildOrderInput(
   payload: z.infer<typeof bodySchema>,
   totals: ServerComputedTotals,
+  store: EchoDeskStoreConfig["pickup"] | undefined,
 ): ManualOrderInput {
+  const { address, city } = payload.pickup
+    ? pickupAddress(payload, store)
+    : { address: payload.address ?? "", city: payload.city ?? "" };
   return {
     firstName: payload.firstName,
     lastName: payload.lastName,
     phone: payload.phone,
     email: payload.email,
-    address: payload.address,
-    city: payload.city,
+    address,
+    city,
     lat: payload.lat,
     lng: payload.lng,
     notes: payload.notes,
@@ -118,7 +154,12 @@ function buildOrderInput(
         : undefined,
     shippingMethodId: totals.shippingMethodId ?? undefined,
     pickup: payload.pickup ?? false,
+    // From the server-side pricing, never from the request: the courier the shopper is
+    // charged for and the courier the order books have to be the same one.
     courierName: totals.courierName ?? undefined,
+    courierId: totals.courierId ?? undefined,
+    courierFeeId: totals.courierFeeId ?? undefined,
+    courierPrice: totals.courierPrice ?? undefined,
   };
 }
 
@@ -147,9 +188,18 @@ export async function POST(req: Request): Promise<NextResponse<CheckoutResponse>
   // Asked of the tenant, not of an env var. The checkout page reads the same source, so the
   // server can't refuse a method the site is offering — which is exactly what happened while
   // this mirrored NEXT_PUBLIC_COD_ENABLED and EchoDesk said the opposite.
+  const storeConfig = isEchoDeskConfigured ? await getStoreConfig() : null;
   const availability = isEchoDeskConfigured
-    ? paymentAvailability(await getStoreConfig())
+    ? paymentAvailability(storeConfig)
     : envPaymentAvailability();
+  // The bank the shopper chose has to be one the shop can charge through right now. Checked
+  // here rather than left to EchoDesk so a stale page can't have a TBC order quietly charged
+  // through BOG.
+  const isCard = payload.paymentMethod === "bog_card" || payload.paymentMethod === "tbc_card";
+  const card = isCard ? providerForMethod(payload.paymentMethod, availability.providers) : null;
+  if (isEchoDeskConfigured && isCard && !card) {
+    return NextResponse.json({ error: "cardUnavailable" }, { status: 400 });
+  }
   if (payload.paymentMethod === "cod" && !availability.cashOnDelivery) {
     return NextResponse.json(
       { error: "codUnavailable" },
@@ -177,7 +227,7 @@ export async function POST(req: Request): Promise<NextResponse<CheckoutResponse>
     : await withShipping(
     totalsResult.totals,
     payload.locale === "en" ? "en" : "ka",
-    { street: payload.address, city: payload.city, lat: payload.lat, lng: payload.lng },
+    { street: payload.address ?? "", city: payload.city ?? "", lat: payload.lat, lng: payload.lng },
     payload.lines,
     payload.shippingMethodId ?? null,
     payload.courierKey ?? null,
@@ -209,7 +259,7 @@ export async function POST(req: Request): Promise<NextResponse<CheckoutResponse>
     );
   }
 
-  const orderInput = buildOrderInput(payload, totals);
+  const orderInput = { ...buildOrderInput(payload, totals, storeConfig?.pickup), paymentProvider: card?.provider };
 
   // EchoDesk owns orders once it's configured. It brokers card payments itself, so the
   // BOG/TBC branches below are bypassed entirely — the tenant decides which providers are
@@ -399,6 +449,17 @@ async function handleEchoDeskOrder(
         { status: 400 },
       );
     }
+    if (outcome.missingProductId !== undefined) {
+      // The bag outlived the product. Name it from the bag itself — the backend only gives
+      // an id, and "product 1" means nothing to the shopper.
+      const line = orderInput.lines.find(
+        (l) => parseEchoDeskGid(l.variantId)?.productId === outcome.missingProductId,
+      );
+      return NextResponse.json(
+        { error: "itemUnavailable", unavailable: { product: line?.productTitle } },
+        { status: 400 },
+      );
+    }
     return outcome.error
       ? NextResponse.json({ error: classifyOrderError(outcome.error) }, { status: 400 })
       : NextResponse.json({ error: "orderFailed" }, { status: 502 });
@@ -409,7 +470,7 @@ async function handleEchoDeskOrder(
 
   // Card flow: the gateway owns the next step.
   if (step.kind === "redirect") {
-    return NextResponse.json({ redirectUrl: step.url });
+    return NextResponse.json({ redirectUrl: step.url, trackingToken: order.publicToken });
   }
 
   // A card order with no gateway session is unpaid. Reporting it as placed would clear the

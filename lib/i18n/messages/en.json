@@ -4,10 +4,14 @@
     "tagline": "Synthetic hair for afro curls and braids."
   },
   "nav": {
+    "readMore": "Read more",
+    "readLess": "Show less",
     "shop": "Shop",
     "home": "Home",
     "allProducts": "All Products",
-    "allProductsDesc": "Every Nitchiani piece — hair extensions, hair care, bonnets and durags — in one place.",
+    "allProductsDesc": "Braiding and curly hair extensions, hair-care essentials, satin bonnets and durags — everything in one place. Pay securely by card, then have your order delivered anywhere in Georgia, or pick it up free from our store in Tbilisi.",
+    "allProductsMetaTitle": "All Products — Hair Extensions, Bonnets & Durags",
+    "allProductsMetaDesc": "Braiding hair extensions, hair care, satin bonnets and durags. Secure card payment, delivery across Georgia or free pickup in Tbilisi.",
     "bonnets": "Bonnets",
     "services": "Services",
     "journal": "Journal",
@@ -71,7 +75,7 @@
     "servicesDesc": "Hand-crafted styling — book your visit",
     "trust": {
       "shipping": "Shipping in Georgia",
-      "shippingDesc": "1–3 business days",
+      "shippingDesc": "1–4 business days",
       "returns": "24-hour returns",
       "returnsDesc": "Even on opened items",
       "payment": "Secure checkout",
@@ -105,7 +109,7 @@
     "viewFullDetails": "View full details",
     "share": "Share",
     "shareCopied": "Link copied",
-    "shipsIn": "Ships from Tbilisi · 1–3 business days",
+    "shipsIn": "Ships from Tbilisi · 1–4 business days",
     "askQuestion": "Questions about this?",
     "askQuestionDesc": "Chat with us right here — we usually reply in minutes.",
     "sizeGuide": "Size guide",
@@ -135,6 +139,8 @@
     "specifications": "Specifications"
   },
   "cart": {
+    "removedUnavailable": "{count, plural, one {{products} is no longer sold, so we removed it from your bag.} other {{products} are no longer sold, so we removed them from your bag.}}",
+    "dismiss": "Dismiss",
     "empty": "Your bag is empty",
     "emptyDesc": "Start adding pieces you love",
     "continueShopping": "Continue shopping",
@@ -164,8 +170,8 @@
     "howItWorksStep1Desc": "We confirm by WhatsApp or email within a few hours.",
     "howItWorksStep2Title": "Hand-prepared in Tbilisi",
     "howItWorksStep2Desc": "Each piece is made or quality-checked at our studio before it ships.",
-    "howItWorksStep3Title": "Delivered in 1–3 days",
-    "howItWorksStep3Desc": "Courier shipping across Georgia. Free over ₾150 in Tbilisi.",
+    "howItWorksStep3Title": "Delivered in 1–4 days",
+    "howItWorksStep3Desc": "Courier shipping across Georgia.",
     "howItWorksStep4Title": "Try at home",
     "howItWorksStep4Desc": "24-hour returns, even on opened items. No questions asked.",
     "total": "Total",
@@ -233,6 +239,8 @@
       "orderFailed": "We couldn't place your order. Please try again or message us on WhatsApp.",
       "insufficientStock": "Only {count} left of “{product}”. Please reduce the quantity in your bag.",
       "insufficientStockNone": "“{product}” has sold out. Please remove it from your bag.",
+      "itemUnavailable": "An item in your bag is no longer available. Please remove it and try again.",
+      "itemUnavailableNamed": "“{product}” is no longer available. Please remove it from your bag and try again.",
       "deliveryNeedsLocation": "Pick your address on the map so we can price delivery.",
       "deliveryUnavailable": "We couldn't price delivery right now. Please try again."
     },
@@ -312,7 +320,7 @@
     "title": "Terms & Conditions",
     "lastUpdated": "Last updated {date}",
     "intro": "These terms govern your use of nitchiani.shop and any order you place with us. Please read them carefully before purchasing — placing an order means you accept them.",
-    "metaTitle": "Terms & Conditions",
+    "metaTitle": "Terms & Conditions — Orders, Delivery & Returns",
     "metaDescription": "The terms that govern orders placed on nitchiani.shop, including delivery, returns and the 24-hour right of withdrawal."
   },
   "whatsapp": {
@@ -342,15 +350,15 @@
     "title": "Privacy Policy",
     "lastUpdated": "Last updated {date}",
     "intro": "How we collect, use and protect your personal data when you use nitchiani.shop. Written so a reasonable person can actually read it.",
-    "metaTitle": "Privacy Policy",
-    "metaDescription": "How Nitchiani collects, uses and protects personal data — under the Georgian Personal Data Protection Act."
+    "metaTitle": "Privacy Policy — How We Protect Your Data",
+    "metaDescription": "How Nitchiani collects, uses and protects your personal data when you shop on nitchiani.shop — under the Georgian Personal Data Protection Act."
   },
   "refund": {
     "eyebrow": "Legal",
     "title": "Refund & Returns Policy",
     "lastUpdated": "Last updated {date}",
     "intro": "How returns and refunds work — your 24-hour right of withdrawal, what's excluded for hygiene reasons, and how to get money back into your account.",
-    "metaTitle": "Refund & Returns Policy",
+    "metaTitle": "Refund & Returns Policy — 24-Hour Withdrawal",
     "metaDescription": "Return and refund terms for orders placed on nitchiani.shop, including the 24-hour right of withdrawal and hygiene exceptions."
   },
   "footer": {
@@ -365,7 +373,7 @@
     "newsletterConsent": "By subscribing you agree to receive emails from Nitchiani. Unsubscribe at any time. See our <link>Privacy Policy</link>.",
     "newsletterError": "Couldn't subscribe — please try again or message us.",
     "rights": "All rights reserved",
-    "regId": "Reg. ID",
+    "regId": "ID code",
     "vatId": "VAT ID",
     "tbilisi": "Tbilisi, Georgia",
     "contact": "Contact"
@@ -442,7 +450,9 @@
     "lookupCta": "Track order",
     "lookupHint": "Your confirmation email links straight here — the code is in that link.",
     "notFoundTitle": "We couldn't find that order",
-    "notFoundDesc": "Check the code and try again. The surest way in is the tracking link in your confirmation email. If it still doesn't come up, message us and we'll look it up by hand."
+    "notFoundDesc": "Check the code and try again. The surest way in is the tracking link in your confirmation email. If it still doesn't come up, message us and we'll look it up by hand.",
+    "metaTitle": "Order Status — Track Your Order Online",
+    "metaDescription": "Check your order status: payment confirmation, packing, courier hand-off and delivery. Use the link from your confirmation email or your order number."
   },
   "welcome": {
     "eyebrow": "Welcome offer",
@@ -454,13 +464,15 @@
   "about": {
     "lead": "Nitchiani is an online shop based in Tbilisi, trading since 2021. We sell synthetic hair for afro curls and braids — and everything needed to care for it.",
     "offerTitle": "What we sell",
-    "offerBody": "Synthetic hair for curls, kinky textures and braiding. Hair care — oils, sprays and shampoos. Bonnets and durags for overnight protection.",
+    "offerBody": "Synthetic hair for curls, kinky textures and braiding. Hair care — leave-in conditioners and styling wax. Satin bonnets and durags to protect your hair.",
     "whyTitle": "Why Nitchiani",
-    "whyBody": "These products are hard to find in Georgia — most people import them, waiting weeks and paying shipping on top. We hold stock in Tbilisi: your order arrives in 1–3 working days, with no wait and no customs.",
+    "whyBody": "These products are hard to find in Georgia — most people import them, waiting weeks and paying shipping on top. We hold stock in Tbilisi: your order arrives in 1–4 working days, with no wait and no customs.",
     "deliveryTitle": "Delivery and payment",
-    "deliveryBody": "Courier delivery across Georgia — 1–3 working days from Tbilisi. Free in Tbilisi above a threshold. Pay by bank card or bank transfer. Collection in Tbilisi is possible by arrangement — the address is shown at checkout.",
+    "deliveryBody": "Courier delivery across Georgia — 1–4 working days from Tbilisi. Pay by bank card or bank transfer. Collection in Tbilisi is possible by arrangement — the address is shown at checkout.",
     "returnsTitle": "Returns",
     "returnsBody": "If you don't like it, the colour isn't what you expected, or you find a visual defect — return it within 24 hours, even opened.",
-    "contactTitle": "Get in touch"
+    "contactTitle": "Get in touch",
+    "metaTitle": "About Us — Online Hair Shop in Tbilisi",
+    "metaDescription": "Nitchiani is a Tbilisi-based online shop, trading since 2021: synthetic braiding hair, hair-care products, satin bonnets and durags."
   }
 }

@@ -1,5 +1,5 @@
-import { composeNotes } from "../checkout/geo";
-import { type InsufficientStock, parseInsufficientStock } from "./stock-error";
+import { isUsableCoordinate } from "../checkout/geo";
+import { type InsufficientStock, parseInsufficientStock, parseMissingProduct } from "./stock-error";
 import type { ManualOrderInput } from "../shopify/orders";
 import { parseEchoDeskGid } from "./adapt";
 
@@ -28,7 +28,13 @@ export type GuestOrderOutcome =
   | { ok: true; order: GuestOrderResult }
   /** `stock` is set when the rejection was specifically an over-limit line, so the shopper
    *  can be told which product and how many are left rather than "something is unavailable". */
-  | { ok: false; error?: string; stock?: InsufficientStock };
+  | {
+      ok: false;
+      error?: string;
+      stock?: InsufficientStock;
+      /** EchoDesk id of a product the backend no longer sells — deleted or switched off. */
+      missingProductId?: number;
+    };
 
 export type GuestOrderResult = {
   id: number;
@@ -69,18 +75,47 @@ function toItems(lines: ManualOrderInput["lines"]) {
   const items: Array<{ product_id: number; quantity: number; variant_id?: number }> = [];
   for (const l of lines) {
     const ref = parseEchoDeskGid(l.variantId);
-    // A line from the sample catalog has no EchoDesk id. Skipping it would silently ship a
-    // cheaper order than the shopper agreed to, so refuse the whole thing instead.
-    if (!ref) return null;
+    // A line from the sample catalog has no EchoDesk id, and a variant saved without its
+    // parent has no product to name. Skipping either would silently ship a cheaper order than
+    // the shopper agreed to, so refuse the whole thing instead.
+    if (!ref || ref.productId === null) return null;
     if (ref.kind === "product") {
-      items.push({ product_id: ref.id, quantity: l.quantity });
+      items.push({ product_id: ref.productId, quantity: l.quantity });
     } else {
-      // A variant row still needs its parent product id, which the API resolves from the
-      // variant — send both where we have them.
-      items.push({ product_id: ref.id, quantity: l.quantity, variant_id: ref.id });
+      // Both ids: `product_id` is the parent, `variant_id` the size or colour within it.
+      // Sending the variant id as `product_id` named some unrelated product — or none.
+      items.push({ product_id: ref.productId, quantity: l.quantity, variant_id: ref.id });
     }
   }
   return items;
+}
+
+/**
+ * The courier the shopper picked, as the order's `quickshipper_*` fields.
+ *
+ * All or nothing: the provider id alone books a company without saying which of its tiers,
+ * and Go Delivery is quoted as scooter, car and truck under one id at three prices. Without
+ * the fee id EchoDesk would pick for us, so a partial choice is not sent at all.
+ *
+ * `quickshipper_parcel_dimensions_id` is deliberately omitted — QuickShipper returns it as
+ * null on every option we've seen, and inventing a value would describe a parcel we haven't
+ * measured. It is nullable on the request, so leaving it out is the honest answer.
+ */
+function quickShipperFields(input: ManualOrderInput, pickup: boolean) {
+  // Nobody is delivering a collection order, so there is no courier to book.
+  if (pickup) return {};
+  if (input.courierId === undefined || !input.courierFeeId) return {};
+
+  return {
+    quickshipper_provider_id: input.courierId,
+    quickshipper_provider_fee_id: input.courierFeeId,
+    ...(input.courierName ? { quickshipper_provider_name: input.courierName } : {}),
+    // A decimal string, not a number: the field is `format: decimal` with at most two
+    // places, and posting 8.010000000000001 is rejected by the pattern.
+    ...(typeof input.courierPrice === "number" && Number.isFinite(input.courierPrice)
+      ? { quickshipper_price: input.courierPrice.toFixed(2) }
+      : {}),
+  };
 }
 
 export async function createGuestOrder(
@@ -102,6 +137,9 @@ export async function createGuestOrder(
     return { ok: false };
   }
 
+  const notes = input.notes?.trim();
+  const pickup = input.pickup === true;
+
   const body = {
     email: input.email,
     first_name: input.firstName,
@@ -110,20 +148,31 @@ export async function createGuestOrder(
     address: {
       address: input.address,
       city: input.city,
-      label: "Delivery",
+      label: pickup ? "Pickup" : "Delivery",
+      // The map pin, as coordinates rather than as a link in the notes. Only sent when both
+      // halves are real — see isUsableCoordinate — because the backend quotes and dispatches
+      // against these, and a zeroed pair would send a courier to the Gulf of Guinea.
+      ...(isUsableCoordinate(input.lat, input.lng)
+        ? { latitude: input.lat, longitude: input.lng }
+        : {}),
     },
     items,
     payment_method: paymentMethod,
+    // The bank the shopper picked. Card only: EchoDesk ignores it for cash on delivery, and
+    // leaving it out falls back to the shop's default bank.
+    ...(paymentMethod === "card" && input.paymentProvider
+      ? { payment_provider: input.paymentProvider }
+      : {}),
+    // Collection at the store is a first-class choice on the order now, not a note somebody
+    // has to read: the back office sees a pickup order and no courier is dispatched.
+    delivery_method: pickup ? "pickup" : "courier",
     // Only sent when a configured flat method priced the delivery. A live courier quote has
     // no method id — EchoDesk prices that one itself from the same address.
     ...(input.shippingMethodId ? { shipping_method_id: input.shippingMethodId } : {}),
     ...(input.couponCode ? { promo_code: input.couponCode } : {}),
-    // The map pin travels in the notes: guest checkout has no coordinate fields (see
-    // lib/checkout/geo.ts), and a pin the courier can't see is a pin we didn't need.
-    ...(() => {
-      const notes = composeNotes(input.notes, input.lat, input.lng, input.pickup, input.courierName);
-      return notes ? { notes } : {};
-    })(),
+    ...quickShipperFields(input, pickup),
+    // Whatever the customer typed, and nothing else.
+    ...(notes ? { notes } : {}),
   };
 
   const res = await fetch(`${API_URL}/api/ecommerce/client/guest-checkout/`, {
@@ -145,7 +194,12 @@ export async function createGuestOrder(
           return undefined;
         }
       })();
-      return { ok: false, error: message, stock: parseInsufficientStock(message ?? raw) ?? undefined };
+      return {
+        ok: false,
+        error: message,
+        stock: parseInsufficientStock(message ?? raw) ?? undefined,
+        missingProductId: parseMissingProduct(message ?? raw) ?? undefined,
+      };
     }
     return { ok: false };
   }

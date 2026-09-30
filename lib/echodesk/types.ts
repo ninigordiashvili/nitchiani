@@ -66,6 +66,9 @@ export type EchoDeskProduct = {
   is_in_stock?: boolean;
   is_featured?: boolean;
   status?: string;
+  /** Search-result title and description, set per product in EchoDesk. Usually empty. */
+  meta_title?: LocalizedText;
+  meta_description?: LocalizedText;
   average_rating?: number | null;
   review_count?: number;
 };

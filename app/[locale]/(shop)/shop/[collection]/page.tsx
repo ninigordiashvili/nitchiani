@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { setRequestLocale } from "next-intl/server";
 import { Suspense } from "react";
 import { CampaignView } from "@/components/commerce/CampaignView";
+import { CollectionDescription } from "@/components/commerce/CollectionDescription";
 import { FilteredCollection } from "@/components/commerce/FilteredCollection";
 import { CategoryChips } from "@/components/homepage/CategoryChips";
 import { getCampaignBySlug } from "@/lib/campaigns";
@@ -35,10 +36,13 @@ export async function generateMetadata({
   }
 
   const collection = await getCollectionByHandle(handle, locale);
-  if (!collection) return {};
+  // Unreachable in practice — layout.tsx 404s unknown slugs first. See the product page.
+  if (!collection) notFound();
   return {
-    title: collection.title,
-    description: collection.description
+    title: collection.seoTitle ?? collection.title,
+    description: collection.seoDescription
+      ? collection.seoDescription
+      : collection.description
       ? metaDescription(collection.description)
       : `Shop ${collection.title} at Nitchiani — synthetic hair and care, shipped from Tbilisi.`,
     alternates,
@@ -84,7 +88,7 @@ export default async function CollectionPage({
           <h1 className="font-display text-3xl tracking-tight sm:text-4xl">
             {collection.title}
           </h1>
-          <p className="mt-2 max-w-prose text-sm opacity-70">{collection.description}</p>
+          <CollectionDescription text={collection.description} />
         </header>
 
         <Suspense>

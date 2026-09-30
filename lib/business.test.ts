@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { BUSINESS, BUSINESS_DETAILS_FILLED } from "./business";
+import { BUSINESS, BUSINESS_DETAILS_FILLED, businessAddress } from "./business";
 
 /**
  * The footer's legal block renders only when this is true. These pin the two halves of that
@@ -8,20 +8,24 @@ import { BUSINESS, BUSINESS_DETAILS_FILLED } from "./business";
  * hidden after incorporation, and both fail quietly.
  */
 describe("BUSINESS_DETAILS_FILLED", () => {
-  it("is false while the registration details are placeholders", () => {
-    // Fails the day someone fills these in — at which point delete this expectation and keep
-    // the two below, which are the ones that matter long-term.
-    expect(BUSINESS_DETAILS_FILLED).toBe(false);
+  it("is true now the registration details are filled in", () => {
+    // The footer's legal block and the legal pages depend on it; card acquirers check them.
+    expect(BUSINESS_DETAILS_FILLED).toBe(true);
   });
 
   it("detects a bracketed placeholder in any of the three required fields", () => {
-    const filled = (o: { legalName: string; registrationId: string; address: string }) =>
-      !o.legalName.startsWith("[") && !o.registrationId.startsWith("[") && !o.address.startsWith("[");
-    const real = { legalName: "Nitchiani LLC", registrationId: "405123456", address: "Tbilisi" };
+    const filled = (o: { legalName: string; registrationId: string; street: string }) =>
+      !o.legalName.startsWith("[") && !o.registrationId.startsWith("[") && !o.street.startsWith("[");
+    const real = { legalName: "ი/მ Name Surname", registrationId: "01001012345", street: "Street 1" };
     expect(filled(real)).toBe(true);
     expect(filled({ ...real, legalName: "[LEGAL ENTITY NAME]" })).toBe(false);
     expect(filled({ ...real, registrationId: "[REGISTRATION NUMBER]" })).toBe(false);
-    expect(filled({ ...real, address: "[REGISTERED ADDRESS, Tbilisi, Georgia]" })).toBe(false);
+    expect(filled({ ...real, street: "[REGISTERED ADDRESS]" })).toBe(false);
+  });
+
+  it("writes the address in the reader's language", () => {
+    expect(businessAddress("ka")).toBe("სულხან ცინცაძის ქუჩა 17, თბილისი, საქართველო");
+    expect(businessAddress("en")).toBe("17 Sulkhan Tsintsadze St, Tbilisi, Georgia");
   });
 
   it("keeps the contact details that are real", () => {

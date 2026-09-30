@@ -6,6 +6,8 @@ import { type Coupon, type CouponError, discountFor, findCoupon } from "./coupon
 import { clampToStock } from "./stock";
 import { bundleForCoupon, bundleShortfall } from "../bundles";
 import { checkPromoAction } from "@/app/actions/promo";
+import { findGoneCartLinesAction, paymentStateAction } from "@/app/actions/cart";
+import { forgetPendingPayment, loadPendingPayment } from "./pending-payment";
 import type { PromoReason } from "@/lib/echodesk/promo";
 
 // Bump the version when image hosts or line shape change, so stale localStorage entries
@@ -69,6 +71,8 @@ type CartState = {
   couponMinSubtotal: number | null;
   /** Units still needed for a "buy N" offer; 0 when met, null when the code has no such rule. */
   couponShortfall: number | null;
+  /** Names of lines dropped on load because the shop no longer sells them. */
+  removedUnavailable: string[];
 };
 
 type CartActions = {
@@ -79,6 +83,7 @@ type CartActions = {
   applyCoupon: (code: string) => Promise<boolean>;
   removeCoupon: () => void;
   clearCouponError: () => void;
+  dismissRemovedUnavailable: () => void;
   open: boolean;
   setOpen: (open: boolean) => void;
 };
@@ -134,6 +139,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const [couponMinSubtotal, setCouponMinSubtotal] = useState<number | null>(null);
   const [open, setOpen] = useState(false);
   const [hydrated, setHydrated] = useState(false);
+  const [removedUnavailable, setRemovedUnavailable] = useState<string[]>([]);
 
   useEffect(() => {
     try {
@@ -156,6 +162,34 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     if (!hydrated) return;
     localStorage.setItem(STORAGE_KEY, JSON.stringify(lines));
   }, [lines, hydrated]);
+
+  /**
+   * Once per visit, ask whether everything in the restored bag is still sold. A product
+   * deleted or recreated since it went in keeps its old id here and looks normal, then fails
+   * at the very last step of checkout. Dropping it now — and saying so — costs the shopper
+   * nothing; finding out after filling in the whole form costs the order.
+   */
+  useEffect(() => {
+    if (!hydrated) return;
+    const restored = linesRef.current;
+    if (restored.length === 0) return;
+    let cancelled = false;
+    void findGoneCartLinesAction(restored.map((l) => l.variantId))
+      .then((gone) => {
+        if (cancelled || gone.length === 0) return;
+        const goneSet = new Set(gone);
+        const titles = linesRef.current.filter((l) => goneSet.has(l.variantId)).map((l) => l.productTitle);
+        setLines((prev) => prev.filter((l) => !goneSet.has(l.variantId)));
+        setRemovedUnavailable(titles);
+      })
+      // Couldn't check: keep the bag as it is. Checkout still names a gone product if one slips by.
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [hydrated, setLines]);
+
+  const dismissRemovedUnavailable = useCallback(() => setRemovedUnavailable([]), []);
 
   useEffect(() => {
     if (!hydrated) return;
@@ -240,7 +274,31 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     setAppliedCoupon(null);
     setCouponError(null);
     setCouponReason(null);
+    // An empty bag is waiting on nothing.
+    forgetPendingPayment();
   }, [setLines]);
+
+  /**
+   * Back from the bank, on whatever page: if the card order this bag went into has been paid,
+   * the bag is done with. A failed or cancelled payment keeps the bag for another try; a
+   * pending one, or one we couldn't look up, is left alone until the next visit.
+   */
+  useEffect(() => {
+    if (!hydrated) return;
+    const pending = loadPendingPayment();
+    if (!pending?.token) return;
+    let cancelled = false;
+    void paymentStateAction(pending.token)
+      .then((state) => {
+        if (cancelled) return;
+        if (state === "paid") clear();
+        else if (state === "failed") forgetPendingPayment();
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [hydrated, clear]);
 
   const totals = useMemo(() => computeTotals(lines), [lines]);
 
@@ -372,6 +430,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       couponReason,
       couponMinSubtotal,
       couponShortfall,
+      removedUnavailable,
+      dismissRemovedUnavailable,
       addLine,
       updateQuantity,
       removeLine,
@@ -392,6 +452,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       couponReason,
       couponMinSubtotal,
       couponShortfall,
+      removedUnavailable,
+      dismissRemovedUnavailable,
       addLine,
       updateQuantity,
       removeLine,

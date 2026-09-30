@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Mail, MapPin, Phone } from "lucide-react";
 import { localeAlternates } from "@/lib/seo";
-import { BUSINESS, BUSINESS_DETAILS_FILLED } from "@/lib/business";
+import { BUSINESS, businessAddress } from "@/lib/business";
 import { formatWhatsAppNumber, getWhatsAppNumber } from "@/components/brand/WhatsAppIcon";
 import type { Locale } from "@/lib/i18n/config";
 
@@ -14,10 +14,10 @@ export async function generateMetadata({
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "about" });
   return {
-    title: locale === "ka" ? "ჩვენ შესახებ" : "About",
-    // The lead doubles as the meta description: it is the one sentence that says who the shop
-    // is and what it sells, which is exactly what the description has to do.
-    description: t("lead"),
+    // Written for search results: the on-page heading is two words, and the lead runs past
+    // the ~155 characters Google shows.
+    title: t("metaTitle"),
+    description: t("metaDescription"),
     alternates: localeAlternates(locale, "/about"),
   };
 }
@@ -28,18 +28,9 @@ export default async function AboutPage({ params }: { params: Promise<{ locale: 
   const t = await getTranslations("about");
   // Same source the footer uses, so the two can't drift apart.
   const whatsappNumber = getWhatsAppNumber();
-  // City only, deliberately. Collection happens at the owner's home, and this is the page
-  // Google indexes — a street address here publishes a private residence to anyone who
-  // searches, permanently. Checkout still shows the exact address, but only to someone who
-  // has chosen collection, which is the moment they need it.
-  //
-  // `BUSINESS.address` is the registered *legal* address and would be fine to print; it is
-  // still a placeholder awaiting the lawyer, so it only appears once filled in.
-  const storeAddress = BUSINESS_DETAILS_FILLED
-    ? BUSINESS.address
-    : locale === "ka"
-      ? "თბილისი, საქართველო"
-      : "Tbilisi, Georgia";
+  // The registered address, published in full: card acquirers (TBC, via Flitt) require one on
+  // the site before switching payments live, and the owner chose to show it.
+  const storeAddress = businessAddress(locale);
 
   // Ordered as a first-time visitor's questions arrive: what is this, what do you sell, why
   // you, how does it reach me, what if it's wrong, how do I ask. Each is its own `h2` — the
