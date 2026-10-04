@@ -11,7 +11,9 @@ import { useFocusTrap } from "@/lib/ui/use-focus-trap";
 import { useOverlays } from "@/lib/ui/overlays";
 import { useQuickView } from "@/lib/ui/quick-view";
 import { useSwipeDismiss } from "@/lib/ui/use-swipe-dismiss";
+import { ImageLightbox } from "./ImageLightbox";
 import { ProductPurchase } from "./ProductPurchase";
+import { ZoomablePhoto } from "./ZoomablePhoto";
 import { ProductSpecList } from "./ProductSpecList";
 import { WishlistButton } from "./WishlistButton";
 
@@ -51,11 +53,15 @@ export function QuickViewModal() {
     [product?.images],
   );
   const [active, setActive] = useState(0);
+  const [lightbox, setLightbox] = useState(false);
+  const lightboxRef = useRef(false);
+  lightboxRef.current = lightbox;
 
   // Reset when the sheet switches products, or shot 3 of the last product would carry over
   // to one that only has two.
   useEffect(() => {
     setActive(0);
+    setLightbox(false);
   }, [product?.handle]);
 
   const shown = shots[active] ?? product?.featuredImage;
@@ -65,7 +71,8 @@ export function QuickViewModal() {
     if (!open) return;
     document.body.style.overflow = "hidden";
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") quickView.close();
+      // With the photo viewer open, Escape closes the viewer only — it has its own handler.
+      if (e.key === "Escape" && !lightboxRef.current) quickView.close();
     };
     window.addEventListener("keydown", onKey);
     return () => {
@@ -77,6 +84,7 @@ export function QuickViewModal() {
   return (
     <div
       aria-hidden={!open}
+      inert={!open}
       className="fixed inset-0 z-50 transition-opacity"
       style={{ opacity: open ? 1 : 0, pointerEvents: open ? "auto" : "none" }}
     >
@@ -108,16 +116,16 @@ export function QuickViewModal() {
                 all it has to fill. On sm+ the two sit side by side and the details column is
                 the taller of the pair, so a fixed square left a band of the sheet's cream under
                 the white photo — `h-full` lets the white run the full height of the row. */}
-            <div className="relative aspect-square w-full bg-white sm:aspect-auto sm:h-full sm:rounded-l-2xl sm:rounded-tr-none">
-              <Image
-                src={shown?.url ?? product.featuredImage.url}
-                alt={shown?.altText ?? product.featuredImage.altText}
-                fill
-                sizes="(min-width: 640px) 50vw, 100vw"
-                placeholder="blur"
-                blurDataURL={BLUR_DATA_URL}
-                className="object-contain sm:rounded-l-2xl"
-              />
+            <ZoomablePhoto
+              image={shown ?? product.featuredImage}
+              alt={shown?.altText || product.featuredImage.altText || product.title}
+              sizes="(min-width: 640px) 50vw, 100vw"
+              // Top-left: the thumbnails take the bottom edge and the close button the top-right.
+              hintPosition="top-left"
+              onOpen={() => setLightbox(true)}
+              className="aspect-square w-full sm:aspect-auto sm:h-full sm:rounded-l-2xl sm:rounded-tr-none"
+              imageClassName="sm:rounded-l-2xl"
+            >
 
               {/* Overlaid on the image rather than stacked beneath it: the sheet is capped at
                   88dvh on mobile and the space below the fold belongs to the variant picker and
@@ -165,7 +173,17 @@ export function QuickViewModal() {
               >
                 <X size={18} />
               </button>
-            </div>
+            </ZoomablePhoto>
+
+            {lightbox ? (
+              <ImageLightbox
+                images={shots.length > 0 ? shots : [product.featuredImage]}
+                index={active}
+                title={product.title}
+                onIndexChange={setActive}
+                onClose={() => setLightbox(false)}
+              />
+            ) : null}
 
             {/* Details */}
             {/* `sm:pt-14` clears the close button above: it sits at top-3 and is 36px tall,
@@ -230,9 +248,9 @@ export function QuickViewModal() {
                   quickView.close();
                   overlays.setSearchOpen(false);
                 }}
-                className="inline-flex items-center gap-1 self-center pt-4 text-xs font-medium tracking-[0.16em] uppercase opacity-80 hover:opacity-100"
+                className="group inline-flex items-center gap-1 self-center pt-4 text-xs font-medium tracking-[0.16em] uppercase opacity-80 hover:opacity-100"
               >
-                {t("product.viewFullDetails")}
+                <span className="underline-motion">{t("product.viewFullDetails")}</span>
                 <ArrowRight size={14} />
               </Link>
             </div>

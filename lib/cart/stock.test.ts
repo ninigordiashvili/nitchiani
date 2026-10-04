@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { clampToStock, isAtStockLimit } from "./stock";
+import { clampToStock, isAtStockLimit, lowStockCount, unitsLeft } from "./stock";
 
 describe("clampToStock", () => {
   it("caps a request at what the shop can ship", () => {
@@ -41,5 +41,22 @@ describe("isAtStockLimit", () => {
 
   it("is true when nothing is in stock", () => {
     expect(isAtStockLimit(0, 0)).toBe(true);
+  });
+});
+
+describe("low stock warning", () => {
+  it("warns only for the last piece, never at zero or when stock isn't tracked", () => {
+    expect(lowStockCount(1)).toBe(1);
+    expect(lowStockCount(2)).toBeNull();
+    expect(lowStockCount(3)).toBeNull();
+    expect(lowStockCount(0)).toBeNull();
+    expect(lowStockCount(undefined)).toBeNull();
+  });
+
+  it("counts units across a product's variants that are on sale", () => {
+    expect(unitsLeft([{ availableForSale: true, quantityAvailable: 1 }, { availableForSale: true, quantityAvailable: 1 }])).toBe(2);
+    expect(unitsLeft([{ availableForSale: true, quantityAvailable: 2 }, { availableForSale: false, quantityAvailable: 0 }])).toBe(2);
+    // One untracked variant means the total is unknown — no warning rather than a wrong one.
+    expect(unitsLeft([{ availableForSale: true, quantityAvailable: 1 }, { availableForSale: true }])).toBeUndefined();
   });
 });

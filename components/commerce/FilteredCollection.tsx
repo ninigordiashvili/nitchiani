@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { useSearchParams } from "next/navigation";
+import { useUrlQuery } from "@/lib/ui/use-url-query";
 import { useMemo } from "react";
 import { Link } from "@/lib/i18n/routing";
 import {
@@ -26,12 +26,13 @@ import { CollectionToolbar } from "./CollectionToolbar";
  */
 export function FilteredCollection({ products }: { products: Product[] }) {
   const t = useTranslations("shop");
-  const searchParams = useSearchParams();
+  const searchParams = useUrlQuery();
+  const query = searchParams.toString();
 
   const sort: SortKey = useMemo(() => {
     const raw = searchParams.get("sort") ?? DEFAULT_SORT;
     return isSortKey(raw) ? raw : DEFAULT_SORT;
-  }, [searchParams]);
+  }, [query]);
 
   const filters: ProductFilters = useMemo(() => {
     const colorParam = searchParams.get("color");
@@ -44,7 +45,7 @@ export function FilteredCollection({ products }: { products: Product[] }) {
       maxPrice: Number.isFinite(maxPriceNum) && maxPriceNum > 0 ? maxPriceNum : null,
       attributes: parseAttributeParam(searchParams.get("attr")),
     };
-  }, [searchParams]);
+  }, [query]);
 
   const availableColors = useMemo(() => extractColors(products), [products]);
   // Facets come from the products themselves, so an attribute added in the CMS shows up here

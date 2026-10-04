@@ -37,13 +37,8 @@ const resolve = (bundle: Record<string, unknown>, path: string) =>
  * surfaces when someone opens the page it's on. This catches it at test time instead — it was
  * written after `nav.allProductsDesc` was removed as "orphaned" and broke /shop.
  */
-/**
- * Known gap, recorded rather than silently tolerated: `components/booking/
- * WhatsAppBookingForm.tsx` is not rendered anywhere and its whole `booking` namespace is
- * empty — 11 keys. It can't break a page today because nothing mounts it, but it would the
- * moment someone did. Listed explicitly so this suite still fails on anything new.
- */
-const KNOWN_GAPS = [/^(en|ka): booking\./];
+/** Keys allowed to be missing. Empty: the booking form that needed this was removed. */
+const KNOWN_GAPS: RegExp[] = [];
 
 describe("i18n messages", () => {
   const keys = usedKeys();

@@ -1,12 +1,19 @@
 import type { Metadata } from "next";
-import { connection } from "next/server";
 import { setRequestLocale, getTranslations } from "next-intl/server";
 import { Suspense } from "react";
+import { CollectionDescription } from "@/components/commerce/CollectionDescription";
 import { FilteredCollection } from "@/components/commerce/FilteredCollection";
 import { CategoryChips } from "@/components/homepage/CategoryChips";
 import { getProducts } from "@/lib/shopify/client";
 import { localeAlternates } from "@/lib/seo";
 import type { Locale } from "@/lib/i18n/config";
+
+/**
+ * Served from cache and refreshed every 5 minutes, like the catalogue data it shows. The
+ * filters read the URL in the browser (see lib/ui/use-url-query.ts), so the cached HTML still
+ * carries the full product grid.
+ */
+export const revalidate = 300;
 
 export async function generateMetadata({
   params,
@@ -33,14 +40,6 @@ export default async function ShopPage({
   const { locale } = await params;
   setRequestLocale(locale);
 
-  // Rendered per request, like /shop/[collection]. `FilteredCollection` reads the URL
-  // (`?sort=`, `?color=`), and in a statically built page anything that does is skipped at
-  // build time and drawn in the browser instead — so this page shipped as an empty <Suspense>,
-  // with no products in the HTML Google indexes or a slow phone paints first. Per-request
-  // rendering fills the grid on the server. The catalog fetch is still cached (see
-  // lib/echodesk/client.ts), so this costs a render, not an EchoDesk call.
-  await connection();
-
   const [products, t] = await Promise.all([
     getProducts(locale, 50),
     getTranslations("nav"),
@@ -54,9 +53,8 @@ export default async function ShopPage({
           <h1 className="font-display text-3xl tracking-tight sm:text-4xl">
             {t("allProducts")}
           </h1>
-          <p className="mt-2 max-w-prose text-sm opacity-70">
-            {t("allProductsDesc")}
-          </p>
+          {/* Same intro block as the category pages, so every listing reads alike. */}
+          <CollectionDescription text={t("allProductsDesc")} />
         </header>
         <Suspense>
           <FilteredCollection products={products} />

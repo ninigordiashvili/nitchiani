@@ -2,14 +2,11 @@
 
 import type { Product, ProductVariant } from "@/lib/shopify/types";
 import { cn } from "@/lib/utils";
-import { PiercingSizeGuide } from "./PiercingSizeGuide";
 import { SizeGuideButton } from "./SizeGuideButton";
 
 /** Option names that should surface the (hair) Size guide link next to the label row. */
 const SIZE_GUIDE_OPTION_RE = /^(size|length|ზომა|სიგრძე)$/i;
 
-/** Option names that should surface the piercing Gauge guide instead. */
-const PIERCING_GUIDE_OPTION_RE = /^(gauge|diameter|გეიჯი|დიამეტრი)$/i;
 
 /**
  * Renders one row of pill-style chips per option group (Color / Size / Length / etc.).
@@ -36,19 +33,11 @@ export function VariantPicker({
     return null;
   }
 
-  // Pick the right guide based on the product's category and option names. Piercings get the
-  // gauge/diameter modal; everything else uses the (existing) Size/Length guide. Only the
-  // FIRST matching option gets the link — avoids two buttons when a product has multiple
-  // dimensional axes.
-  const isPiercing = product.productTypeHandle === "piercings";
-  const piercingGuideOption =
-    showSizeGuide && isPiercing
-      ? product.options.find((o) => PIERCING_GUIDE_OPTION_RE.test(o.name))
-      : null;
-  const sizeGuideOption =
-    showSizeGuide && !isPiercing
-      ? product.options.find((o) => SIZE_GUIDE_OPTION_RE.test(o.name))
-      : null;
+  // Only the FIRST size/length option gets the guide link — avoids two buttons when a
+  // product has more than one dimensional axis.
+  const sizeGuideOption = showSizeGuide
+    ? product.options.find((o) => SIZE_GUIDE_OPTION_RE.test(o.name))
+    : null;
 
   return (
     <div className="space-y-5">
@@ -69,7 +58,6 @@ export function VariantPicker({
                 ) : null}
               </p>
               {option === sizeGuideOption ? <SizeGuideButton /> : null}
-              {option === piercingGuideOption ? <PiercingSizeGuide /> : null}
             </div>
             <div className="flex flex-wrap gap-2">
               {option.values.map((value) => {

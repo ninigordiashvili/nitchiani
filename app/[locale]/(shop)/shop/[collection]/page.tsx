@@ -11,6 +11,18 @@ import { getCollectionByHandle, getProductsByHandles } from "@/lib/shopify/clien
 import { localeAlternates, metaDescription, ogLocale } from "@/lib/seo";
 import type { Locale } from "@/lib/i18n/config";
 
+/**
+ * Rendered on first visit, then served from cache and refreshed every 5 minutes — the same
+ * window as the EchoDesk data it shows. It used to render on every request, which made each
+ * visit wait for the server. Prices and stock are checked again at checkout regardless.
+ */
+export const revalidate = 300;
+
+/** None at build time; each page is built on its first visit and cached from then on. */
+export async function generateStaticParams() {
+  return [];
+}
+
 export async function generateMetadata({
   params,
 }: {

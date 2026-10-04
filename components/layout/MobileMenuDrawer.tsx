@@ -15,7 +15,6 @@ const SHOP_LINKS = [
 ];
 
 const SECONDARY = [
-  // { href: "/services", labelKey: "services" as const },  // hidden site-wide
   { href: "/about", labelKey: "about" as const },
   // Tracking has no account behind it, so the menu is the only place a returning customer
   // can reach it without digging out the link from their confirmation email.
@@ -50,6 +49,7 @@ export function MobileMenuDrawer({
   return (
     <div
       aria-hidden={!open}
+      inert={!open}
       className="fixed inset-0 z-50 transition-opacity"
       style={{ opacity: open ? 1 : 0, pointerEvents: open ? "auto" : "none" }}
     >
@@ -97,9 +97,9 @@ export function MobileMenuDrawer({
                 <Link
                   href={l.href}
                   onClick={onClose}
-                  className="font-display text-base tracking-tight transition-colors hover:text-[var(--color-brand-maroon)]"
+                  className="group font-display text-base tracking-tight transition-colors hover:text-[var(--color-brand-maroon)]"
                 >
-                  {t(l.labelKey)}
+                  <span className="underline-motion">{t(l.labelKey)}</span>
                 </Link>
               </li>
             ))}
@@ -111,9 +111,9 @@ export function MobileMenuDrawer({
                 <Link
                   href={l.href}
                   onClick={onClose}
-                  className="text-xs uppercase tracking-[0.18em] transition-colors hover:text-[var(--color-brand-maroon)]"
+                  className="group text-xs uppercase tracking-[0.18em] transition-colors hover:text-[var(--color-brand-maroon)]"
                 >
-                  {t(l.labelKey)}
+                  <span className="underline-motion">{t(l.labelKey)}</span>
                 </Link>
               </li>
             ))}

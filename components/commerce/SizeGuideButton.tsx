@@ -58,6 +58,7 @@ export function SizeGuideButton() {
 
       <div
         aria-hidden={!open}
+        inert={!open}
         className="fixed inset-0 z-50 transition-opacity"
         style={{ opacity: open ? 1 : 0, pointerEvents: open ? "auto" : "none" }}
       >

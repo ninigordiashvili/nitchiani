@@ -29,21 +29,9 @@ export type Campaign = {
   couponCode?: string;
 };
 
-export const CAMPAIGNS: Campaign[] = [
-  {
-    slug: "spring-drop-26",
-    titleEn: "Spring drop · 2026",
-    titleKa: "გაზაფხულის კოლექცია · 2026",
-    eyebrowEn: "Limited",
-    eyebrowKa: "შეზღუდული",
-    taglineEn:
-      "Three new pieces in soft maroon, hand-prepared this week in our Tbilisi studio.",
-    taglineKa:
-      "სამი ახალი ნივთი რბილ მაროუნში, ხელით მზადდება ამ კვირაში თბილისის სტუდიოში.",
-    bannerImage: "/banners/new-drop.png",
-    handles: ["silk-bonnet-noir", "satin-pillowcase-cream", "gold-loc-cuff-set"],
-  },
-];
+// None running. The old "spring drop" entry pointed at sample-catalogue products that were
+// never in EchoDesk, so its page could only ever be empty; add real campaigns here.
+export const CAMPAIGNS: Campaign[] = [];
 
 export function getCampaignBySlug(slug: string): Campaign | null {
   return CAMPAIGNS.find((c) => c.slug === slug) ?? null;

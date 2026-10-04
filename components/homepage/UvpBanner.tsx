@@ -6,19 +6,19 @@ import { useTranslations } from "next-intl";
 /**
  * Full-bleed brand UVP banner that appears once and is gone after the user engages.
  *
- *   - Visible only on the visitor's first session (gated server-side by the `uvp-seen`
- *     cookie — see `app/[locale]/(shop)/page.tsx`). No SSR flash on return visits.
+ *   - Visible only on the visitor's first session. The `uvp-seen` cookie is checked by a tiny
+ *     inline script before the page paints, so a returning visitor never sees it flash — and
+ *     the server doesn't need the cookie, which keeps the home page cacheable.
+ *   - Shown at full opacity from the first paint: it's the largest thing above the fold, so
+ *     fading it in held back the moment the page counts as loaded.
  *   - Dismisses once the user has fully scrolled past the banner (its bottom edge has
  *     passed the top of the viewport). Sets the cookie + unmounts itself.
  *   - Cookie lasts 1 year. Users who clear cookies see it again on next visit — fine.
  *
- * Server keeps deciding whether to mount the banner at all; this component only handles
- * the in-session dismissal once mounted.
  */
 
 const COOKIE_NAME = "uvp-seen";
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 365; // 1 year
-const ENTER_DURATION_MS = 900;
 const EXIT_DURATION_MS = 750;
 // Softer settling curve than `--ease-brand` — closer to "ease-out-expo" with a long
 // decel tail so the motion feels editorial rather than mechanical.
@@ -29,18 +29,15 @@ const COLLAPSE_FROM_PX = 600;
 
 export function UvpBanner() {
   const t = useTranslations("home");
-  // Three-phase lifecycle: mounted (off → on for enter animation), dismissing (on → off
-  // for exit animation), dismissed (unmount).
-  const [mounted, setMounted] = useState(false);
+  // Two-phase lifecycle: shown, then dismissing (fades and collapses) once scrolled past,
+  // then dismissed (unmounted).
   const [dismissing, setDismissing] = useState(false);
   const [dismissed, setDismissed] = useState(false);
   const sectionRef = useRef<HTMLElement | null>(null);
 
-  // Trigger the enter animation on the frame after mount, so the initial paint shows the
-  // banner offset/transparent and the transition runs from there.
+  // Already seen (the inline script has hidden it): unmount rather than keep it in the page.
   useEffect(() => {
-    const id = requestAnimationFrame(() => setMounted(true));
-    return () => cancelAnimationFrame(id);
+    if (document.cookie.split("; ").includes(`${COOKIE_NAME}=1`)) setDismissed(true);
   }, []);
 
   // Dismiss once the banner has fully scrolled off the top — i.e., its bottom edge is
@@ -90,12 +87,21 @@ export function UvpBanner() {
   //   transform — short downward settle on enter, upward lift on exit
   //   max-height — collapses the section to zero during exit so the page below glides
   //                up instead of snapping when the unmount happens
-  const visible = mounted && !dismissing;
-  const transitionDuration = dismissing ? EXIT_DURATION_MS : ENTER_DURATION_MS;
+  const visible = !dismissing;
+  const transitionDuration = EXIT_DURATION_MS;
 
   return (
+    <>
+    {/* Runs as the HTML is parsed, before paint: a returning visitor's banner is hidden
+        without ever showing. */}
+    <script
+      dangerouslySetInnerHTML={{
+        __html: `if(document.cookie.split("; ").indexOf("${COOKIE_NAME}=1")>-1)document.documentElement.classList.add("uvp-seen")`,
+      }}
+    />
     <section
       ref={sectionRef}
+      data-uvp-banner=""
       aria-hidden={dismissing}
       style={{
         background: "var(--color-brand-bg)",
@@ -125,5 +131,6 @@ export function UvpBanner() {
         </h2>
       </div>
     </section>
+    </>
   );
 }

@@ -112,6 +112,16 @@ export type AttributeFacet = { key: string; name: string; values: string[] };
  * With one value every product matches, so the chip filters nothing and just adds noise —
  * which is also what keeps a half-configured attribute from reaching the toolbar.
  */
+const facetCollator = new Intl.Collator(undefined, { numeric: true, sensitivity: "base" });
+
+/** Orders facet labels by their leading number when both have one, else alphabetically. */
+export function compareFacetValues(a: string, b: string): number {
+  const na = Number.parseFloat(a.replace(",", "."));
+  const nb = Number.parseFloat(b.replace(",", "."));
+  if (Number.isFinite(na) && Number.isFinite(nb) && na !== nb) return na - nb;
+  return facetCollator.compare(a, b);
+}
+
 export function extractAttributeFacets(products: Product[]): AttributeFacet[] {
   const byKey = new Map<string, { name: string; values: Set<string> }>();
 
@@ -125,7 +135,9 @@ export function extractAttributeFacets(products: Product[]): AttributeFacet[] {
 
   return [...byKey.entries()]
     .filter(([, v]) => v.values.size >= 2)
-    .map(([key, v]) => ({ key, name: v.name, values: [...v.values] }));
+    // Smallest first, comparing the numbers inside the labels — "53.96 სმ" before "132 სმ",
+    // "100 გრამი" before "600 გრამი" — instead of whatever order the products arrived in.
+    .map(([key, v]) => ({ key, name: v.name, values: [...v.values].sort(compareFacetValues) }));
 }
 
 function productMatchesAttributes(p: Product, selected: Record<string, string[]>): boolean {

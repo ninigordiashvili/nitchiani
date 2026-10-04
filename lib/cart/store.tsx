@@ -76,7 +76,13 @@ type CartState = {
 };
 
 type CartActions = {
-  addLine: (line: Omit<LocalCartLine, "quantity"> & { quantity?: number }) => void;
+  /**
+   * Adds to the bag and returns how many units actually went in — 0 when the bag already
+   * holds all the stock there is. Callers confirm to the shopper only when it's above 0.
+   */
+  addLine: (line: Omit<LocalCartLine, "quantity"> & { quantity?: number }) => number;
+  /** Units of this variant the bag can still take: Infinity when stock isn't tracked. */
+  canAdd: (variantId: string, maxQuantity: number | undefined) => number;
   updateQuantity: (variantId: string, quantity: number) => void;
   removeLine: (variantId: string) => void;
   clear: () => void;
@@ -224,6 +230,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const addLine = useCallback(
     (line: Omit<LocalCartLine, "quantity"> & { quantity?: number }) => {
       const qty = line.quantity ?? 1;
+      // setLines applies the updater synchronously (see above), so this is set by the time
+      // it returns.
+      let added = 0;
       setLines((prev) => {
         const idx = prev.findIndex((l) => l.variantId === line.variantId);
         if (idx >= 0) {
@@ -231,24 +240,34 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           // Clamp the *total*, not the increment: three taps of + on a product with two in
           // stock must land on two, not six.
           const max = line.maxQuantity ?? next[idx].maxQuantity;
-          next[idx] = {
-            ...next[idx],
-            maxQuantity: max,
-            quantity: clampToStock(next[idx].quantity + qty, max),
-          };
+          const quantity = clampToStock(next[idx].quantity + qty, max);
+          added = quantity - next[idx].quantity;
+          if (added <= 0) return prev;
+          next[idx] = { ...next[idx], maxQuantity: max, quantity };
           return next;
         }
         const clamped = clampToStock(qty, line.maxQuantity);
         // Nothing in stock — the line never enters the bag at all, rather than entering at
         // zero and rendering as a phantom row.
         if (clamped === 0) return prev;
+        added = clamped;
         return [...prev, { ...line, quantity: clamped }];
       });
+      return added;
       // Deliberately does NOT open the drawer. Interrupting the browse flow to show a
       // cart the user didn't ask for costs more than it confirms; the count badge nudging
       // in the header / bottom nav carries the acknowledgement instead.
     },
     [setLines],
+  );
+
+  const canAdd = useCallback(
+    (variantId: string, maxQuantity: number | undefined) => {
+      if (maxQuantity === undefined || !Number.isFinite(maxQuantity)) return Infinity;
+      const inBag = lines.find((l) => l.variantId === variantId)?.quantity ?? 0;
+      return Math.max(0, Math.floor(maxQuantity) - inBag);
+    },
+    [lines],
   );
 
   const updateQuantity = useCallback((variantId: string, quantity: number) => {
@@ -333,6 +352,43 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           : 0;
   const totalNum = Math.max(0, subtotalNum - discountAmount);
   const currencyCode = totals.subtotal.currencyCode;
+
+  /**
+   * Re-price an applied code whenever the bag's total changes.
+   *
+   * The backend prices a code against the subtotal it's shown, once. Applied to an empty bag
+   * — which is what the welcome popup does on a first visit — that price is ₾0, and it stayed
+   * ₾0 after products went in: the bag showed "WELCOME10 −₾0.00" on an ₾80 order. Asking
+   * again on every change keeps the discount on screen the one checkout will charge.
+   *
+   * Debounced, so tapping + several times asks once. A failed request changes nothing.
+   */
+  useEffect(() => {
+    if (!hydrated || !couponCode) return;
+    let cancelled = false;
+    const id = window.setTimeout(async () => {
+      const result = await checkPromoAction(couponCode, subtotalNum).catch(() => null);
+      if (cancelled || !result || result.status === "unavailable") return;
+      if (result.status === "valid") {
+        setServerDiscount(result.discount);
+        setAppliedCoupon({ code: result.code, type: "amount", value: result.discount });
+        setCouponError(null);
+        setCouponReason(null);
+        setCouponMinSubtotal(null);
+      } else {
+        // No longer applies to this bag (e.g. below a minimum spend): keep the code attached,
+        // take nothing off, and say why — adding more puts it back.
+        setServerDiscount(0);
+        setCouponError(result.reason === "minimum" ? "minimum" : "invalid");
+        setCouponReason(result.reason);
+        setCouponMinSubtotal(result.minSubtotal ?? null);
+      }
+    }, 350);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(id);
+    };
+  }, [hydrated, couponCode, subtotalNum]);
 
   // Memoised on primitives. Built inline these were fresh objects every render, which put a
   // never-equal value in the context `useMemo` below — so every cart consumer in the tree
@@ -433,6 +489,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       removedUnavailable,
       dismissRemovedUnavailable,
       addLine,
+      canAdd,
       updateQuantity,
       removeLine,
       clear,
@@ -455,6 +512,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       removedUnavailable,
       dismissRemovedUnavailable,
       addLine,
+      canAdd,
       updateQuantity,
       removeLine,
       clear,

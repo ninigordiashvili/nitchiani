@@ -3,6 +3,7 @@ import { setRequestLocale, getTranslations } from "next-intl/server";
 import { ArrowLeft, CheckCircle2 } from "lucide-react";
 import { Link } from "@/lib/i18n/routing";
 import type { Locale } from "@/lib/i18n/config";
+import { OrderNumber } from "@/components/commerce/OrderNumber";
 import { SettlePendingPayment } from "@/components/cart/SettlePendingPayment";
 
 export async function generateMetadata({
@@ -38,7 +39,7 @@ export default async function CheckoutSuccess({
         {t("successTitle")}
       </h1>
       <p className="max-w-sm text-sm opacity-70">{t("successDesc")}</p>
-      {order ? <p className="label-eyebrow tabular-nums">{t("orderNumber", { id: order })}</p> : null}
+      {order ? <OrderNumber number={order} /> : null}
       <div className="mt-3 flex flex-wrap justify-center gap-3">
         <Link
           // The token is what makes tracking work without an account, so prefer it; the order

@@ -9,9 +9,9 @@ import { formatPrice } from "@/lib/money";
  * paint or never. Now: static, server-rendered, slightly taller for comfortable mobile
  * reading, with a truck glyph anchoring the brand's shipping promise.
  *
- * The shipping promise is only made when the tenant has a free-shipping threshold to back it.
- * With none configured the strip falls back to `promo.newDrop` rather than advertising free
- * delivery the shop hasn't set up — and rather than leaving an empty bar above the header.
+ * The free-shipping promise is only made when the tenant has a threshold to back it. Without
+ * one the strip states the delivery times instead — the same promise as the terms of service —
+ * rather than advertising free delivery the shop hasn't set up.
  */
 export async function PromoStrip({
   freeShippingThreshold,
@@ -29,7 +29,9 @@ export async function PromoStrip({
         color: "var(--color-brand-cream)",
       }}
     >
-      <div className="container-shop flex h-8 items-center justify-center gap-2 text-[11px] tracking-[0.18em] uppercase">
+      {/* Light tracking: the wide letter-spacing this strip used made a Georgian sentence run
+          off a phone screen and harder to read anywhere. */}
+      <div className="container-shop flex h-8 items-center justify-center gap-2 text-[11px] tracking-[0.04em] sm:text-xs">
         <Truck size={12} className="opacity-80" />
         <span>
           {freeShippingThreshold !== null
@@ -39,7 +41,13 @@ export async function PromoStrip({
                   locale as Locale,
                 ),
               })
-            : t("newDrop")}
+            : (
+              <>
+                {/* The full sentence doesn't fit a phone's width on one line. */}
+                <span className="sm:hidden">{t("deliveryShort")}</span>
+                <span className="hidden sm:inline">{t("delivery")}</span>
+              </>
+            )}
         </span>
       </div>
     </div>

@@ -1,11 +1,14 @@
 "use client";
 
-import { Minus, Plus, Truck } from "lucide-react";
+import { Minus, Plus, Store, Truck } from "lucide-react";
 import { useRef, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
+import { BUSINESS } from "@/lib/business";
 import type { Product } from "@/lib/shopify/types";
-import { clampToStock, isAtStockLimit } from "@/lib/cart/stock";
+import { useCart } from "@/lib/cart/store";
+import { clampToStock, isAtStockLimit, lowStockCount } from "@/lib/cart/stock";
 import { AddToCartButton } from "./AddToCartButton";
+import { LowStockNotice } from "./LowStockNotice";
 import { PriceDisplay } from "./PriceDisplay";
 import { StickyAddToCart } from "./StickyAddToCart";
 import { VariantPicker } from "./VariantPicker";
@@ -30,11 +33,18 @@ export function ProductPurchase({
   onAdded?: () => void;
 }) {
   const t = useTranslations("product");
+  const cart = useCart();
+  const locale = useLocale();
   const tNav = useTranslations("nav");
   const [selected, setSelected] = useState(
     product.variants.find((v) => v.availableForSale) ?? product.variants[0],
   );
   const [quantity, setQuantity] = useState(1);
+  const lowStock = selected.availableForSale ? lowStockCount(selected.quantityAvailable) : null;
+  // The stepper's ceiling is what the bag can still take, not the raw stock: with 1 left and
+  // 1 already in the bag, there's nothing more to choose.
+  const room = cart.canAdd(selected.id, selected.quantityAvailable);
+  const stepMax = Number.isFinite(room) ? Math.max(1, room) : undefined;
 
   const inlineCtaRef = useRef<HTMLDivElement>(null);
 
@@ -53,6 +63,8 @@ export function ProductPurchase({
         showSizeGuide={showSizeGuide}
       />
 
+      {lowStock !== null ? <LowStockNotice count={lowStock} /> : null}
+
       <div ref={inlineCtaRef} className="flex items-stretch gap-3">
         <div className="flex items-center rounded-md border border-black/15">
           <button
@@ -70,8 +82,8 @@ export function ProductPurchase({
           <button
             type="button"
             aria-label={tNav("increaseQuantity")}
-            onClick={() => setQuantity((q) => clampToStock(q + 1, selected?.quantityAvailable))}
-            disabled={isAtStockLimit(quantity, selected?.quantityAvailable)}
+            onClick={() => setQuantity((q) => clampToStock(q + 1, stepMax))}
+            disabled={isAtStockLimit(quantity, stepMax)}
             className="flex h-full cursor-pointer items-center justify-center px-3 disabled:cursor-not-allowed disabled:opacity-30"
           >
             <Plus size={14} />
@@ -82,10 +94,16 @@ export function ProductPurchase({
         </div>
       </div>
 
-      <p className="-mt-2 flex items-center justify-center gap-1.5 text-xs opacity-70">
-        <Truck size={13} className="flex-shrink-0" />
-        {t("shipsIn")}
-      </p>
+      {/* How it reaches you, right under the button — the next thing a shopper asks. A card
+          rather than a grey caption, so it's read rather than skipped. */}
+      <ul className="divide-y divide-black/10 rounded-md border border-black/10 bg-white/70 text-[13px]">
+        <DeliveryRow icon={<Truck size={16} />} title={t("deliveryTitle")} detail={t("shipsIn")} />
+        <DeliveryRow
+          icon={<Store size={16} />}
+          title={t("pickupTitle")}
+          detail={`${locale === "ka" ? BUSINESS.street.ka : BUSINESS.street.en}, ${locale === "ka" ? "თბილისი" : "Tbilisi"}`}
+        />
+      </ul>
 
       <StickyAddToCart
         product={product}
@@ -94,5 +112,26 @@ export function ProductPurchase({
         inlineCtaRef={inlineCtaRef}
       />
     </div>
+  );
+}
+
+function DeliveryRow({ icon, title, detail }: { icon: React.ReactNode; title: string; detail: string }) {
+  return (
+    <li className="flex items-center gap-3 px-3 py-2.5">
+      <span
+        className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full"
+        style={{
+          background: "color-mix(in oklab, var(--color-brand-maroon) 12%, transparent)",
+          color: "var(--color-brand-maroon)",
+        }}
+        aria-hidden
+      >
+        {icon}
+      </span>
+      <span className="min-w-0">
+        <span className="block font-medium text-[var(--color-brand-ink)]">{title}</span>
+        <span className="block text-xs opacity-70">{detail}</span>
+      </span>
+    </li>
   );
 }

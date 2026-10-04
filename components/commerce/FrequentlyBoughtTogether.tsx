@@ -4,6 +4,7 @@ import { Check } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
+import { useToast } from "@/lib/ui/toast";
 import { useCart } from "@/lib/cart/store";
 import { Link } from "@/lib/i18n/routing";
 import type { Locale } from "@/lib/i18n/config";
@@ -32,6 +33,7 @@ export function FrequentlyBoughtTogether({
   related: Product[];
 }) {
   const t = useTranslations("product");
+  const toast = useToast();
   const locale = useLocale() as Locale;
   const cart = useCart();
 
@@ -61,12 +63,13 @@ export function FrequentlyBoughtTogether({
   const canAdd = selectedItems.length > 0;
 
   const onAdd = () => {
+    let added = 0;
     for (const p of selectedItems) {
       // Only a sellable variant, and only if one exists: a bundle must never quietly
       // slip a sold-out item into the bag alongside the ones the shopper picked.
       const v = p.variants.find((vv) => vv.availableForSale);
       if (!v) continue;
-      cart.addLine({
+      added += cart.addLine({
         variantId: v.id,
         productHandle: p.handle,
         productTitle: p.title,
@@ -76,6 +79,7 @@ export function FrequentlyBoughtTogether({
         maxQuantity: v.quantityAvailable,
       });
     }
+    toast.show(added > 0 ? t("addedToCart") : t("allInBag"));
   };
 
   return (
@@ -132,10 +136,10 @@ export function FrequentlyBoughtTogether({
                 <div className="min-w-0 flex-1">
                   <Link
                     href={`/products/${p.handle}`}
-                    className="block hover:underline"
+                    className="group block"
                   >
                     <p className="line-clamp-1 text-sm font-medium leading-tight">
-                      {p.title}
+                      <span className="underline-motion">{p.title}</span>
                     </p>
                   </Link>
                   {isThisItem ? (

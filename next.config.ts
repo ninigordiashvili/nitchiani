@@ -10,7 +10,6 @@ const isDev = process.env.NODE_ENV === "development";
  *  - Next App Router injects inline bootstrap scripts → `'unsafe-inline'` for script-src
  *    (we don't use nonces; this is the documented trade-off). Dev also needs `'unsafe-eval'`
  *    + `ws:` for HMR, so those are added only in development.
- *  - Cal.com booking embed loads/iframes/XHRs against `*.cal.com`.
  *  - EchoDesk live chat: script + iframe UI from `echodesk.ge`, config fetch to
  *    `api.echodesk.ge`. It uses no websockets, workers, remote fonts or images, so
  *    those directives stay untouched.
@@ -30,15 +29,15 @@ const isDev = process.env.NODE_ENV === "development";
  */
 const csp = [
   `default-src 'self'`,
-  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""} https://*.cal.com https://echodesk.ge https://maps.googleapis.com https://www.googletagmanager.com`,
+  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""} https://echodesk.ge https://maps.googleapis.com https://www.googletagmanager.com`,
   // The Maps JS API injects its own stylesheet link for map controls.
   `style-src 'self' 'unsafe-inline' https://fonts.googleapis.com`,
-  `img-src 'self' data: blob: https://echodesk-media.fsn1.your-objectstorage.com https://cdn.shopify.com https://*.cdninstagram.com https://*.fbcdn.net https://picsum.photos https://fastly.picsum.photos https://*.cal.com https://maps.gstatic.com https://maps.googleapis.com https://*.googleapis.com https://*.ggpht.com https://static.quickshipper.app https://test-static.quickshipper.app https://www.google-analytics.com`,
+  `img-src 'self' data: blob: https://echodesk-media.fsn1.your-objectstorage.com https://cdn.shopify.com https://*.cdninstagram.com https://*.fbcdn.net https://picsum.photos https://fastly.picsum.photos https://maps.gstatic.com https://maps.googleapis.com https://*.googleapis.com https://*.ggpht.com https://static.quickshipper.app https://test-static.quickshipper.app https://www.google-analytics.com`,
   `font-src 'self' data: https://fonts.gstatic.com`,
   // `*.api.echodesk.ge` covers the tenant subdomain (nitchiani.api.echodesk.ge); the bare
   // host alone does not match it, so client-side storefront calls would be blocked.
-  `connect-src 'self' https://*.cal.com https://api.echodesk.ge https://*.api.echodesk.ge https://maps.googleapis.com https://places.googleapis.com https://www.google-analytics.com https://*.google-analytics.com https://*.analytics.google.com https://www.googletagmanager.com${isDev ? " ws:" : ""}`,
-  `frame-src 'self' https://*.cal.com https://echodesk.ge`,
+  `connect-src 'self' https://api.echodesk.ge https://*.api.echodesk.ge https://maps.googleapis.com https://places.googleapis.com https://www.google-analytics.com https://*.google-analytics.com https://*.analytics.google.com https://www.googletagmanager.com${isDev ? " ws:" : ""}`,
+  `frame-src 'self' https://echodesk.ge`,
   `frame-ancestors 'self'`,
   `base-uri 'self'`,
   `form-action 'self'`,
@@ -89,6 +88,11 @@ const nextConfig: NextConfig = {
       ["accessories", "hair-accessories"],
     ];
     return [
+      // The salon-era sections are gone; send old links home rather than to a 404.
+      ...["services", "journal"].flatMap((from) => [
+        { source: `/:locale(ka|en)/${from}`, destination: "/:locale", permanent: true },
+        { source: `/:locale(ka|en)/${from}/:slug*`, destination: "/:locale", permanent: true },
+      ]),
       ...moved.map(([from, to]) => ({
         source: `/:locale(ka|en)/shop/${from}`,
         destination: `/:locale/shop/${to}`,

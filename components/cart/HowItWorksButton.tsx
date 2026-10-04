@@ -94,6 +94,7 @@ export function HowItWorksButton({
 
       <div
         aria-hidden={!open}
+        inert={!open}
         className="fixed inset-0 z-50 transition-opacity"
         style={{ opacity: open ? 1 : 0, pointerEvents: open ? "auto" : "none" }}
       >
@@ -108,18 +109,19 @@ export function HowItWorksButton({
           role="dialog"
           aria-modal="true"
           aria-label={t("howItWorks")}
-          className="absolute right-0 bottom-0 left-0 max-h-[88dvh] overflow-y-auto rounded-t-2xl transition-transform duration-200 ease-[var(--ease-brand)] sm:right-1/2 sm:bottom-1/2 sm:left-1/2 sm:max-h-[80dvh] sm:w-[min(28rem,92vw)] sm:translate-x-[-50%] sm:translate-y-[50%] sm:rounded-2xl"
+          className="absolute right-4 bottom-4 left-4 max-h-[85dvh] overflow-y-auto rounded-2xl shadow-xl transition-transform duration-200 ease-[var(--ease-brand)] sm:right-1/2 sm:bottom-1/2 sm:left-1/2 sm:max-h-[80dvh] sm:w-[min(26rem,calc(100vw-3rem))] sm:translate-x-[-50%] sm:translate-y-[50%]"
           style={{
             background: "var(--surface)",
             transform: open
               ? dragOffset > 0
                 ? `translateY(${dragOffset}px)`
                 : undefined
-              : "translateY(100%)",
+              : // Past its own height plus the gap it now floats above the bottom edge.
+                "translateY(calc(100% + 2rem))",
             ...(dragOffset > 0 ? { transition: "none" } : {}),
           }}
         >
-          <div className="flex items-center justify-between border-b border-black/10 px-4 py-3">
+          <div className="flex items-center justify-between border-b border-black/10 px-5 py-3">
             <p className="font-display text-xl">{t("howItWorks")}</p>
             <button
               type="button"
@@ -131,7 +133,7 @@ export function HowItWorksButton({
             </button>
           </div>
 
-          <ol className="space-y-4 p-4">
+          <ol className="space-y-4 px-5 py-4">
             {steps.map((step, i) => (
               <li key={i} className="flex items-start gap-3">
                 <span

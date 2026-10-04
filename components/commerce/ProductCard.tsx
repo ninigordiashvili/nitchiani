@@ -9,6 +9,8 @@ import { getReviewSummary } from "@/lib/reviews";
 import { useQuickView } from "@/lib/ui/quick-view";
 import { PriceDisplay } from "./PriceDisplay";
 import { CardAddButton } from "./CardAddButton";
+import { LowStockBadge } from "./LowStockNotice";
+import { lowStockCount, unitsLeft } from "@/lib/cart/stock";
 import { StarRating } from "./StarRating";
 import { WishlistButton } from "./WishlistButton";
 
@@ -18,6 +20,7 @@ export function ProductCard({ product, priority = false }: { product: Product; p
   const compareAt = variant?.compareAtPrice;
   const offPercent = discountPercent(variant?.price ?? product.priceRange.min, compareAt);
   const summary = product.reviewSummary ?? getReviewSummary(product.handle);
+  const lowStock = lowStockCount(unitsLeft(product.variants));
 
   // Clicking the card (image, title, price) opens the quick view; the PDP is reached from
   // inside the sheet. The plus button is the other gesture and adds straight to the bag —
@@ -48,15 +51,21 @@ export function ProductCard({ product, priority = false }: { product: Product; p
           blurDataURL={BLUR_DATA_URL}
           className="object-contain transition-transform duration-[400ms] ease-[var(--ease-brand)] group-hover:scale-105"
         />
-        {offPercent !== null && (
-          <div className="absolute top-2 left-2 flex items-center gap-1">
-            <Badge tone="maroon">−{offPercent}%</Badge>
-            {/* "SALE" is deliberately not translated — it reads as SALE on the Georgian
-                storefront too, the way the brand uses it. Hardcoded rather than pulled from
-                the message bundle so nobody "fixes" it into ფასდაკლება later. */}
-            <Badge>SALE</Badge>
+        {/* Top-left: the discount, then the stock warning beneath it when both apply. */}
+        {offPercent !== null || lowStock !== null ? (
+          <div className="absolute top-2 left-2 flex flex-col items-start gap-1">
+            {offPercent !== null ? (
+              <div className="flex items-center gap-1">
+                <Badge tone="maroon">−{offPercent}%</Badge>
+                {/* "SALE" is deliberately not translated — it reads as SALE on the Georgian
+                    storefront too, the way the brand uses it. Hardcoded rather than pulled from
+                    the message bundle so nobody "fixes" it into ფასდაკლება later. */}
+                <Badge>SALE</Badge>
+              </div>
+            ) : null}
+            {lowStock !== null ? <LowStockBadge count={lowStock} /> : null}
           </div>
-        )}
+        ) : null}
         <div className="absolute top-2 right-2">
           <WishlistButton handle={product.handle} />
         </div>

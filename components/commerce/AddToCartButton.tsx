@@ -24,14 +24,19 @@ export function AddToCartButton({
   const cart = useCart();
   const toast = useToast();
 
-  const disabled = !variant.availableForSale;
+  const soldOut = !variant.availableForSale;
+  // How many more the bag can take. When it already holds every unit in stock, the button
+  // says so instead of claiming to add one more that the bag would refuse.
+  const room = cart.canAdd(variant.id, variant.quantityAvailable);
+  const allInBag = !soldOut && room === 0;
+  const disabled = soldOut || allInBag;
 
   return (
     <button
       type="button"
       disabled={disabled}
       onClick={() => {
-        cart.addLine({
+        const added = cart.addLine({
           variantId: variant.id,
           productHandle: product.handle,
           productTitle: product.title,
@@ -42,13 +47,18 @@ export function AddToCartButton({
           quantity,
         });
         // Adding is otherwise invisible: the drawer doesn't open and, from the quick view,
-        // the sheet is about to close. The toast is the only confirmation the shopper gets.
-        toast.show(t("addedToCart"));
+        // the sheet is about to close. The toast is the only confirmation the shopper gets —
+        // so it says what really happened, never "added" when the bag was already full.
+        if (added === 0) {
+          toast.show(t("allInBag"));
+          return;
+        }
+        toast.show(added < quantity ? t("addedPartly", { count: added }) : t("addedToCart"));
         onAdded?.();
       }}
       className={cn("btn-primary w-full", disabled && "opacity-50 cursor-not-allowed", className)}
     >
-      {disabled ? t("outOfStock") : t("addToCart")}
+      {soldOut ? t("outOfStock") : allInBag ? t("inBagMax") : t("addToCart")}
     </button>
   );
 }
