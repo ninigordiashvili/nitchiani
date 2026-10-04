@@ -42,7 +42,7 @@ export function SiteJsonLd({ locale }: { locale: Locale }) {
     // The whole country: couriers deliver nationwide, and "Tbilisi" quietly told Google not
     // to show the shop to anyone outside it.
     areaServed: "GE",
-    foundingDate: "2021",
+    foundingDate: "2026",
     sameAs: [`https://instagram.com/${instagram}`, BUSINESS.facebookUrl],
   };
 
