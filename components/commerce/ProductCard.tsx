@@ -76,7 +76,9 @@ export function ProductCard({ product, priority = false }: { product: Product; p
         </div>
       </div>
       <div className="pt-3 pb-1">
-        <p className="line-clamp-1 text-sm font-medium leading-tight">{product.title}</p>
+        {/* Two lines: at this width every name in the catalogue overflows one, and a row of
+            "ღრმა ტალღოვანი თმის…" tells a shopper nothing. */}
+        <p className="line-clamp-2 text-sm font-medium leading-snug">{product.title}</p>
         {summary.count > 0 ? (
           <div className="mt-1 flex items-center gap-1 text-[11px] opacity-70">
             <StarRating

@@ -122,11 +122,8 @@ export function UvpBanner() {
         willChange: "opacity, transform, max-height",
       }}
     >
-      <div className="container-shop py-20 text-center sm:py-24">
-        <h2
-          className="font-display leading-tight tracking-wider uppercase"
-          style={{ fontSize: "54px" }}
-        >
+      <div className="container-shop py-10 text-center sm:py-24">
+        <h2 className="font-display text-[32px] leading-tight tracking-wider uppercase sm:text-[54px]">
           {t("uvp")}
         </h2>
       </div>

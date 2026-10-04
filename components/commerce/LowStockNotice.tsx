@@ -36,7 +36,7 @@ export function LowStockBadge({ count }: { count: number }) {
   const t = useTranslations("product");
   return (
     <span
-      className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium shadow-sm"
+      className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium shadow-sm"
       style={{ background: "var(--color-brand-cream)", color: "var(--color-brand-maroon)" }}
     >
       <span

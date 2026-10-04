@@ -31,7 +31,7 @@ export async function PromoStrip({
     >
       {/* Light tracking: the wide letter-spacing this strip used made a Georgian sentence run
           off a phone screen and harder to read anywhere. */}
-      <div className="container-shop flex h-8 items-center justify-center gap-2 text-[11px] tracking-[0.04em] sm:text-xs">
+      <div className="container-shop flex h-9 items-center justify-center gap-2 text-xs tracking-[0.04em] sm:h-8">
         <Truck size={12} className="opacity-80" />
         <span>
           {freeShippingThreshold !== null
