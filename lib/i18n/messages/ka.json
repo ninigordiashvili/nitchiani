@@ -386,7 +386,8 @@
     "countFiltered": "{visible} {total}-დან",
     "noResultsTitle": "შედეგი ვერ მოიძებნა",
     "noResultsDesc": "სცადე ფილტრების შეცვლა ან ნახე მთლიანი კოლექცია",
-    "browseAll": "ნახე ყველა"
+    "browseAll": "ნახე ყველა",
+    "filters": "ფილტრები"
   },
   "reviews": {
     "title": "მიმოხილვები",

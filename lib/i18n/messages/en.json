@@ -386,7 +386,8 @@
     "countFiltered": "{visible} of {total}",
     "noResultsTitle": "No results",
     "noResultsDesc": "Try a different filter combination, or browse the whole catalog",
-    "browseAll": "Browse all"
+    "browseAll": "Browse all",
+    "filters": "Filters"
   },
   "reviews": {
     "title": "Reviews",
