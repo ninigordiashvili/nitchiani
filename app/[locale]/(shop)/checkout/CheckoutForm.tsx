@@ -7,6 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { loadSavedContact, saveContact } from "@/lib/checkout/saved-contact";
 import { rememberPendingPayment } from "@/lib/cart/pending-payment";
+import { markCouponUsed } from "@/lib/cart/used-coupons";
 import { RemovedUnavailableNotice } from "@/components/cart/RemovedUnavailableNotice";
 import { CardBrandLogos } from "@/components/commerce/CardBrandLogos";
 import {
@@ -420,7 +421,9 @@ export function CheckoutForm({
 
       if (data.redirectUrl) {
         // The bag stays until the payment is confirmed — see lib/cart/pending-payment.ts.
-        rememberPendingPayment(data.trackingToken);
+        // Carries the code too, so it can be marked spent once the payment goes through —
+        // not now, because a failed payment should leave the shopper their discount.
+        rememberPendingPayment(data.trackingToken, cart.coupon?.code);
         // BOG hosted payment page — clear cart only after payment confirms via webhook,
         // but redirect now so the customer can complete payment.
         window.location.href = data.redirectUrl;
@@ -428,6 +431,8 @@ export function CheckoutForm({
       }
 
       if (!data.orderId) throw new Error(t("checkout.errors.orderFailed"));
+      // Placed without a payment step (cash on delivery): the code is spent now.
+      markCouponUsed(cart.coupon?.code);
       cart.clear();
       // `trackingToken` is the order's public token when the backend issues one. Carrying it
       // through is what lets the success page hand the customer a working tracking link —

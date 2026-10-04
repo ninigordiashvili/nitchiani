@@ -1,10 +1,8 @@
 import type { Metadata } from "next";
 import { setRequestLocale, getTranslations } from "next-intl/server";
-import { ArrowLeft, CheckCircle2 } from "lucide-react";
-import { Link } from "@/lib/i18n/routing";
+import { CheckCircle2 } from "lucide-react";
 import type { Locale } from "@/lib/i18n/config";
-import { OrderNumber } from "@/components/commerce/OrderNumber";
-import { SettlePendingPayment } from "@/components/cart/SettlePendingPayment";
+import { SuccessOrderDetails } from "@/components/checkout/SuccessOrderDetails";
 
 export async function generateMetadata({
   params,
@@ -26,40 +24,16 @@ export default async function CheckoutSuccess({
   const { locale } = await params;
   const { order, token } = await searchParams;
   setRequestLocale(locale);
-  const [t, tCart] = await Promise.all([
-    getTranslations("checkout"),
-    getTranslations("cart"),
-  ]);
+  const t = await getTranslations("checkout");
 
   return (
     <div className="container-shop flex min-h-[60vh] flex-col items-center justify-center gap-4 py-12 text-center">
-      <SettlePendingPayment outcome="paid" />
       <CheckCircle2 size={48} className="text-[var(--color-brand-maroon)]" />
       <h1 className="font-display text-3xl tracking-tight sm:text-4xl">
         {t("successTitle")}
       </h1>
       <p className="max-w-sm text-sm opacity-70">{t("successDesc")}</p>
-      {order ? <OrderNumber number={order} /> : null}
-      <div className="mt-3 flex flex-wrap justify-center gap-3">
-        <Link
-          // The token is what makes tracking work without an account, so prefer it; the order
-          // number is the fallback for flows that don't issue one.
-          href={
-            token
-              ? `/order-status?token=${encodeURIComponent(token)}`
-              : order
-                ? `/order-status?order=${encodeURIComponent(order)}`
-                : "/order-status"
-          }
-          className="btn-primary"
-        >
-          {t("trackOrder")}
-        </Link>
-        <Link href="/" className="btn-ghost">
-          <ArrowLeft size={14} />
-          {tCart("continueShopping")}
-        </Link>
-      </div>
+      <SuccessOrderDetails order={order} token={token} />
     </div>
   );
 }
