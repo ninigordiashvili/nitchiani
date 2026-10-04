@@ -58,6 +58,9 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   images: {
+    // A generated image URL names its source, width and quality, and EchoDesk's media
+    // filenames carry their own timestamp — so the same URL always means the same bytes.
+    minimumCacheTTL: 31536000,
     remotePatterns: [
       { protocol: "https", hostname: "cdn.shopify.com" },
       // EchoDesk product media (object storage behind their CMS).

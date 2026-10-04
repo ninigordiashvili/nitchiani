@@ -23,6 +23,7 @@ export function Logo({
   size = 40,
   tone = "ink",
   className,
+  priority = false,
 }: {
   variant?: "text" | "mark" | "wordmark";
   /** Pixel height (image variants). Ignored for text variant. */
@@ -30,6 +31,9 @@ export function Logo({
   /** Color of the text variant; ignored for image variants. */
   tone?: "ink" | "cream";
   className?: string;
+  /** Only for a logo above the fold. The footer's is not, and preloading it there competed
+   *  with the product images a shopper actually sees first. */
+  priority?: boolean;
 }) {
   if (variant === "text") {
     return (
@@ -56,8 +60,8 @@ export function Logo({
         alt="Nitchiani"
         width={width}
         height={size}
-        className={cn("h-auto w-auto", className)}
-        priority
+        className={cn("block", className)}
+        priority={priority}
       />
     );
   }
@@ -69,8 +73,8 @@ export function Logo({
       alt="Nitchiani"
       width={size}
       height={size}
-      className={cn("h-auto w-auto rounded-full", className)}
-      priority
+      className={cn("block rounded-full", className)}
+      priority={priority}
     />
   );
 }
