@@ -17,12 +17,17 @@ const MAX_AGE_MS = 24 * 60 * 60 * 1000;
 export type PendingPayment = {
   /** EchoDesk's public order token — what the order can be looked up by without an account. */
   token?: string;
+  /** The promo code on that order, marked as spent once the payment goes through. */
+  coupon?: string;
   at: number;
 };
 
-export function rememberPendingPayment(token: string | undefined): void {
+export function rememberPendingPayment(token: string | undefined, coupon?: string | null): void {
   try {
-    localStorage.setItem(KEY, JSON.stringify({ token, at: Date.now() } satisfies PendingPayment));
+    localStorage.setItem(
+      KEY,
+      JSON.stringify({ token, coupon: coupon ?? undefined, at: Date.now() } satisfies PendingPayment),
+    );
   } catch {
     // Storage unavailable: the bag simply won't empty itself.
   }

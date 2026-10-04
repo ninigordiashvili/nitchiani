@@ -8,6 +8,7 @@ import { bundleForCoupon, bundleShortfall } from "../bundles";
 import { checkPromoAction } from "@/app/actions/promo";
 import { findGoneCartLinesAction, paymentStateAction } from "@/app/actions/cart";
 import { forgetPendingPayment, loadPendingPayment } from "./pending-payment";
+import { isCouponUsed, markCouponUsed } from "./used-coupons";
 import type { PromoReason } from "@/lib/echodesk/promo";
 
 // Bump the version when image hosts or line shape change, so stale localStorage entries
@@ -156,7 +157,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       if (raw) setLines(JSON.parse(raw) as LocalCartLine[]);
 
       const savedCoupon = localStorage.getItem(COUPON_STORAGE_KEY);
-      if (savedCoupon) setCouponCode(savedCoupon);
+      // A code spent on a paid order doesn't come back with the bag.
+      if (savedCoupon && !isCouponUsed(savedCoupon)) setCouponCode(savedCoupon);
     } catch {
       // ignore corrupted storage
     } finally {
@@ -310,7 +312,11 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     void paymentStateAction(pending.token)
       .then((state) => {
         if (cancelled) return;
-        if (state === "paid") clear();
+        if (state === "paid") {
+          // Paid: the code on that order is spent, and the bag is done with.
+          markCouponUsed(pending.coupon);
+          clear();
+        }
         else if (state === "failed") forgetPendingPayment();
       })
       .catch(() => {});
@@ -412,6 +418,14 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         (sum, l) => sum + Number.parseFloat(l.unitPrice.amount) * l.quantity,
         0,
       );
+      // Already spent from this browser: refused here rather than at checkout, where the
+      // shopper would have filled in the whole form first.
+      if (isCouponUsed(code)) {
+        setCouponError("invalid");
+        setCouponReason("usageLimit");
+        setCouponMinSubtotal(null);
+        return false;
+      }
       const result = await checkPromoAction(code, pendingSubtotal).catch(() => null);
       if (!result || result.status === "unavailable") {
         // Couldn't reach the backend — distinct from a bad code, so say so rather than

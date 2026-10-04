@@ -30,3 +30,14 @@ export async function paymentStateAction(
   if (payment === "failed" || order.status === "cancelled" || order.status === "refunded") return "failed";
   return "pending";
 }
+
+/**
+ * The order number for a public token — the success page shows it to a shopper who comes
+ * back from the bank, whose return address carries no order details. Null when it can't be
+ * looked up.
+ */
+export async function orderNumberAction(token: string): Promise<string | null> {
+  if (!isEchoDeskConfigured || !token) return null;
+  const order = await getOrderByToken(token).catch(() => null);
+  return typeof order?.order_number === "string" ? order.order_number : null;
+}
