@@ -53,9 +53,11 @@ export function ProductCard({ product, priority = false }: { product: Product; p
           blurDataURL={BLUR_DATA_URL}
           className="object-contain transition-transform duration-[400ms] ease-[var(--ease-brand)] group-hover:scale-105"
         />
-        {/* Top-left: the discount, then the stock warning beneath it when both apply. */}
+        {/* Top-left: the discount, then the stock warning beneath it when both apply. The
+            column stops short of the wishlist heart in the opposite corner — the stock badge
+            grew with its font size and ran underneath it. */}
         {offPercent !== null || lowStock !== null ? (
-          <div className="absolute top-2 left-2 flex flex-col items-start gap-1">
+          <div className="absolute top-2 left-2 flex max-w-[calc(100%-3.25rem)] flex-col items-start gap-1">
             {offPercent !== null ? (
               <div className="flex items-center gap-1">
                 <Badge tone="maroon">−{offPercent}%</Badge>
