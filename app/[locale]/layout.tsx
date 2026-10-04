@@ -77,6 +77,10 @@ export default async function LocaleLayout({
     <html
       lang={locale}
       className={`${manrope.variable} ${tenorSans.variable} ${notoSansGeorgian.variable} ${notoSerifGeorgian.variable}`}
+      // UvpBanner's inline script marks this element before React hydrates, and the chat
+      // placement sets a flag on it after — neither is server-rendered, and without this
+      // React reports the difference as a hydration error.
+      suppressHydrationWarning
     >
       <body>
         <SiteJsonLd locale={locale as Locale} />
