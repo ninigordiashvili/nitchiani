@@ -18,7 +18,7 @@ export function SectionHeader({
     <div className="mb-5 flex items-center justify-between gap-3 sm:gap-4">
       <div>
         {eyebrow ? <p className="label-eyebrow mb-1.5">{eyebrow}</p> : null}
-        <h2 className="font-display text-2xl tracking-tight sm:text-3xl">{title}</h2>
+        <h2 className="font-display text-xl tracking-tight sm:text-2xl lg:text-3xl">{title}</h2>
       </div>
       {href ? (
         <Link
