@@ -6,6 +6,7 @@ import { getOrderByName, type OrderTracking } from "@/lib/shopify/orders";
 import { getTrackingByToken } from "@/lib/echodesk/tracking";
 import { localeAlternates } from "@/lib/seo";
 import type { Locale } from "@/lib/i18n/config";
+import { parseTrackingInput } from "@/lib/orders/tracking-input";
 import { OrderNumber } from "@/components/commerce/OrderNumber";
 
 export async function generateMetadata({
@@ -64,7 +65,10 @@ export default async function OrderStatusPage({
   //
   // A pasted value could be either, so a token lookup is tried first and the name lookup is
   // the fallback; a wrong guess costs one request, not a dead end.
-  const lookup = tokenParam ?? orderParam;
+  // What was typed may be the token, a pasted tracking link, or an order number — which
+  // cannot be looked up, and gets its own answer below rather than a dead "not found".
+  const typed = parseTrackingInput(tokenParam ?? orderParam ?? "");
+  const lookup = typed.kind === "token" ? typed.token : (tokenParam ?? orderParam);
   const order =
     (lookup ? await getTrackingByToken(lookup, locale).catch(() => null) : null) ??
     (orderParam ? await getOrderByName(orderParam).catch(() => null) : null);
@@ -101,6 +105,18 @@ export default async function OrderStatusPage({
           <p className="mb-6 max-w-2xl text-sm opacity-80">{t("liveIntro")}</p>
           <LiveTracking order={order} locale={locale} />
         </section>
+      ) : typed.kind === "orderNumber" ? (
+        /* An order number: say why it can't be looked up, and what to do instead. */
+        <div
+          role="status"
+          className="mb-10 rounded-lg border p-5"
+          style={{ borderColor: "var(--border-soft)" }}
+        >
+          <p className="font-display text-lg tracking-tight">{t("looksLikeOrderNumberTitle")}</p>
+          <p className="mt-2 max-w-md text-sm opacity-75">
+            {t("looksLikeOrderNumberDesc", { number: typed.number })}
+          </p>
+        </div>
       ) : lookup ? (
         /* A code was supplied but nothing came back — say so plainly, directly under the
            field it was typed into. */

@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Check, Link2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { orderNumberAction } from "@/app/actions/cart";
@@ -27,6 +27,7 @@ export function SuccessOrderDetails({ order, token }: { order?: string; token?: 
   const { clear } = useCart();
   const [number, setNumber] = useState(order);
   const [tok, setTok] = useState(token);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     const pending = loadPendingPayment();
@@ -61,9 +62,32 @@ export function SuccessOrderDetails({ order, token }: { order?: string; token?: 
       ? `/order-status?order=${encodeURIComponent(number)}`
       : "/order-status";
 
+  const copyTrackingLink = async () => {
+    if (!tok) return;
+    try {
+      await navigator.clipboard.writeText(`${window.location.origin}${trackHref}`);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2400);
+    } catch {
+      // Clipboard blocked: the tracking button beside it still works.
+    }
+  };
+
   return (
     <>
       {number ? <OrderNumber number={number} /> : null}
+      {/* The link is what tracking actually needs, so it's one tap to keep — nobody should
+          have to copy a long code out of an email by hand. */}
+      {tok ? (
+        <button
+          type="button"
+          onClick={copyTrackingLink}
+          className="inline-flex cursor-pointer items-center gap-1.5 text-[13px] font-medium text-[var(--color-brand-maroon)] hover:underline hover:underline-offset-2"
+        >
+          {copied ? <Check size={14} aria-hidden /> : <Link2 size={14} aria-hidden />}
+          {copied ? t("trackingLinkCopied") : t("copyTrackingLink")}
+        </button>
+      ) : null}
       <div className="mt-3 flex flex-wrap justify-center gap-3">
         <Link href={trackHref} className="btn-primary">
           {t("trackOrder")}
