@@ -2,7 +2,7 @@
 
 import { X } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useSetUrlQuery } from "@/lib/ui/use-url-query";
 import { useCallback, useMemo } from "react";
 import {
   type AttributeFacet,
@@ -38,22 +38,8 @@ export function CollectionToolbar({
   sort: SortKey;
 }) {
   const t = useTranslations("shop");
-  const pathname = usePathname();
-  const router = useRouter();
-  const searchParams = useSearchParams();
-
-  const updateParam = useCallback(
-    (updates: Record<string, string | null>) => {
-      const params = new URLSearchParams(searchParams.toString());
-      for (const [key, value] of Object.entries(updates)) {
-        if (value === null || value === "") params.delete(key);
-        else params.set(key, value);
-      }
-      const qs = params.toString();
-      router.push(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
-    },
-    [pathname, router, searchParams],
-  );
+  // Updates the address bar in place — no server round trip, and the page can stay cached.
+  const updateParam = useSetUrlQuery();
 
   const toggleColor = useCallback(
     (color: string) => {
@@ -126,27 +112,23 @@ export function CollectionToolbar({
           nothing until the catalog actually defines a filterable attribute with more than one
           value across the products on screen. */}
       {attributeFacets.map((facet) => (
-        <div key={facet.key} className="flex flex-wrap items-center gap-2">
-          <span className="label-eyebrow mr-1 opacity-70">{facet.name}</span>
-          {facet.values.map((value) => {
-            const active = (filters.attributes[facet.key] ?? []).includes(value);
-            return (
-              <button
-                key={value}
-                type="button"
-                onClick={() => toggleAttribute(facet.key, value)}
-                aria-pressed={active}
-                className={cn(
-                  "cursor-pointer rounded-full border px-3 py-1.5 text-xs transition-colors",
-                  active
-                    ? "border-[var(--text-primary)] bg-[var(--text-primary)] text-[var(--surface)]"
-                    : "border-black/15 hover:border-black/40",
-                )}
-              >
-                {value}
-              </button>
-            );
-          })}
+        <div key={facet.key} className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
+          {/* A fixed column, so every group's chips start at the same line and the rows read
+              as a table rather than a ragged pile. Plain weight and no letter-spacing: the
+              tracked small caps used before were barely legible in Georgian. */}
+          <span className="text-[13px] font-semibold text-[var(--color-brand-ink)] sm:w-28 sm:flex-shrink-0">
+            {facet.name}
+          </span>
+          <div className="flex flex-wrap gap-2">
+            {facet.values.map((value) => {
+              const active = (filters.attributes[facet.key] ?? []).includes(value);
+              return (
+                <Chip key={value} active={active} onClick={() => toggleAttribute(facet.key, value)}>
+                  {value}
+                </Chip>
+              );
+            })}
+          </div>
         </div>
       ))}
 
@@ -154,20 +136,9 @@ export function CollectionToolbar({
         {availableColors.map((color) => {
           const active = filters.colors.includes(color);
           return (
-            <button
-              key={color}
-              type="button"
-              onClick={() => toggleColor(color)}
-              aria-pressed={active}
-              className={cn(
-                "cursor-pointer rounded-full border px-3 py-1.5 text-xs transition-colors",
-                active
-                  ? "border-[var(--text-primary)] bg-[var(--text-primary)] text-[var(--surface)]"
-                  : "border-black/15 hover:border-black/40",
-              )}
-            >
+            <Chip key={color} active={active} onClick={() => toggleColor(color)}>
               {color}
-            </button>
+            </Chip>
           );
         })}
         {PRICE_TIERS.map((tier) => {
@@ -200,14 +171,51 @@ export function CollectionToolbar({
           <button
             type="button"
             onClick={clearAll}
-            className="ml-auto inline-flex cursor-pointer items-center gap-1 text-xs opacity-70 hover:opacity-100"
+            // A real button, not faint text: once filters are on, this is the way back to
+            // everything, and it has to be findable at a glance.
+            className="ml-auto inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-[var(--color-brand-maroon)] px-3.5 py-1.5 text-[13px] font-medium text-[var(--color-brand-maroon)] transition-colors hover:bg-[var(--color-brand-maroon)] hover:text-[var(--color-brand-cream)]"
           >
-            <X size={12} />
+            <X size={14} strokeWidth={2.25} />
             {t("clearAll")} ({activeFilterCount})
           </button>
         ) : null}
       </div>
     </div>
+  );
+}
+
+/**
+ * One filter chip. White on the cream page with a firm border, so it reads as something to
+ * press; the selected state fills in, so it's clear at a glance what is on.
+ */
+function Chip({
+  active,
+  onClick,
+  tone = "ink",
+  children,
+}: {
+  active: boolean;
+  onClick: () => void;
+  /** Ink for attribute filters, maroon for the shop-wide toggles (price, sale, stock). */
+  tone?: "ink" | "maroon";
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={active}
+      className={cn(
+        "inline-flex cursor-pointer items-center rounded-full border px-3.5 py-1.5 text-[13px] font-medium transition-colors",
+        active
+          ? tone === "maroon"
+            ? "border-[var(--color-brand-maroon)] bg-[var(--color-brand-maroon)] text-[var(--color-brand-cream)]"
+            : "border-[var(--text-primary)] bg-[var(--text-primary)] text-[var(--surface)]"
+          : "border-black/25 bg-white/80 text-[var(--color-brand-ink)] hover:border-black/60 hover:bg-white",
+      )}
+    >
+      {children}
+    </button>
   );
 }
 
@@ -221,18 +229,8 @@ function Toggle({
   label: string;
 }) {
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-pressed={active}
-      className={cn(
-        "cursor-pointer rounded-full border px-3 py-1.5 text-xs transition-colors",
-        active
-          ? "border-[var(--color-brand-maroon)] bg-[var(--color-brand-maroon)] text-[var(--color-brand-cream)]"
-          : "border-black/15 hover:border-black/40",
-      )}
-    >
+    <Chip active={active} onClick={onClick} tone="maroon">
       {label}
-    </button>
+    </Chip>
   );
 }

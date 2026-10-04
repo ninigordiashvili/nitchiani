@@ -81,6 +81,12 @@ const buildCheckoutSchema = (t: Translate, { pickup }: { pickup: boolean }) => z
 });
 type CheckoutInput = z.infer<ReturnType<typeof buildCheckoutSchema>>;
 
+/**
+ * Bank transfer is hidden from checkout for now. Everything behind it — the option, the chat
+ * hand-off, the copy — stays in place; set this to true to bring it back.
+ */
+const SHOW_BANK_TRANSFER = false;
+
 // Cash on delivery is temporarily withdrawn. Unlike the card flags above — which gate on
 // merchant credentials existing — this one is a business decision, so it defaults OFF and
 
@@ -118,6 +124,10 @@ export function CheckoutForm({
   // One option per bank the shop has live, read from the tenant — a bank switched off in
   // EchoDesk drops out here without a deploy.
   const cards = payments.card ? cardOptions(payments.providers) : [];
+  // Bank transfer is switched off for now (SHOW_BANK_TRANSFER) but kept intact. It still
+  // appears if it's the only way left to pay — cards off and no cash on delivery — so the
+  // checkout never ends up with nothing to choose.
+  const showBankTransfer = SHOW_BANK_TRANSFER || (cards.length === 0 && !payments.cashOnDelivery);
 
   const defaultPaymentMethod: CheckoutInput["paymentMethod"] = cards[0]
     ? cards[0].method
@@ -824,13 +834,15 @@ export function CheckoutForm({
                   desc={t(c.desc)}
                 />
               ))}
-              <PaymentOption
-                active={paymentMethod === "bank_transfer"}
-                onSelect={() => setValue("paymentMethod", "bank_transfer")}
-                icon={<Banknote size={20} />}
-                title={t("checkout.bankTransfer")}
-                desc={t("checkout.bankTransferDesc")}
-              />
+              {showBankTransfer ? (
+                <PaymentOption
+                  active={paymentMethod === "bank_transfer"}
+                  onSelect={() => setValue("paymentMethod", "bank_transfer")}
+                  icon={<Banknote size={20} />}
+                  title={t("checkout.bankTransfer")}
+                  desc={t("checkout.bankTransferDesc")}
+                />
+              ) : null}
               {payments.cashOnDelivery ? (
                 <PaymentOption
                   active={paymentMethod === "cod"}

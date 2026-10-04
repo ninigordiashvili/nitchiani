@@ -8,7 +8,6 @@
  *   - Privacy lawful-basis claims and retention periods against the current GE data law
  *   - Privacy §9 (your rights) — confirm scope matches the GE Personal Data Protection Act
  *   - Whether any product category needs additional disclosures (cosmetics, hair tools, body
- *     jewellery / piercings — implant-grade alloy disclosures may be required)
  *
  * Entity details (legal name, registration ID, address) are NOT hardcoded here — they
  * come from `lib/business.ts` and are interpolated into the entity sections below.
@@ -16,7 +15,7 @@
  *
  * Structured as an array of `{ headingEn, headingKa, bodyEn, bodyKa }` so the page can
  * render the right locale's sections without two `if` branches. Body paragraphs are split
- * by `\n\n` at render time (same convention as the journal posts).
+ * by `\n\n` at render time.
  */
 
 import { BUSINESS, businessAddress } from "./business";
@@ -75,25 +74,25 @@ export const TERMS_SECTIONS: LegalSection[] = [
     headingEn: "6. Payment",
     headingKa: "6. გადახდა",
     bodyEn:
-      "We accept the payment methods displayed at checkout, which are Visa and Mastercard cards, paid through Bank of Georgia or TBC Bank, and bank transfer. We do not accept cash on delivery. For card payments, processing is handled by the respective payment provider and is subject to their terms. Payment confirmation may take up to one business day for bank-transfer orders; we will hold the items for you during that window.",
+      "We accept the payment methods displayed at checkout, which are Visa and Mastercard cards, paid through Bank of Georgia or TBC Bank. We do not accept cash on delivery. For card payments, processing is handled by the respective payment provider and is subject to their terms.",
     bodyKa:
-      "ჩვენ ვიღებთ გადახდის იმ მეთოდებს, რომლებიც ნაჩვენებია გადახდის გვერდზე: Visa და Mastercard ბარათები Bank of Georgia-ს ან TBC ბანკის მეშვეობით და ბანკის გადარიცხვა. ნაღდი ფულით გადახდა მიწოდებისას არ ხორციელდება. ბარათით გადახდა მუშავდება შესაბამისი გადახდის სერვისის მიერ და ექვემდებარება მათ პირობებს. ბანკის გადარიცხვით გადახდის შემთხვევაში ანგარიშსწორების დადასტურებას შესაძლოა დასჭირდეს ერთ სამუშაო დღემდე — ამ პერიოდის განმავლობაში ვინახავთ ნივთებს თქვენთვის.",
+      "ჩვენ ვიღებთ გადახდის იმ მეთოდებს, რომლებიც ნაჩვენებია გადახდის გვერდზე: Visa და Mastercard ბარათები Bank of Georgia-ს ან TBC ბანკის მეშვეობით. ნაღდი ფულით გადახდა მიწოდებისას არ ხორციელდება. ბარათით გადახდა მუშავდება შესაბამისი გადახდის სერვისის მიერ და ექვემდებარება მათ პირობებს.",
   },
   {
     headingEn: "7. Shipping and delivery",
     headingKa: "7. მიწოდება",
     bodyEn:
-      `Orders are packed and dispatched from Tbilisi within 1–3 business days. Standard delivery inside Tbilisi typically arrives in 1–3 business days; deliveries to the broader region of Georgia take 3–7 business days. International orders, where available, are quoted separately. Risk of loss passes to you on delivery to the address you provided. If no one is available at the address, the courier will follow their own retry policy, after which the order may be returned to us. You can also collect your order free of charge from our store at ${businessAddress("en")}: choose "Pickup at store" at checkout, where the address and a contact phone number are shown. For pickup orders, risk of loss passes to you when you collect the order.`,
+      `Orders are packed and dispatched from Tbilisi within 1–3 business days. Standard delivery inside Tbilisi typically arrives in 1–3 business days; deliveries to the broader region of Georgia take 3–7 business days. International orders, where available, are quoted separately. Risk of loss passes to you on delivery to the address you provided. If no one is available at the address, the courier will follow their own retry policy, after which the order may be returned to us. You can also collect your order free of charge from ${businessAddress("en")}: choose "Pick up in Tbilisi" at checkout, where the address and a contact phone number are shown. For pickup orders, risk of loss passes to you when you collect the order.`,
     bodyKa:
-      `შეკვეთები იგზავნება თბილისიდან 1-3 სამუშაო დღეში. სტანდარტული მიწოდება თბილისში ხდება 1-3 სამუშაო დღეში; სხვა რეგიონებში მიწოდება — 3-7 სამუშაო დღეში. საერთაშორისო შეკვეთები (სადაც ხელმისაწვდომია) იანგარიშება ცალკე. დაკარგვის რისკი თქვენზე გადადის ნივთის ჩაბარების მომენტში მითითებულ მისამართზე. თუ მისამართზე არავინ იქნება, კურიერი იმოქმედებს თავისი წესების შესაბამისად — შემდგომში შეკვეთა შესაძლოა დაბრუნდეს ჩვენთან. შეკვეთის გატანა ასევე შეგიძლიათ უფასოდ, ჩვენი მაღაზიიდან მისამართზე ${businessAddress("ka")} — გადახდისას აირჩიეთ „თვითონ გამოვიტან მაღაზიიდან“; მისამართი და საკონტაქტო ტელეფონი იქვეა მითითებული. ამ შემთხვევაში დაკარგვის რისკი თქვენზე გადადის შეკვეთის გატანის მომენტში.`,
+      `შეკვეთები იგზავნება თბილისიდან 1-3 სამუშაო დღეში. სტანდარტული მიწოდება თბილისში ხდება 1-3 სამუშაო დღეში; სხვა რეგიონებში მიწოდება — 3-7 სამუშაო დღეში. საერთაშორისო შეკვეთები (სადაც ხელმისაწვდომია) იანგარიშება ცალკე. დაკარგვის რისკი თქვენზე გადადის ნივთის ჩაბარების მომენტში მითითებულ მისამართზე. თუ მისამართზე არავინ იქნება, კურიერი იმოქმედებს თავისი წესების შესაბამისად — შემდგომში შეკვეთა შესაძლოა დაბრუნდეს ჩვენთან. შეკვეთის გატანა ასევე შეგიძლიათ უფასოდ, მისამართზე ${businessAddress("ka")} — გადახდისას აირჩიეთ „თვითონ გავიტან თბილისში“; მისამართი და საკონტაქტო ტელეფონი იქვეა მითითებული. ამ შემთხვევაში დაკარგვის რისკი თქვენზე გადადის შეკვეთის გატანის მომენტში.`,
   },
   {
     headingEn: "8. Right of withdrawal (24 hours)",
     headingKa: "8. უარის თქმის უფლება (24 საათი)",
     bodyEn:
-      `Under the consumer protection legislation of Georgia, if you are a consumer (not buying for business purposes) you may withdraw from a distance-selling contract within 24 hours of receiving the goods, without giving any reason. To exercise this right, notify us by email at ${BUSINESS.email} or WhatsApp before the 24-hour window closes, and return the item in its original, unused, resaleable condition with all packaging. Return shipping is the customer's responsibility unless the item arrived defective. Once we receive the returned item we issue the refund using the original payment method within 14 days. Hygiene-sensitive items (e.g., opened hair-care bottles, used hair tools) are not eligible for return for hygiene reasons; this exception is allowed under the same legislation.`,
+      `Under the consumer protection legislation of Georgia, if you are a consumer (not buying for business purposes) you may withdraw from a distance-selling contract within 24 hours of receiving the goods, without giving any reason. To exercise this right, notify us by email at ${BUSINESS.email} or WhatsApp before the 24-hour window closes, and return the item in its original, unused, resaleable condition with all packaging. Return shipping is the customer's responsibility unless the item arrived defective. Once we receive the returned item we issue the refund using the original payment method within 14 days. Hair extensions can be returned even if the package has been opened, as long as the hair hasn't been used. Hygiene-sensitive items — opened hair-care products such as wax or leave-in conditioner, and used hair tools — are not eligible for return for hygiene reasons; this exception is allowed under the same legislation.`,
     bodyKa:
-      `საქართველოს მომხმარებლის უფლებების დაცვის შესახებ კანონმდებლობის შესაბამისად, თუ თქვენ ხართ მომხმარებელი (არ ყიდულობთ კომერციული მიზნებისთვის), შეგიძლიათ უარი თქვათ დისტანციური ნასყიდობის ხელშეკრულებაზე ნივთის მიღებიდან 24 საათის განმავლობაში, მიზეზის მითითების გარეშე. ამ უფლების გამოყენებისთვის გვაცნობეთ ფოსტით ${BUSINESS.email} ან WhatsApp-ით 24-საათიანი ვადის გასვლამდე და დააბრუნეთ ნივთი თავდაპირველ, გამოუყენებელ, გასაყიდი მდგომარეობით, ყველა შესაფუთი ნივთით ერთად. დაბრუნების ღირებულება ეკისრება მომხმარებელს, გარდა იმ შემთხვევებისა, როდესაც ნივთი ჩამოვიდა დეფექტით. დაბრუნებული ნივთის მიღების შემდეგ თანხას დაგიბრუნებთ თავდაპირველი გადახდის მეთოდით 14 დღის განმავლობაში. ჰიგიენისადმი მგრძნობიარე ნივთები (მაგ., გახსნილი თმის მოვლის ფლაკონები, გამოყენებული ხელსაწყოები) არ ექვემდებარება დაბრუნებას ჰიგიენური მიზეზებიდან გამომდინარე — ეს გამონაკლისი ნებადართულია იმავე კანონმდებლობით.`,
+      `საქართველოს მომხმარებლის უფლებების დაცვის შესახებ კანონმდებლობის შესაბამისად, თუ თქვენ ხართ მომხმარებელი (არ ყიდულობთ კომერციული მიზნებისთვის), შეგიძლიათ უარი თქვათ დისტანციური ნასყიდობის ხელშეკრულებაზე ნივთის მიღებიდან 24 საათის განმავლობაში, მიზეზის მითითების გარეშე. ამ უფლების გამოყენებისთვის გვაცნობეთ ფოსტით ${BUSINESS.email} ან WhatsApp-ით 24-საათიანი ვადის გასვლამდე და დააბრუნეთ ნივთი თავდაპირველ, გამოუყენებელ, გასაყიდი მდგომარეობით, ყველა შესაფუთი ნივთით ერთად. დაბრუნების ღირებულება ეკისრება მომხმარებელს, გარდა იმ შემთხვევებისა, როდესაც ნივთი ჩამოვიდა დეფექტით. დაბრუნებული ნივთის მიღების შემდეგ თანხას დაგიბრუნებთ თავდაპირველი გადახდის მეთოდით 14 დღის განმავლობაში. ხელოვნური თმის დაბრუნება შესაძლებელია შეფუთვის გახსნის შემდეგაც, თუ თმა არ არის გამოყენებული. ჰიგიენისადმი მგრძნობიარე ნივთები — გახსნილი თმის მოვლის საშუალებები, მაგალითად ცვილი ან ლივ-ინ კონდიციონერი, და გამოყენებული ხელსაწყოები — არ ექვემდებარება დაბრუნებას ჰიგიენური მიზეზებიდან გამომდინარე; ეს გამონაკლისი ნებადართულია იმავე კანონმდებლობით.`,
   },
   {
     headingEn: "9. Defective or incorrect items",
@@ -261,17 +260,17 @@ export const REFUND_SECTIONS: LegalSection[] = [
     headingEn: "2. Items that can't be returned",
     headingKa: "2. ნივთები, რომლებიც ვერ დაბრუნდება",
     bodyEn:
-      "For hygiene reasons, the following are excluded from the 24-hour withdrawal right once they've been opened or used: opened hair-care liquids (oils, rinses, gels); used hair tools (combs, picks, brushes); body jewellery / piercings that have been worn or have left their sealed sterile packaging; and any custom or made-to-order piece. The unopened versions of the first three categories remain returnable. This exception is allowed under the same Georgian consumer-protection statute that gives you the right.",
+      "For hygiene reasons, the following are excluded from the 24-hour withdrawal right once they've been opened or used: opened hair-care products (wax, leave-in conditioners, oils, gels); used hair tools (combs, picks, brushes); and any custom or made-to-order piece. Unopened hair-care products remain returnable. Hair extensions are not on this list: they can be returned even if the package has been opened, as long as the hair hasn't been used. This exception is allowed under the same Georgian consumer-protection statute that gives you the right.",
     bodyKa:
-      "ჰიგიენური მიზეზებიდან გამომდინარე, შემდეგი ნივთები არ ექვემდებარება 24-საათიან დაბრუნებას, თუ გახსნილია ან გამოყენებულია: გახსნილი თმის მოვლის სითხეები (ზეთები, ჩამოსარეცხები, გელები); გამოყენებული ხელსაწყოები (სავარცხლები, პიკები, ფუნჯები); ნახმარი ან სტერილური შეფუთვიდან ამოღებული პირსინგი/საყურეები; ნებისმიერი ინდივიდუალურად დამზადებული ნივთი. პირველი სამი კატეგორიის გახსნელი ვერსიები კვლავ ექვემდებარება დაბრუნებას. ეს გამონაკლისი ნებადართულია იმავე ქართული კანონმდებლობით, რომელიც დაბრუნების უფლებას გვაძლევს.",
+      "ჰიგიენური მიზეზებიდან გამომდინარე, შემდეგი ნივთები არ ექვემდებარება 24-საათიან დაბრუნებას, თუ გახსნილია ან გამოყენებულია: გახსნილი თმის მოვლის საშუალებები (ცვილი, ლივ-ინ კონდიციონერები, ზეთები, გელები); გამოყენებული ხელსაწყოები (სავარცხლები, პიკები, ფუნჯები); ნებისმიერი ინდივიდუალურად დამზადებული ნივთი. გაუხსნელი თმის მოვლის საშუალებები კვლავ ექვემდებარება დაბრუნებას. ხელოვნური თმა ამ სიაში არ შედის: მისი დაბრუნება შესაძლებელია შეფუთვის გახსნის შემდეგაც, თუ თმა არ არის გამოყენებული. ეს გამონაკლისი ნებადართულია იმავე ქართული კანონმდებლობით, რომელიც დაბრუნების უფლებას გვაძლევს.",
   },
   {
     headingEn: "3. Condition we need it in",
     headingKa: "3. რა მდგომარეობით უნდა დაბრუნდეს",
     bodyEn:
-      "Items should come back unused, in their original packaging, with all tags, bags and protective wrapping intact. Bonnets, accessories and tools may be unwrapped and inspected (the same way you'd inspect a piece in a shop) but not worn or used. If the item arrives back with visible signs of use, we may offer a partial refund proportional to the loss of value.",
+      "Items should come back unused, in their original packaging, with all tags, bags and protective wrapping intact. Hair extensions, bonnets, durags and accessories may be unwrapped and inspected (the same way you'd inspect a piece in a shop) but not worn or used — for hair, that means not braided, cut, washed or styled. If the item arrives back with visible signs of use, we may offer a partial refund proportional to the loss of value.",
     bodyKa:
-      "ნივთები უნდა დაბრუნდეს გამოუყენებლად, თავდაპირველი შეფუთვით, ყველა ეტიკეტით, ჩანთით და დამცავი ბაფთით. ბონნეტები, აქსესუარები და ხელსაწყოები შეიძლება გახსნა და დაათვალიერო (ისე, როგორც მაღაზიაში დაათვალიერებდი) — მაგრამ არ ატარო და არ გამოიყენო. თუ ნივთი დაბრუნდება ხმარების აშკარა ნიშნებით, შესაძლოა შემოგთავაზოთ ნაწილობრივი ანაზღაურება ღირებულების დაკარგვის პროპორციულად.",
+      "ნივთები უნდა დაბრუნდეს გამოუყენებლად, თავდაპირველი შეფუთვით, ყველა ეტიკეტით, ჩანთით და დამცავი ბაფთით. ხელოვნური თმა, ბონეტები, დურაგები და აქსესუარები შეგიძლია გახსნა და დაათვალიერო (ისე, როგორც მაღაზიაში დაათვალიერებდი) — მაგრამ არ ატარო და არ გამოიყენო; თმის შემთხვევაში ეს ნიშნავს, რომ არ დაგიწნავს, არ შეგიჭრია, არ დაგიბანია და არ დაგივარცხნია. თუ ნივთი დაბრუნდება ხმარების აშკარა ნიშნებით, შესაძლოა შემოგთავაზოთ ნაწილობრივი ანაზღაურება ღირებულების დაკარგვის პროპორციულად.",
   },
   {
     headingEn: "4. How to start a return",
@@ -293,9 +292,9 @@ export const REFUND_SECTIONS: LegalSection[] = [
     headingEn: "6. Refund processing",
     headingKa: "6. ანაზღაურების დამუშავება",
     bodyEn:
-      "Once we receive your returned items and confirm the condition, we issue the refund within 14 days using the same payment method you used at checkout. Card refunds typically settle in 3–10 business days depending on your bank; bank-transfer refunds settle in 1–3 business days. We refund the price of the returned items only — original shipping fees aren't refunded for change-of-mind returns. For defective items we refund shipping in both directions.",
+      "Once we receive your returned items and confirm the condition, we issue the refund within 14 days using the same payment method you used at checkout. Card refunds typically settle in 3–10 business days depending on your bank. We refund the price of the returned items only — original shipping fees aren't refunded for change-of-mind returns. For defective items we refund shipping in both directions.",
     bodyKa:
-      "დაბრუნებული ნივთების მიღების და მდგომარეობის დადასტურების შემდეგ თანხას დაგიბრუნებთ 14 დღის განმავლობაში გადახდის იმავე მეთოდით, რომელიც გამოიყენე გადახდისას. ბარათით ანაზღაურება ჩვეულებრივ ხდება 3-10 სამუშაო დღეში ბანკიდან გამომდინარე; ბანკის გადარიცხვით — 1-3 სამუშაო დღეში. ვანაზღაურებთ მხოლოდ დაბრუნებული ნივთების ფასს — თავდაპირველი მიწოდების საფასური არ ანაზღაურდება გადაწყვეტილების შეცვლის შემთხვევაში. დეფექტიანი ნივთების შემთხვევაში ვანაზღაურებთ მიწოდების ღირებულებას ორივე მიმართულებით.",
+      "დაბრუნებული ნივთების მიღების და მდგომარეობის დადასტურების შემდეგ თანხას დაგიბრუნებთ 14 დღის განმავლობაში გადახდის იმავე მეთოდით, რომელიც გამოიყენე გადახდისას. ბარათით ანაზღაურება ჩვეულებრივ ხდება 3-10 სამუშაო დღეში ბანკიდან გამომდინარე. ვანაზღაურებთ მხოლოდ დაბრუნებული ნივთების ფასს — თავდაპირველი მიწოდების საფასური არ ანაზღაურდება გადაწყვეტილების შეცვლის შემთხვევაში. დეფექტიანი ნივთების შემთხვევაში ვანაზღაურებთ მიწოდების ღირებულებას ორივე მიმართულებით.",
   },
   {
     headingEn: "7. Defective, damaged or incorrect items",

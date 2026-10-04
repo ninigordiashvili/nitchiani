@@ -1,6 +1,6 @@
 "use client";
 
-import { Sparkles, X } from "lucide-react";
+import { Info, Sparkles, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { useCart } from "@/lib/cart/store";
@@ -100,6 +100,7 @@ export function WelcomePopup() {
   return (
     <div
       aria-hidden={!visible}
+      inert={!visible}
       className="fixed inset-0 z-50 transition-opacity"
       style={{ opacity: visible ? 1 : 0, pointerEvents: visible ? "auto" : "none" }}
     >
@@ -167,7 +168,14 @@ export function WelcomePopup() {
             {t("apply")}
           </button>
 
-          <p className="mt-3 text-xs opacity-50">{t("fineprint")}</p>
+          {/* The conditions of the offer, as a readable note rather than faint small print:
+              a shopper should know before checkout that the code works once and doesn't stack. */}
+          {/* In the card's own maroon — the colour of the code and the sparkle — under a hairline,
+              so it reads as the offer's footnote rather than a separate element. */}
+          <p className="mt-5 flex w-full items-center justify-center gap-1.5 border-t border-[color-mix(in_oklab,var(--color-brand-maroon)_20%,transparent)] pt-4 text-[13px] font-medium text-[var(--color-brand-maroon)]">
+            <Info size={14} className="flex-shrink-0" aria-hidden />
+            {t("fineprint")}
+          </p>
         </div>
       </div>
     </div>

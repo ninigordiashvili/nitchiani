@@ -18,6 +18,15 @@ export const PRODUCT_CATEGORIES: Record<string, string[]> = {
   // rather than names — see the note below about renaming them.
   "b-hs3089p-22": ["hair-extensions"], // არიელი 22″
   "b-hs3226p-24": ["hair-extensions"], // ანა 24″
+  "4_kinky_curly_55_88": ["hair-extensions"], // 4 ცალი ხვეული თმა — Kinky Curly, 55.88 სმ
+  "76_2_deep_wave_ocean_wave": ["hair-extensions"], // 76.2 სმ ხვეული თმა — Deep Wave & Ocean Wave
+  "61": ["hair-extensions"], // წინასწარ გაწელილი თმა — 61 სმ, სტაფილოსფერი
+  "6x_pre_stretched_braiding_hair_52_inch_kanekalon_yaki_texture": ["hair-extensions"], // 6X წინასწარ გაწელილი, 132 სმ
+  "long_braided_ponytail_hair_extension_black": ["hair-extensions"], // გრძელი ნაწნავი კუდი — შავი
+  "fashion_idol_ombre_blonde": ["hair-extensions"], // ტალღოვანი — Ombre Blonde
+  "soft_body_wave_hair_extensions_blonde": ["hair-extensions"], // ტალღოვანი — Blonde
+  "deep_wave_braiding_hair_extensions": ["hair-extensions"], // ღრმა ტალღოვანი, ნაწნავებისთვის
+  "freedom_braid_collection_french_curl_synthetic_hair_56_cm": ["hair-extensions"], // Freedom Braid — French Curl, 56 სმ
   // The remaining four styles, added here so they land in the category the moment they go
   // live rather than sitting under All products until someone notices.
   "b-hs1047p-28": ["hair-extensions"], // არიელი სწორი 28″

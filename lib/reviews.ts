@@ -155,7 +155,7 @@ const REVIEWS_BY_HANDLE: Record<string, Review[]> = {
       date: "2026-04-08",
       rating: 5,
       bodyKa: "მე-3 შეკვეთა. ყოველთვის თანმიმდევრული. სალონში ყველა მეკითხება სად ვიყიდე.",
-      bodyEn: "Third order. Always consistent. Everyone at the salon asks where I got it.",
+      bodyEn: "Third order. Always consistent. Everyone asks where I got it.",
     },
   ],
   "loc-detox-rinse": [

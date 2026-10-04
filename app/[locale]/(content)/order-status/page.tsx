@@ -6,6 +6,7 @@ import { getOrderByName, type OrderTracking } from "@/lib/shopify/orders";
 import { getTrackingByToken } from "@/lib/echodesk/tracking";
 import { localeAlternates } from "@/lib/seo";
 import type { Locale } from "@/lib/i18n/config";
+import { OrderNumber } from "@/components/commerce/OrderNumber";
 
 export async function generateMetadata({
   params,
@@ -49,9 +50,8 @@ export default async function OrderStatusPage({
   const { order: orderParam, token: tokenParam } = await searchParams;
   setRequestLocale(locale);
 
-  const [t, tCheckout, tWa] = await Promise.all([
+  const [t, tWa] = await Promise.all([
     getTranslations("orderStatus"),
-    getTranslations("checkout"),
     getTranslations("whatsapp"),
   ]);
 
@@ -93,9 +93,11 @@ export default async function OrderStatusPage({
       {order ? (
         <section className="mb-10">
           <p className="label-eyebrow mb-2">{t("liveTitle")}</p>
-          <p className="mb-4 text-sm tabular-nums opacity-70">
-            {tCheckout("orderNumber", { id: order.name })}
-          </p>
+          {order.name ? (
+            <div className="mb-4">
+              <OrderNumber number={order.name} align="start" />
+            </div>
+          ) : null}
           <p className="mb-6 max-w-2xl text-sm opacity-80">{t("liveIntro")}</p>
           <LiveTracking order={order} locale={locale} />
         </section>
@@ -270,7 +272,7 @@ function OrderLookup({
       className="mb-10 rounded-lg border p-5 sm:p-6"
       style={{ borderColor: "var(--border-soft)" }}
     >
-      <label htmlFor="order-lookup" className="label-eyebrow mb-2 block">
+      <label htmlFor="order-lookup" className="mb-2 block text-sm font-semibold text-[var(--color-brand-ink)]">
         {t("lookupLabel")}
       </label>
       <div className="flex flex-col gap-2 sm:flex-row">
@@ -282,14 +284,14 @@ function OrderLookup({
           required
           defaultValue={defaultValue ?? ""}
           placeholder={t("lookupPlaceholder")}
-          className="w-full rounded-md border px-3 py-2.5 text-base outline-none focus:border-[var(--color-brand-ink)]"
-          style={{ borderColor: "var(--border-soft)", background: "var(--surface)" }}
+          // White on the cream card with a firm edge, so the field reads as the place to type.
+          className="w-full rounded-md border border-black/25 bg-white px-3.5 py-3 text-base text-[var(--color-brand-ink)] shadow-sm outline-none transition-colors placeholder:text-black/45 hover:border-black/40 focus:border-[var(--color-brand-ink)] focus:ring-2 focus:ring-[color-mix(in_oklab,var(--color-brand-maroon)_25%,transparent)]"
         />
         <button type="submit" className="btn-primary shrink-0 justify-center">
           {t("lookupCta")}
         </button>
       </div>
-      <p className="mt-2 text-xs opacity-60">{t("lookupHint")}</p>
+      <p className="mt-2 text-xs opacity-75">{t("lookupHint")}</p>
     </form>
   );
 }

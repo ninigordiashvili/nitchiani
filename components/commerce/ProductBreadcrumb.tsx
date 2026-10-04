@@ -58,8 +58,8 @@ export async function ProductBreadcrumb({
         {items.map((it, i) => (
           <span key={i} className="flex min-w-0 items-center gap-1.5">
             {it.href ? (
-              <Link href={it.href} className="hover:opacity-100 hover:underline">
-                {it.name}
+              <Link href={it.href} className="group hover:opacity-100">
+                <span className="underline-motion">{it.name}</span>
               </Link>
             ) : (
               <span className="truncate" aria-current="page">

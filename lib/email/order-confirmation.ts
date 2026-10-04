@@ -84,7 +84,7 @@ function copyFor(locale: string, firstName: string, orderId: string): Copy {
       nextHeader: "რა მოხდება შემდეგ",
       steps: [
         "ჩვენ ვადასტურებთ შენს შეკვეთას WhatsApp-ით ან ფოსტით რამდენიმე საათში.",
-        "შენი შეკვეთა ხელით მზადდება ჩვენს თბილისის სტუდიოში.",
+        "შეკვეთას ვამოწმებთ, ფრთხილად ვფუთავთ და კურიერს გადავცემთ.",
         "კურიერი მოგიტანს 1-3 სამუშაო დღეში თბილისში.",
       ],
       trackCta: "შეკვეთის გადამოწმება",
@@ -119,7 +119,7 @@ function copyFor(locale: string, firstName: string, orderId: string): Copy {
     nextHeader: "What happens next",
     steps: [
       "We confirm by WhatsApp or email within a few hours.",
-      "Your order is hand-prepared at our Tbilisi studio.",
+      "We check your order, pack it carefully and hand it to the courier.",
       "Courier delivers in 1–3 business days inside Tbilisi.",
     ],
     trackCta: "Track this order",
@@ -341,7 +341,7 @@ function escapeHtml(s: string): string {
 
 export async function sendOrderConfirmation(input: OrderConfirmationInput): Promise<boolean> {
   // Email is optional at checkout — a customer can order with just a name and a phone
-  // number. Nothing to send to, and no error either: the studio still follows up on
+  // number. Nothing to send to, and no error either: we still follow up on
   // WhatsApp, which is what the confirmation copy itself promises.
   if (!input.email) {
     console.warn("[email/order-confirmation] no email on order — skipping", input.orderId);

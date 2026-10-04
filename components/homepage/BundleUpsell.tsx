@@ -57,11 +57,12 @@ export function BundleUpsell({
   const bundleTotalNum = Math.max(0, subtotalNum - discountNum);
 
   const onAdd = () => {
+    let added = 0;
     for (const p of offerProducts) {
       // Same rule as the bundle rail: never add a variant that can't be sold.
       const v = p.variants.find((vv) => vv.availableForSale);
       if (!v) continue;
-      cart.addLine({
+      added += cart.addLine({
         variantId: v.id,
         productHandle: p.handle,
         productTitle: p.title,
@@ -78,7 +79,7 @@ export function BundleUpsell({
     void cart.applyCoupon(bundle.couponCode);
     // Same confirmation as every other add-to-bag. This button is furthest from the header
     // badge, so without it the offer gives no sign it did anything.
-    toast.show(tProduct("addedToCart"));
+    toast.show(added > 0 ? tProduct("addedToCart") : tProduct("allInBag"));
   };
 
   return (

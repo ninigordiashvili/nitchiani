@@ -1,13 +1,10 @@
 import type { Metadata } from "next";
-import { cookies } from "next/headers";
 import { setRequestLocale, getTranslations } from "next-intl/server";
 import { CategoryChips } from "@/components/homepage/CategoryChips";
 import { SectionHeader } from "@/components/homepage/SectionHeader";
 import { CategoryCardGrid } from "@/components/homepage/CategoryCardGrid";
 import { HomepageReviews } from "@/components/homepage/HomepageReviews";
 import { ConnectStrip } from "@/components/homepage/ConnectStrip";
-// Hidden for now — see the commented-out "Booking + services" section below.
-// import { ServicesTeaser } from "@/components/homepage/ServicesTeaser";
 import { ProductGrid } from "@/components/commerce/ProductGrid";
 import { RecentlyViewedRail } from "@/components/commerce/RecentlyViewedRail";
 import { BundleUpsellPicker } from "@/components/homepage/BundleUpsellPicker";
@@ -45,16 +42,7 @@ export default async function HomePage({
   const { locale } = await params;
   setRequestLocale(locale);
 
-  const [allProducts, t, cookieStore] = await Promise.all([
-    getProducts(locale, 50),
-    getTranslations("home"),
-    cookies(),
-  ]);
-
-  // Server-side gate for the one-time UVP banner. When the cookie is set, the banner is
-  // never even sent to the client — no SSR flash, no layout shift, no client-side hide.
-  // The cookie is written client-side by `UvpBanner` once the visitor scrolls past it.
-  const showUvpBanner = cookieStore.get("uvp-seen")?.value !== "1";
+  const [allProducts, t] = await Promise.all([getProducts(locale, 50), getTranslations("home")]);
 
   // "All Products" rail — best sellers first (in their curated order), then everything else
   // Plain catalog order. This used to lead with the best-sellers collection and dedup the
@@ -131,7 +119,9 @@ export default async function HomePage({
       {/* 1 — Brand UVP banner. One-time-only — only renders for visitors who haven't yet
           scrolled past it (gated by the `uvp-seen` cookie). Dismisses itself on first
           scroll and writes the cookie so subsequent visits skip it entirely. */}
-      {showUvpBanner ? <UvpBanner /> : null}
+      {/* Hides itself for returning visitors, in the browser — see UvpBanner. Reading the
+          cookie here made the whole home page uncacheable. */}
+      <UvpBanner />
 
       {/* 2 — Category chips */}
       <CategoryChips />
@@ -157,15 +147,6 @@ export default async function HomePage({
           <BundleUpsellPicker bundlesWithProducts={offers} />
         </section>
       ) : null}
-
-      {/* 5 — Booking + services (full-bleed dark panel, content inside container).
-          Temporarily hidden. To bring it back, uncomment this block and the
-          `ServicesTeaser` import at the top of the file. */}
-      {/*
-      <section className="mt-12">
-        <ServicesTeaser />
-      </section>
-      */}
 
       {/* 7 — Visual category cards */}
       <section className="container-shop mt-12">

@@ -50,6 +50,7 @@ export function StickyAddToCart({
   return (
     <div
       aria-hidden={!visible}
+      inert={!visible}
       className="sm:hidden"
       style={{
         position: "fixed",

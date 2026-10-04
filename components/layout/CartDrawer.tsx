@@ -49,6 +49,7 @@ export function CartDrawer({
   return (
     <div
       aria-hidden={!open}
+      inert={!open}
       className="fixed inset-0 z-50 transition-opacity"
       style={{ opacity: open ? 1 : 0, pointerEvents: open ? "auto" : "none" }}
     >
@@ -84,8 +85,15 @@ export function CartDrawer({
             border-b/t are then inset 16px on both sides, symmetric. Content still sits
             16px from the drawer edges because the parent margin replaces the padding. */}
         <div className="mx-4 flex h-14 items-center justify-between gap-3 border-b border-black/10">
-          <span className="label-eyebrow">
-            {t("nav.cart")} · {cart.totalQuantity}
+          {/* The count as a labelled pill ("2 ნივთი"): a bare "· 2" after the title read as
+              decoration, not as how many things are in the bag. */}
+          <span className="flex items-center gap-2 text-[15px] font-semibold">
+            {t("nav.cart")}
+            {cart.totalQuantity > 0 ? (
+              <span className="rounded-full bg-[var(--color-brand-ink)] px-2 py-0.5 text-[11px] font-medium tabular-nums text-[var(--color-brand-cream)]">
+                {t("cart.itemsCount", { count: cart.totalQuantity })}
+              </span>
+            ) : null}
           </span>
           <div className="flex items-center gap-3">
             <ClearCartButton contained />

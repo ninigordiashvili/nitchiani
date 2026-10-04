@@ -10,16 +10,16 @@ import type { Locale } from "@/lib/i18n/config";
  *
  * The Georgian copy leads with the products, not the studio: the shop sells hair, and the
  * braiding service is no longer offered. It also spends its words on the phrases customers
- * actually search — "ხელოვნური თმები", "კულულები", "ხუჭუჭები", "აფრო ხვეულები" — rather than
+ * actually search — "ხელოვნური თმა", "ხუჭუჭები", "ნაწნავები" — rather than
  * on the in-house vocabulary used elsewhere on the site.
  */
 type SeoCopy = { title: string; description: string };
 
 const COPY: Record<Locale, SeoCopy> = {
   ka: {
-    title: "ხელოვნური თმები, კულულები და ხუჭუჭები — Nitchiani",
+    title: "ხელოვნური თმა ხუჭუჭებისა და ნაწნავებისთვის — Nitchiani",
     description:
-      "ხელოვნური თმები აფრო ხვეულებისთვის — კულულები, ხუჭუჭები და ნაწნავებისთვის თმა. ბონეტი, დურაგი და თმის მოვლის საშუალებები. მიწოდება მთელ საქართველოში.",
+      "ხელოვნური თმა ხუჭუჭებისა და ნაწნავებისთვის, ატლასის ბონეტები, დურაგები და თმის მოვლის საშუალებები. მიწოდება მთელ საქართველოში ან უფასო გატანა თბილისში.",
   },
   en: {
     title: "Nitchiani — Synthetic Hair, Bonnets & Durags · Tbilisi",

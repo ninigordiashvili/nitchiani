@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { ChevronDown } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 
@@ -36,19 +37,31 @@ export function CollectionDescription({ text }: { text: string }) {
   const folded = !open;
 
   return (
-    <div className="mt-2 max-w-prose text-sm opacity-70">
+    <div className="mt-3 max-w-prose">
       <div
         ref={ref}
-        className={cn("grid gap-2 leading-relaxed", folded && "max-h-[4.9rem] overflow-hidden")}
+        // Clear space between paragraphs, so each reads as its own point rather than one block.
+        className={cn("grid gap-3.5 text-sm leading-relaxed", folded && "max-h-[6.5rem] overflow-hidden")}
         // Fade the last visible line so the cut reads as "there's more", not as a clipped box.
         style={
           folded && overflows
-            ? { maskImage: "linear-gradient(to bottom, black 55%, transparent)" }
+            ? { maskImage: "linear-gradient(to bottom, black 60%, transparent)" }
             : undefined
         }
       >
         {paragraphs.map((para, i) => (
-          <p key={i}>{para}</p>
+          <p
+            key={i}
+            // The first paragraph is the one-line answer to "what's here?" — set a step up so
+            // it reads as the intro; the rest are details.
+            className={
+              i === 0
+                ? "text-[15px] font-medium text-[var(--color-brand-ink)]"
+                : "text-[var(--color-brand-ink)] opacity-75"
+            }
+          >
+            {para}
+          </p>
         ))}
       </div>
       {overflows || open ? (
@@ -56,9 +69,10 @@ export function CollectionDescription({ text }: { text: string }) {
           type="button"
           onClick={() => setOpen((o) => !o)}
           aria-expanded={open}
-          className="mt-1.5 cursor-pointer text-xs font-medium underline underline-offset-2 opacity-90 hover:opacity-100"
+          className="mt-2 inline-flex cursor-pointer items-center gap-1 text-[13px] font-semibold text-[var(--color-brand-maroon)] hover:underline hover:underline-offset-2"
         >
           {open ? t("readLess") : t("readMore")}
+          <ChevronDown size={15} className={cn("transition-transform", open && "rotate-180")} aria-hidden />
         </button>
       ) : null}
     </div>

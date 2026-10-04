@@ -4,7 +4,6 @@ import { setRequestLocale, getTranslations } from "next-intl/server";
 import { FrequentlyBoughtTogether } from "@/components/commerce/FrequentlyBoughtTogether";
 import { ProductInfoTabs } from "@/components/commerce/ProductInfoTabs";
 import { ProductSpecList } from "@/components/commerce/ProductSpecList";
-import { MaterialTrust } from "@/components/commerce/MaterialTrust";
 import { PdpAssurance } from "@/components/commerce/PdpAssurance";
 import { ProductAccordion } from "@/components/commerce/ProductAccordion";
 import { ProductBreadcrumb } from "@/components/commerce/ProductBreadcrumb";
@@ -23,6 +22,18 @@ import { localeAlternates, ogLocale, productSeo } from "@/lib/seo";
 import { categoriesFor } from "@/lib/echodesk/categories";
 import { CATEGORIES } from "@/lib/categories";
 import type { Locale } from "@/lib/i18n/config";
+
+/**
+ * Rendered on first visit, then served from cache and refreshed every 5 minutes — the same
+ * window as the EchoDesk data it shows. It used to render on every request, which made each
+ * visit wait for the server. Prices and stock are checked again at checkout regardless.
+ */
+export const revalidate = 300;
+
+/** None at build time; each page is built on its first visit and cached from then on. */
+export async function generateStaticParams() {
+  return [];
+}
 
 export async function generateMetadata({
   params,
@@ -124,11 +135,6 @@ export default async function ProductPage({
           <div className="mt-5">
             <ProductPurchase product={product} />
           </div>
-
-          {/* Piercing-only — renders nothing for hair products since their `material` field
-              is undefined. Sits between purchase and description so safety info reaches the
-              buyer at the moment they're choosing variants. */}
-          <MaterialTrust materialHandle={product.material} locale={locale} />
 
           {/* Description and the data sheet, as two tabs. Renders nothing when the product
               has neither, which is most of the catalogue until EchoDesk is filled in. */}

@@ -25,3 +25,28 @@ export function isAtStockLimit(quantity: number, max: number | undefined): boole
   if (max === undefined || !Number.isFinite(max)) return false;
   return quantity >= Math.floor(max);
 }
+
+/**
+ * At or below this many units, the product page and cards say how many are left.
+ *
+ * Only the last piece is called out. Most of the catalogue holds two or three of each item,
+ * so a higher line put the warning on nearly every card, where it stopped meaning anything.
+ */
+export const LOW_STOCK_THRESHOLD = 1;
+
+/**
+ * How many are left, when it's few enough to say so; null otherwise. Untracked stock
+ * (`undefined`) and sold-out (0) never warn — sold out has its own state.
+ */
+export function lowStockCount(available: number | undefined): number | null {
+  if (available === undefined || !Number.isFinite(available)) return null;
+  const left = Math.floor(available);
+  return left > 0 && left <= LOW_STOCK_THRESHOLD ? left : null;
+}
+
+/** Units left across a product's variants that are on sale; undefined if any is untracked. */
+export function unitsLeft(variants: { availableForSale: boolean; quantityAvailable?: number }[]): number | undefined {
+  const onSale = variants.filter((v) => v.availableForSale);
+  if (onSale.some((v) => v.quantityAvailable === undefined)) return undefined;
+  return onSale.reduce((sum, v) => sum + (v.quantityAvailable ?? 0), 0);
+}

@@ -52,8 +52,6 @@ export type RawProduct = Omit<
   aftercareEn?: string;
   productTypeKa: string;
   productTypeEn: string;
-  /** Optional — handle from `lib/piercings.ts` materials registry. Only set on piercings. */
-  material?: string;
   featuredImage: Product["featuredImage"];
   images: Product["images"];
   basePrice: number;
@@ -125,7 +123,6 @@ export function localizeProduct(p: RawProduct, locale: Locale): Product {
     howToUse: ka ? p.howToUseKa : p.howToUseEn,
     whatsInside: ka ? p.whatsInsideKa : p.whatsInsideEn,
     aftercare: ka ? p.aftercareKa : p.aftercareEn,
-    material: p.material,
     productType: ka ? p.productTypeKa : p.productTypeEn,
     // Slug-form English type — used as the breadcrumb category link target. Stable
     // across locales so URLs stay consistent regardless of viewer language.
@@ -191,8 +188,6 @@ function makeProduct(p: {
   options?: RawProductOption[];
   /** Variant rows. Omit for a single-SKU product (defaults to one variant with no options). */
   variants?: RawProductVariant[];
-  /** Optional material handle (lib/piercings.ts). Drives the `MaterialTrust` PDP panel. */
-  material?: string;
 }): RawProduct {
   return {
     id: `gid://nitchiani/Product/${p.handle}`,
@@ -224,7 +219,6 @@ function makeProduct(p: {
     rawOptions: p.options ?? [],
     rawVariants: p.variants ?? [{ optionValues: [], available: true }],
     isBestSeller: p.isBestSeller,
-    material: p.material,
   };
 }
 
@@ -666,99 +660,6 @@ export const DUMMY_RAW_PRODUCTS: RawProduct[] = [
       { optionValues: ["Maroon"] },
     ],
   }),
-  // — Piercings — sample SKU so the MaterialTrust panel and PiercingSizeGuide light up.
-  // Add more entries with `productTypeEn: "Piercings"` to populate the collection.
-  makeProduct({
-    handle: "titanium-helix-stud",
-    titleEn: "Titanium Helix Stud",
-    titleKa: "ტიტანის ჰელიქსის საყურე",
-    descriptionEn:
-      "A single implant-grade titanium flat-back stud — the same alloy a piercer uses to start a new piercing. Threaded post, hand-polished bezel, comes in three gauges to fit lobe, helix or tragus placement.",
-    descriptionKa:
-      "ერთჯერი იმპლანტ-კლასის ტიტანის ბრტყელზურგიანი საყურე — იგივე შენადნობი, რომელსაც პროფესიონალი იყენებს ახალი პირსინგისთვის. ჭანჭკით ჩასახრახნი, ხელით გაპრიალებული ბეზელით, სამი გეიჯით — ფურცლის, ჰელიქსისა და ტრაგუსისთვის.",
-    howToUseEn:
-      "Sterilise hands and the piercing site with saline before each rotation. Insert the threaded post gently — never force. New piercings: leave in place for the full healing window (6–12 months for cartilage) and clean with saline twice daily.",
-    howToUseKa:
-      "ხელები და ჩასვმის ადგილი დაასუფთავე ფიზიოლოგიური ხსნარით ყოველი მოძრაობის წინ. ჭანჭიკიანი ღერო ფრთხილად ჩასვი — ძალით არ აიძულო. ახალი პირსინგი: დატოვე სრული შემხორცების პერიოდის განმავლობაში (6-12 თვე ხრტილისთვის) და დაასუფთავე ფიზიოლოგიური ხსნარით დღეში ორჯერ.",
-    whatsInsideEn:
-      "Implant-grade titanium (ASTM F-136, ISO 5832-3) · threaded post + flat back · 3mm round bezel. Ships in a recyclable card. Lifetime polish service in our Tbilisi studio.",
-    whatsInsideKa:
-      "იმპლანტ-კლასის ტიტანი (ASTM F-136, ISO 5832-3) · ჭანჭიკიანი ღერო + ბრტყელი ზურგი · 3მმ მრგვალი ბეზელი. იგზავნება გადამუშავებად ბარათში. სამუდამო გაპრიალების სერვისი ჩვენს თბილისის სტუდიოში.",
-    aftercareEn:
-      "Clean twice a day with sterile saline — morning and evening. Soak a cotton round, hold against the front and back of the piercing for 30 seconds each, then air-dry. Do not rotate the jewelry, do not use alcohol or hydrogen peroxide, do not apply creams, makeup or hair products around the piercing during healing. Sleep on a clean satin pillowcase to reduce friction. Approximate healing windows — lobe: 6–8 weeks · helix / tragus: 6–12 months · nostril: 4–6 months · septum: 6–8 weeks. Contact a professional piercer if you see green or yellow discharge, persistent swelling beyond two weeks, or develop a fever.",
-    aftercareKa:
-      "გაასუფთავე დღეში ორჯერ სტერილური ფიზიოლოგიური ხსნარით — დილით და საღამოს. ჩაასველე ბამბის დისკი, დაიჭირე პირსინგზე წინა და უკანა მხრიდან თითო 30 წამი, შემდეგ გააშრე ჰაერზე. არ ატრიალო საყურე, არ გამოიყენო სპირტი ან წყალბადის ზეჟანგი, არ წაიცხო კრემი, კოსმეტიკა ან თმის პროდუქტი პირსინგის ირგვლივ შემხორცების პერიოდში. იძინე სუფთა სატენის ბალიშზე ხახუნის შესამცირებლად. შემხორცების სავარაუდო პერიოდი — ფურცელი: 6-8 კვირა · ჰელიქსი / ტრაგუსი: 6-12 თვე · ნესტო: 4-6 თვე · სეპტუმი: 6-8 კვირა. დაუკავშირდი პროფესიონალ პირსერს, თუ შენიშნე მწვანე ან ყვითელი გამონადენი, ხანგრძლივი შეშუპება ორ კვირაზე მეტი ხნის განმავლობაში ან გაგიჩნდა ცხელება.",
-    productTypeEn: "Piercings",
-    productTypeKa: "პირსინგი",
-    price: 145,
-    image: "/products/titanium-helix-stud.png",
-    tags: ["piercings", "titanium", "new"],
-    material: "implant-titanium",
-    options: [
-      {
-        nameEn: "Gauge",
-        nameKa: "გეიჯი",
-        values: [
-          { en: "16G", ka: "16G" },
-          { en: "18G", ka: "18G" },
-          { en: "20G", ka: "20G" },
-        ],
-      },
-    ],
-    variants: [
-      { optionValues: ["16G"] },
-      { optionValues: ["18G"] },
-      { optionValues: ["20G"] },
-    ],
-  }),
-  // Second piercing — a 14k gold huggie hoop. Uses the `Diameter` option (instead of `Gauge`)
-  // so the PiercingSizeGuide trigger gets exercised on both label paths. The 14k-gold material
-  // also flips on the "healed piercings only" warning in MaterialTrust since gold isn't
-  // recommended for actively healing tissue.
-  makeProduct({
-    handle: "gold-huggie-hoop",
-    titleEn: "14k Gold Huggie Hoop",
-    titleKa: "14 კარატის ოქროს Huggie რგოლი",
-    descriptionEn:
-      "A close-fitting hoop in solid 14k gold — the everyday hoop you stop noticing because it never catches on a sweater. Snap-clasp closure, hand-finished bezel, three diameters to fit lobe through helix.",
-    descriptionKa:
-      "მჭიდრო რგოლი მთლიანი 14 კარატის ოქროდან — ყოველდღიური რგოლი, რომელიც ისე იცვამ, რომ ვერ ამჩნევ — სვიტერზე არ ეჭიდება. სამაგრის სისტემით, ხელით გაპრიალებული ბეზელით, სამი დიამეტრით — ფურცლიდან ჰელიქსამდე.",
-    howToUseEn:
-      "Open the snap clasp gently from the hinge. Slide into the piercing, then click closed — you should hear a soft snap. For new piercings, wait until fully healed before switching to gold.",
-    howToUseKa:
-      "სამაგრი ფრთხილად გახსენი ჩიხის მხრიდან. გაატარე პირსინგში და დააწკაპუნე — გაიგონებ მსუბუქ ბგერას. ახალი პირსინგების შემთხვევაში დაელოდე სრულ შემხორცებას ოქროზე გადასვლამდე.",
-    whatsInsideEn:
-      "Solid 14k yellow gold (not plated) · snap-clasp closure · 1mm wire (18G) · 6 / 8 / 10mm inner diameters. Gift-wrapped in our Tbilisi studio.",
-    whatsInsideKa:
-      "მთლიანი 14 კარატის ყვითელი ოქრო (არა საფარი) · სამაგრის სისტემა · 1მმ მავთული (18G) · 6 / 8 / 10მმ შიდა დიამეტრები. შეფუთული ჩვენს თბილისის სტუდიოში.",
-    aftercareEn:
-      "Wear in fully healed piercings only — gold isn't recommended during active healing. To clean: wipe with a soft microfiber cloth (no chemicals, no harsh polishing). For deeper care, soak briefly in warm soapy water, rinse, pat dry. Avoid contact with perfume, hairspray and chlorine — they dull the polish over time. Store separately in a dry pouch so it doesn't scratch other pieces. Lifetime polish service available in our Tbilisi studio whenever the shine fades.",
-    aftercareKa:
-      "ატარე მხოლოდ სრულად შემხორცებად პირსინგებში — ოქრო არ ვარგა აქტიური შემხორცების პერიოდში. გასუფთავება: გაატარე რბილი მიკროფიბრის ნაჭრით (ქიმიური საშუალებების და მკაცრი გაპრიალების გარეშე). უფრო ღრმა მოვლისთვის ჩაუშვი თბილ საპონ წყალში, ჩამოიბანე, შრე გააშრე. მოარიდე საყურეს სუნამოს, თმის ლაქის და ქლორის შეხებას — ეს დროთა განმავლობაში აყუჩებს ბზინვარებას. შეინახე ცალკე მშრალ ჩანთაში, რომ სხვა ნივთებთან არ გაიკვრას. სამუდამო გაპრიალების სერვისი ხელმისაწვდომია ჩვენს თბილისის სტუდიოში, როდესაც ბზინვა შემცირდება.",
-    productTypeEn: "Piercings",
-    productTypeKa: "პირსინგი",
-    price: 320,
-    image: "/products/gold-huggie-hoop.png",
-    isBestSeller: true,
-    tags: ["piercings", "gold", "best-seller"],
-    material: "14k-gold",
-    options: [
-      {
-        nameEn: "Diameter",
-        nameKa: "დიამეტრი",
-        values: [
-          { en: "6mm", ka: "6მმ" },
-          { en: "8mm", ka: "8მმ" },
-          { en: "10mm", ka: "10მმ" },
-        ],
-      },
-    ],
-    variants: [
-      { optionValues: ["6mm"] },
-      { optionValues: ["8mm"] },
-      { optionValues: ["10mm"], available: false },
-    ],
-  }),
 ];
 
 export const DUMMY_RAW_COLLECTIONS: RawCollection[] = [
@@ -768,13 +669,15 @@ export const DUMMY_RAW_COLLECTIONS: RawCollection[] = [
     titleEn: "Hair Extensions",
     titleKa: "ხელოვნური თმა",
     descriptionEn:
-      "Synthetic braiding hair in water wave, deep wave, bone straight and kinky textures. One 300g pack of 3 pieces covers a full head. Lengths run from 20 to 28 inches (50–70 cm).\n\nThe fibre is heat-resistant, so it takes hot tools without melting and keeps its curl. Around 25 shades — naturals, blondes, ombré blends and brights. All from one manufacturer, so colour and texture stay consistent between orders.\n\nHeld in stock in Tbilisi; delivery takes 1–3 working days in Tbilisi and 3–7 working days to the rest of Georgia.",
+      "Synthetic hair for braids and protective styles — every texture you need in one place.\n\nLengths from 54 to 132 cm, in shades from natural black to blonde and ombré. Buy a single pack or a 4- or 6-pack set.\n\nPre-stretched hair makes braiding quicker. Each product page says whether it's heat-resistant.\n\nDelivery in 1–3 working days in Tbilisi, 3–7 elsewhere in Georgia. Pickup in Tbilisi is free.",
     descriptionKa:
-      "ხელოვნური თმა ნაწნავებისა და ხვეულებისთვის — ტალღოვანი (water wave), ღრმა ტალღა (deep wave), სწორი (bone straight) და კინკი (kinky) ტექსტურებით. ერთი შეკვრა (3 ცალი, 300 გრამი) მთელი თავისთვის საკმარისია. სიგრძე — 50-დან 70 სმ-მდე.\n\nბოჭკო სითბოს მიმართ მდგრადია: უძლებს თმის უთოსა და ფენს და ინარჩუნებს ხვეულ ფორმას. დაახლოებით 25 ფერი: ნატურალური, ქერა, ომბრე და კაშკაშა ტონები. ყველა ერთი მწარმოებლისაა, ამიტომ ფერი და ტექსტურა შეკვეთიდან შეკვეთამდე უცვლელი რჩება.\n\nმარაგი თბილისშია; მიწოდება თბილისში 1–3 სამუშაო დღეში, საქართველოს სხვა რეგიონებში — 3–7 სამუშაო დღეში.",
+      "ხელოვნური თმა ნაწნავებისა და ვარცხნილობისთვის — ყველა საჭირო ტექსტურა ერთ ადგილას.\n\nსიგრძე — 54-დან 132 სმ-მდე. ფერები — ნატურალური შავიდან ქერასა და ომბრემდე. იყიდება ცალკე შეკვრად ან 4- და 6-ცალიან ნაკრებად.\n\nწინასწარ გაწელილი თმით ნაწნავი უფრო სწრაფად იწვნება. სითბოს მიმართ მდგრადობა თითოეული პროდუქტის გვერდზეა მითითებული.\n\nმიწოდება თბილისში 1–3 სამუშაო დღეში, რეგიონებში — 3–7 დღეში. თბილისში გატანა უფასოა.",
     seoTitleKa: "ხელოვნური თმა ნაწნავებისა და ხვეულებისთვის",
     seoTitleEn: "Synthetic Braiding Hair Extensions in Georgia",
-    seoDescriptionKa: "ხელოვნური თმა ნაწნავებისა და ხვეულებისთვის: ტალღოვანი, სწორი და კინკი ტექსტურები, 50–70 სმ. მიწოდება მთელ საქართველოში ან უფასო გატანა თბილისში.",
-    seoDescriptionEn: "Synthetic braiding hair in wavy, straight and kinky textures, 50–70 cm. Delivery across Georgia or free pickup from our store in Tbilisi.",
+    seoDescriptionKa:
+      "სინთეტიკური თმა ნაწნავებისთვის: deep wave, body wave, kinky curly და Yaki, 54–132 სმ. მიწოდება მთელ საქართველოში ან უფასო გატანა თბილისში.",
+    seoDescriptionEn:
+      "Synthetic braiding hair in deep wave, body wave, kinky curly and Yaki textures, 54–132 cm. Delivery across Georgia or free pickup in Tbilisi.",
     // Membership comes from lib/echodesk/categories.ts when the catalog is live.
     products: [],
   },
@@ -784,9 +687,9 @@ export const DUMMY_RAW_COLLECTIONS: RawCollection[] = [
     titleEn: "Hair Care",
     titleKa: "თმის მოვლა",
     descriptionEn:
-      "Two Lorenti essentials for everyday care. The 400ml two-phase leave-in conditioner comes in biotin and keratin versions — it sprays on, needs no rinsing, makes detangling easier and shields hair from heat tools and daily wear.\n\nThe 150ml Gel Wax Ultra Hold holds a style all day without greasy residue, for laying edges and finishing a look. Both suit all hair types and lengths.\n\nHeld in stock in Tbilisi; delivery takes 1–3 working days in Tbilisi and 3–7 working days to the rest of Georgia.",
+      "Professional Lorenti care for every day.\n\nTwo-phase leave-in conditioner (400 ml, with biotin or keratin) — no rinsing needed, with built-in heat protection. Hair detangles easily.\n\nGel Wax 08 (150 ml) — strong all-day hold with no greasy residue.\n\nBoth suit natural and synthetic hair alike.\n\nDelivery in 1–3 working days in Tbilisi, 3–7 elsewhere in Georgia. Pickup in Tbilisi is free.",
     descriptionKa:
-      "Lorenti-ს ორი საშუალება ყოველდღიური მოვლისთვის. 400 მლ ორფაზიანი ლივ-ინ კონდიციონერი (ბიოტინით ან კერატინით) სპრეის სახით გამოიყენება და ჩამორეცხვას არ საჭიროებს: აადვილებს დავარცხნას და თმას იცავს თერმული და ყოველდღიური ზემოქმედებისგან.\n\n150 მლ Gel Wax Ultra Hold ვარცხნილობას მთელი დღე ინარჩუნებს, ცხიმიანი კვალის გარეშე — თმის კიდეების (edges) დასალაგებლად და ვარცხნილობის საბოლოო ფიქსაციისთვის. ორივე შესაფერისია ყველა ტიპისა და სიგრძის თმისთვის.\n\nმარაგი თბილისშია; მიწოდება თბილისში 1–3 სამუშაო დღეში, საქართველოს სხვა რეგიონებში — 3–7 სამუშაო დღეში.",
+      "Lorenti-ს პროფესიონალური საშუალებები ყოველდღიური მოვლისთვის.\n\nორფაზიანი ლივ-ინ კონდიციონერი (400 მლ, ბიოტინით ან კერატინით) — არ საჭიროებს ჩამობანას და აქვს თერმო დამცავი ფუნქცია. თმა ადვილად ივარცხნება.\n\nGel Wax 08 (150 მლ) — ძლიერი ფიქსაცია მთელი დღის განმავლობაში, ცხიმიანი კვალის გარეშე.\n\nორივე შესაფერისია როგორც ბუნებრივი, ასევე ხელოვნური თმისთვის.\n\nმიწოდება თბილისში 1–3 სამუშაო დღეში, რეგიონებში — 3–7 დღეში. თბილისში გატანა უფასოა.",
     seoTitleKa: "თმის მოვლა — Lorenti კონდიციონერი და თმის ცვილი",
     seoTitleEn: "Hair Care — Lorenti Leave-In Conditioner & Wax",
     seoDescriptionKa: "Lorenti-ს ორფაზიანი ლივ-ინ კონდიციონერი და თმის ცვილი ყოველდღიური მოვლისთვის. მიწოდება მთელ საქართველოში ან უფასო გატანა თბილისში.",
@@ -812,13 +715,13 @@ export const DUMMY_RAW_COLLECTIONS: RawCollection[] = [
     titleEn: "Bonnets",
     titleKa: "ბონეტი",
     descriptionEn:
-      "A soft and comfortable head covering designed for sleeping and everyday use. Its smooth, satin-like fabric helps reduce friction between the hair and pillow, helping maintain the hair’s shape and a neat appearance.\n\nSuitable for different hair types, including curly, wavy, and straight hair. The bonnet provides a comfortable fit while helping protect and maintain your hair throughout the night.",
+      "Satin bonnets to protect your hair — for sleep and everyday wear.\n\nThe smooth, satin-like fabric reduces friction against your pillow, so your hair keeps its shape and looks neat in the morning.\n\nSuitable for every hair type — curly, wavy or straight. The long styles have room for braids and extensions too.\n\nDelivery in 1–3 working days in Tbilisi, 3–7 elsewhere in Georgia. Pickup in Tbilisi is free.",
     descriptionKa:
-      "ბონეტი არის რბილი და კომფორტული თავსაბურავი, რომელიც იდეალურია ძილისა და ყოველდღიური გამოყენებისთვის. მისი გლუვი, სატინის მსგავსი ქსოვილი ამცირებს თმის ხახუნს ბალიშთან და ხელს უწყობს თმის ფორმისა და მოწესრიგებული იერსახის შენარჩუნებას.\n\nშესაფერისია სხვადასხვა ტიპის თმისთვის, მათ შორის ხვეული, ტალღოვანი და სწორი თმისთვის. ბონეტი კომფორტულად თავსდება თავზე და ხელს უწყობს თმის მოვლას ძილის დროს.",
+      "ატლასის ბონეტები თმის დასაცავად — ძილისა და ყოველდღიური გამოყენებისთვის.\n\nგლუვი, სატინის მსგავსი ქსოვილი ამცირებს თმის ხახუნს ბალიშთან, ამიტომ დილით თმა ფორმასა და მოწესრიგებულ იერს ინარჩუნებს.\n\nშესაფერისია ნებისმიერი ტიპის თმისთვის — ხვეული, ტალღოვანი თუ სწორი. გრძელ მოდელებში ნაწნავები და დაგრძელებული თმაც თავისუფლად ეტევა.\n\nმიწოდება თბილისში 1–3 სამუშაო დღეში, რეგიონებში — 3–7 დღეში. თბილისში გატანა უფასოა.",
     seoTitleKa: "ატლასის ბონეტები — თმის დაცვა ძილის დროს",
     seoTitleEn: "Satin Hair Bonnets for Sleep & Hair Protection",
     seoDescriptionKa: "ატლასის ბონეტები, რომლებიც ამცირებს ხახუნს და ძილის დროს თმის ფორმას ინარჩუნებს. მიწოდება მთელ საქართველოში ან უფასო გატანა თბილისში.",
-    seoDescriptionEn: "Satin bonnets that reduce friction and keep your hair's shape overnight. Delivery across Georgia or free pickup from our store in Tbilisi.",
+    seoDescriptionEn: "Satin bonnets that reduce friction and keep your hair's shape overnight. Delivery across Georgia or free pickup in Tbilisi.",
     // Membership comes from lib/echodesk/categories.ts when the catalog is live.
     products: [],
   },
@@ -828,9 +731,9 @@ export const DUMMY_RAW_COLLECTIONS: RawCollection[] = [
     titleEn: "Durags",
     titleKa: "დურაგი",
     descriptionEn:
-      "A practical and comfortable accessory designed for everyday use. Its fitted shape comfortably wraps around the head and helps maintain a neat and well-groomed hairstyle. The long adjustable ties allow you to secure the durag according to your preferred fit and comfort.\n\nPerfect for everyday styling as well as part of your hair-care routine. Available in a variety of colors, making it easy to match with your personal style.",
+      "Satin durags for everyday style and hair care.\n\nThe fitted shape hugs your head and keeps your hair neat, and the long ties let you adjust the fit exactly how you like it.\n\nAvailable in a range of colours — on their own or as a 6-piece set.\n\nDelivery in 1–3 working days in Tbilisi, 3–7 elsewhere in Georgia. Pickup in Tbilisi is free.",
     descriptionKa:
-      "დურაგი არის პრაქტიკული და კომფორტული აქსესუარი ყოველდღიური გამოყენებისთვის. მისი ფორმა მჭიდროდ ერგება თავს და ხელს უწყობს თმის მოწესრიგებული იერსახის შენარჩუნებას. გრძელი შესაკრავი ნაწილები საშუალებას გაძლევთ, დურაგი სასურველი სიმჭიდროვით მოირგოთ.\n\nშესაფერისია როგორც ყოველდღიური სტილისთვის, ასევე თმის მოვლის რუტინაში გამოსაყენებლად. ხელმისაწვდომია სხვადასხვა ფერში, რათა მარტივად შეუხამოთ თქვენს ინდივიდუალურ სტილს.",
+      "ატლასის დურაგები ყოველდღიური სტილისა და თმის მოვლისთვის.\n\nფორმა მჭიდროდ ერგება თავს და თმას მოწესრიგებულს ინარჩუნებს, ხოლო გრძელი შესაკრავებით დურაგს სასურველ სიმჭიდროვეზე მოირგებ.\n\nხელმისაწვდომია სხვადასხვა ფერში — ცალკე ან 6-ცალიან ნაკრებად.\n\nმიწოდება თბილისში 1–3 სამუშაო დღეში, რეგიონებში — 3–7 დღეში. თბილისში გატანა უფასოა.",
     seoTitleKa: "ატლასის დურაგები თმისთვის, გრძელი შესაკრავებით",
     seoTitleEn: "Satin Durags with Long Ties — Wave Caps for Hair",
     seoDescriptionKa: "ატლასის დურაგები გრძელი შესაკრავებით, ყოველდღიური სტილისა და თმის მოვლისთვის, სხვადასხვა ფერში. მიწოდება მთელ საქართველოში ან გატანა თბილისში.",

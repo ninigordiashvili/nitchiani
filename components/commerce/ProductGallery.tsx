@@ -6,10 +6,13 @@ import { useTranslations } from "next-intl";
 import { BLUR_DATA_URL, distinctImages } from "@/lib/images";
 import type { ImageRef } from "@/lib/shopify/types";
 import { cn } from "@/lib/utils";
+import { ImageLightbox } from "./ImageLightbox";
+import { ZoomablePhoto } from "./ZoomablePhoto";
 
 export function ProductGallery({ images, title }: { images: ImageRef[]; title: string }) {
   const t = useTranslations("nav");
   const [active, setActive] = useState(0);
+  const [lightbox, setLightbox] = useState(false);
   // Same rule as the quick-view sheet: a thumbnail rail is only worth showing when the shots
   // differ. Placeholder galleries pad themselves by repeating one photo, and a column of
   // identical thumbnails is noise that reads as a bug. Keeping both surfaces on one rule means
@@ -53,26 +56,24 @@ export function ProductGallery({ images, title }: { images: ImageRef[]; title: s
         </ul>
       ) : null}
 
-      <div
-        className="relative order-1 aspect-[4/5] w-full self-start overflow-hidden bg-white lg:order-2 lg:flex-1"
-        style={{
-          // `contain: layout style` isolates this subtree from external reflows so opening
-          // a modal / dropdown anywhere on the page can't trigger a re-layout of the gallery.
-          // Belt-and-braces with the `scrollbar-gutter: stable` rule on `<html>`.
-          contain: "layout style",
-        }}
-      >
-        <Image
-          src={current.url}
-          alt={current.altText || title}
-          fill
-          sizes="(min-width: 1024px) 50vw, 100vw"
-          priority
-          placeholder="blur"
-          blurDataURL={BLUR_DATA_URL}
-          className="object-contain"
+      <ZoomablePhoto
+        image={current}
+        alt={current.altText || title}
+        sizes="(min-width: 1024px) 50vw, 100vw"
+        priority
+        onOpen={() => setLightbox(true)}
+        className="order-1 aspect-[4/5] w-full self-start lg:order-2 lg:flex-1"
+      />
+
+      {lightbox ? (
+        <ImageLightbox
+          images={shots}
+          index={active}
+          title={title}
+          onIndexChange={setActive}
+          onClose={() => setLightbox(false)}
         />
-      </div>
+      ) : null}
     </div>
   );
 }

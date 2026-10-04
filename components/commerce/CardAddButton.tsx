@@ -1,6 +1,6 @@
 "use client";
 
-import { Plus } from "lucide-react";
+import { Check, Plus } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useCart } from "@/lib/cart/store";
 import { useQuickView } from "@/lib/ui/quick-view";
@@ -43,24 +43,34 @@ export function CardAddButton({
   // More than one variant is a genuine choice, so the sheet handles it. Sold out is not a
   // choice — the button refuses instead.
   const deferToSheet = !soldOut && product.variants.length > 1;
+  // The bag already holds every unit in stock: say so, rather than toast "added" for an
+  // add the bag refuses.
+  const allInBag =
+    !soldOut && !deferToSheet && !!variant && cart.canAdd(variant.id, variant.quantityAvailable) === 0;
 
   // Sold out expands too, to say so. A grey circle that does nothing on hover reads as a
   // broken button; "Out of stock" reads as the reason.
-  const label = soldOut ? t("outOfStock") : deferToSheet ? t("quickView") : t("addToCart");
+  const label = soldOut
+    ? t("outOfStock")
+    : allInBag
+      ? t("inBagMax")
+      : deferToSheet
+        ? t("quickView")
+        : t("addToCart");
 
   return (
     <button
       type="button"
-      disabled={soldOut}
+      disabled={soldOut || allInBag}
       onClick={(e) => {
         e.preventDefault();
         e.stopPropagation();
-        if (soldOut || !variant) return;
+        if (soldOut || allInBag || !variant) return;
         if (deferToSheet) {
           quickView.open(product);
           return;
         }
-        cart.addLine({
+        const added = cart.addLine({
           variantId: variant.id,
           productHandle: product.handle,
           productTitle: product.title,
@@ -70,8 +80,9 @@ export function CardAddButton({
           maxQuantity: variant.quantityAvailable,
           quantity: 1,
         });
-        // The drawer deliberately stays shut, so the toast is the only sign it worked.
-        toast.show(t("addedToCart"));
+        // The drawer deliberately stays shut, so the toast is the only sign it worked — and it
+        // only claims an add that happened.
+        toast.show(added > 0 ? t("addedToCart") : t("allInBag"));
       }}
       aria-label={label}
       className={cn(
@@ -79,12 +90,16 @@ export function CardAddButton({
         // and the label growing from zero is what turns it into a pill.
         "flex h-9 items-center justify-center overflow-hidden rounded-full px-[9px]",
         "bg-[var(--color-brand-ink)] text-[var(--color-brand-cream)]",
-        soldOut ? "cursor-not-allowed opacity-40" : "cursor-pointer active:scale-95",
+        soldOut ? "cursor-not-allowed opacity-40" : allInBag ? "cursor-default" : "cursor-pointer active:scale-95",
         "transition-transform",
         className,
       )}
     >
-      <Plus size={18} strokeWidth={1.8} className="shrink-0" />
+      {allInBag ? (
+        <Check size={18} strokeWidth={2} className="shrink-0" />
+      ) : (
+        <Plus size={18} strokeWidth={1.8} className="shrink-0" />
+      )}
       {/* Present in the DOM at every size so the button keeps one accessible name, and
           revealed by width rather than by mounting — an element that appears on hover can't
           animate, and the card would jump.

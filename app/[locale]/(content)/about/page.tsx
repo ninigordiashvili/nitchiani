@@ -75,14 +75,14 @@ export default async function AboutPage({ params }: { params: Promise<{ locale: 
               ) : null}
               <li className="flex items-center gap-2.5">
                 <Phone size={15} className="shrink-0 opacity-50" aria-hidden />
-                <a href={`tel:+${whatsappNumber}`} className="hover:underline">
-                  {formatWhatsAppNumber(whatsappNumber)}
+                <a href={`tel:+${whatsappNumber}`} className="group">
+                  <span className="underline-motion">{formatWhatsAppNumber(whatsappNumber)}</span>
                 </a>
               </li>
               <li className="flex items-center gap-2.5">
                 <Mail size={15} className="shrink-0 opacity-50" aria-hidden />
-                <a href={`mailto:${BUSINESS.email}`} className="hover:underline">
-                  {BUSINESS.email}
+                <a href={`mailto:${BUSINESS.email}`} className="group">
+                  <span className="underline-motion">{BUSINESS.email}</span>
                 </a>
               </li>
             </ul>

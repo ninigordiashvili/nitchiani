@@ -102,19 +102,19 @@ export function Footer() {
               <li>
                 <a
                   href={`tel:+${whatsappNumber}`}
-                  className="flex items-center gap-2 tabular-nums hover:opacity-100"
+                  className="group flex items-center gap-2 tabular-nums hover:opacity-100"
                 >
                   <Phone size={14} className="flex-shrink-0 opacity-70" />
-                  <span>{phoneDisplay}</span>
+                  <span className="underline-motion">{phoneDisplay}</span>
                 </a>
               </li>
               <li>
                 <a
                   href={`mailto:${BUSINESS.email}`}
-                  className="flex items-center gap-2 hover:opacity-100"
+                  className="group flex items-center gap-2 hover:opacity-100"
                 >
                   <Mail size={14} className="flex-shrink-0 opacity-70" />
-                  <span>{BUSINESS.email}</span>
+                  <span className="underline-motion">{BUSINESS.email}</span>
                 </a>
               </li>
               <li>
@@ -122,10 +122,10 @@ export function Footer() {
                   href={`https://wa.me/${whatsappNumber}`}
                   target="_blank"
                   rel="noreferrer noopener"
-                  className="inline-flex items-center gap-2 hover:opacity-100"
+                  className="group inline-flex items-center gap-2 hover:opacity-100"
                 >
                   <WhatsAppIcon size={14} />
-                  <span>{t("nav.chatWhatsApp")}</span>
+                  <span className="underline-motion">{t("nav.chatWhatsApp")}</span>
                 </a>
               </li>
               <li>
@@ -133,10 +133,10 @@ export function Footer() {
                   href={`https://instagram.com/${instagramHandle}`}
                   target="_blank"
                   rel="noreferrer noopener"
-                  className="flex items-center gap-2 hover:opacity-100"
+                  className="group flex items-center gap-2 hover:opacity-100"
                 >
                   <Instagram size={14} className="flex-shrink-0 opacity-70" />
-                  <span>@{instagramHandle}</span>
+                  <span className="underline-motion">@{instagramHandle}</span>
                 </a>
               </li>
               <li>
@@ -144,10 +144,10 @@ export function Footer() {
                   href={BUSINESS.facebookUrl}
                   target="_blank"
                   rel="noreferrer noopener"
-                  className="flex items-center gap-2 hover:opacity-100"
+                  className="group flex items-center gap-2 hover:opacity-100"
                 >
                   <Facebook size={14} className="flex-shrink-0 opacity-70" />
-                  <span>{BUSINESS.facebookName}</span>
+                  <span className="underline-motion">{BUSINESS.facebookName}</span>
                 </a>
               </li>
             </ul>
@@ -160,7 +160,9 @@ export function Footer() {
             <ul className="space-y-2 text-sm opacity-80">
               {CATEGORIES.map((c) => (
                 <li key={c.handle}>
-                  <Link href={`/shop/${c.handle}`}>{t(`nav.${c.labelKey}`)}</Link>
+                  <Link href={`/shop/${c.handle}`} className="group">
+                    <span className="underline-motion">{t(`nav.${c.labelKey}`)}</span>
+                  </Link>
                 </li>
               ))}
             </ul>
@@ -171,21 +173,19 @@ export function Footer() {
               {t("footer.help")}
             </p>
             <ul className="space-y-2 text-sm opacity-80">
-              {/* <li><Link href="/services">{t("nav.services")}</Link></li> */}
-              {/* <li><Link href="/journal">{t("nav.journal")}</Link></li> */}
-              <li><Link href="/about">{t("nav.about")}</Link></li>
+              <li><Link href="/about" className="group"><span className="underline-motion">{t("nav.about")}</span></Link></li>
               {/* <li><Link href="/contact">{t("nav.contact")}</Link></li> */}
-              <li><Link href="/order-status">{t("nav.orderStatus")}</Link></li>
-              <li><Link href="/terms">{t("nav.terms")}</Link></li>
-              <li><Link href="/privacy">{t("nav.privacy")}</Link></li>
-              <li><Link href="/refund">{t("nav.refund")}</Link></li>
+              <li><Link href="/order-status" className="group"><span className="underline-motion">{t("nav.orderStatus")}</span></Link></li>
+              <li><Link href="/terms" className="group"><span className="underline-motion">{t("nav.terms")}</span></Link></li>
+              <li><Link href="/privacy" className="group"><span className="underline-motion">{t("nav.privacy")}</span></Link></li>
+              <li><Link href="/refund" className="group"><span className="underline-motion">{t("nav.refund")}</span></Link></li>
               <li>
                 <button
                   type="button"
                   onClick={resetCookieConsent}
-                  className="cursor-pointer text-left hover:opacity-100"
+                  className="group cursor-pointer text-left hover:opacity-100"
                 >
-                  {t("nav.cookiePreferences")}
+                  <span className="underline-motion">{t("nav.cookiePreferences")}</span>
                 </button>
               </li>
             </ul>
@@ -213,8 +213,8 @@ export function Footer() {
           </p>
           <p>{address}</p>
           <p>
-            <a href={`mailto:${BUSINESS.email}`} className="underline-offset-2 hover:underline">
-              {BUSINESS.email}
+            <a href={`mailto:${BUSINESS.email}`} className="group">
+              <span className="underline-motion">{BUSINESS.email}</span>
             </a>
           </p>
         </div>

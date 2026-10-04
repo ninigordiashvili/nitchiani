@@ -1,11 +1,13 @@
 "use client";
 
+import { ShoppingBag } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useState, useTransition } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { getRecommendedProductsAction } from "@/app/actions/recommendations";
 import { PriceDisplay } from "@/components/commerce/PriceDisplay";
 import { ProductCard } from "@/components/commerce/ProductCard";
+import { CartUpsellRow } from "./CartUpsellRow";
 import { Link } from "@/lib/i18n/routing";
 import type { Locale } from "@/lib/i18n/config";
 import { BLUR_DATA_URL, safeImageSrc } from "@/lib/images";
@@ -51,6 +53,43 @@ export function EmptyCartRecommendations({
   }, [locale, useRecent]);
 
   const isDrawer = variant === "drawer";
+
+  // In the drawer the empty state is the message, so it takes the middle of the panel; the
+  // suggestions shrink to the compact row a full bag uses, along the bottom, instead of a
+  // grid of large cards that pushed the message to the top and filled the screen.
+  if (isDrawer) {
+    return (
+      <div className="flex min-h-full flex-col">
+        <div className="flex flex-1 flex-col items-center justify-center px-6 py-10 text-center">
+          <span
+            className="mb-4 flex h-14 w-14 items-center justify-center rounded-full"
+            style={{
+              background: "color-mix(in oklab, var(--color-brand-maroon) 12%, transparent)",
+              color: "var(--color-brand-maroon)",
+            }}
+            aria-hidden
+          >
+            <ShoppingBag size={24} />
+          </span>
+          <p className="font-display text-2xl">{t("cart.empty")}</p>
+          <p className="mt-1 text-sm opacity-70">{t("cart.emptyDesc")}</p>
+          <Link href="/shop" onClick={onCloseDrawer} className="btn-ghost mt-5 inline-flex">
+            {t("cart.continueShopping")}
+          </Link>
+        </div>
+        {/* Following a product link leaves the bag, so the drawer closes; the row's own
+            buttons (scroll arrows, quick add) keep it open. */}
+        <div
+          onClick={(e) => {
+            if ((e.target as Element).closest("a")) onCloseDrawer?.();
+          }}
+        >
+          <CartUpsellRow variant="drawer" title={t("cart.recommendationsHeader")} />
+        </div>
+      </div>
+    );
+  }
+
   const gridCls = cn(
     "grid gap-x-2 gap-y-4",
     isDrawer ? "grid-cols-2" : "grid-cols-2 sm:grid-cols-4",
