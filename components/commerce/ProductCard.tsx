@@ -11,6 +11,7 @@ import { PriceDisplay } from "./PriceDisplay";
 import { CardAddButton } from "./CardAddButton";
 import { LowStockBadge } from "./LowStockNotice";
 import { lowStockCount, unitsLeft } from "@/lib/cart/stock";
+import { useSoldOut } from "@/lib/cart/sold-out";
 import { StarRating } from "./StarRating";
 import { WishlistButton } from "./WishlistButton";
 
@@ -20,7 +21,8 @@ export function ProductCard({ product, priority = false }: { product: Product; p
   const compareAt = variant?.compareAtPrice;
   const offPercent = discountPercent(variant?.price ?? product.priceRange.min, compareAt);
   const summary = product.reviewSummary ?? getReviewSummary(product.handle);
-  const lowStock = lowStockCount(unitsLeft(product.variants));
+  const knownSoldOut = useSoldOut();
+  const lowStock = knownSoldOut(product.handle) ? null : lowStockCount(unitsLeft(product.variants));
 
   // Clicking the card (image, title, price) opens the quick view; the PDP is reached from
   // inside the sheet. The plus button is the other gesture and adds straight to the bag —
