@@ -201,7 +201,8 @@
     "promoCodeLapsed": "პრომო კოდი მოიხსნა — აქციის პირობა აღარ სრულდება",
     "itemsCount": "{count} ნივთი",
     "upsellPrev": "წინა",
-    "upsellNext": "შემდეგი"
+    "upsellNext": "შემდეგი",
+    "removedSoldOut": "{count, plural, one {{products} ამოიწურა, ამიტომ კალათიდან ამოვიღეთ.} other {{products} ამოიწურა, ამიტომ კალათიდან ამოვიღეთ.}}"
   },
   "checkout": {
     "title": "შეკვეთის გაფორმება",

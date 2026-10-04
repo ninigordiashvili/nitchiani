@@ -201,7 +201,8 @@
     "promoCodeLapsed": "Promo code removed — the offer's condition is no longer met",
     "itemsCount": "{count, plural, one {# item} other {# items}}",
     "upsellPrev": "Previous",
-    "upsellNext": "Next"
+    "upsellNext": "Next",
+    "removedSoldOut": "{count, plural, one {{products} has sold out, so we removed it from your bag.} other {{products} have sold out, so we removed them from your bag.}}"
   },
   "checkout": {
     "title": "Checkout",
