@@ -55,8 +55,8 @@ export async function generateMetadata({
     description: collection.seoDescription
       ? collection.seoDescription
       : collection.description
-      ? metaDescription(collection.description)
-      : `Shop ${collection.title} at Nitchiani — synthetic hair and care, shipped from Tbilisi.`,
+        ? metaDescription(collection.description)
+        : `Shop ${collection.title} at Nitchiani — synthetic hair and care, shipped from Tbilisi.`,
     alternates,
     openGraph: {
       ...ogLocale(locale),
@@ -97,9 +97,7 @@ export default async function CollectionPage({
       <CategoryChips />
       <section className="container-shop mt-4">
         <header className="mb-6">
-          <h1 className="font-display text-3xl tracking-tight sm:text-4xl">
-            {collection.title}
-          </h1>
+          <h1 className="font-display text-3xl tracking-tight sm:text-4xl">{collection.title}</h1>
           <CollectionDescription text={collection.description} />
         </header>
 

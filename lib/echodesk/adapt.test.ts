@@ -133,3 +133,38 @@ describe("localizeUnit", () => {
     expect(localizeUnit("კოლოფი", "en")).toBe("კოლოფი");
   });
 });
+
+describe("variants as choices", () => {
+  const withVariants = (variants: unknown[]) =>
+    adaptProduct(
+      { id: 25, name: { en: "Soft body wave" }, slug: "soft", price: "80", variants } as never,
+      "ka",
+    );
+
+  it("offers the variant's own name when EchoDesk recorded no attributes", () => {
+    // The product editor lets a variant be saved with a name and nothing else; without this
+    // the picker had no options to show and hid itself, so neither colour could be chosen.
+    const p = withVariants([
+      { id: 1, name: { ka: "Ombre" }, price: "80", quantity: 1 },
+      { id: 2, name: { ka: "BLONDE" }, price: "80", quantity: 1 },
+    ]);
+    expect(p.options).toEqual([{ name: "ვარიანტი", values: ["Ombre", "BLONDE"] }]);
+    expect(p.variants.map((v) => v.selectedOptions)).toEqual([
+      [{ name: "ვარიანტი", value: "Ombre" }],
+      [{ name: "ვარიანტი", value: "BLONDE" }],
+    ]);
+  });
+
+  it("prefers the merchant's own attribute when there is one", () => {
+    const p = withVariants([
+      {
+        id: 1,
+        name: { ka: "შავი" },
+        price: "80",
+        quantity: 1,
+        attribute_values: [{ attribute: { name: { ka: "ფერი" } }, value: "შავი" }],
+      },
+    ]);
+    expect(p.options).toEqual([{ name: "ფერი", values: ["შავი"] }]);
+  });
+});

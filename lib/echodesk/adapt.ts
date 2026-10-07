@@ -17,6 +17,12 @@ import type { EchoDeskAttributeValue, EchoDeskProduct, LocalizedText } from "./t
 
 const CURRENCY = "GEL";
 
+/**
+ * Heading above the choices when a variant carries no attribute of its own — "Colour" would
+ * be a guess, and a variant can just as easily be a size or a set.
+ */
+const OPTION_LABEL: Record<Locale, string> = { ka: "ვარიანტი", en: "Option" };
+
 /** EchoDesk sends `{en, ka}`; fall back through locale → English → any value → "". */
 export function pick(text: LocalizedText | undefined, locale: Locale): string {
   if (!text) return "";
@@ -52,20 +58,30 @@ export function adaptProduct(p: EchoDeskProduct, locale: Locale): Product {
   // A product with no variants still needs one sellable row — the storefront always adds a
   // variant to the bag, never a bare product.
   const variants: ProductVariant[] = (p.variants ?? []).length
-    ? p.variants!.map((v) => ({
-        // The parent product rides along: guest checkout and the courier quote both want
-        // `product_id`, and a variant id in that field names some other product entirely.
-        id: `gid://echodesk/Variant/${v.id}?product=${p.id}`,
-        title: pick(v.name, locale) || "One Size",
-        availableForSale: v.is_in_stock ?? (v.quantity ?? 0) > 0,
-        quantityAvailable: v.quantity ?? undefined,
-        selectedOptions: (v.attribute_values ?? []).map((a) => ({
+    ? p.variants!.map((v) => {
+        const title = pick(v.name, locale) || "One Size";
+        // A variant is a choice, and the picker is built from `selectedOptions`. EchoDesk's
+        // product editor lets a variant be created with a name and no attributes at all —
+        // "Ombre", "BLONDE" — and with nothing here the storefront concluded there was
+        // nothing to choose and hid the picker entirely. The variant's own name is the
+        // choice in that case; attributes win when the merchant has set them.
+        const attributes = (v.attribute_values ?? []).map((a) => ({
           name: pick(a.attribute?.name, locale),
           value: typeof a.value === "string" ? a.value : (a.value_text ?? ""),
-        })),
-        price: money(v.price ?? p.price),
-        compareAtPrice: v.compare_at_price ? money(v.compare_at_price) : undefined,
-      }))
+        }));
+        const named = attributes.filter((o) => o.name && o.value);
+        return {
+        // The parent product rides along: guest checkout and the courier quote both want
+        // `product_id`, and a variant id in that field names some other product entirely.
+          id: `gid://echodesk/Variant/${v.id}?product=${p.id}`,
+          title,
+          availableForSale: v.is_in_stock ?? (v.quantity ?? 0) > 0,
+          quantityAvailable: v.quantity ?? undefined,
+          selectedOptions: named.length > 0 ? named : [{ name: OPTION_LABEL[locale], value: title }],
+          price: money(v.price ?? p.price),
+          compareAtPrice: v.compare_at_price ? money(v.compare_at_price) : undefined,
+        };
+      })
     : [
         {
           // Tagged Product, not Variant: this row stands in for a product that has no
