@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 import { PriceDisplay } from "@/components/commerce/PriceDisplay";
 import { Link } from "@/lib/i18n/routing";
 import { BLUR_DATA_URL, safeImageSrc } from "@/lib/images";
-import { useRecentlyViewed } from "@/lib/recently-viewed/store";
+import { type RecentlyViewedItem, useRecentlyViewed } from "@/lib/recently-viewed/store";
 
 /**
  * Horizontal scroll rail of the user's recently viewed products. Hides itself when there
@@ -22,9 +22,19 @@ import { useRecentlyViewed } from "@/lib/recently-viewed/store";
 export function RecentlyViewedRail({
   excludeHandle,
   minItems = 3,
+  fallback,
 }: {
   excludeHandle?: string;
   minItems?: number;
+  /**
+   * What the slot shows instead of a browsing history: products rendered on the server, so
+   * the section is in the HTML from the first paint.
+   *
+   * Without it this rail appears only once the browser has read localStorage, inserting a
+   * whole row into an already-painted page and pushing everything below it down. With it the
+   * slot is the same height either way — only the products and the heading change.
+   */
+  fallback?: RecentlyViewedItem[];
 } = {}) {
   const t = useTranslations("home");
   const { items } = useRecentlyViewed();
@@ -33,13 +43,18 @@ export function RecentlyViewedRail({
     ? items.filter((i) => i.handle !== excludeHandle)
     : items;
 
-  if (visible.length < minItems) return null;
+  // `items` is empty on the first client render too — the store reads storage in an effect —
+  // so this starts on the fallback and matches what the server sent.
+  const showRecent = visible.length >= minItems;
+  const shown = showRecent ? visible : (fallback ?? []);
+
+  if (shown.length === 0) return null;
 
   return (
     <section>
-      <p className="label-eyebrow mb-3">{t("recentlyViewed")}</p>
+      <p className="label-eyebrow mb-3">{showRecent ? t("recentlyViewed") : t("popularNow")}</p>
       <ul className="no-scrollbar -mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 sm:mx-0 sm:px-0">
-        {visible.map((item) => (
+        {shown.map((item) => (
           <li
             key={item.handle}
             className="w-[140px] flex-shrink-0 snap-start"

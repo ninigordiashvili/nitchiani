@@ -49,6 +49,15 @@ export default async function HomePage({
   // overlap; with that collection gone there is one list and nothing to merge.
   const orderedProducts = allProducts;
 
+  // Snapshots in the shape the rail renders, so both states share one card and one height.
+  const popularFallback = allProducts.slice(0, 8).map((p) => ({
+    handle: p.handle,
+    title: p.title,
+    image: p.featuredImage,
+    price: p.priceRange.min,
+    productTypeHandle: p.productTypeHandle,
+  }));
+
 
   // Pre-fetch every candidate bundle's products in parallel server-side. The client picker
   // then selects the best fit from these based on the user's recently-viewed history,
@@ -126,11 +135,11 @@ export default async function HomePage({
       {/* 2 — Category chips */}
       <CategoryChips />
 
-      {/* Recently viewed, above the grid where a returning visitor meets it first. It is drawn
-          in the browser, so it appears a moment after the page and pushes what follows down —
-          see the note in the commit; the alternative was keeping it below the fold. */}
+      {/* Recently viewed, above the grid where a returning visitor meets it first. The slot is
+          filled on the server with popular products, so it is the same height whether or not
+          this visitor has a history — the row is never inserted into an already-painted page. */}
       <section className="container-shop mt-4">
-        <RecentlyViewedRail />
+        <RecentlyViewedRail fallback={popularFallback} />
       </section>
 
       {/* 3 — All Products (best sellers first, then the rest) */}
