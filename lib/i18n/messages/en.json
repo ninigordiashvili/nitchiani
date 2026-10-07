@@ -329,6 +329,10 @@
     "acceptAll": "Accept all",
     "rejectAll": "Essential only"
   },
+  "policyNotice": {
+    "body": "We've updated our Privacy Policy and Terms: delivery now runs through the QuickShipper platform, and we've named every recipient your data is passed to. <link>Read it</link>",
+    "dismiss": "Dismiss"
+  },
   "privacy": {
     "eyebrow": "Legal",
     "title": "Privacy Policy",
