@@ -11,8 +11,8 @@ import { cn } from "@/lib/utils";
  */
 export function RemovedUnavailableNotice({ className }: { className?: string }) {
   const t = useTranslations("cart");
-  const { removedUnavailable, dismissRemovedUnavailable } = useCart();
-  if (removedUnavailable.length === 0) return null;
+  const { removedUnavailable, removedSoldOut, dismissRemovedUnavailable } = useCart();
+  if (removedUnavailable.length === 0 && removedSoldOut.length === 0) return null;
 
   return (
     <div
@@ -25,12 +25,24 @@ export function RemovedUnavailableNotice({ className }: { className?: string }) 
       }}
     >
       <AlertCircle size={14} className="mt-0.5 flex-shrink-0" aria-hidden />
-      <p className="flex-1">
-        {t("removedUnavailable", {
-          products: removedUnavailable.join(", "),
-          count: removedUnavailable.length,
-        })}
-      </p>
+      <div className="flex-1 space-y-1">
+        {removedSoldOut.length > 0 ? (
+          <p>
+            {t("removedSoldOut", {
+              products: removedSoldOut.join(", "),
+              count: removedSoldOut.length,
+            })}
+          </p>
+        ) : null}
+        {removedUnavailable.length > 0 ? (
+          <p>
+            {t("removedUnavailable", {
+              products: removedUnavailable.join(", "),
+              count: removedUnavailable.length,
+            })}
+          </p>
+        ) : null}
+      </div>
       <button
         type="button"
         onClick={dismissRemovedUnavailable}

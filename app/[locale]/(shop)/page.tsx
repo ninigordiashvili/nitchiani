@@ -126,11 +126,6 @@ export default async function HomePage({
       {/* 2 — Category chips */}
       <CategoryChips />
 
-      {/* 3 — Recently viewed (renders only when the user has visited PDPs before) */}
-      <section className="container-shop mt-4">
-        <RecentlyViewedRail />
-      </section>
-
       {/* 3 — All Products (best sellers first, then the rest) */}
       <section className="container-shop mt-4">
         <SectionHeader
@@ -139,6 +134,12 @@ export default async function HomePage({
           href="/shop"
         />
         <ProductGrid products={orderedProducts.slice(0, 8)} priorityFirst={4} />
+      </section>
+
+      {/* Recently viewed. Below the grid on purpose: it is drawn in the browser, so higher up
+          it pushed the whole page down the moment it appeared for a returning visitor. */}
+      <section className="container-shop mt-12">
+        <RecentlyViewedRail />
       </section>
 
       {/* 4 — Featured bundle (picked client-side to match recent browsing) */}

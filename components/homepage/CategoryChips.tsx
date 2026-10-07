@@ -21,7 +21,7 @@ export function CategoryChips() {
       // 20px of visible space above and below the chip pills, symmetric.
       // Top: `mt-4` (16) + `pt-1` (4) = 20.
       // Bottom: `pb-1` (4) + `mt-4` (16) on the next section = 20.
-      className="container-shop no-scrollbar mt-4 flex snap-x snap-mandatory items-center gap-2 overflow-x-auto py-1"
+      className="container-shop no-scrollbar mt-4 flex snap-x snap-mandatory items-center gap-2 overflow-x-auto py-1 [mask-image:linear-gradient(to_right,black_calc(100%-2.5rem),transparent)] sm:[mask-image:none]"
       aria-label={t("browseCategories")}
     >
       {CHIPS.map((c) => {

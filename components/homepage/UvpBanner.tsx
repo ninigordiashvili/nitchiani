@@ -96,7 +96,9 @@ export function UvpBanner() {
         without ever showing. */}
     <script
       dangerouslySetInnerHTML={{
-        __html: `if(document.cookie.split("; ").indexOf("${COOKIE_NAME}=1")>-1)document.documentElement.classList.add("uvp-seen")`,
+        // A data attribute, not a class: React owns <html>'s className, and changing it
+        // before hydration is a mismatch it reports in the console.
+        __html: `if(document.cookie.split("; ").indexOf("${COOKIE_NAME}=1")>-1)document.documentElement.setAttribute("data-uvp-seen","1")`,
       }}
     />
     <section
@@ -122,11 +124,8 @@ export function UvpBanner() {
         willChange: "opacity, transform, max-height",
       }}
     >
-      <div className="container-shop py-20 text-center sm:py-24">
-        <h2
-          className="font-display leading-tight tracking-wider uppercase"
-          style={{ fontSize: "54px" }}
-        >
+      <div className="container-shop py-10 text-center sm:py-24">
+        <h2 className="font-display text-[32px] leading-tight tracking-wider uppercase sm:text-[54px]">
           {t("uvp")}
         </h2>
       </div>

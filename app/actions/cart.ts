@@ -1,7 +1,7 @@
 "use server";
 
 import { isEchoDeskConfigured, lookupProduct } from "@/lib/echodesk/client";
-import { findGoneLines } from "@/lib/echodesk/cart-check";
+import { findGoneLines, type GoneLine } from "@/lib/echodesk/cart-check";
 import { getOrderByToken } from "@/lib/echodesk/orders";
 
 /**
@@ -9,7 +9,7 @@ import { getOrderByToken } from "@/lib/echodesk/orders";
  * than let checkout fail on them. Empty when EchoDesk isn't the backend, or when it can't be
  * reached — not knowing is never a reason to remove anything.
  */
-export async function findGoneCartLinesAction(variantIds: string[]): Promise<string[]> {
+export async function findGoneCartLinesAction(variantIds: string[]): Promise<GoneLine[]> {
   if (!isEchoDeskConfigured || variantIds.length === 0) return [];
   // A bag is a handful of lines; anything larger is not a real bag.
   return findGoneLines(variantIds.slice(0, 50), lookupProduct).catch(() => []);

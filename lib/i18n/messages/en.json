@@ -201,7 +201,8 @@
     "promoCodeLapsed": "Promo code removed — the offer's condition is no longer met",
     "itemsCount": "{count, plural, one {# item} other {# items}}",
     "upsellPrev": "Previous",
-    "upsellNext": "Next"
+    "upsellNext": "Next",
+    "removedSoldOut": "{count, plural, one {{products} has sold out, so we removed it from your bag.} other {{products} have sold out, so we removed them from your bag.}}"
   },
   "checkout": {
     "title": "Checkout",
@@ -212,6 +213,8 @@
     "address": "Address",
     "city": "City",
     "notes": "Notes (optional)",
+    "dataNotice": "By placing this order you agree to our <terms>Terms & Conditions</terms> and <privacy>Privacy Policy</privacy>. Your name, phone, address and map pin are passed to the delivery platform QuickShipper and to the courier company that carries the order; you will receive a tracking link by SMS.",
+    "marketingConsent": "I'd like news and offers from Nitchiani and its delivery partner. Optional — it does not affect your order and you can withdraw it at any time.",
     "paymentMethod": "Payment method",
     "bankTransfer": "Bank transfer",
     "bankTransferDesc": "Transfer and send us the receipt",
@@ -326,6 +329,10 @@
     "acceptAll": "Accept all",
     "rejectAll": "Essential only"
   },
+  "policyNotice": {
+    "body": "We've updated our Privacy Policy and Terms: delivery now runs through the QuickShipper platform, and we've named every recipient your data is passed to. <link>Read it</link>",
+    "dismiss": "Dismiss"
+  },
   "privacy": {
     "eyebrow": "Legal",
     "title": "Privacy Policy",
@@ -385,7 +392,8 @@
     "countFiltered": "{visible} of {total}",
     "noResultsTitle": "No results",
     "noResultsDesc": "Try a different filter combination, or browse the whole catalog",
-    "browseAll": "Browse all"
+    "browseAll": "Browse all",
+    "filters": "Filters"
   },
   "reviews": {
     "title": "Reviews",
@@ -445,7 +453,7 @@
     "fineprint": "One per customer · cannot combine with other offers"
   },
   "about": {
-    "lead": "Nitchiani is an online shop based in Tbilisi, trading since 2021. We sell synthetic hair for afro curls and braids — and everything needed to care for it.",
+    "lead": "The Nitchiani brand has been around since 2021, and the online shop since 2026. We sell synthetic hair for afro curls and braids — and everything needed to care for it.",
     "offerTitle": "What we sell",
     "offerBody": "Synthetic hair for curls, kinky textures and braiding. Hair care — leave-in conditioners and styling wax. Satin bonnets and durags to protect your hair.",
     "whyTitle": "Why Nitchiani",
@@ -456,6 +464,6 @@
     "returnsBody": "If you don't like it, the colour isn't what you expected, or you find a visual defect — return it within 24 hours. Hair can be returned even with the package opened, as long as it hasn't been used — not braided. For hygiene reasons, opened care products such as wax or conditioner can't be returned.",
     "contactTitle": "Get in touch",
     "metaTitle": "About Us — Online Hair Shop in Tbilisi",
-    "metaDescription": "Nitchiani is a Tbilisi-based online shop, trading since 2021: synthetic braiding hair, hair-care products, satin bonnets and durags."
+    "metaDescription": "Nitchiani — a Tbilisi brand since 2021, online shop since 2026: synthetic braiding hair, hair care, satin bonnets and durags."
   }
 }

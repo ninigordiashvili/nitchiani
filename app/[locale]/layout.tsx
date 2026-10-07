@@ -13,6 +13,7 @@ import { CookieConsentBanner } from "@/components/layout/CookieConsentBanner";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { PromoStrip } from "@/components/layout/PromoStrip";
+import { PolicyUpdateStrip } from "@/components/layout/PolicyUpdateStrip";
 import { getFreeShippingThreshold } from "@/lib/echodesk/shipping";
 import { CartDrawer } from "@/components/layout/CartDrawer";
 import { BottomNav } from "@/components/layout/BottomNav";
@@ -25,6 +26,7 @@ import { QuickViewModal } from "@/components/commerce/QuickViewModal";
 import { ChatWidgetPlacement } from "@/components/ui/ChatWidgetPlacement";
 import { CartProvider } from "@/lib/cart/store";
 import { CookieConsentProvider } from "@/lib/ui/cookie-consent";
+import { PRIVACY_LAST_UPDATED } from "@/lib/legal";
 import { CurrencyProvider } from "@/lib/currency/store";
 import { RecentlyViewedProvider } from "@/lib/recently-viewed/store";
 import { OverlaysProvider } from "@/lib/ui/overlays";
@@ -77,6 +79,10 @@ export default async function LocaleLayout({
     <html
       lang={locale}
       className={`${manrope.variable} ${tenorSans.variable} ${notoSansGeorgian.variable} ${notoSerifGeorgian.variable}`}
+      // UvpBanner's inline script marks this element before React hydrates, and the chat
+      // placement sets a flag on it after — neither is server-rendered, and without this
+      // React reports the difference as a hydration error.
+      suppressHydrationWarning
     >
       <body>
         <SiteJsonLd locale={locale as Locale} />
@@ -94,6 +100,8 @@ export default async function LocaleLayout({
                 <div className="flex min-h-dvh flex-col">
                   <SkipToContent />
                   <PromoStrip freeShippingThreshold={freeShippingThreshold} />
+                  {/* Keeps Privacy Policy §12 — bumping PRIVACY_LAST_UPDATED re-shows it. */}
+                  <PolicyUpdateStrip version={PRIVACY_LAST_UPDATED} />
                   <LocalePrompt />
                   <Header locale={locale as Locale} />
                   {/* `id="main"` is the skip-link target; `tabIndex={-1}` makes it programmatically

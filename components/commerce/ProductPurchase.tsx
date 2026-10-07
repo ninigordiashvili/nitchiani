@@ -6,6 +6,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { BUSINESS } from "@/lib/business";
 import type { Product } from "@/lib/shopify/types";
 import { useCart } from "@/lib/cart/store";
+import { useSoldOut } from "@/lib/cart/sold-out";
 import { clampToStock, isAtStockLimit, lowStockCount } from "@/lib/cart/stock";
 import { AddToCartButton } from "./AddToCartButton";
 import { LowStockNotice } from "./LowStockNotice";
@@ -40,7 +41,11 @@ export function ProductPurchase({
     product.variants.find((v) => v.availableForSale) ?? product.variants[0],
   );
   const [quantity, setQuantity] = useState(1);
-  const lowStock = selected.availableForSale ? lowStockCount(selected.quantityAvailable) : null;
+  const knownSoldOut = useSoldOut();
+  const lowStock =
+    selected.availableForSale && !knownSoldOut(product.handle)
+      ? lowStockCount(selected.quantityAvailable)
+      : null;
   // The stepper's ceiling is what the bag can still take, not the raw stock: with 1 left and
   // 1 already in the bag, there's nothing more to choose.
   const room = cart.canAdd(selected.id, selected.quantityAvailable);

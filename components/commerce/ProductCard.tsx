@@ -11,6 +11,7 @@ import { PriceDisplay } from "./PriceDisplay";
 import { CardAddButton } from "./CardAddButton";
 import { LowStockBadge } from "./LowStockNotice";
 import { lowStockCount, unitsLeft } from "@/lib/cart/stock";
+import { useSoldOut } from "@/lib/cart/sold-out";
 import { StarRating } from "./StarRating";
 import { WishlistButton } from "./WishlistButton";
 
@@ -20,7 +21,8 @@ export function ProductCard({ product, priority = false }: { product: Product; p
   const compareAt = variant?.compareAtPrice;
   const offPercent = discountPercent(variant?.price ?? product.priceRange.min, compareAt);
   const summary = product.reviewSummary ?? getReviewSummary(product.handle);
-  const lowStock = lowStockCount(unitsLeft(product.variants));
+  const knownSoldOut = useSoldOut();
+  const lowStock = knownSoldOut(product.handle) ? null : lowStockCount(unitsLeft(product.variants));
 
   // Clicking the card (image, title, price) opens the quick view; the PDP is reached from
   // inside the sheet. The plus button is the other gesture and adds straight to the bag —
@@ -51,9 +53,11 @@ export function ProductCard({ product, priority = false }: { product: Product; p
           blurDataURL={BLUR_DATA_URL}
           className="object-contain transition-transform duration-[400ms] ease-[var(--ease-brand)] group-hover:scale-105"
         />
-        {/* Top-left: the discount, then the stock warning beneath it when both apply. */}
+        {/* Top-left: the discount, then the stock warning beneath it when both apply. The
+            column stops short of the wishlist heart in the opposite corner — the stock badge
+            grew with its font size and ran underneath it. */}
         {offPercent !== null || lowStock !== null ? (
-          <div className="absolute top-2 left-2 flex flex-col items-start gap-1">
+          <div className="absolute top-2 left-2 flex max-w-[calc(100%-3.25rem)] flex-col items-start gap-1">
             {offPercent !== null ? (
               <div className="flex items-center gap-1">
                 <Badge tone="maroon">−{offPercent}%</Badge>
@@ -74,7 +78,9 @@ export function ProductCard({ product, priority = false }: { product: Product; p
         </div>
       </div>
       <div className="pt-3 pb-1">
-        <p className="line-clamp-1 text-sm font-medium leading-tight">{product.title}</p>
+        {/* Two lines: at this width every name in the catalogue overflows one, and a row of
+            "ღრმა ტალღოვანი თმის…" tells a shopper nothing. */}
+        <p className="line-clamp-2 text-sm font-medium leading-snug">{product.title}</p>
         {summary.count > 0 ? (
           <div className="mt-1 flex items-center gap-1 text-[11px] opacity-70">
             <StarRating

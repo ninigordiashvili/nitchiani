@@ -7,6 +7,7 @@ import {
   type ServerComputedTotals,
 } from "@/lib/checkout/totals";
 import { sendOrderConfirmation } from "@/lib/email/order-confirmation";
+import { addNewsletterContact } from "@/lib/email/newsletter";
 import {
   createManualOrder,
   createPendingOrder,
@@ -58,6 +59,12 @@ const bodySchema = z.object({
   lat: z.number().min(-90).max(90).optional(),
   lng: z.number().min(-180).max(180).optional(),
   notes: z.string().optional(),
+  /**
+   * Whether the shopper ticked the optional marketing box at checkout. Never inferred and
+   * never defaulted true: it is the record of an affirmative consent, and as the controller we
+   * are the one who has to be able to show it was given.
+   */
+  marketingConsent: z.boolean().optional(),
   paymentMethod: z.enum(["bank_transfer", "cod", "bog_card", "tbc_card"]),
   locale: z.string(),
   lines: z.array(lineSchema).min(1),
@@ -138,6 +145,7 @@ function buildOrderInput(
     lat: payload.lat,
     lng: payload.lng,
     notes: payload.notes,
+    marketingConsent: payload.marketingConsent === true,
     paymentMethod: payload.paymentMethod,
     locale: payload.locale,
     lines: payload.lines,
@@ -260,6 +268,25 @@ export async function POST(req: Request): Promise<NextResponse<CheckoutResponse>
   }
 
   const orderInput = { ...buildOrderInput(payload, totals, storeConfig?.pickup), paymentProvider: card?.provider };
+
+  // A ticked marketing box is acted on here, before the payment branches, so it is recorded
+  // once no matter which of them runs — a card order leaves the site at the next line and
+  // never comes back through this handler.
+  //
+  // Resend's audience is what makes the consent durable and dated: the order body carries a
+  // `marketing_consent` flag for the back office, but we don't own EchoDesk's schema and an
+  // unknown field there may simply be dropped. We are the controller, so showing that a
+  // consent was actually given is our burden, and it needs somewhere we read and control.
+  // Fire-and-forget: a marketing signup must never cost somebody their order.
+  if (payload.marketingConsent === true) {
+    void addNewsletterContact({
+      email: payload.email,
+      firstName: payload.firstName,
+      locale: payload.locale === "ka" ? "ka" : "en",
+    }).catch((err) => {
+      reportError(err, { op: "marketingConsentAtCheckout" });
+    });
+  }
 
   // EchoDesk owns orders once it's configured. It brokers card payments itself, so the
   // BOG/TBC branches below are bypassed entirely — the tenant decides which providers are

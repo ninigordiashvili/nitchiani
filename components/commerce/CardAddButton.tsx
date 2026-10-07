@@ -3,6 +3,7 @@
 import { Check, Plus } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useCart } from "@/lib/cart/store";
+import { useSoldOut } from "@/lib/cart/sold-out";
 import { useQuickView } from "@/lib/ui/quick-view";
 import { useToast } from "@/lib/ui/toast";
 import type { Product } from "@/lib/shopify/types";
@@ -39,7 +40,10 @@ export function CardAddButton({
   // Prefer a variant that can actually be sold, so a product whose first colour is gone is
   // still buyable from the card.
   const variant = product.variants.find((v) => v.availableForSale) ?? product.variants[0];
-  const soldOut = !variant?.availableForSale;
+  // `knownSoldOut` covers stock that ran out after this page was rendered — the listing is
+  // cached for a few minutes, and the bag may already know better.
+  const knownSoldOut = useSoldOut();
+  const soldOut = !variant?.availableForSale || knownSoldOut(product.handle);
   // More than one variant is a genuine choice, so the sheet handles it. Sold out is not a
   // choice — the button refuses instead.
   const deferToSheet = !soldOut && product.variants.length > 1;

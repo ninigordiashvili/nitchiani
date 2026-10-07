@@ -13,10 +13,12 @@ export function SectionHeader({
 }) {
   const t = useTranslations("home");
   return (
-    <div className="mb-5 flex items-end justify-between gap-4">
+    // One row at every width, pushed apart, with the link sitting on the title's centre line
+    // rather than its baseline.
+    <div className="mb-5 flex items-center justify-between gap-3 sm:gap-4">
       <div>
         {eyebrow ? <p className="label-eyebrow mb-1.5">{eyebrow}</p> : null}
-        <h2 className="font-display text-2xl tracking-tight sm:text-3xl">{title}</h2>
+        <h2 className="font-display text-xl tracking-tight sm:text-2xl lg:text-3xl">{title}</h2>
       </div>
       {href ? (
         <Link

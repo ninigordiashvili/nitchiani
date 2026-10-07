@@ -368,7 +368,7 @@ button[aria-label="Open chat"],
 }
 
 /* Returning visitors: the one-time banner is hidden before first paint (UvpBanner). */
-.uvp-seen [data-uvp-banner] {
+html[data-uvp-seen="1"] [data-uvp-banner] {
   display: none;
 }
 

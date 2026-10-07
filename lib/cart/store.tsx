@@ -9,6 +9,7 @@ import { checkPromoAction } from "@/app/actions/promo";
 import { findGoneCartLinesAction, paymentStateAction } from "@/app/actions/cart";
 import { forgetPendingPayment, loadPendingPayment } from "./pending-payment";
 import { isCouponUsed, markCouponUsed } from "./used-coupons";
+import { markSoldOut } from "./sold-out";
 import type { PromoReason } from "@/lib/echodesk/promo";
 
 // Bump the version when image hosts or line shape change, so stale localStorage entries
@@ -74,6 +75,8 @@ type CartState = {
   couponShortfall: number | null;
   /** Names of lines dropped on load because the shop no longer sells them. */
   removedUnavailable: string[];
+  /** Names of lines dropped on load because they had sold out. */
+  removedSoldOut: string[];
 };
 
 type CartActions = {
@@ -147,6 +150,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
   const [hydrated, setHydrated] = useState(false);
   const [removedUnavailable, setRemovedUnavailable] = useState<string[]>([]);
+  const [removedSoldOut, setRemovedSoldOut] = useState<string[]>([]);
 
   useEffect(() => {
     try {
@@ -185,10 +189,21 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     void findGoneCartLinesAction(restored.map((l) => l.variantId))
       .then((gone) => {
         if (cancelled || gone.length === 0) return;
-        const goneSet = new Set(gone);
-        const titles = linesRef.current.filter((l) => goneSet.has(l.variantId)).map((l) => l.productTitle);
-        setLines((prev) => prev.filter((l) => !goneSet.has(l.variantId)));
-        setRemovedUnavailable(titles);
+        const reasons = new Map(gone.map((g) => [g.variantId, g.reason]));
+        const titlesFor = (reason: string) =>
+          linesRef.current.filter((l) => reasons.get(l.variantId) === reason).map((l) => l.productTitle);
+        const unavailable = titlesFor("unavailable");
+        const soldOut = titlesFor("soldOut");
+        setLines((prev) => prev.filter((l) => !reasons.has(l.variantId)));
+        if (unavailable.length > 0) setRemovedUnavailable(unavailable);
+        if (soldOut.length > 0) {
+          setRemovedSoldOut(soldOut);
+          // Cards and buy buttons elsewhere show it as sold out straight away, rather than
+          // waiting for the listing cache to catch up.
+          markSoldOut(
+            linesRef.current.filter((l) => reasons.get(l.variantId) === "soldOut").map((l) => l.productHandle),
+          );
+        }
       })
       // Couldn't check: keep the bag as it is. Checkout still names a gone product if one slips by.
       .catch(() => {});
@@ -197,7 +212,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     };
   }, [hydrated, setLines]);
 
-  const dismissRemovedUnavailable = useCallback(() => setRemovedUnavailable([]), []);
+  const dismissRemovedUnavailable = useCallback(() => {
+    setRemovedUnavailable([]);
+    setRemovedSoldOut([]);
+  }, []);
 
   useEffect(() => {
     if (!hydrated) return;
@@ -501,6 +519,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       couponMinSubtotal,
       couponShortfall,
       removedUnavailable,
+      removedSoldOut,
       dismissRemovedUnavailable,
       addLine,
       canAdd,
@@ -524,6 +543,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       couponMinSubtotal,
       couponShortfall,
       removedUnavailable,
+      removedSoldOut,
       dismissRemovedUnavailable,
       addLine,
       canAdd,

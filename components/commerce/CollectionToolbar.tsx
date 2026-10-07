@@ -1,9 +1,9 @@
 "use client";
 
-import { X } from "lucide-react";
+import { ChevronDown, SlidersHorizontal, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useSetUrlQuery } from "@/lib/ui/use-url-query";
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
   type AttributeFacet,
   type ProductFilters,
@@ -38,6 +38,16 @@ export function CollectionToolbar({
   sort: SortKey;
 }) {
   const t = useTranslations("shop");
+  // Phones only: the rows below are hidden until asked for. From sm up they always show, so
+  // this state is ignored there.
+  const [openOnMobile, setOpenOnMobile] = useState(false);
+
+  const activeFilterCount =
+    Object.values(filters.attributes).reduce((n, v) => n + v.length, 0) +
+    filters.colors.length +
+    (filters.onSale ? 1 : 0) +
+    (filters.availableOnly ? 1 : 0) +
+    (filters.maxPrice !== null ? 1 : 0);
   // Updates the address bar in place — no server round trip, and the page can stay cached.
   const updateParam = useSetUrlQuery();
 
@@ -63,12 +73,6 @@ export function CollectionToolbar({
     [filters.attributes, updateParam],
   );
 
-  const activeFilterCount =
-    Object.values(filters.attributes).reduce((n, v) => n + v.length, 0) +
-    filters.colors.length +
-    (filters.onSale ? 1 : 0) +
-    (filters.availableOnly ? 1 : 0) +
-    (filters.maxPrice !== null ? 1 : 0);
 
   const clearAll = useCallback(
     () =>
@@ -86,13 +90,38 @@ export function CollectionToolbar({
   );
 
   return (
-    <div className="mb-6 flex flex-col gap-4 border-b border-black/10 pb-4">
+    <div className="mb-6 flex flex-col gap-3 border-b border-black/10 pb-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-xs opacity-60">
           {visibleCount === totalCount
             ? t("countAll", { count: totalCount })
             : t("countFiltered", { visible: visibleCount, total: totalCount })}
         </p>
+
+        {/* Filters fold away on a phone, where the rows below are taller than the screen and
+            pushed every product out of sight. */}
+        <button
+          type="button"
+          onClick={() => setOpenOnMobile((v) => !v)}
+          aria-expanded={openOnMobile}
+          className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-black/25 bg-white/80 px-3.5 py-1.5 text-[13px] font-medium text-[var(--color-brand-ink)] sm:hidden"
+        >
+          <SlidersHorizontal size={14} aria-hidden />
+          {t("filters")}
+          {activeFilterCount > 0 ? (
+            <span
+              className="rounded-full px-1.5 text-[11px] tabular-nums"
+              style={{ background: "var(--color-brand-maroon)", color: "var(--color-brand-cream)" }}
+            >
+              {activeFilterCount}
+            </span>
+          ) : null}
+          <ChevronDown
+            size={14}
+            aria-hidden
+            className={cn("transition-transform", openOnMobile && "rotate-180")}
+          />
+        </button>
 
         <div className="inline-flex items-center gap-2 text-xs">
           <span className="opacity-60">{t("sortLabel")}</span>
@@ -107,6 +136,7 @@ export function CollectionToolbar({
         </div>
       </div>
 
+      <div className={cn("flex-col gap-4", openOnMobile ? "flex" : "hidden sm:flex")}>
       {/* One row per backend attribute (hair type, length, …), each labelled with the
           attribute's own name so the chips read as a group rather than a loose pile. Renders
           nothing until the catalog actually defines a filterable attribute with more than one
@@ -170,7 +200,10 @@ export function CollectionToolbar({
         {activeFilterCount > 0 ? (
           <button
             type="button"
-            onClick={clearAll}
+            onClick={() => {
+              clearAll();
+              setOpenOnMobile(false);
+            }}
             // A real button, not faint text: once filters are on, this is the way back to
             // everything, and it has to be findable at a glance.
             className="ml-auto inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-[var(--color-brand-maroon)] px-3.5 py-1.5 text-[13px] font-medium text-[var(--color-brand-maroon)] transition-colors hover:bg-[var(--color-brand-maroon)] hover:text-[var(--color-brand-cream)]"
@@ -179,6 +212,7 @@ export function CollectionToolbar({
             {t("clearAll")} ({activeFilterCount})
           </button>
         ) : null}
+      </div>
       </div>
     </div>
   );

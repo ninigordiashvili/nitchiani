@@ -214,7 +214,9 @@ export function QuickViewModal() {
                   against a white product photo. On the cream panel the maroon reads clearly, and
                   the hairline border makes it legible as a control rather than decoration. */}
               <div className="flex items-start justify-between gap-3">
-                <h2 className="font-display text-2xl leading-tight tracking-tight sm:text-3xl">
+                {/* Smaller on a phone: a long Georgian name ran to three lines here and pushed
+                    the price and the buy button off the first screen. */}
+                <h2 className="font-display text-lg leading-snug tracking-tight sm:text-3xl sm:leading-tight">
                   {product.title}
                 </h2>
                 <WishlistButton
