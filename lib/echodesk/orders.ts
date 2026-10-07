@@ -171,6 +171,12 @@ export async function createGuestOrder(
     ...(input.shippingMethodId ? { shipping_method_id: input.shippingMethodId } : {}),
     ...(input.couponCode ? { promo_code: input.couponCode } : {}),
     ...quickShipperFields(input, pickup),
+    // Sent as its own field, not folded into `notes`: the back office has to be able to see
+    // whether this customer may be marketed to without reading prose, and the notes field is
+    // the customer's words. If EchoDesk ignores unknown keys this is a no-op there, which is
+    // why the consent is also recorded by subscribing them in /api/checkout/initiate — that
+    // path is the durable, dated record we control.
+    marketing_consent: input.marketingConsent === true,
     // Whatever the customer typed, and nothing else.
     ...(notes ? { notes } : {}),
   };

@@ -213,6 +213,8 @@
     "address": "Address",
     "city": "City",
     "notes": "Notes (optional)",
+    "dataNotice": "By placing this order you agree to our <terms>Terms & Conditions</terms> and <privacy>Privacy Policy</privacy>. Your name, phone, address and map pin are passed to the delivery platform QuickShipper and to the courier company that carries the order; you will receive a tracking link by SMS.",
+    "marketingConsent": "I'd like news and offers from Nitchiani and its delivery partner. Optional — it does not affect your order and you can withdraw it at any time.",
     "paymentMethod": "Payment method",
     "bankTransfer": "Bank transfer",
     "bankTransferDesc": "Transfer and send us the receipt",

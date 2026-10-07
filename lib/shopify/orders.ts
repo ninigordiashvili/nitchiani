@@ -23,6 +23,12 @@ export type ManualOrderInput = {
   lat?: number;
   lng?: number;
   notes?: string;
+  /**
+   * The shopper ticked the optional marketing box at checkout. Carried onto the order so the
+   * consent has a dated record attached to the thing that produced it — we are the controller,
+   * not the delivery platform, so showing it was given is our burden.
+   */
+  marketingConsent?: boolean;
   paymentMethod: CheckoutPaymentMethod;
   /** EchoDesk `payment_provider` for a card order — which bank charges it. */
   paymentProvider?: string;
@@ -110,6 +116,7 @@ function buildOrderPayload(input: ManualOrderInput) {
 
   const noteLines: string[] = [paymentMethodNote(input.paymentMethod), `Locale: ${input.locale}`];
   if (input.couponCode) noteLines.push(`Coupon: ${input.couponCode}`);
+  noteLines.push(`Marketing consent: ${input.marketingConsent ? "yes" : "no"}`);
   if (input.notes) noteLines.push(`Customer note: ${input.notes}`);
 
   const discountAmount = input.discount ? Number.parseFloat(input.discount.amount) : 0;

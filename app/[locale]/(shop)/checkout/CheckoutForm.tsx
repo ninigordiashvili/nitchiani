@@ -78,6 +78,13 @@ const buildCheckoutSchema = (t: Translate, { pickup }: { pickup: boolean }) => z
   lng: z.number().optional(),
   city: pickup ? z.string().optional() : z.string().min(1, t("checkout.validation.required")),
   notes: z.string().optional(),
+  // Marketing consent, and nothing else, is what this tick covers. It is deliberately NOT
+  // required to place an order and NOT pre-ticked: we are the controller, so the lawfulness of
+  // every consent collected here is ours to answer for, and a consent that was a condition of
+  // buying — or that the shopper never actively gave — is not a consent. The delivery
+  // transfers themselves need no tick; they are contract performance, and the disclosure above
+  // the submit button is what informs the shopper of them.
+  marketingConsent: z.boolean().optional(),
   paymentMethod: z.enum(["bank_transfer", "cod", "bog_card", "tbc_card"]),
 });
 type CheckoutInput = z.infer<ReturnType<typeof buildCheckoutSchema>>;
@@ -205,6 +212,7 @@ export function CheckoutForm({
       // No city is pre-filled. A value the shopper did not choose is one they have to
       // notice and clear, and it silently ships every unread order to the capital.
       paymentMethod: defaultPaymentMethod,
+      marketingConsent: false,
     },
   });
 
@@ -217,6 +225,9 @@ export function CheckoutForm({
     reset({
       ...saved,
       paymentMethod: defaultPaymentMethod,
+      // Never restored from the last order. A marketing consent has to be given afresh each
+      // time it is relied on, and a box the shopper finds already ticked is not a consent.
+      marketingConsent: false,
     });
     // Mount-only on purpose: re-running when `defaultPaymentMethod` changes would overwrite
     // whatever the shopper has typed, and the shop's payment settings don't change mid-visit.
@@ -999,6 +1010,43 @@ export function CheckoutForm({
               <span>{submitError}</span>
             </div>
           ) : null}
+          {/* Data disclosure, immediately above the action it describes.
+
+              This is the point of collection, so this is where the shopper has to be told who
+              receives their address and phone. We are the controller, and a policy page they
+              never opened does not discharge that. Hidden on mobile step 1 along with the
+              submit button, so it always sits directly above whichever button actually places
+              the order.
+
+              Deliberately two separate things: the paragraph is notice (no tick — these
+              transfers are how a delivery happens at all), the checkbox is consent (optional,
+              unticked, and not wired into validation). Collapsing them into one "I agree"
+              would make the delivery itself look optional and the marketing look compulsory. */}
+          <div className={cn("mt-5", step === 1 && "hidden sm:block")}>
+            <p className="text-[11px] leading-relaxed opacity-65">
+              {t.rich("checkout.dataNotice", {
+                terms: (chunks) => (
+                  <Link href="/terms" className="underline underline-offset-2">
+                    {chunks}
+                  </Link>
+                ),
+                privacy: (chunks) => (
+                  <Link href="/privacy" className="underline underline-offset-2">
+                    {chunks}
+                  </Link>
+                ),
+              })}
+            </p>
+            <label className="mt-2.5 flex cursor-pointer items-start gap-2 text-[11px] leading-relaxed opacity-80">
+              <input
+                type="checkbox"
+                {...register("marketingConsent")}
+                className="mt-0.5 flex-shrink-0 accent-[var(--color-brand-ink)]"
+              />
+              <span>{t("checkout.marketingConsent")}</span>
+            </label>
+          </div>
+
           {/* Mobile step 1: "Continue to payment" advances to step 2 (no submission). */}
           <button
             type="button"
