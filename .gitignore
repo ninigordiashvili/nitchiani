@@ -43,3 +43,6 @@ next-env.d.ts
 .vscode/*
 !.vscode/extensions.json
 .idea
+
+# local notes (commercial terms — must never be committed; repo is public)
+*.local.md
