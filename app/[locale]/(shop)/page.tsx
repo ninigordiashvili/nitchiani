@@ -126,6 +126,13 @@ export default async function HomePage({
       {/* 2 — Category chips */}
       <CategoryChips />
 
+      {/* Recently viewed, above the grid where a returning visitor meets it first. It is drawn
+          in the browser, so it appears a moment after the page and pushes what follows down —
+          see the note in the commit; the alternative was keeping it below the fold. */}
+      <section className="container-shop mt-4">
+        <RecentlyViewedRail />
+      </section>
+
       {/* 3 — All Products (best sellers first, then the rest) */}
       <section className="container-shop mt-4">
         <SectionHeader
@@ -134,12 +141,6 @@ export default async function HomePage({
           href="/shop"
         />
         <ProductGrid products={orderedProducts.slice(0, 8)} priorityFirst={4} />
-      </section>
-
-      {/* Recently viewed. Below the grid on purpose: it is drawn in the browser, so higher up
-          it pushed the whole page down the moment it appeared for a returning visitor. */}
-      <section className="container-shop mt-12">
-        <RecentlyViewedRail />
       </section>
 
       {/* 4 — Featured bundle (picked client-side to match recent browsing) */}
