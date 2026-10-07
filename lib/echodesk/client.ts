@@ -58,6 +58,11 @@ export function listProducts(limit = 100): Promise<Paginated<EchoDeskProduct> | 
 }
 
 /** Products are addressed by slug in our URLs; the API filters on it. */
+/** One product's full record — the only payload that carries its variants and gallery. */
+export function getProductById(id: number): Promise<EchoDeskProduct | null> {
+  return get<EchoDeskProduct>(`/products/${id}/`);
+}
+
 export async function getProductBySlug(slug: string): Promise<EchoDeskProduct | null> {
   const page = await get<Paginated<EchoDeskProduct>>(
     `/products/?slug=${encodeURIComponent(slug)}`,

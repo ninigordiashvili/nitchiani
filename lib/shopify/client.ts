@@ -8,7 +8,12 @@ import {
 } from "./dummy";
 import { findMatchingProducts } from "./search";
 import { adaptProduct } from "../echodesk/adapt";
-import { getProductBySlug, isEchoDeskConfigured, listProducts } from "../echodesk/client";
+import {
+  getProductById,
+  getProductBySlug,
+  isEchoDeskConfigured,
+  listProducts,
+} from "../echodesk/client";
 import { categoriesFor } from "../echodesk/categories";
 import type { Locale } from "../i18n/config";
 import { defaultLocale } from "../i18n/config";
@@ -79,7 +84,14 @@ export async function shopifyFetch<T>({
 const catalog = cache(async (locale: Locale): Promise<Product[]> => {
   if (!isEchoDeskConfigured) return [];
   const page = await listProducts(200);
-  return (page?.results ?? []).map((p) => adaptProduct(p, locale));
+  const rows = page?.results ?? [];
+  // The list serialiser omits variants, so every product looked single-variant on the home
+  // page and the shop grid: a product with two colours offered no choice, and the card's add
+  // button put an unchosen one in the bag. The detail record is the only place variants live.
+  // Fetched in parallel and cached exactly like the list, so this costs one round of requests
+  // per revalidation rather than one per visitor.
+  const detailed = await Promise.all(rows.map(async (p) => (await getProductById(p.id)) ?? p));
+  return detailed.map((p) => adaptProduct(p, locale));
 });
 
 export async function getProducts(locale: Locale = defaultLocale, limit = 20): Promise<Product[]> {

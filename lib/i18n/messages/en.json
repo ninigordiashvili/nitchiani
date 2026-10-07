@@ -147,7 +147,8 @@
     "nextImage": "Next photo",
     "inBagMax": "Already in your bag",
     "allInBag": "All available stock is already in your bag",
-    "addedPartly": "Added {count} — that's all we have in stock"
+    "addedPartly": "Added {count} — that's all we have in stock",
+    "chooseOption": "Choose an option"
   },
   "cart": {
     "removedUnavailable": "{count, plural, one {{products} is no longer sold, so we removed it from your bag.} other {{products} are no longer sold, so we removed them from your bag.}}",
