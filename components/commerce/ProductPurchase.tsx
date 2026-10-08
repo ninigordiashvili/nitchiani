@@ -1,12 +1,13 @@
 "use client";
 
 import { Minus, Plus, Store, Truck } from "lucide-react";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { BUSINESS } from "@/lib/business";
 import type { Product } from "@/lib/shopify/types";
 import { useCart } from "@/lib/cart/store";
 import { useSoldOut } from "@/lib/cart/sold-out";
+import { showVariantPhoto } from "@/lib/ui/variant-photo";
 import { clampToStock, isAtStockLimit, lowStockCount } from "@/lib/cart/stock";
 import { AddToCartButton } from "./AddToCartButton";
 import { LowStockNotice } from "./LowStockNotice";
@@ -41,6 +42,12 @@ export function ProductPurchase({
     product.variants.find((v) => v.availableForSale) ?? product.variants[0],
   );
   const [quantity, setQuantity] = useState(1);
+  // Tell the gallery which photo the current choice wears, and clear it on the way out so the
+  // next product doesn't open on the last one's colour.
+  useEffect(() => {
+    showVariantPhoto(selected.image?.url ?? null);
+    return () => showVariantPhoto(null);
+  }, [selected]);
   const knownSoldOut = useSoldOut();
   const lowStock =
     selected.availableForSale && !knownSoldOut(product.handle)

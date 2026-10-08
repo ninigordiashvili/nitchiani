@@ -67,7 +67,7 @@ export function BundleUpsell({
         productHandle: p.handle,
         productTitle: p.title,
         variantTitle: v.title,
-        image: p.featuredImage,
+        image: v.image ?? p.featuredImage,
         unitPrice: v.price,
         maxQuantity: v.quantityAvailable,
         quantity: qty,

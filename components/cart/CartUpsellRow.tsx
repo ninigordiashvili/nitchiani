@@ -148,7 +148,7 @@ function UpsellCard({ product, compact }: { product: Product; compact: boolean }
       productHandle: product.handle,
       productTitle: product.title,
       variantTitle: variant.title,
-      image: product.featuredImage,
+      image: variant.image ?? product.featuredImage,
       unitPrice: variant.price,
       maxQuantity: variant.quantityAvailable,
     });

@@ -78,6 +78,11 @@ export function adaptProduct(p: EchoDeskProduct, locale: Locale): Product {
           availableForSale: v.is_in_stock ?? (v.quantity ?? 0) > 0,
           quantityAvailable: v.quantity ?? undefined,
           selectedOptions: named.length > 0 ? named : [{ name: OPTION_LABEL[locale], value: title }],
+          // A colour is worth seeing: when a variant carries its own photo, the gallery and
+          // the bag show that rather than the product's default shot.
+          image: v.image
+            ? { url: v.image, altText: `${title} — ${pick(p.name, locale)}`, width: 900, height: 1125 }
+            : undefined,
           price: money(v.price ?? p.price),
           compareAtPrice: v.compare_at_price ? money(v.compare_at_price) : undefined,
         };

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { distinctImages } from "./images";
+import { distinctImages, variantPhotos } from "./images";
 
 const img = (url: string) => ({ url, altText: url });
 
@@ -18,5 +18,22 @@ describe("distinctImages", () => {
   it("handles empty and single-image galleries", () => {
     expect(distinctImages([])).toEqual([]);
     expect(distinctImages([img("/a.png")])).toHaveLength(1);
+  });
+});
+
+describe("variantPhotos", () => {
+  const product = (variants: unknown[]) => ({ variants }) as never;
+
+  it("lists only the variants that have a photo, in variant order", () => {
+    expect(
+      variantPhotos(
+        product([
+          { image: img("/black.png") },
+          {},
+          { image: img("/blonde.png") },
+          { image: { url: "", altText: "" } },
+        ]),
+      ),
+    ).toEqual([img("/black.png"), img("/blonde.png")]);
   });
 });

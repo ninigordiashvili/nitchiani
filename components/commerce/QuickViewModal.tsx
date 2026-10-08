@@ -6,10 +6,11 @@ import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "@/lib/i18n/routing";
 import { cn } from "@/lib/utils";
-import { BLUR_DATA_URL, distinctImages } from "@/lib/images";
+import { BLUR_DATA_URL, distinctImages, variantPhotos } from "@/lib/images";
 import { useFocusTrap } from "@/lib/ui/use-focus-trap";
 import { useOverlays } from "@/lib/ui/overlays";
 import { useQuickView } from "@/lib/ui/quick-view";
+import { useVariantPhoto } from "@/lib/ui/variant-photo";
 import { useSwipeDismiss } from "@/lib/ui/use-swipe-dismiss";
 import { ImageLightbox } from "./ImageLightbox";
 import { ProductPurchase } from "./ProductPurchase";
@@ -49,8 +50,8 @@ export function QuickViewModal() {
   // compact reads as a bug rather than a feature — so the strip stays hidden until real
   // angles exist, then appears on its own. See `distinctImages`.
   const shots = useMemo(
-    () => distinctImages(product?.images ?? []),
-    [product?.images],
+    () => distinctImages([...(product?.images ?? []), ...(product ? variantPhotos(product) : [])]),
+    [product],
   );
   const [active, setActive] = useState(0);
   const [lightbox, setLightbox] = useState(false);
@@ -63,6 +64,14 @@ export function QuickViewModal() {
     setActive(0);
     setLightbox(false);
   }, [product?.handle]);
+
+  // Follow the picker, the same way the PDP gallery does.
+  const chosen = useVariantPhoto();
+  useEffect(() => {
+    if (!chosen) return;
+    const i = shots.findIndex((s) => s.url === chosen);
+    if (i >= 0) setActive(i);
+  }, [chosen, shots]);
 
   const shown = shots[active] ?? product?.featuredImage;
 

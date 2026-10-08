@@ -1,3 +1,5 @@
+import type { ImageRef, Product } from "./shopify/types";
+
 /**
  * Returns a safe image URL for components that render `next/image` from data sources we don't fully
  * control (e.g. localStorage cart lines, third-party APIs). If the URL host isn't in the
@@ -51,4 +53,16 @@ export function safeImageSrc(src: string | undefined | null): string {
 export function distinctImages<T extends { url: string }>(images: T[]): T[] {
   const seen = new Set<string>();
   return images.filter((img) => (seen.has(img.url) ? false : (seen.add(img.url), true)));
+}
+
+/**
+ * Every variant photo a product carries, in variant order.
+ *
+ * Appended after the product's own gallery rather than mixed into it, so picking a colour moves
+ * the selection along a fixed strip instead of reshuffling the thumbnails under the shopper's
+ * finger. Duplicates are left to `distinctImages`: a variant photo that is also a gallery shot
+ * should stay at its gallery position.
+ */
+export function variantPhotos(product: Product): ImageRef[] {
+  return product.variants.map((v) => v.image).filter((img): img is ImageRef => Boolean(img?.url));
 }

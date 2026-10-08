@@ -25,6 +25,8 @@ export type ProductVariant = {
    */
   quantityAvailable?: number;
   selectedOptions: { name: string; value: string }[];
+  /** This variant's own photo, when it has one — the gallery and the bag prefer it. */
+  image?: ImageRef;
   price: Money;
   compareAtPrice?: Money;
 };

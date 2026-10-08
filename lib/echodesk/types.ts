@@ -26,6 +26,8 @@ export type EchoDeskVariant = {
   quantity?: number;
   is_in_stock?: boolean;
   attribute_values?: EchoDeskAttributeValue[];
+  /** Photo of this colour or size, when the merchant has set one. */
+  image?: string | null;
 };
 
 export type EchoDeskAttributeValue = {

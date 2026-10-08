@@ -168,3 +168,34 @@ describe("variants as choices", () => {
     expect(p.options).toEqual([{ name: "ფერი", values: ["შავი"] }]);
   });
 });
+
+describe("variant photos", () => {
+  const withVariants = (variants: unknown[]) =>
+    adaptProduct(
+      {
+        id: 25,
+        name: { en: "Soft body wave", ka: "რბილი ტალღა" },
+        slug: "soft",
+        price: "80",
+        image: "https://cdn/default.jpg",
+        variants,
+      } as never,
+      "ka",
+    );
+
+  it("carries a variant's own photo, so the gallery and the bag can show it", () => {
+    const p = withVariants([
+      { id: 1, name: { ka: "შავი" }, price: "80", quantity: 1, image: "https://cdn/black.jpg" },
+      { id: 2, name: { ka: "ქერა" }, price: "80", quantity: 1 },
+    ]);
+    expect(p.variants[0].image).toEqual({
+      url: "https://cdn/black.jpg",
+      altText: "შავი — რბილი ტალღა",
+      width: 900,
+      height: 1125,
+    });
+    // No photo of its own: callers fall back to the product's, so this stays absent rather
+    // than becoming an <Image> with an empty src.
+    expect(p.variants[1].image).toBeUndefined();
+  });
+});

@@ -17,6 +17,7 @@ import { Reviews } from "@/components/commerce/Reviews";
 import { StarRating } from "@/components/commerce/StarRating";
 import { TrackRecentlyViewed } from "@/components/commerce/TrackRecentlyViewed";
 import { getProductByHandle, getRelatedProducts } from "@/lib/shopify/client";
+import { variantPhotos } from "@/lib/images";
 import { getReviewSummary } from "@/lib/reviews";
 import { localeAlternates, ogLocale, productSeo } from "@/lib/seo";
 import { categoriesFor } from "@/lib/echodesk/categories";
@@ -98,7 +99,11 @@ export default async function ProductPage({
     <article className="pb-12">
       <ProductJsonLd product={product} locale={locale} />
       <div className="container-shop sm:grid sm:grid-cols-2 sm:gap-10">
-        <ProductGallery images={product.images} title={product.title} />
+        <ProductGallery
+          images={product.images}
+          title={product.title}
+          variantImages={variantPhotos(product)}
+        />
 
         <div className="mt-6 sm:mt-0">
           <ProductBreadcrumb product={product} locale={locale} />
