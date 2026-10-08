@@ -7,7 +7,8 @@ import { BUSINESS } from "@/lib/business";
 import type { Product } from "@/lib/shopify/types";
 import { useCart } from "@/lib/cart/store";
 import { useSoldOut } from "@/lib/cart/sold-out";
-import { showVariantPhoto } from "@/lib/ui/variant-photo";
+import { variantForPhoto } from "@/lib/images";
+import { showVariantPhoto, usePhotoOnScreen } from "@/lib/ui/variant-photo";
 import { clampToStock, isAtStockLimit, lowStockCount } from "@/lib/cart/stock";
 import { AddToCartButton } from "./AddToCartButton";
 import { LowStockNotice } from "./LowStockNotice";
@@ -48,6 +49,13 @@ export function ProductPurchase({
     showVariantPhoto(selected.image?.url ?? null);
     return () => showVariantPhoto(null);
   }, [selected]);
+  // And follow it back: a shopper who swipes to the blonde photo has chosen blonde. Which
+  // photos count as a choice is `variantForPhoto`'s rule.
+  const onScreen = usePhotoOnScreen();
+  useEffect(() => {
+    const match = variantForPhoto(product.variants, onScreen);
+    if (match) setSelected((current) => (match.id === current.id ? current : match));
+  }, [onScreen, product.variants]);
   const knownSoldOut = useSoldOut();
   const lowStock =
     selected.availableForSale && !knownSoldOut(product.handle)

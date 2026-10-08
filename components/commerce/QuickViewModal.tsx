@@ -10,7 +10,7 @@ import { BLUR_DATA_URL, distinctImages, variantPhotos } from "@/lib/images";
 import { useFocusTrap } from "@/lib/ui/use-focus-trap";
 import { useOverlays } from "@/lib/ui/overlays";
 import { useQuickView } from "@/lib/ui/quick-view";
-import { useVariantPhoto } from "@/lib/ui/variant-photo";
+import { showPhotoOnScreen, useVariantPhoto } from "@/lib/ui/variant-photo";
 import { useSwipeDismiss } from "@/lib/ui/use-swipe-dismiss";
 import { ImageLightbox } from "./ImageLightbox";
 import { ProductPurchase } from "./ProductPurchase";
@@ -74,6 +74,12 @@ export function QuickViewModal() {
   }, [chosen, shots]);
 
   const shown = shots[active] ?? product?.featuredImage;
+
+  // The sheet's own picker is told what is on screen, exactly as on the product page.
+  useEffect(() => {
+    showPhotoOnScreen(shown?.url ?? null);
+    return () => showPhotoOnScreen(null);
+  }, [shown]);
 
   // Body scroll lock + ESC handler.
   useEffect(() => {

@@ -1,4 +1,4 @@
-import type { ImageRef, Product } from "./shopify/types";
+import type { ImageRef, Product, ProductVariant } from "./shopify/types";
 
 /**
  * Returns a safe image URL for components that render `next/image` from data sources we don't fully
@@ -65,4 +65,20 @@ export function distinctImages<T extends { url: string }>(images: T[]): T[] {
  */
 export function variantPhotos(product: Product): ImageRef[] {
   return product.variants.map((v) => v.image).filter((img): img is ImageRef => Boolean(img?.url));
+}
+
+/**
+ * The variant a photo belongs to, if any — the reverse of `variantPhotos`.
+ *
+ * Used when the shopper reaches a photo by swiping or by the arrows: landing on the blonde
+ * shot should select blonde. A shot that belongs to no variant leaves the choice alone, and so
+ * does one whose variant can't be bought — the picker greys those out, so arriving by photo
+ * must not pick them either.
+ */
+export function variantForPhoto(
+  variants: ProductVariant[],
+  url: string | null,
+): ProductVariant | undefined {
+  if (!url) return undefined;
+  return variants.find((v) => v.image?.url === url && v.availableForSale);
 }

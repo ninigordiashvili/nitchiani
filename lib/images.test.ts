@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { distinctImages, variantPhotos } from "./images";
+import { distinctImages, variantForPhoto, variantPhotos } from "./images";
 
 const img = (url: string) => ({ url, altText: url });
 
@@ -35,5 +35,25 @@ describe("variantPhotos", () => {
         ]),
       ),
     ).toEqual([img("/black.png"), img("/blonde.png")]);
+  });
+});
+
+describe("variantForPhoto", () => {
+  const variants = [
+    { id: "a", image: img("/black.png"), availableForSale: true },
+    { id: "b", image: img("/blonde.png"), availableForSale: false },
+    { id: "c", availableForSale: true },
+  ] as never;
+
+  it("names the variant whose photo is on screen", () => {
+    expect(variantForPhoto(variants, "/black.png")).toMatchObject({ id: "a" });
+  });
+
+  it("leaves the choice alone for a shot that belongs to no variant, or to none for sale", () => {
+    // A plain gallery shot: the shopper is just looking around.
+    expect(variantForPhoto(variants, "/pack-shot.png")).toBeUndefined();
+    // Sold out — the picker greys this one out, so the photo must not select it either.
+    expect(variantForPhoto(variants, "/blonde.png")).toBeUndefined();
+    expect(variantForPhoto(variants, null)).toBeUndefined();
   });
 });

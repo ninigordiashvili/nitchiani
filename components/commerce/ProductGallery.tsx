@@ -8,7 +8,7 @@ import type { ImageRef } from "@/lib/shopify/types";
 import { cn } from "@/lib/utils";
 import { ImageLightbox } from "./ImageLightbox";
 import { ZoomablePhoto } from "./ZoomablePhoto";
-import { useVariantPhoto } from "@/lib/ui/variant-photo";
+import { showPhotoOnScreen, useVariantPhoto } from "@/lib/ui/variant-photo";
 
 export function ProductGallery({
   images,
@@ -42,6 +42,13 @@ export function ProductGallery({
     const i = shots.findIndex((s) => s.url === chosen);
     if (i >= 0) setActive(i);
   }, [chosen, shots]);
+
+  // And the other way: say what is on screen, so landing on a colour's photo — by arrow,
+  // swipe or thumbnail — selects that colour in the picker.
+  useEffect(() => {
+    showPhotoOnScreen(current?.url ?? null);
+    return () => showPhotoOnScreen(null);
+  }, [current]);
 
   return (
     <div className="lg:flex lg:gap-4">
