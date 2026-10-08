@@ -10,6 +10,7 @@ import { ProductBreadcrumb } from "@/components/commerce/ProductBreadcrumb";
 import { ProductGallery } from "@/components/commerce/ProductGallery";
 import { ProductJsonLd } from "@/components/commerce/ProductJsonLd";
 import { ShareButton } from "@/components/commerce/ShareButton";
+import { ShortDescription } from "@/components/commerce/ShortDescription";
 import { ProductPurchase } from "@/components/commerce/ProductPurchase";
 import { RecentlyViewedRail } from "@/components/commerce/RecentlyViewedRail";
 import { RelatedProducts } from "@/components/commerce/RelatedProducts";
@@ -139,9 +140,7 @@ export default async function ProductPage({
               The figures it replaced (length, weight, texture) are all still in the details
               tab below, and a product with no short description keeps them here. */}
           {product.shortDescription ? (
-            <p className="mt-4 max-w-prose text-sm leading-relaxed opacity-85">
-              {product.shortDescription}
-            </p>
+            <ShortDescription text={product.shortDescription} />
           ) : (
             <ProductSpecList attributes={product.attributes} />
           )}
