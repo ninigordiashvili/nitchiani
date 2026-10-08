@@ -17,6 +17,20 @@ import type { EchoDeskAttributeValue, EchoDeskProduct, LocalizedText } from "./t
 
 const CURRENCY = "GEL";
 
+/** Shown for a product EchoDesk holds no photo for — see `public/products/placeholder.png`. */
+const NO_PHOTO = "/products/placeholder.png";
+
+/**
+ * EchoDesk sends `""` for an image nobody has uploaded, not `null`, and an empty string is not
+ * a URL: `<Image src="">` renders a broken image and React reports
+ * "ReactDOM.preload(): ... The `href` argument encountered was an empty string" for every one
+ * on the page. So blank counts as absent, here at the boundary rather than in each component.
+ */
+function photoUrl(raw: string | null | undefined): string | null {
+  const trimmed = raw?.trim();
+  return trimmed ? trimmed : null;
+}
+
 /**
  * Heading above the choices when a variant carries no attribute of its own — "Colour" would
  * be a guess, and a variant can just as easily be a size or a set.
@@ -39,15 +53,18 @@ export function adaptProduct(p: EchoDeskProduct, locale: Locale): Product {
     .slice()
     .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
     .map((img, i) => ({
-      url: img.image,
+      url: photoUrl(img.image),
       altText: img.alt_text || `${title} — view ${i + 1}`,
       width: 900,
       height: 1125,
-    }));
+    }))
+    .filter((img): img is { url: string; altText: string; width: number; height: number } =>
+      img.url !== null,
+    );
 
   // The list serialiser sends only a single `image`; the detail one sends `images`.
   const featured = gallery[0] ?? {
-    url: p.image ?? "/products/gold-wax.png",
+    url: photoUrl(p.image) ?? NO_PHOTO,
     altText: title,
     width: 900,
     height: 1125,
@@ -80,8 +97,13 @@ export function adaptProduct(p: EchoDeskProduct, locale: Locale): Product {
           selectedOptions: named.length > 0 ? named : [{ name: OPTION_LABEL[locale], value: title }],
           // A colour is worth seeing: when a variant carries its own photo, the gallery and
           // the bag show that rather than the product's default shot.
-          image: v.image
-            ? { url: v.image, altText: `${title} — ${pick(p.name, locale)}`, width: 900, height: 1125 }
+          image: photoUrl(v.image)
+            ? {
+                url: photoUrl(v.image)!,
+                altText: `${title} — ${pick(p.name, locale)}`,
+                width: 900,
+                height: 1125,
+              }
             : undefined,
           price: money(v.price ?? p.price),
           compareAtPrice: v.compare_at_price ? money(v.compare_at_price) : undefined,

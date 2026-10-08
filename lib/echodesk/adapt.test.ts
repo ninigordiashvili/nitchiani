@@ -199,3 +199,31 @@ describe("variant photos", () => {
     expect(p.variants[1].image).toBeUndefined();
   });
 });
+
+describe("missing photos", () => {
+  // EchoDesk sends "" rather than null for a product nobody has photographed — product 17, the
+  // wide-strap durag, is one. Passed through, `<Image src="">` logged a ReactDOM.preload error
+  // for every card on the page and showed a broken image in each.
+  it("falls back to the placeholder when the only photo is an empty string", () => {
+    const p = adaptProduct(
+      { id: 17, name: { ka: "დურაგი" }, slug: "durag", price: "25", image: "" } as never,
+      "ka",
+    );
+    expect(p.featuredImage.url).toBe("/products/placeholder.png");
+    expect(p.images).toEqual([p.featuredImage]);
+  });
+
+  it("drops a blank gallery entry rather than rendering it", () => {
+    const p = adaptProduct(
+      {
+        id: 17,
+        name: { ka: "დურაგი" },
+        slug: "durag",
+        price: "25",
+        images: [{ image: "  ", sort_order: 1 }, { image: "https://cdn/real.jpg", sort_order: 2 }],
+      } as never,
+      "ka",
+    );
+    expect(p.images.map((i) => i.url)).toEqual(["https://cdn/real.jpg"]);
+  });
+});

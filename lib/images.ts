@@ -15,7 +15,8 @@ const ALLOWED_HOSTS = [
 ];
 const ALLOWED_HOST_SUFFIXES = ["cdninstagram.com", "fbcdn.net"];
 
-const FALLBACK = "/products/gold-wax.png";
+/** Neutral, not a product shot: a card showing some other product's photo misleads. */
+const FALLBACK = "/products/placeholder.png";
 
 /**
  * Tiny cream-toned SVG used as `blurDataURL` for every `<Image>` on the site. Solid
@@ -28,7 +29,7 @@ export const BLUR_DATA_URL =
   "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2IDQiPjxyZWN0IHdpZHRoPSI2IiBoZWlnaHQ9IjQiIGZpbGw9IiNlY2U0ZDYiLz48L3N2Zz4=";
 
 export function safeImageSrc(src: string | undefined | null): string {
-  if (!src) return FALLBACK;
+  if (!src?.trim()) return FALLBACK;
   if (src.startsWith("/")) return src;
   try {
     const { hostname } = new URL(src);
