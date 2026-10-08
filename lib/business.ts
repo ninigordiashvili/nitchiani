@@ -1,6 +1,6 @@
 /**
- * Single source of truth for the legal/business identity that appears in the footer
- * and in the legal pages (Terms §2, Privacy §1). Replace the placeholders below
+ * Single source of truth for the legal/business identity shown in the legal pages
+ * (Terms §2, Privacy §1). Replace the placeholders below
  * with your real registration details before going live — every customer-facing
  * disclosure pulls from this object.
  *
@@ -34,7 +34,13 @@ export const BUSINESS = {
   facebookName: "Nitchiani Shop",
 } as const;
 
-/** Convenience boolean — true once the placeholders have been replaced with real data. */
+/**
+ * True once the placeholders have been replaced with real data.
+ *
+ * Nothing on screen is gated on it any more — the legal pages interpolate these values
+ * unconditionally, which is exactly why it is worth a tripwire: `business.test.ts` asserts it,
+ * so a reset placeholder fails the build rather than reaching Terms §2 as "[LEGAL ENTITY NAME]".
+ */
 export const BUSINESS_DETAILS_FILLED =
   !BUSINESS.legalName.ka.startsWith("[") &&
   !BUSINESS.registrationId.startsWith("[") &&
