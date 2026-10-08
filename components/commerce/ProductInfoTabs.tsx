@@ -8,16 +8,15 @@ import { DescriptionBlocks } from "./DescriptionBlocks";
 import type { ProductAttribute } from "@/lib/shopify/types";
 
 /**
- * Product details / Description, as two tabs under the purchase block.
+ * Description / Product details, as two tabs under the purchase block.
  *
  * The two answer different questions. The description is read once, to decide whether this is
  * the right product; the data sheet is scanned, usually to check one figure against something
  * the shopper already owns. Stacking both meant the specs sat below a paragraph nobody rereads.
  *
- * The data sheet opens first, because by the time a shopper is down here the description above
- * the price has already said what the product is — what is left to answer is how long, how
- * heavy, how many in the pack. The description tab holds the blurb written to sell it, which is
- * the one thing here nobody needs twice.
+ * The description — the blurb written to sell the product — opens first, since the feature
+ * list above the price has already covered what it is. The data sheet sits beside it for the
+ * shopper who came down here to check one figure.
  *
  * The details tab is built from the product's filterable attributes, so it fills itself: add
  * Length or Weight in EchoDesk and a row appears here with no code change. When a product has
@@ -36,13 +35,13 @@ export function ProductInfoTabs({
   const blocks = parseDescription(description);
   const specs = (attributes ?? []).filter((a) => a.values.length > 0);
   const hasSpecs = specs.length > 0;
-  const [tab, setTab] = useState<"description" | "details">("details");
+  const [tab, setTab] = useState<"description" | "details">("description");
 
   if (blocks.length === 0 && !hasSpecs) return null;
 
   const tabs = [
-    { id: "details" as const, label: t("productDetails"), enabled: hasSpecs },
     { id: "description" as const, label: t("description"), enabled: blocks.length > 0 },
+    { id: "details" as const, label: t("productDetails"), enabled: hasSpecs },
   ].filter((x) => x.enabled);
 
   // One tab is not a tab — it is a heading, and a lone clickable tab invites a click that
