@@ -213,6 +213,26 @@ describe("missing photos", () => {
     expect(p.images).toEqual([p.featuredImage]);
   });
 
+  it("uses the variants' own photos when the product itself has none", () => {
+    // How the wide-strap durag is stocked: no product image, one photo per colour.
+    const p = adaptProduct(
+      {
+        id: 17,
+        name: { ka: "დურაგი" },
+        slug: "durag",
+        price: "10",
+        image: "",
+        variants: [
+          { id: 3, name: { ka: "შავი" }, price: "10", quantity: 3, image: "https://cdn/black.png" },
+          { id: 4, name: { ka: "წითელი" }, price: "10", quantity: 2, image: "https://cdn/red.png" },
+        ],
+      } as never,
+      "ka",
+    );
+    expect(p.featuredImage.url).toBe("https://cdn/black.png");
+    expect(p.images.map((i) => i.url)).toEqual(["https://cdn/black.png", "https://cdn/red.png"]);
+  });
+
   it("drops a blank gallery entry rather than rendering it", () => {
     const p = adaptProduct(
       {

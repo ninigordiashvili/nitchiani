@@ -1,5 +1,6 @@
+import { distinctImages } from "../images";
 import type { Locale } from "../i18n/config";
-import type { Product, ProductAttribute, ProductVariant } from "../shopify/types";
+import type { ImageRef, Product, ProductAttribute, ProductVariant } from "../shopify/types";
 import type { EchoDeskAttributeValue, EchoDeskProduct, LocalizedText } from "./types";
 
 /**
@@ -62,14 +63,6 @@ export function adaptProduct(p: EchoDeskProduct, locale: Locale): Product {
       img.url !== null,
     );
 
-  // The list serialiser sends only a single `image`; the detail one sends `images`.
-  const featured = gallery[0] ?? {
-    url: photoUrl(p.image) ?? NO_PHOTO,
-    altText: title,
-    width: 900,
-    height: 1125,
-  };
-
   const inStock = p.is_in_stock ?? (p.quantity ?? 0) > 0;
 
   // A product with no variants still needs one sellable row — the storefront always adds a
@@ -128,6 +121,20 @@ export function adaptProduct(p: EchoDeskProduct, locale: Locale): Product {
         },
       ];
 
+  // A merchant who sells one durag in two colours photographs the colours, not the product:
+  // EchoDesk then holds no product image at all and every variant has one. Those are the
+  // product's photos — without this the card, the search result and the cart line all showed
+  // the "no photo" placeholder for a product with two perfectly good pictures.
+  const variantShots = variants
+    .map((v) => v.image)
+    .filter((img): img is ImageRef => Boolean(img?.url));
+
+  // The list serialiser sends only a single `image`; the detail one sends `images`.
+  const featured: ImageRef = gallery[0] ??
+    (photoUrl(p.image)
+      ? { url: photoUrl(p.image)!, altText: title, width: 900, height: 1125 }
+      : variantShots[0]) ?? { url: NO_PHOTO, altText: title, width: 900, height: 1125 };
+
   const prices = variants.map((v) => Number.parseFloat(v.price.amount));
 
   // Option groups are derived from the variants' own attributes rather than read separately,
@@ -161,7 +168,9 @@ export function adaptProduct(p: EchoDeskProduct, locale: Locale): Product {
     // Locale-stable slug for breadcrumb/category links, mirroring the sample catalog's rule.
     productTypeHandle: "",
     featuredImage: featured,
-    images: gallery.length ? gallery : [featured],
+    // Every colour belongs in the gallery when the product has no shots of its own, so the
+    // page and the card rail can be swiped through them.
+    images: gallery.length ? gallery : distinctImages([featured, ...variantShots]),
     options: [...optionMap].map(([name, values]) => ({ name, values: [...values] })),
     variants,
     priceRange: {
