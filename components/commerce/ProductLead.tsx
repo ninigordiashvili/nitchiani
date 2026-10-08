@@ -3,29 +3,33 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
+import { DescriptionBlocks } from "./DescriptionBlocks";
 
 /**
  * Roughly the number of characters that fills three lines on a phone — enough to decide, before
- * the browser has measured anything, whether this paragraph will need its "read more".
+ * the browser has measured anything, whether this text will need its "read more".
  */
 const CLAMPS_AT = 150;
 
 /**
- * The merchant's short description, above the price.
+ * What the product says for itself, between the title and the price.
  *
- * On a phone it is capped at three lines: at full length it is about twice the height of the
+ * On a phone it is capped at about three lines: at full length it stands twice as tall as the
  * spec bullets it replaced, and every line of it pushes Add to bag further down the first
  * screen. From `sm` up there is room, so it shows whole and the control disappears.
  *
- * The rest is a tap away rather than gone — this text lives nowhere else on the page, so a
- * clamp with no way past it would simply lose it.
+ * Capped by height rather than `line-clamp`, because this is a description — paragraphs and
+ * the merchant's own bullet list — and `line-clamp` would have to turn the list into a
+ * `-webkit-box` to count its lines, which stops it rendering as a list at all.
+ *
+ * The rest is a tap away rather than gone: a cut with no way past it would simply lose it.
  */
-export function ShortDescription({ text }: { text: string }) {
+export function ProductLead({ text }: { text: string }) {
   const t = useTranslations("nav");
-  const ref = useRef<HTMLParagraphElement>(null);
+  const ref = useRef<HTMLDivElement>(null);
   const [expanded, setExpanded] = useState(false);
   /**
-   * Whether three lines actually cut anything off — a short paragraph needs no control.
+   * Whether the cap actually cuts anything off — a short description needs no control.
    *
    * Guessed from the length first so the control is there in the server's markup, and the
    * measurement below only corrects it. Starting at `false` meant the button appeared a moment
@@ -47,15 +51,18 @@ export function ShortDescription({ text }: { text: string }) {
 
   return (
     <div className="mt-4">
-      <p
+      <div
         ref={ref}
         className={cn(
-          "max-w-prose text-sm leading-relaxed opacity-85",
-          expanded ? null : "line-clamp-3 sm:line-clamp-none",
+          "overflow-hidden sm:max-h-none sm:[mask-image:none]",
+          // The fade says the text carries on, so the cut doesn't read as the end of it.
+          expanded
+            ? null
+            : "max-h-[4.25rem] [mask-image:linear-gradient(to_bottom,black_calc(100%-1.25rem),transparent)]",
         )}
       >
-        {text}
-      </p>
+        <DescriptionBlocks text={text} />
+      </div>
       {overflows ? (
         <button
           type="button"

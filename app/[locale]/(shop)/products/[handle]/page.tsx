@@ -10,7 +10,7 @@ import { ProductBreadcrumb } from "@/components/commerce/ProductBreadcrumb";
 import { ProductGallery } from "@/components/commerce/ProductGallery";
 import { ProductJsonLd } from "@/components/commerce/ProductJsonLd";
 import { ShareButton } from "@/components/commerce/ShareButton";
-import { ShortDescription } from "@/components/commerce/ShortDescription";
+import { ProductLead } from "@/components/commerce/ProductLead";
 import { ProductPurchase } from "@/components/commerce/ProductPurchase";
 import { RecentlyViewedRail } from "@/components/commerce/RecentlyViewedRail";
 import { RelatedProducts } from "@/components/commerce/RelatedProducts";
@@ -96,6 +96,13 @@ export default async function ProductPage({
   // Live catalog reports its own rating; the sample map only covers sample handles.
   const summary = product.reviewSummary ?? getReviewSummary(handle);
 
+  // The two descriptions sit at opposite ends. What the product *is* — the merchant's feature
+  // list — leads, above the price; the blurb written to sell it waits in the tab below. When
+  // EchoDesk holds only a short description the adapter serves it as both, so it leads and the
+  // tab is left to the data sheet rather than repeating it.
+  const lead = product.description || product.shortDescription || "";
+  const blurb = product.shortDescription && product.shortDescription !== lead ? product.shortDescription : "";
+
   return (
     <article className="pb-12">
       <ProductJsonLd product={product} locale={locale} />
@@ -136,12 +143,10 @@ export default async function ProductPage({
             />
           </div>
 
-          {/* EchoDesk's short description — what the product is, in the merchant's own words.
-              The figures it replaced (length, weight, texture) are all still in the details
-              tab below, and a product with no short description keeps them here. */}
-          {product.shortDescription ? (
-            <ShortDescription text={product.shortDescription} />
+          {lead ? (
+            <ProductLead text={lead} />
           ) : (
+            // Nothing written yet: the attributes are all this product can say for itself.
             <ProductSpecList attributes={product.attributes} />
           )}
 
@@ -151,7 +156,7 @@ export default async function ProductPage({
 
           {/* Description and the data sheet, as two tabs. Renders nothing when the product
               has neither, which is most of the catalogue until EchoDesk is filled in. */}
-          <ProductInfoTabs description={product.description} attributes={product.attributes} />
+          <ProductInfoTabs description={blurb} attributes={product.attributes} />
 
           <div className="mt-8">
             {/* Secondary details collapse to keep the PDP scannable. */}

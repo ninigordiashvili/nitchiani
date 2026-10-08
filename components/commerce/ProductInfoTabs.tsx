@@ -4,6 +4,7 @@ import { useId, useState } from "react";
 import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { parseDescription } from "@/lib/products/description";
+import { DescriptionBlocks } from "./DescriptionBlocks";
 import type { ProductAttribute } from "@/lib/shopify/types";
 
 /**
@@ -13,9 +14,10 @@ import type { ProductAttribute } from "@/lib/shopify/types";
  * the right product; the data sheet is scanned, usually to check one figure against something
  * the shopper already owns. Stacking both meant the specs sat below a paragraph nobody rereads.
  *
- * The data sheet opens first, because by the time a shopper is down here the short description
- * above the price has already said what the product is — what is left to answer is how long,
- * how heavy, how many in the pack.
+ * The data sheet opens first, because by the time a shopper is down here the description above
+ * the price has already said what the product is — what is left to answer is how long, how
+ * heavy, how many in the pack. The description tab holds the blurb written to sell it, which is
+ * the one thing here nobody needs twice.
  *
  * The details tab is built from the product's filterable attributes, so it fills itself: add
  * Length or Weight in EchoDesk and a row appears here with no code change. When a product has
@@ -87,19 +89,8 @@ export function ProductInfoTabs({
           role={single ? undefined : "tabpanel"}
           id={`${baseId}-description-panel`}
           aria-labelledby={single ? undefined : `${baseId}-description`}
-          className="mt-5 grid max-w-prose gap-3 text-sm leading-relaxed opacity-85"
         >
-          {blocks.map((b, i) =>
-            b.kind === "paragraph" ? (
-              <p key={i}>{b.text}</p>
-            ) : (
-              <ul key={i} className="grid list-disc gap-1.5 pl-5 marker:opacity-45">
-                {b.items.map((item, j) => (
-                  <li key={j}>{item}</li>
-                ))}
-              </ul>
-            ),
-          )}
+          <DescriptionBlocks text={description} className="mt-5" />
         </div>
       ) : null}
 
