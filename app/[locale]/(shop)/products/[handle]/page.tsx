@@ -135,7 +135,16 @@ export default async function ProductPage({
             />
           </div>
 
-          <ProductSpecList attributes={product.attributes} />
+          {/* EchoDesk's short description — what the product is, in the merchant's own words.
+              The figures it replaced (length, weight, texture) are all still in the details
+              tab below, and a product with no short description keeps them here. */}
+          {product.shortDescription ? (
+            <p className="mt-4 max-w-prose text-sm leading-relaxed opacity-85">
+              {product.shortDescription}
+            </p>
+          ) : (
+            <ProductSpecList attributes={product.attributes} />
+          )}
 
           <div className="mt-5">
             <ProductPurchase product={product} />

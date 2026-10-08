@@ -9,6 +9,10 @@ import type { ProductAttribute } from "@/lib/shopify/types";
  * them scroll past the buy button to find the length is how a sale is lost to a competitor
  * whose page said "55 cm" above the fold.
  *
+ * The quick-view sheet leads with these, since it has no room for prose. The product page
+ * leads with the merchant's own short description instead and keeps this as the fallback for
+ * products that have none.
+ *
  * Built from the same attributes as the data sheet, so the two can never disagree.
  */
 export function ProductSpecList({
