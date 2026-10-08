@@ -132,6 +132,11 @@ export function QuickViewModal() {
               // Top-left: the thumbnails take the bottom edge and the close button the top-right.
               hintPosition="top-left"
               onOpen={() => setLightbox(true)}
+              onNavigate={
+                shots.length > 1
+                  ? (d) => setActive((i) => (i + d + shots.length) % shots.length)
+                  : undefined
+              }
               className="aspect-square w-full sm:aspect-auto sm:h-full sm:rounded-l-2xl sm:rounded-tr-none"
               imageClassName="sm:rounded-l-2xl"
             >

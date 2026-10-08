@@ -85,6 +85,11 @@ export function ProductGallery({
         sizes="(min-width: 1024px) 50vw, 100vw"
         priority
         onOpen={() => setLightbox(true)}
+        onNavigate={
+          shots.length > 1
+            ? (d) => setActive((i) => (i + d + shots.length) % shots.length)
+            : undefined
+        }
         className="order-1 aspect-[4/5] w-full self-start lg:order-2 lg:flex-1"
       />
 
