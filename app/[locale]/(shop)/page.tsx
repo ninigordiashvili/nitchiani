@@ -11,6 +11,7 @@ import { BundleUpsellPicker } from "@/components/homepage/BundleUpsellPicker";
 import { UvpBanner } from "@/components/homepage/UvpBanner";
 import { BUNDLES, type Bundle } from "@/lib/bundles";
 import { getProductByHandle, getProducts } from "@/lib/shopify/client";
+import { spreadByCategory } from "@/lib/products/spread";
 import { isEchoDeskConfigured } from "@/lib/echodesk/client";
 import { validatePromo } from "@/lib/echodesk/promo";
 import type { Locale } from "@/lib/i18n/config";
@@ -44,19 +45,22 @@ export default async function HomePage({
 
   const [allProducts, t] = await Promise.all([getProducts(locale, 50), getTranslations("home")]);
 
-  // "All Products" rail — best sellers first (in their curated order), then everything else
-  // Plain catalog order. This used to lead with the best-sellers collection and dedup the
-  // overlap; with that collection gone there is one list and nothing to merge.
-  const orderedProducts = allProducts;
+  // Each category takes a turn, so the first eight cards cover the shop rather than the
+  // eleven braiding-hair products EchoDesk happens to return first.
+  const orderedProducts = spreadByCategory(allProducts);
+  const gridProducts = orderedProducts.slice(0, 8);
 
-  // Snapshots in the shape the rail renders, so both states share one card and one height.
-  const popularFallback = allProducts.slice(0, 8).map((p) => ({
+  // The rail above the grid shows what the grid doesn't, wrapping round for a small
+  // catalogue — it used to be the same eight products in the same order, one section apart.
+  const popularFallback = [...orderedProducts.slice(8), ...gridProducts]
+    .slice(0, 8)
+    .map((p) => ({
     handle: p.handle,
     title: p.title,
     image: p.featuredImage,
     price: p.priceRange.min,
     productTypeHandle: p.productTypeHandle,
-  }));
+    }));
 
 
   // Pre-fetch every candidate bundle's products in parallel server-side. The client picker
@@ -144,12 +148,11 @@ export default async function HomePage({
 
       {/* 3 — All Products (best sellers first, then the rest) */}
       <section className="container-shop mt-4">
-        <SectionHeader
-          title={t("allProducts")}
-          eyebrow={t("shopByCategory")}
-          href="/shop"
-        />
-        <ProductGrid products={orderedProducts.slice(0, 8)} priorityFirst={4} />
+        {/* No eyebrow: it read "Shop by category" directly above a grid that is not sorted
+            by category, and the real category section repeats the same words two sections
+            down. */}
+        <SectionHeader title={t("allProducts")} href="/shop" />
+        <ProductGrid products={gridProducts} priorityFirst={4} />
       </section>
 
       {/* 4 — Featured bundle (picked client-side to match recent browsing) */}
