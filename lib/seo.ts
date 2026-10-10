@@ -57,11 +57,20 @@ export function ogLocale(locale: Locale) {
  * Whole sentences are kept while they fit; a first sentence longer than the budget is trimmed
  * at a word boundary instead, which still beats a clipped word.
  */
+/**
+ * Sentence ends, as a decimal point is not one.
+ *
+ * `76.2 სმ` was being split after "76.", and since the fragment before it never matched, the
+ * snippet for that product opened "2 სმ სიგრძის" — telling Georgian shoppers the hair is two
+ * centimetres long. A dot with digits on both sides is part of the number, not an ending.
+ */
+const SENTENCE = /(?:[^.!?]|(?<=\d)[.!?](?=\d))+[.!?]+(\s|$)/g;
+
 export function metaDescription(text: string, limit = 160): string {
   const clean = text.replace(/\s+/g, " ").trim();
   if (clean.length <= limit) return clean;
 
-  const sentences = clean.match(/[^.!?]+[.!?]+(\s|$)/g) ?? [];
+  const sentences = clean.match(SENTENCE) ?? [];
   let out = "";
   for (const s of sentences) {
     if ((out + s).trim().length > limit) break;
@@ -125,7 +134,7 @@ export function productSeo(p: {
     // Whole sentences that leave room for the delivery line read better than a longer
     // snippet cut off mid-sentence, so try that first.
     const room = 155 - delivery.length - 1;
-    const sentences = source.match(/[^.!?]+[.!?]+(\s|$)/g) ?? [];
+    const sentences = source.match(SENTENCE) ?? [];
     let lead = "";
     for (const sentence of sentences) {
       if ((lead + sentence).trim().length > room) break;

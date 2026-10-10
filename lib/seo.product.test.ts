@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { productSeo } from "./seo";
+import { metaDescription, productSeo } from "./seo";
 
 const long =
   "Keep your hairstyle neat and protected throughout the whole night. The long satin bonnet is designed for long, curly, voluminous hair, braids, extensions and styles that need extra room while you sleep.";
@@ -44,5 +44,23 @@ describe("productSeo", () => {
     expect(productSeo({ name: "Durag", locale: "en" }).description).toBe(
       "Durag. Delivery across Georgia or free pickup in Tbilisi.",
     );
+  });
+});
+
+describe("a decimal point is not the end of a sentence", () => {
+  it("keeps the number whole when the copy opens with one", () => {
+    // The live snippet for the 76.2 cm hair opened "2 სმ სიგრძის" — telling Georgian
+    // shoppers the hair was two centimetres long.
+    const out = metaDescription(
+      "76.2 სმ სიგრძის სინთეტიკური ხვეული თმა შექმნილია მათთვის, ვისაც სურს ვარცხნილობას " +
+        "შემატოს სიგრძე და მოცულობა. მეორე წინადადება, რომელიც საკმაოდ გრძელია და ბიუჯეტს " +
+        "ავსებს მთლიანად.",
+      120,
+    );
+    expect(out.startsWith("76.2 სმ")).toBe(true);
+  });
+
+  it("still ends a sentence on a full stop followed by a digit-free word", () => {
+    expect(metaDescription("First one. Second one. Third one.", 15)).toBe("First one.");
   });
 });

@@ -58,10 +58,17 @@ export async function generateMetadata({
         ? metaDescription(collection.description)
         : `Shop ${collection.title} at Nitchiani — synthetic hair and care, shipped from Tbilisi.`,
     alternates,
-    openGraph: {
-      ...ogLocale(locale),
-      ...(collection.image ? { images: [{ url: collection.image.url }] } : {}),
-    },
+    // Only when there is artwork of our own: Next picks the deepest `openGraph` rather than
+    // merging, so declaring one here without an image threw away the site-wide
+    // `opengraph-image` and left these links previewing as plain text.
+    ...(collection.image
+      ? {
+          openGraph: {
+            ...ogLocale(locale),
+            images: [{ url: collection.image.url }],
+          },
+        }
+      : {}),
   };
 }
 

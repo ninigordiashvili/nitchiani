@@ -36,21 +36,27 @@ function getBaseUrl(): string {
   );
 }
 
+/**
+ * One entry per locale, each pointing at itself and listing the others as alternates.
+ *
+ * Every entry used to be pinned to the first locale, so the English half of the site — the
+ * same 27 pages — had no `<loc>` of its own anywhere in the sitemap, and was left to be
+ * discovered by crawling alone.
+ */
 function buildEntry(
   baseUrl: string,
   path: string,
   priority = 0.7,
-): MetadataRoute.Sitemap[number] {
+): MetadataRoute.Sitemap {
   const languages: Record<string, string> = {};
   for (const l of locales) languages[l] = `${baseUrl}/${l}${path}`;
-  return {
-    // Use the first locale as the canonical URL; alternates carry the rest.
-    url: `${baseUrl}/${locales[0]}${path}`,
+  return locales.map((locale) => ({
+    url: `${baseUrl}/${locale}${path}`,
     lastModified: new Date(),
-    changeFrequency: "weekly",
+    changeFrequency: "weekly" as const,
     priority,
     alternates: { languages },
-  };
+  }));
 }
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
@@ -61,10 +67,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const entries: MetadataRoute.Sitemap = [];
 
   for (const path of STATIC_PATHS) {
-    entries.push(buildEntry(baseUrl, path, path === "" ? 1 : 0.8));
+    entries.push(...buildEntry(baseUrl, path, path === "" ? 1 : 0.8));
   }
   for (const col of COLLECTIONS) {
-    entries.push(buildEntry(baseUrl, `/shop/${col}`, 0.7));
+    entries.push(...buildEntry(baseUrl, `/shop/${col}`, 0.7));
   }
   // Only campaigns that resolve to real products. The campaign page calls `notFound()` when
   // its handles match nothing, so listing one here advertised a dead URL to Google — and
@@ -74,10 +80,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const live = await getProductsByHandles(c.handles, locales[0]).catch(() => []);
     if (live.length === 0) continue;
     // Campaigns are usually time-bound and drive paid/social traffic — high priority while live.
-    entries.push(buildEntry(baseUrl, `/shop/${c.slug}`, 0.8));
+    entries.push(...buildEntry(baseUrl, `/shop/${c.slug}`, 0.8));
   }
   for (const p of products) {
-    entries.push(buildEntry(baseUrl, `/products/${p.handle}`, 0.8));
+    entries.push(...buildEntry(baseUrl, `/products/${p.handle}`, 0.8));
   }
 
   return entries;

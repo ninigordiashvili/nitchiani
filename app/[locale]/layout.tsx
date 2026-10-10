@@ -54,7 +54,11 @@ export async function generateMetadata({
     // Default og:locale for every page. Pages that set their own `openGraph` re-spread
     // `ogLocale(locale)` (Next picks the deepest openGraph, it does not deep-merge).
     openGraph: { ...ogLocale(locale), title, description },
-    twitter: { card: "summary_large_image", title, description },
+    // Card type only. Giving it a title and description here pinned the homepage copy to
+    // every page — a product page's Twitter card advertised the shop's front door — because
+    // child pages set `title`/`description`/`openGraph` and never `twitter`. Left out, Next
+    // derives each page's card from its own title and description.
+    twitter: { card: "summary_large_image" },
   };
 }
 
