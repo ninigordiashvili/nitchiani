@@ -60,7 +60,7 @@ export function RecentlyViewedRail({
             className="w-[140px] flex-shrink-0 snap-start"
           >
             <Link href={`/products/${item.handle}`} className="group block">
-              <div className="relative aspect-square overflow-hidden rounded-[var(--radius-lg)] border border-[var(--border-soft)] bg-white transition-shadow duration-300 ease-[var(--ease-brand)] group-hover:shadow-[0_8px_28px_-10px_rgba(13,13,13,0.25)]">
+              <div className="relative aspect-square overflow-hidden rounded-[var(--radius-lg)] border border-[var(--border-card)] bg-white transition-[box-shadow,border-color] duration-300 ease-[var(--ease-brand)] group-hover:border-[var(--border-card-hover)] group-hover:shadow-[0_8px_28px_-10px_color-mix(in_oklab,var(--color-brand-maroon)_38%,transparent)]">
                 <Image
                   src={safeImageSrc(item.image.url)}
                   alt={item.image.altText}

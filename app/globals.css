@@ -58,6 +58,12 @@
     --muted: var(--text-muted);
     --accent: var(--color-brand-maroon);
     --hairline: var(--border-soft);
+    /* Product tiles. Grey is the absence of a decision; the brand's maroon at a whisper
+       (22% over the tile's white) draws the same line in the shop's own colour and warms a
+       grid that is otherwise white rectangles on cream. Doubled on hover, where it becomes
+       the one thing pointing at the card under the cursor. */
+    --border-card: color-mix(in oklab, var(--color-brand-maroon) 22%, transparent);
+    --border-card-hover: color-mix(in oklab, var(--color-brand-maroon) 45%, transparent);
   }
 
   html {

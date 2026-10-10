@@ -160,7 +160,7 @@ function UpsellCard({ product, compact }: { product: Product; compact: boolean }
   return (
     <li className={cn(compact && "w-28 flex-shrink-0 snap-start")}>
       <Link href={`/products/${product.handle}`} className="group block">
-        <div className="relative aspect-square overflow-hidden rounded-[var(--radius-md)] border border-[var(--border-soft)] bg-white">
+        <div className="relative aspect-square overflow-hidden rounded-[var(--radius-md)] border border-[var(--border-card)] bg-white">
           <Image
             src={safeImageSrc(product.featuredImage.url)}
             alt={product.featuredImage.altText}

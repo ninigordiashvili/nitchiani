@@ -54,11 +54,10 @@ export function ProductCard({ product, priority = false }: { product: Product; p
       className="group block"
       aria-label={product.title}
     >
-      {/* The hairline is the brand's own `--border-soft` (ink at 8%), so the edge reads as a
-          drawn line rather than a grey box, and the radius matches the sheet and the dialogs.
-          The shadow only appears under the cursor: a resting grid of sixteen shadows is
+      {/* A warm hairline rather than a grey one — see `--border-card`. It deepens under the
+          cursor, and the shadow only appears there too: a resting grid of sixteen shadows is
           heavier than the photography it frames. */}
-      <div className="relative aspect-[4/5] overflow-hidden rounded-[var(--radius-lg)] border border-[var(--border-soft)] bg-white transition-shadow duration-300 ease-[var(--ease-brand)] group-hover:shadow-[0_8px_28px_-10px_rgba(13,13,13,0.25)]">
+      <div className="relative aspect-[4/5] overflow-hidden rounded-[var(--radius-lg)] border border-[var(--border-card)] bg-white transition-[box-shadow,border-color] duration-300 ease-[var(--ease-brand)] group-hover:border-[var(--border-card-hover)] group-hover:shadow-[0_8px_28px_-10px_color-mix(in_oklab,var(--color-brand-maroon)_38%,transparent)]">
         {photos.length > 1 ? (
           // More than one shot: let them be browsed here, rather than only behind a tap.
           <CardPhotos
