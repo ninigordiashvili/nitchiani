@@ -168,10 +168,10 @@ export default async function HomePage({
         <CategoryCardGrid />
       </section>
 
-      {/* 8 — Customer testimonials */}
-      <section className="container-shop mt-12">
-        <HomepageReviews locale={locale} />
-      </section>
+      {/* 8 — Customer testimonials. The component owns its own section, because it renders
+          nothing when no review matches a stocked product and an empty <section> was being
+          left behind in the markup. */}
+      <HomepageReviews locale={locale} />
 
       {/* 9 — Contact channels (closes the page on "start a conversation") */}
       <section className="container-shop mt-8 sm:mt-12">

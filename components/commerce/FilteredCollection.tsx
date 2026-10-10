@@ -5,14 +5,17 @@ import { useUrlQuery } from "@/lib/ui/use-url-query";
 import { useMemo } from "react";
 import { Link } from "@/lib/i18n/routing";
 import {
-  applyFilters,
-  applySort,
   DEFAULT_SORT,
   EMPTY_FILTERS,
+  anyOnSale,
+  anySoldOut,
+  applyFilters,
+  applySort,
   extractAttributeFacets,
-  parseAttributeParam,
   extractColors,
   isSortKey,
+  parseAttributeParam,
+  priceTiers,
   type ProductFilters,
   type SortKey,
 } from "@/lib/products/filter";
@@ -48,6 +51,15 @@ export function FilteredCollection({ products }: { products: Product[] }) {
   }, [query]);
 
   const availableColors = useMemo(() => extractColors(products), [products]);
+  // Which of the standing toggles can do anything for this set of products.
+  const chips = useMemo(
+    () => ({
+      tiers: priceTiers(products),
+      onSale: anyOnSale(products),
+      soldOut: anySoldOut(products),
+    }),
+    [products],
+  );
   // Facets come from the products themselves, so an attribute added in the CMS shows up here
   // with no code change — and one that isn't worth filtering by never appears.
   const attributeFacets = useMemo(() => extractAttributeFacets(products), [products]);
@@ -63,6 +75,9 @@ export function FilteredCollection({ products }: { products: Product[] }) {
         totalCount={products.length}
         visibleCount={visible.length}
         availableColors={availableColors}
+        priceTiers={chips.tiers}
+        showOnSale={chips.onSale}
+        showAvailable={chips.soldOut}
         attributeFacets={attributeFacets}
         filters={filters}
         sort={sort}

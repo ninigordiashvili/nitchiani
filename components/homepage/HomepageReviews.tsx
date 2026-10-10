@@ -18,5 +18,9 @@ export async function HomepageReviews({ locale }: { locale: Locale }) {
   const stocked = new Set((await getProducts(locale, 200)).map((p) => p.handle));
   const reviews = getTopReviews(locale, 24).filter((r) => stocked.has(r.productHandle)).slice(0, 6);
   if (reviews.length === 0) return null;
-  return <ReviewsRail reviews={reviews} />;
+  return (
+    <section className="container-shop mt-12">
+      <ReviewsRail reviews={reviews} />
+    </section>
+  );
 }
