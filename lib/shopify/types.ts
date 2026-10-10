@@ -48,6 +48,12 @@ export type Product = {
   /** Optional aftercare instructions — rendered as the "Aftercare" PDP section. */
   aftercare?: string;
   tags: string[];
+  /**
+   * Everything a shopper might type to reach this product, both languages, lower-cased:
+   * names, slug, category and its aliases. Built at the boundary because that is the only
+   * place both locales are in hand — see `adaptProduct`.
+   */
+  searchText?: string;
   vendor: string;
   productType: string;
   featuredImage: ImageRef;

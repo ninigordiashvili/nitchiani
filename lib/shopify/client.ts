@@ -15,6 +15,7 @@ import {
   listProducts,
 } from "../echodesk/client";
 import { categoriesFor } from "../echodesk/categories";
+import { scoreForQuery } from "../products/match";
 import type { Locale } from "../i18n/config";
 import { defaultLocale } from "../i18n/config";
 
@@ -190,15 +191,14 @@ export async function searchProducts(
   {
     const products = await catalog(locale);
     if (products.length > 0) {
-      // `findMatchingProducts` scores the raw sample shape, so live products get a simple
-      // substring match over the fields a shopper actually types: title, type, description.
       const q = query.trim().toLowerCase();
       if (!q) return [];
       return products
-        .filter((p) =>
-          [p.title, p.productType, p.description].some((f) => f?.toLowerCase().includes(q)),
-        )
-        .slice(0, limit);
+        .map((p) => ({ p, score: scoreForQuery(p, q) }))
+        .filter((x) => x.score > 0)
+        .sort((a, b) => b.score - a.score)
+        .slice(0, limit)
+        .map((x) => x.p);
     }
   }
   return findMatchingProducts(DUMMY_RAW_PRODUCTS, query, locale, limit);

@@ -1,3 +1,4 @@
+import { CATEGORIES } from "../categories";
 import { categoriesFor } from "./categories";
 import { distinctImages } from "../images";
 import type { Locale } from "../i18n/config";
@@ -168,7 +169,21 @@ export function adaptProduct(p: EchoDeskProduct, locale: Locale): Product {
   // The category, though, is known — and everything that keyed on `productType` was treating
   // every product as the same kind: the breadcrumb's middle crumb had no name, and "related
   // products" matched "" to "" and offered a braiding-hair rail on a ₾10 durag.
-  const productTypeHandle = categoriesFor(p.slug)[0] ?? "";
+  const handles = categoriesFor(p.slug);
+  const productTypeHandle = handles[0] ?? "";
+
+  // Both languages, so the Georgian site finds "durag" and the English one finds "ბონეტი" —
+  // search only ever read the current locale's copy, and a shopper typing the other language
+  // got "nothing found" for a product sitting on the page behind the overlay.
+  const searchText = [
+    pick(p.name, "ka"),
+    pick(p.name, "en"),
+    p.slug.replace(/[_-]/g, " "),
+    ...handles,
+    ...handles.flatMap((h) => CATEGORIES.find((c) => c.handle === h)?.aliases ?? []),
+  ]
+    .join(" ")
+    .toLowerCase();
 
   return {
     id: `gid://echodesk/Product/${p.id}`,
@@ -179,6 +194,7 @@ export function adaptProduct(p: EchoDeskProduct, locale: Locale): Product {
     seoTitle: pick(p.meta_title, locale) || undefined,
     seoDescription: pick(p.meta_description, locale) || undefined,
     tags: [],
+    searchText,
     vendor: "Nitchiani",
     productType,
     // Locale-stable slug for breadcrumb/category links, mirroring the sample catalog's rule.
