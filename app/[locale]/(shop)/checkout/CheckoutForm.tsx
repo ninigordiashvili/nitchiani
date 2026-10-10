@@ -18,6 +18,7 @@ import {
   Check,
   CreditCard,
   Loader2,
+  Minus,
   Plus,
   ShieldCheck,
   Trash2,
@@ -26,6 +27,7 @@ import {
 import Image from "next/image";
 import { Link, useRouter } from "@/lib/i18n/routing";
 import { useCart } from "@/lib/cart/store";
+import { isAtStockLimit } from "@/lib/cart/stock";
 import { formatPrice } from "@/lib/money";
 import type { Locale } from "@/lib/i18n/config";
 import { cn } from "@/lib/utils";
@@ -896,9 +898,35 @@ export function CheckoutForm({
                     className="object-contain"
                   />
                 </div>
-                <div className="flex flex-1 flex-col">
+                <div className="flex flex-1 flex-col gap-1">
                   <span className="line-clamp-1 text-sm">{l.productTitle}</span>
-                  <span className="text-xs opacity-60">× {l.quantity}</span>
+                  {/* A stepper, not a count. EchoDesk refuses an order that asks for more
+                      than it has, and the message it comes back with — "only 1 left, reduce
+                      the quantity" — was an instruction this page gave no way to follow: the
+                      only control here was a bin. */}
+                  <div className="flex w-fit items-center rounded-md border border-black/15">
+                    <button
+                      type="button"
+                      aria-label={t("nav.decreaseQuantity")}
+                      disabled={l.quantity <= 1}
+                      onClick={() => cart.updateQuantity(l.variantId, l.quantity - 1)}
+                      className="flex h-6 cursor-pointer items-center justify-center px-2 disabled:cursor-not-allowed disabled:opacity-30"
+                    >
+                      <Minus size={12} aria-hidden />
+                    </button>
+                    <span className="min-w-[1.5rem] text-center text-xs tabular-nums">
+                      {l.quantity}
+                    </span>
+                    <button
+                      type="button"
+                      aria-label={t("nav.increaseQuantity")}
+                      disabled={isAtStockLimit(l.quantity, l.maxQuantity)}
+                      onClick={() => cart.updateQuantity(l.variantId, l.quantity + 1)}
+                      className="flex h-6 cursor-pointer items-center justify-center px-2 disabled:cursor-not-allowed disabled:opacity-30"
+                    >
+                      <Plus size={12} aria-hidden />
+                    </button>
+                  </div>
                 </div>
                 <div className="flex flex-shrink-0 items-start gap-2">
                   <span className="text-sm tabular-nums">

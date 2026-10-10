@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { findGoneLines, type ProductLookup } from "./cart-check";
+import { checkCartLines, findGoneLines, type ProductLookup } from "./cart-check";
 import type { EchoDeskProduct } from "./types";
 
 const product = (id: number, extra: Partial<EchoDeskProduct> = {}): EchoDeskProduct => ({
@@ -78,5 +78,44 @@ describe("sold out since it went in the bag", () => {
         lookupFrom({ 7: { id: 7, name: { en: "P7" }, slug: "p-7", price: "10", status: "active" } }),
       ),
     ).toEqual([]);
+  });
+});
+
+describe("stock refresh", () => {
+  // The bag keeps the limit each line was added with. With one or two units in stock, a bag
+  // left overnight routinely asks for more than exists — and the only thing that ever said so
+  // was EchoDesk refusing the whole order at the last step.
+  const lookup = async (id: number) =>
+    id === 25
+      ? ({ id: 25, quantity: 7, variants: [{ id: 1, quantity: 2 }] } as never)
+      : ({ id: 30, quantity: 1 } as never);
+
+  it("reports what is left of each line", async () => {
+    const { stock, gone } = await checkCartLines(
+      ["gid://echodesk/Variant/1?product=25", "gid://echodesk/Product/30"],
+      lookup,
+    );
+    expect(gone).toEqual([]);
+    expect(stock).toEqual([
+      { variantId: "gid://echodesk/Variant/1?product=25", available: 2 },
+      { variantId: "gid://echodesk/Product/30", available: 1 },
+    ]);
+  });
+
+  it("says nothing about a line it had to remove", async () => {
+    const { gone, stock } = await checkCartLines(
+      ["gid://echodesk/Product/40"],
+      async () => ({ id: 40, quantity: 0 }) as never,
+    );
+    expect(gone).toEqual([{ variantId: "gid://echodesk/Product/40", reason: "soldOut" }]);
+    expect(stock).toEqual([]);
+  });
+
+  it("leaves the limit alone when the backend doesn't count stock", async () => {
+    const { stock } = await checkCartLines(
+      ["gid://echodesk/Product/50"],
+      async () => ({ id: 50 }) as never,
+    );
+    expect(stock).toEqual([]);
   });
 });
