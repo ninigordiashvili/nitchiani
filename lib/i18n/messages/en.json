@@ -299,7 +299,12 @@
     "copyOrderNumber": "Copy full order number: {number}",
     "orderNumberCopied": "Full number copied",
     "copyTrackingLink": "Copy tracking link",
-    "trackingLinkCopied": "Link copied — keep it safe"
+    "trackingLinkCopied": "Link copied — keep it safe",
+    "noCourierTitle": "No courier can deliver to this address",
+    "noCourierDesc": "None of them could price it just now. Try again in a few minutes or check the address — you can also collect the order in Tbilisi, free of charge.",
+    "noCourierDescNoPickup": "None of them could price it just now. Try again in a few minutes or check the address. If it still fails, message us and we'll sort it out by hand.",
+    "retryQuote": "Try again",
+    "noCourierWrite": "Message us on WhatsApp"
   },
   "terms": {
     "eyebrow": "Legal",

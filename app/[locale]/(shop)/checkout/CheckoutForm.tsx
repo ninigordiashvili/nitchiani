@@ -20,12 +20,14 @@ import {
   Loader2,
   Minus,
   Plus,
+  RefreshCw,
   ShieldCheck,
   Trash2,
   Wallet,
 } from "lucide-react";
 import Image from "next/image";
 import { Link, useRouter } from "@/lib/i18n/routing";
+import { getWhatsAppNumber } from "@/components/brand/WhatsAppIcon";
 import { useCart } from "@/lib/cart/store";
 import { isAtStockLimit } from "@/lib/cart/stock";
 import { formatPrice } from "@/lib/money";
@@ -191,6 +193,9 @@ export function CheckoutForm({
   // True only while a quote is actually in flight — not during the debounce, or every
   // keystroke would flash a spinner at the shopper.
   const [quoting, setQuoting] = useState(false);
+  // Bumped by the retry button: the quote depends on the address, and re-asking for the
+  // same address needs something in the dependency list to actually change.
+  const [quoteAttempt, setQuoteAttempt] = useState(0);
   const [noteOpen, setNoteOpen] = useState(false);
 
   // Mobile-only two-step flow: 1 = contact/shipping, 2 = payment + place order.
@@ -287,7 +292,7 @@ export function CheckoutForm({
     }, 500);
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [addressValue, cityValue, latValue, lngValue, subtotalAmount, cart.lines.length, locale]);
+  }, [addressValue, cityValue, latValue, lngValue, subtotalAmount, cart.lines.length, locale, quoteAttempt]);
 
   /**
    * What the summary shows for delivery.
@@ -739,6 +744,53 @@ export function CheckoutForm({
                           className="h-[42px] animate-pulse rounded-md border border-black/10 bg-black/[0.04]"
                         />
                       ))}
+                    </div>
+                  ) : !isPickup && shipping.status === "unavailable" ? (
+                    /* No courier would price this address. Left unexplained, the shopper sees
+                       a form with no delivery line and no way forward — and QuickShipper
+                       refusing an address is not rare: a new building, a village, or the
+                       service being briefly down. So say what happened, offer the retry, and
+                       point at collection, which is the one route always open. */
+                    <div
+                      className="mt-2 rounded-md border px-3 py-3 text-xs leading-relaxed"
+                      style={{
+                        borderColor: "color-mix(in oklab, var(--color-brand-maroon) 30%, transparent)",
+                        background: "color-mix(in oklab, var(--color-brand-maroon) 7%, transparent)",
+                      }}
+                      aria-live="polite"
+                    >
+                      <p className="mb-1 font-medium">{t("checkout.noCourierTitle")}</p>
+                      <p className="opacity-80">
+                        {pickup ? t("checkout.noCourierDesc") : t("checkout.noCourierDescNoPickup")}
+                      </p>
+                      <div className="mt-2.5 flex flex-wrap items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setQuoteAttempt((n) => n + 1)}
+                          className="inline-flex cursor-pointer items-center gap-1.5 rounded-md border border-black/20 bg-white/70 px-3 py-1.5 font-medium transition-colors hover:border-black/40"
+                        >
+                          <RefreshCw size={13} aria-hidden />
+                          {t("checkout.retryQuote")}
+                        </button>
+                        {pickup ? (
+                          <button
+                            type="button"
+                            onClick={() => setIsPickup(true)}
+                            className="cursor-pointer font-medium underline underline-offset-4 opacity-80 hover:opacity-100"
+                          >
+                            {t("checkout.pickupAtStore")}
+                          </button>
+                        ) : (
+                          <a
+                            href={`https://wa.me/${getWhatsAppNumber()}`}
+                            target="_blank"
+                            rel="noreferrer noopener"
+                            className="font-medium underline underline-offset-4 opacity-80 hover:opacity-100"
+                          >
+                            {t("checkout.noCourierWrite")}
+                          </a>
+                        )}
+                      </div>
                     </div>
                   ) : !isPickup && couriers.length > 1 ? (
                     <div className="mt-2 grid gap-2">
