@@ -300,6 +300,10 @@ export function CheckoutForm({
   const priced = shipping.status === "priced" ? shipping.option : null;
   const couriers = priced?.couriers ?? [];
   const chosenCourier = couriers.find((c) => c.key === courierKey) ?? null;
+  /** True while the thing standing between the shopper and the order is the delivery price. */
+  const deliveryBlocked =
+    !isPickup && (shipping.status === "needsLocation" || shipping.status === "unavailable");
+
   const shippingAmount = (() => {
     if (isPickup) return 0;
     if (!priced) return 0;
@@ -1043,7 +1047,26 @@ export function CheckoutForm({
               }}
             >
               <AlertCircle size={14} className="mt-0.5 flex-shrink-0" />
-              <span>{submitError}</span>
+              <span className="flex flex-col items-start gap-1.5">
+                <span>{submitError}</span>
+                {/* An out, not just a refusal. Delivery here is priced by courier quote
+                    alone — the tenant configures no flat method — so an address the courier
+                    can't price, or a map that won't load, leaves the shopper staring at a
+                    form they cannot submit. Collection is the one route still open, and it
+                    is one tap rather than a scroll back up to find the radio. */}
+                {pickup && !isPickup && deliveryBlocked ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsPickup(true);
+                      setSubmitError(null);
+                    }}
+                    className="cursor-pointer font-medium underline underline-offset-4"
+                  >
+                    {t("checkout.pickupAtStore")}
+                  </button>
+                ) : null}
+              </span>
             </div>
           ) : null}
           {/* Data disclosure, immediately above the action it describes.

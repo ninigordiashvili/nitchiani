@@ -247,3 +247,44 @@ describe("missing photos", () => {
     expect(p.images.map((i) => i.url)).toEqual(["https://cdn/real.jpg"]);
   });
 });
+
+describe("merchant copy arriving raw", () => {
+  it("trims a name the CRM saved with a trailing space", () => {
+    // Invisible in EchoDesk, visible on the card as a gap before the price.
+    const p = adaptProduct(
+      { id: 25, name: { ka: "ტალღოვანი თმის დაგრძელება " }, slug: "wave", price: "80" } as never,
+      "ka",
+    );
+    expect(p.title).toBe("ტალღოვანი თმის დაგრძელება");
+  });
+
+  it("drops a form-field heading pasted in with the copy", () => {
+    // One product's English short description opens with the literal line "Short Description",
+    // which the page printed as its first paragraph and Google used to open the snippet.
+    const p = adaptProduct(
+      {
+        id: 12,
+        name: { en: "Bonnets" },
+        slug: "bonnets",
+        price: "25",
+        short_description: { en: "Short Description\nProtect your hair while sleeping." },
+      } as never,
+      "en",
+    );
+    expect(p.shortDescription).toBe("Protect your hair while sleeping.");
+  });
+
+  it("keeps a sentence that merely starts with the word", () => {
+    const p = adaptProduct(
+      {
+        id: 13,
+        name: { en: "Thing" },
+        slug: "thing",
+        price: "25",
+        short_description: { en: "Description of the fabric follows.\nIt is satin." },
+      } as never,
+      "en",
+    );
+    expect(p.shortDescription?.startsWith("Description of the fabric")).toBe(true);
+  });
+});

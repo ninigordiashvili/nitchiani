@@ -52,10 +52,30 @@ const VIEW_LABEL: Record<Locale, (n: number) => string> = {
   en: (n) => `view ${n}`,
 };
 
-/** EchoDesk sends `{en, ka}`; fall back through locale → English → any value → "". */
+/**
+ * EchoDesk sends `{en, ka}`; fall back through locale → English → any value → "".
+ *
+ * Trimmed, because a stray space at the end of a product name is invisible in the CRM and
+ * shows up on the card as a gap before the price.
+ */
 export function pick(text: LocalizedText | undefined, locale: Locale): string {
   if (!text) return "";
-  return text[locale] || text.en || Object.values(text).find(Boolean) || "";
+  return (text[locale] || text.en || Object.values(text).find(Boolean) || "").trim();
+}
+
+/**
+ * Drops a form-field heading someone pasted along with the copy.
+ *
+ * One product's English short description opens with the line "Short Description", which the
+ * PDP printed as its first paragraph and Google used as the opening of the snippet. Only an
+ * exact heading on its own first line is removed — a sentence that happens to start with the
+ * word is the merchant's prose, not a label.
+ */
+const FIELD_HEADING = /^(short description|description|მოკლე აღწერა|აღწერა)\s*:?\s*$/i;
+
+function stripFieldHeading(text: string): string {
+  const [first, ...rest] = text.split("\n");
+  return rest.length > 0 && FIELD_HEADING.test(first.trim()) ? rest.join("\n").trim() : text;
 }
 
 function money(amount: string | null | undefined) {
@@ -189,8 +209,10 @@ export function adaptProduct(p: EchoDeskProduct, locale: Locale): Product {
     id: `gid://echodesk/Product/${p.id}`,
     handle: p.slug,
     title,
-    description: pick(p.description, locale) || pick(p.short_description, locale),
-    shortDescription: pick(p.short_description, locale) || undefined,
+    description: stripFieldHeading(
+      pick(p.description, locale) || pick(p.short_description, locale),
+    ),
+    shortDescription: stripFieldHeading(pick(p.short_description, locale)) || undefined,
     seoTitle: pick(p.meta_title, locale) || undefined,
     seoDescription: pick(p.meta_description, locale) || undefined,
     tags: [],
