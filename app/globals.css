@@ -255,9 +255,9 @@
   .scrim-bottom {
     background: linear-gradient(
       180deg,
-      transparent 62%,
-      rgba(10, 31, 31, 0.45) 84%,
-      rgba(10, 31, 31, 0.82) 100%
+      transparent 78%,
+      rgba(10, 31, 31, 0.42) 91%,
+      rgba(10, 31, 31, 0.8) 100%
     );
   }
 
