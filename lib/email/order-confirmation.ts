@@ -15,7 +15,27 @@ import type { ManualOrderInput } from "@/lib/shopify/orders";
 export type OrderConfirmationInput = ManualOrderInput & {
   /** Display number used in the URL + subject — Shopify order name or local pseudo-id. */
   orderId: string;
+  /**
+   * The order's public token, when the backend issues one.
+   *
+   * This is what the tracking page can actually resolve. EchoDesk has no public lookup by
+   * order number — `orders/by-token/` is the only unauthenticated one — so a link carrying
+   * only the number lands the customer on a page that has to explain it cannot help them.
+   */
+  trackingToken?: string;
 };
+
+/**
+ * Where "track your order" points. The token resolves; the number is a label, kept in the URL
+ * so the page can show it and so a customer who forwards the link still sees which order it is.
+ */
+export function trackingUrl(input: OrderConfirmationInput): string {
+  const base = `${SITE_URL}/${input.locale}/order-status`;
+  const number = encodeURIComponent(input.orderId);
+  return input.trackingToken
+    ? `${base}?token=${encodeURIComponent(input.trackingToken)}&order=${number}`
+    : `${base}?order=${number}`;
+}
 
 const WHATSAPP_NUMBER =
   process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? "995579370374";
@@ -141,9 +161,7 @@ function formatMoney(amount: string, currency: string): string {
 
 function buildHtml(input: OrderConfirmationInput): string {
   const c = copyFor(input.locale, input.firstName, input.orderId);
-  const trackUrl = `${SITE_URL}/${input.locale}/order-status?order=${encodeURIComponent(
-    input.orderId,
-  )}`;
+  const trackUrl = trackingUrl(input);
   // Prefill the WhatsApp text in the customer's language so a Georgian buyer doesn't open
   // a chat already half-written in English.
   const waMessage = input.locale.startsWith("ka")
@@ -283,9 +301,7 @@ function buildHtml(input: OrderConfirmationInput): string {
 
 function buildText(input: OrderConfirmationInput): string {
   const c = copyFor(input.locale, input.firstName, input.orderId);
-  const trackUrl = `${SITE_URL}/${input.locale}/order-status?order=${encodeURIComponent(
-    input.orderId,
-  )}`;
+  const trackUrl = trackingUrl(input);
   const lines = input.lines
     .map(
       (l) =>
