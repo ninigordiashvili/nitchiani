@@ -18,7 +18,8 @@ export function CategoryCardGrid() {
         <Link
           key={c.handle}
           href={`/shop/${c.handle}`}
-          className="group relative block aspect-square overflow-hidden"
+          // The same warm hairline and radius as the product tiles and the contact cards.
+          className="group relative block aspect-square overflow-hidden rounded-[var(--radius-lg)] border border-[var(--border-card)] transition-[box-shadow,border-color] duration-300 ease-[var(--ease-brand)] hover:border-[var(--border-card-hover)] hover:shadow-[0_8px_28px_-10px_color-mix(in_oklab,var(--color-brand-maroon)_38%,transparent)]"
         >
           {/* A category without artwork yet gets a branded panel rather than a broken image —
               it reads as a deliberate tile instead of a loading failure. Drop a file into
@@ -41,7 +42,7 @@ export function CategoryCardGrid() {
           )}
           <div className="absolute inset-0 scrim-bottom" />
           <div className="absolute right-3 bottom-3 left-3">
-            <p className="font-display text-xl text-[var(--color-brand-cream)] sm:text-2xl">
+            <p className="font-display on-photo text-xl text-[var(--color-brand-cream)] sm:text-2xl">
               {t(c.labelKey)}
             </p>
           </div>

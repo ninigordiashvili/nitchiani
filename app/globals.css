@@ -246,12 +246,37 @@
   }
 
   /* Editorial banner overlay scrim */
+  /* A footing for a label laid over a photo, not a filter over the photo itself.
+     It used to begin fading in at 30% of the height, which on a square tile put a dark wash
+     over two thirds of the artwork — the product was being hidden to make three words
+     legible. It now starts at 62% and only reaches full strength at the very bottom edge,
+     with a soft knee in the middle so the transition isn't a visible band. The label carries
+     its own shadow (`.on-photo`) for the rest. */
   .scrim-bottom {
+    background: linear-gradient(
+      180deg,
+      transparent 62%,
+      rgba(10, 31, 31, 0.45) 84%,
+      rgba(10, 31, 31, 0.82) 100%
+    );
+  }
+
+  /* The original reach, for a banner whose copy block is tall. */
+  .scrim-bottom-tall {
     background: linear-gradient(
       180deg,
       transparent 30%,
       rgba(10, 31, 31, 0.85) 100%
     );
+  }
+
+  /* Text sitting directly on photography. Two shadows: a tight one for the letterform's own
+     edge, and a wide soft one that darkens whatever is immediately behind it — together they
+     hold up over a pale bonnet as well as over dark hair. */
+  .on-photo {
+    text-shadow:
+      0 1px 2px rgba(10, 31, 31, 0.55),
+      0 6px 18px rgba(10, 31, 31, 0.45);
   }
 }
 
