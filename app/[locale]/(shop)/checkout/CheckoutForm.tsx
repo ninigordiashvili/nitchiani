@@ -886,7 +886,9 @@ export function CheckoutForm({
           </fieldset>
         </div>
 
-        <aside className="h-fit border border-black/10 p-5 lg:sticky lg:top-20">
+        {/* `rounded-md`, the same radius as the fields and the button inside it — square
+            corners around rounded controls read as two different kits. */}
+        <aside className="h-fit rounded-md border border-black/10 p-5 lg:sticky lg:top-20">
           <h2 className="font-display mb-4 text-lg">{t("nav.cart")}</h2>
           <ul className="space-y-3 border-b border-black/10 pb-4">
             {cart.lines.map((l) => (

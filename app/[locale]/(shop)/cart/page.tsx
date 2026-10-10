@@ -119,7 +119,7 @@ export default function CartPage() {
           ))}
         </ul>
 
-        <aside className="h-fit border border-black/10 p-6 lg:sticky lg:top-20">
+        <aside className="h-fit rounded-md border border-black/10 p-6 lg:sticky lg:top-20">
           <h2 className="font-display mb-4 text-xl">{t("cart.subtotal")}</h2>
           <CouponField />
           <div className="flex items-center justify-between text-sm">
