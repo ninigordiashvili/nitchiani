@@ -9,6 +9,8 @@ import { useCart } from "@/lib/cart/store";
 import { useSoldOut } from "@/lib/cart/sold-out";
 import { variantForPhoto } from "@/lib/images";
 import { showVariantPhoto, usePhotoOnScreen } from "@/lib/ui/variant-photo";
+import { useSetUrlQuery, useUrlQuery } from "@/lib/ui/use-url-query";
+import { parseEchoDeskGid } from "@/lib/echodesk/adapt";
 import { clampToStock, isAtStockLimit, lowStockCount } from "@/lib/cart/stock";
 import { AddToCartButton } from "./AddToCartButton";
 import { LowStockNotice } from "./LowStockNotice";
@@ -29,6 +31,7 @@ export function ProductPurchase({
   product,
   showSizeGuide = true,
   compact = false,
+  syncUrl = false,
   onAdded,
 }: {
   product: Product;
@@ -41,6 +44,14 @@ export function ProductPurchase({
    * away from the sheet. Without this the panel outgrew the photo and had to scroll.
    */
   compact?: boolean;
+  /**
+   * Write the chosen variant into the address bar as `?variant=<id>`, and read it on arrival.
+   *
+   * Only the product page does this. The quick-view sheet shows a product the URL is not
+   * about — the address there belongs to the grid behind it — so a colour picked in the sheet
+   * must not rewrite it.
+   */
+  syncUrl?: boolean;
   /** Passed straight to AddToCartButton — the quick-view sheet closes on it. */
   onAdded?: () => void;
 }) {
@@ -51,7 +62,36 @@ export function ProductPurchase({
   const [selected, setSelected] = useState(
     product.variants.find((v) => v.availableForSale) ?? product.variants[0],
   );
+
+  // `?variant=3` — a link to one colour. Read once on arrival, and only on the product page:
+  // shared from Instagram, it should open on the durag the post is about rather than on
+  // whichever colour happens to be in stock first.
+  const query = useUrlQuery();
+  const setQuery = useSetUrlQuery("replace");
+  const wantedVariant = syncUrl ? query.get("variant") : null;
+  useEffect(() => {
+    if (!wantedVariant) return;
+    const match = product.variants.find(
+      (v) => String(parseEchoDeskGid(v.id)?.id ?? "") === wantedVariant,
+    );
+    if (match) setSelected((current) => (match.id === current.id ? current : match));
+  }, [wantedVariant, product.variants]);
   const [quantity, setQuantity] = useState(1);
+
+  // Reflect the choice back into the address bar, so the link in the browser is the link worth
+  // sharing. Only for a product with a choice to make: `?variant=` on a single-SKU product is
+  // noise in every URL copied from the site.
+  const variantParam =
+    syncUrl && product.variants.length > 1
+      ? (String(parseEchoDeskGid(selected.id)?.id ?? "") || null)
+      : null;
+  useEffect(() => {
+    if (!syncUrl || !variantParam) return;
+    if (query.get("variant") === variantParam) return;
+    setQuery({ variant: variantParam });
+    // `query` is a fresh object each render; depending on it would loop.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [syncUrl, variantParam, setQuery]);
   // Tell the gallery which photo the current choice wears, and clear it on the way out so the
   // next product doesn't open on the last one's colour.
   useEffect(() => {

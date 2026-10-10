@@ -151,7 +151,7 @@ export default async function ProductPage({
           )}
 
           <div className="mt-5">
-            <ProductPurchase product={product} />
+            <ProductPurchase product={product} syncUrl />
           </div>
 
           {/* Description and the data sheet, as two tabs. Renders nothing when the product

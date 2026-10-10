@@ -29,10 +29,16 @@ export function ShareButton({
   const [copied, setCopied] = useState(false);
 
   const onClick = async () => {
+    // The address bar, not the bare path, when they match: the product page writes the chosen
+    // colour into the query (`?variant=`), and sharing a durag while looking at the red one
+    // should send the red one. Falls back to the given path on the server and anywhere the
+    // two have diverged.
     const fullUrl = url.startsWith("http")
       ? url
       : typeof window !== "undefined"
-        ? `${window.location.origin}${url}`
+        ? window.location.pathname === url
+          ? `${window.location.origin}${url}${window.location.search}`
+          : `${window.location.origin}${url}`
         : url;
 
     if (typeof navigator !== "undefined" && "share" in navigator) {
