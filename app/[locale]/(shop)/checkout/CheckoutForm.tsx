@@ -268,7 +268,15 @@ export function CheckoutForm({
       )
         .then((r) => {
           setShipping(r);
-          setCourierKey(null);
+          // Keep the shopper's courier if the new quote still offers it. Clearing it meant
+          // that deleting a line — or any edit that re-quotes — silently swapped their choice
+          // back to the cheapest option, so someone who picked a 45-minute delivery could end
+          // up booked onto a four-day one without being told.
+          setCourierKey((current) =>
+            current && r.status === "priced"
+              ? ((r.option.couriers ?? []).some((c) => c.key === current) ? current : null)
+              : null,
+          );
         })
         .finally(() => setQuoting(false))
         // A failed lookup shouldn't crash the page; the order route decides the charge and

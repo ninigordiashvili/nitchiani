@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { computeTotals, withShipping, type TotalsLine } from "./totals";
 
 const line = (amount: string, quantity = 1): TotalsLine => ({
@@ -136,5 +136,33 @@ describe("withShipping", () => {
     const out = await withShipping(base, "ka", address, lines);
     expect(out.totals?.subtotal).toBe(100);
     expect(out.totals?.discount).toBe(10);
+  });
+});
+
+describe("repriceLines", () => {
+  it("replaces the price a cart line has been carrying with today's", async () => {
+    vi.resetModules();
+    vi.doMock("@/lib/echodesk/client", () => ({
+      lookupProduct: async (id: number) =>
+        id === 25
+          ? { id: 25, price: "90.00", variants: [{ id: 1, price: "95.00" }] }
+          : "missing",
+    }));
+    const { repriceLines } = await import("./totals");
+    const out = await repriceLines([
+      // Added to the bag at ₾80 a week ago; the variant now sells for ₾95.
+      { unitPrice: { amount: "80.00" }, quantity: 2, variantId: "gid://echodesk/Variant/1?product=25" },
+      // A product line, and a product that has since been removed — left alone.
+      { unitPrice: { amount: "10.00" }, quantity: 1, variantId: "gid://echodesk/Product/99" },
+    ]);
+    expect(out[0].unitPrice.amount).toBe("95.00");
+    expect(out[1].unitPrice.amount).toBe("10.00");
+    vi.doUnmock("@/lib/echodesk/client");
+  });
+
+  it("leaves everything alone when no line carries an EchoDesk id", async () => {
+    const { repriceLines } = await import("./totals");
+    const lines = [{ unitPrice: { amount: "12.00" }, quantity: 1 }];
+    expect(await repriceLines(lines)).toEqual(lines);
   });
 });

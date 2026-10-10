@@ -3,7 +3,7 @@
 import { ArrowLeft, Check, Link2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
-import { orderNumberAction } from "@/app/actions/cart";
+import { orderNumberAction, paymentStateAction } from "@/app/actions/cart";
 import { OrderNumber } from "@/components/commerce/OrderNumber";
 import { useCart } from "@/lib/cart/store";
 import { loadPendingPayment } from "@/lib/cart/pending-payment";
@@ -18,8 +18,9 @@ import { Link } from "@/lib/i18n/routing";
  * holds the order's public token from when checkout sent them to pay (see
  * lib/cart/pending-payment.ts): that gives the tracking link, and one lookup gives the number.
  *
- * Arriving here after paying also empties the bag (it has been bought), and the address is
- * rewritten to carry the token and number, so a refresh or a bookmark keeps them.
+ * Arriving here empties the bag only once EchoDesk confirms the payment — the gateway decides
+ * which URL a cancelled card returns to, and this page is a candidate. The address is rewritten
+ * to carry the token and number, so a refresh or a bookmark keeps them.
  */
 export function SuccessOrderDetails({ order, token }: { order?: string; token?: string }) {
   const t = useTranslations("checkout");
@@ -34,13 +35,22 @@ export function SuccessOrderDetails({ order, token }: { order?: string; token?: 
     if (!pending) return;
     // Read before clearing: emptying the bag also forgets the pending payment.
     const pendingToken = pending.token;
-    // Paid, so the order's promo code is spent — it can't be used again from this browser.
-    markCouponUsed(pending.coupon);
-    clear();
+    const pendingCoupon = pending.coupon;
     if (!pendingToken) return;
     if (!tok) setTok(pendingToken);
-    if (order) return;
     let cancelled = false;
+
+    // Landing on this page is not proof of payment: whether the gateway sends a cancelled or
+    // declined card here depends on its return-URL configuration, and this used to empty the
+    // bag and spend the shopper's one-time code on arrival, for an order nobody had paid for.
+    // So ask EchoDesk, the way the cart's own settle path does.
+    void paymentStateAction(pendingToken).then((state) => {
+      if (cancelled || state !== "paid") return;
+      markCouponUsed(pendingCoupon);
+      clear();
+    });
+
+    if (order) return;
     void orderNumberAction(pendingToken).then((n) => {
       if (cancelled) return;
       if (n) setNumber(n);
