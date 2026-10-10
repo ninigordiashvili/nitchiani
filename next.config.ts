@@ -58,6 +58,9 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   images: {
+    // AVIF first, WebP for anything that can't take it. Next ships WebP-only by default, and
+    // the shop grid is 790 KB of product photos at phone size.
+    formats: ["image/avif", "image/webp"],
     // A generated image URL names its source, width and quality, and EchoDesk's media
     // filenames carry their own timestamp — so the same URL always means the same bytes.
     minimumCacheTTL: 31536000,

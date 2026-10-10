@@ -35,10 +35,16 @@ export function CardPhotos({
   const tNav = useTranslations("nav");
   const railRef = useRef<HTMLDivElement>(null);
   const [active, setActive] = useState(0);
+  // The other slides are markup until someone reaches for them. Rendering all of them up
+  // front put 358 KB of off-screen product photos on the shop page — 45% of its image weight
+  // — for a rail most shoppers never touch. Hover or the first touch is enough warning.
+  const [woken, setWoken] = useState(false);
+  const wake = () => setWoken(true);
 
   const scrollTo = (i: number) => {
     const rail = railRef.current;
     if (!rail) return;
+    wake();
     const index = Math.max(0, Math.min(images.length - 1, i));
     rail.scrollTo({ left: rail.clientWidth * index, behavior: "smooth" });
     // Set it here as well as on scroll: the dots should answer the tap immediately rather
@@ -57,7 +63,11 @@ export function CardPhotos({
     <>
       <div
         ref={railRef}
+        onPointerEnter={wake}
+        onTouchStart={wake}
+        onFocus={wake}
         onScroll={(e) => {
+          wake();
           const rail = e.currentTarget;
           if (rail.clientWidth > 0) setActive(Math.round(rail.scrollLeft / rail.clientWidth));
         }}
@@ -72,18 +82,21 @@ export function CardPhotos({
             key={`${img.url}-${i}`}
             className="relative h-full w-full flex-shrink-0 snap-center overflow-hidden"
           >
-            <Image
-              src={img.url}
-              // Only the first shot names the product; the rest are the same thing from another
-              // angle, and a screen reader reading the name four times says nothing new.
-              alt={i === 0 ? alt : ""}
-              fill
-              sizes={sizes}
-              priority={priority && i === 0}
-              placeholder="blur"
-              blurDataURL={BLUR_DATA_URL}
-              className="object-contain transition-transform duration-[400ms] ease-[var(--ease-brand)] group-hover:scale-105"
-            />
+            {i === 0 || woken ? (
+              <Image
+                src={img.url}
+                // Only the first shot names the product; the rest are the same thing from
+                // another angle, and a screen reader reading the name four times says nothing
+                // new.
+                alt={i === 0 ? alt : ""}
+                fill
+                sizes={sizes}
+                priority={priority && i === 0}
+                placeholder="blur"
+                blurDataURL={BLUR_DATA_URL}
+                className="object-contain transition-transform duration-[400ms] ease-[var(--ease-brand)] group-hover:scale-105"
+              />
+            ) : null}
           </div>
         ))}
       </div>
