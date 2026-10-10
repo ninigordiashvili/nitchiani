@@ -8,8 +8,14 @@ import {
 } from "./dummy";
 import { findMatchingProducts } from "./search";
 import { adaptProduct } from "../echodesk/adapt";
-import { getProductBySlug, isEchoDeskConfigured, listProducts } from "../echodesk/client";
+import {
+  getProductById,
+  getProductBySlug,
+  isEchoDeskConfigured,
+  listProducts,
+} from "../echodesk/client";
 import { categoriesFor } from "../echodesk/categories";
+import { scoreForQuery } from "../products/match";
 import type { Locale } from "../i18n/config";
 import { defaultLocale } from "../i18n/config";
 
@@ -79,7 +85,14 @@ export async function shopifyFetch<T>({
 const catalog = cache(async (locale: Locale): Promise<Product[]> => {
   if (!isEchoDeskConfigured) return [];
   const page = await listProducts(200);
-  return (page?.results ?? []).map((p) => adaptProduct(p, locale));
+  const rows = page?.results ?? [];
+  // The list serialiser omits variants, so every product looked single-variant on the home
+  // page and the shop grid: a product with two colours offered no choice, and the card's add
+  // button put an unchosen one in the bag. The detail record is the only place variants live.
+  // Fetched in parallel and cached exactly like the list, so this costs one round of requests
+  // per revalidation rather than one per visitor.
+  const detailed = await Promise.all(rows.map(async (p) => (await getProductById(p.id)) ?? p));
+  return detailed.map((p) => adaptProduct(p, locale));
 });
 
 export async function getProducts(locale: Locale = defaultLocale, limit = 20): Promise<Product[]> {
@@ -178,15 +191,14 @@ export async function searchProducts(
   {
     const products = await catalog(locale);
     if (products.length > 0) {
-      // `findMatchingProducts` scores the raw sample shape, so live products get a simple
-      // substring match over the fields a shopper actually types: title, type, description.
       const q = query.trim().toLowerCase();
       if (!q) return [];
       return products
-        .filter((p) =>
-          [p.title, p.productType, p.description].some((f) => f?.toLowerCase().includes(q)),
-        )
-        .slice(0, limit);
+        .map((p) => ({ p, score: scoreForQuery(p, q) }))
+        .filter((x) => x.score > 0)
+        .sort((a, b) => b.score - a.score)
+        .slice(0, limit)
+        .map((x) => x.p);
     }
   }
   return findMatchingProducts(DUMMY_RAW_PRODUCTS, query, locale, limit);
@@ -198,9 +210,18 @@ export async function getRelatedProducts(
   limit = 4,
 ): Promise<Product[]> {
   const all = await getProducts(locale, 50);
+  const mine = new Set(categoriesFor(product.handle));
+  // Ranked, not filtered: the durags category holds two products, and a rail with one card in
+  // it reads as a bug. Anything sharing a category comes first; the rest only fill the row.
   return all
-    .filter((p) => p.handle !== product.handle && p.productType === product.productType)
-    .slice(0, limit);
+    .filter((p) => p.handle !== product.handle)
+    .map((p) => ({
+      p,
+      shared: categoriesFor(p.handle).filter((h) => mine.has(h)).length,
+    }))
+    .sort((a, b) => b.shared - a.shared)
+    .slice(0, limit)
+    .map((x) => x.p);
 }
 
 // Cart — Phase 1 stub. Phase 2 wires Shopify Cart API for real.

@@ -58,6 +58,12 @@
     --muted: var(--text-muted);
     --accent: var(--color-brand-maroon);
     --hairline: var(--border-soft);
+    /* Product tiles. Grey is the absence of a decision; the brand's maroon at a whisper
+       (22% over the tile's white) draws the same line in the shop's own colour and warms a
+       grid that is otherwise white rectangles on cream. Doubled on hover, where it becomes
+       the one thing pointing at the card under the cursor. */
+    --border-card: color-mix(in oklab, var(--color-brand-maroon) 22%, transparent);
+    --border-card-hover: color-mix(in oklab, var(--color-brand-maroon) 45%, transparent);
   }
 
   html {
@@ -240,12 +246,40 @@
   }
 
   /* Editorial banner overlay scrim */
+  /* A footing for a label laid over a photo, not a filter over the photo itself.
+     It used to begin fading in at 30% of the height, which on a square tile put a dark wash
+     over two thirds of the artwork — the product was being hidden to make three words
+     legible. It now starts at 62% and only reaches full strength at the very bottom edge,
+     with a soft knee in the middle so the transition isn't a visible band. The label carries
+     its own shadow (`.on-photo`) for the rest. */
   .scrim-bottom {
+    background: linear-gradient(
+      180deg,
+      transparent 78%,
+      rgba(10, 31, 31, 0.42) 91%,
+      rgba(10, 31, 31, 0.8) 100%
+    );
+  }
+
+  /* The original reach, for a banner whose copy block is tall. */
+  .scrim-bottom-tall {
     background: linear-gradient(
       180deg,
       transparent 30%,
       rgba(10, 31, 31, 0.85) 100%
     );
+  }
+
+  /* Text sitting directly on photography.
+     Three layers, because cream over a white product shot is the hardest case there is and
+     the two softer ones alone left the category labels ghosting into the packaging behind
+     them: a near-opaque contact shadow for the letterform's own edge, a mid one that reads as
+     a halo, and a wide soft one that darkens the whole area under the line. */
+  .on-photo {
+    text-shadow:
+      0 1px 1px rgba(10, 31, 31, 0.9),
+      0 2px 7px rgba(10, 31, 31, 0.75),
+      0 10px 28px rgba(10, 31, 31, 0.55);
   }
 }
 

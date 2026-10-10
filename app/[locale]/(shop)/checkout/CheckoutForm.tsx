@@ -18,14 +18,19 @@ import {
   Check,
   CreditCard,
   Loader2,
+  Minus,
   Plus,
+  RefreshCw,
   ShieldCheck,
   Trash2,
+  Truck,
   Wallet,
 } from "lucide-react";
 import Image from "next/image";
 import { Link, useRouter } from "@/lib/i18n/routing";
+import { getWhatsAppNumber } from "@/components/brand/WhatsAppIcon";
 import { useCart } from "@/lib/cart/store";
+import { isAtStockLimit } from "@/lib/cart/stock";
 import { formatPrice } from "@/lib/money";
 import type { Locale } from "@/lib/i18n/config";
 import { cn } from "@/lib/utils";
@@ -189,6 +194,9 @@ export function CheckoutForm({
   // True only while a quote is actually in flight — not during the debounce, or every
   // keystroke would flash a spinner at the shopper.
   const [quoting, setQuoting] = useState(false);
+  // Bumped by the retry button: the quote depends on the address, and re-asking for the
+  // same address needs something in the dependency list to actually change.
+  const [quoteAttempt, setQuoteAttempt] = useState(0);
   const [noteOpen, setNoteOpen] = useState(false);
 
   // Mobile-only two-step flow: 1 = contact/shipping, 2 = payment + place order.
@@ -268,7 +276,15 @@ export function CheckoutForm({
       )
         .then((r) => {
           setShipping(r);
-          setCourierKey(null);
+          // Keep the shopper's courier if the new quote still offers it. Clearing it meant
+          // that deleting a line — or any edit that re-quotes — silently swapped their choice
+          // back to the cheapest option, so someone who picked a 45-minute delivery could end
+          // up booked onto a four-day one without being told.
+          setCourierKey((current) =>
+            current && r.status === "priced"
+              ? ((r.option.couriers ?? []).some((c) => c.key === current) ? current : null)
+              : null,
+          );
         })
         .finally(() => setQuoting(false))
         // A failed lookup shouldn't crash the page; the order route decides the charge and
@@ -277,7 +293,7 @@ export function CheckoutForm({
     }, 500);
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [addressValue, cityValue, latValue, lngValue, subtotalAmount, cart.lines.length, locale]);
+  }, [addressValue, cityValue, latValue, lngValue, subtotalAmount, cart.lines.length, locale, quoteAttempt]);
 
   /**
    * What the summary shows for delivery.
@@ -290,6 +306,10 @@ export function CheckoutForm({
   const priced = shipping.status === "priced" ? shipping.option : null;
   const couriers = priced?.couriers ?? [];
   const chosenCourier = couriers.find((c) => c.key === courierKey) ?? null;
+  /** True while the thing standing between the shopper and the order is the delivery price. */
+  const deliveryBlocked =
+    !isPickup && (shipping.status === "needsLocation" || shipping.status === "unavailable");
+
   const shippingAmount = (() => {
     if (isPickup) return 0;
     if (!priced) return 0;
@@ -726,9 +746,60 @@ export function CheckoutForm({
                         />
                       ))}
                     </div>
-                  ) : !isPickup && couriers.length > 1 ? (
+                  ) : !isPickup && shipping.status === "unavailable" ? (
+                    /* No courier would price this address. Left unexplained, the shopper sees
+                       a form with no delivery line and no way forward — and QuickShipper
+                       refusing an address is not rare: a new building, a village, or the
+                       service being briefly down. So say what happened, offer the retry, and
+                       point at collection, which is the one route always open. */
+                    <div
+                      className="mt-2 rounded-md border px-3 py-3 text-xs leading-relaxed"
+                      style={{
+                        borderColor: "color-mix(in oklab, var(--color-brand-maroon) 30%, transparent)",
+                        background: "color-mix(in oklab, var(--color-brand-maroon) 7%, transparent)",
+                      }}
+                      aria-live="polite"
+                    >
+                      <p className="mb-1 font-medium">{t("checkout.noCourierTitle")}</p>
+                      <p className="opacity-80">
+                        {pickup ? t("checkout.noCourierDesc") : t("checkout.noCourierDescNoPickup")}
+                      </p>
+                      <div className="mt-2.5 flex flex-wrap items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setQuoteAttempt((n) => n + 1)}
+                          className="inline-flex cursor-pointer items-center gap-1.5 rounded-md border border-black/20 bg-white/70 px-3 py-1.5 font-medium transition-colors hover:border-black/40"
+                        >
+                          <RefreshCw size={13} aria-hidden />
+                          {t("checkout.retryQuote")}
+                        </button>
+                        {pickup ? (
+                          <button
+                            type="button"
+                            onClick={() => setIsPickup(true)}
+                            className="cursor-pointer font-medium underline underline-offset-4 opacity-80 hover:opacity-100"
+                          >
+                            {t("checkout.pickupAtStore")}
+                          </button>
+                        ) : (
+                          <a
+                            href={`https://wa.me/${getWhatsAppNumber()}`}
+                            target="_blank"
+                            rel="noreferrer noopener"
+                            className="font-medium underline underline-offset-4 opacity-80 hover:opacity-100"
+                          >
+                            {t("checkout.noCourierWrite")}
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  ) : !isPickup && couriers.length > 0 ? (
                     <div className="mt-2 grid gap-2">
+                      {/* One courier is not a choice, so it is shown as a statement rather
+                          than a radio — but it is shown. Hiding it left this section blank
+                          while the summary beside it named a courier and charged for it. */}
                       {couriers.map((c) => {
+                        const only = couriers.length === 1;
                         const selected = chosenCourier
                           ? chosenCourier.key === c.key
                           : c.key === `${priced?.courierId ?? ""}:${priced?.feeId ?? ""}`;
@@ -736,20 +807,26 @@ export function CheckoutForm({
                           <label
                             key={c.key}
                             className={cn(
-                              "flex cursor-pointer items-center justify-between gap-3 rounded-md border bg-white/60 px-3 py-2 text-sm transition-colors",
-                              selected
-                                ? "border-[var(--color-brand-ink)]"
-                                : "border-black/15 hover:border-black/30",
+                              "flex items-center justify-between gap-3 rounded-md border bg-white/60 px-3 py-2 text-sm transition-colors",
+                              only
+                                ? "border-black/15"
+                                : selected
+                                  ? "cursor-pointer border-[var(--color-brand-ink)]"
+                                  : "cursor-pointer border-black/15 hover:border-black/30",
                             )}
                           >
                             <span className="flex min-w-0 items-center gap-2">
-                              <input
-                                type="radio"
-                                name="courier"
-                                className="accent-[var(--color-brand-ink)]"
-                                checked={selected}
-                                onChange={() => setCourierKey(c.key)}
-                              />
+                              {only ? (
+                                <Truck size={15} className="flex-shrink-0 opacity-50" aria-hidden />
+                              ) : (
+                                <input
+                                  type="radio"
+                                  name="courier"
+                                  className="accent-[var(--color-brand-ink)]"
+                                  checked={selected}
+                                  onChange={() => setCourierKey(c.key)}
+                                />
+                              )}
                               {c.logoUrl ? (
                                 // Courier logos come from QuickShipper's own CDN, so plain
                                 // <img>: next/image would need every host allow-listed and a
@@ -872,12 +949,14 @@ export function CheckoutForm({
           </fieldset>
         </div>
 
-        <aside className="h-fit border border-black/10 p-5 lg:sticky lg:top-20">
+        {/* `rounded-md`, the same radius as the fields and the button inside it — square
+            corners around rounded controls read as two different kits. */}
+        <aside className="h-fit rounded-md border border-black/10 p-5 lg:sticky lg:top-20">
           <h2 className="font-display mb-4 text-lg">{t("nav.cart")}</h2>
           <ul className="space-y-3 border-b border-black/10 pb-4">
             {cart.lines.map((l) => (
               <li key={l.variantId} className="flex gap-3">
-                <div className="relative aspect-[4/5] w-12 flex-shrink-0 overflow-hidden bg-white">
+                <div className="relative aspect-[4/5] w-12 flex-shrink-0 overflow-hidden rounded-[var(--radius-sm)] border border-[var(--border-card)] bg-white">
                   <Image
                     src={safeImageSrc(l.image.url)}
                     alt={l.image.altText}
@@ -888,9 +967,35 @@ export function CheckoutForm({
                     className="object-contain"
                   />
                 </div>
-                <div className="flex flex-1 flex-col">
+                <div className="flex flex-1 flex-col gap-1">
                   <span className="line-clamp-1 text-sm">{l.productTitle}</span>
-                  <span className="text-xs opacity-60">× {l.quantity}</span>
+                  {/* A stepper, not a count. EchoDesk refuses an order that asks for more
+                      than it has, and the message it comes back with — "only 1 left, reduce
+                      the quantity" — was an instruction this page gave no way to follow: the
+                      only control here was a bin. */}
+                  <div className="flex w-fit items-center rounded-md border border-black/15">
+                    <button
+                      type="button"
+                      aria-label={t("nav.decreaseQuantity")}
+                      disabled={l.quantity <= 1}
+                      onClick={() => cart.updateQuantity(l.variantId, l.quantity - 1)}
+                      className="flex h-6 cursor-pointer items-center justify-center px-2 disabled:cursor-not-allowed disabled:opacity-30"
+                    >
+                      <Minus size={12} aria-hidden />
+                    </button>
+                    <span className="min-w-[1.5rem] text-center text-xs tabular-nums">
+                      {l.quantity}
+                    </span>
+                    <button
+                      type="button"
+                      aria-label={t("nav.increaseQuantity")}
+                      disabled={isAtStockLimit(l.quantity, l.maxQuantity)}
+                      onClick={() => cart.updateQuantity(l.variantId, l.quantity + 1)}
+                      className="flex h-6 cursor-pointer items-center justify-center px-2 disabled:cursor-not-allowed disabled:opacity-30"
+                    >
+                      <Plus size={12} aria-hidden />
+                    </button>
+                  </div>
                 </div>
                 <div className="flex flex-shrink-0 items-start gap-2">
                   <span className="text-sm tabular-nums">
@@ -1007,7 +1112,26 @@ export function CheckoutForm({
               }}
             >
               <AlertCircle size={14} className="mt-0.5 flex-shrink-0" />
-              <span>{submitError}</span>
+              <span className="flex flex-col items-start gap-1.5">
+                <span>{submitError}</span>
+                {/* An out, not just a refusal. Delivery here is priced by courier quote
+                    alone — the tenant configures no flat method — so an address the courier
+                    can't price, or a map that won't load, leaves the shopper staring at a
+                    form they cannot submit. Collection is the one route still open, and it
+                    is one tap rather than a scroll back up to find the radio. */}
+                {pickup && !isPickup && deliveryBlocked ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsPickup(true);
+                      setSubmitError(null);
+                    }}
+                    className="cursor-pointer font-medium underline underline-offset-4"
+                  >
+                    {t("checkout.pickupAtStore")}
+                  </button>
+                ) : null}
+              </span>
             </div>
           ) : null}
           {/* Data disclosure, immediately above the action it describes.

@@ -13,7 +13,8 @@ export type LocalizedText = Partial<Record<string, string>>;
 export type EchoDeskImage = {
   id: number;
   image: string;
-  alt_text?: string | null;
+  /** Per-locale, like every other label — and `{}` when nobody has written one. */
+  alt_text?: LocalizedText | string | null;
   sort_order?: number;
 };
 
@@ -26,6 +27,8 @@ export type EchoDeskVariant = {
   quantity?: number;
   is_in_stock?: boolean;
   attribute_values?: EchoDeskAttributeValue[];
+  /** Photo of this colour or size, when the merchant has set one. */
+  image?: string | null;
 };
 
 export type EchoDeskAttributeValue = {

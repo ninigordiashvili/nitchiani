@@ -1,22 +1,44 @@
-import { getTopReviews } from "@/lib/reviews";
+import { getReviews } from "@/lib/echodesk/reviews";
 import { getProducts } from "@/lib/shopify/client";
+import type { HomepageReview } from "@/lib/reviews";
 import type { Locale } from "@/lib/i18n/config";
 import { ReviewsRail } from "./ReviewsRail";
 
+/** How many make the rail. More than this and it stops being a highlight. */
+const LIMIT = 6;
+
 /**
- * Server wrapper. Fetches the top reviews then hands off to the client `ReviewsRail` which
- * owns the horizontal scroll + prev/next controls.
+ * Real customer reviews, from EchoDesk, or nothing at all.
  *
- * Split is intentional: the data fetch (sync today, server-side in the future) stays in this
- * server component; the rail needs refs and click handlers, so it has to be client.
+ * Reviews are written against a product, and EchoDesk serves them per product — so rather
+ * than asking for all sixteen, this asks only the products whose own record says they have
+ * any (`review_count`, which arrives with the catalogue already). Today that is none, and the
+ * section renders nothing; the day you approve your first review in EchoDesk it appears here
+ * on its own.
  */
 export async function HomepageReviews({ locale }: { locale: Locale }) {
-  // Reviews are written against product handles, and each card links to its product. Once the
-  // catalog is served live those handles may no longer exist — a review for a product the shop
-  // doesn't stock is a dead link and, worse, advertises something nobody can buy. So keep only
-  // the reviews whose product is actually in the current catalog, whichever backend supplied it.
-  const stocked = new Set((await getProducts(locale, 200)).map((p) => p.handle));
-  const reviews = getTopReviews(locale, 24).filter((r) => stocked.has(r.productHandle)).slice(0, 6);
+  const products = await getProducts(locale, 200);
+  const reviewed = products.filter((p) => (p.reviewSummary?.count ?? 0) > 0);
+  if (reviewed.length === 0) return null;
+
+  const perProduct = await Promise.all(
+    reviewed.map(async (p) => {
+      const reviews = await getReviews(p.id).catch(() => null);
+      return (reviews ?? []).map((r) => ({ ...r, productHandle: p.handle }));
+    }),
+  );
+
+  // Best first, then most recent — a highlight reel, not a chronological log.
+  const reviews: HomepageReview[] = perProduct
+    .flat()
+    .sort((a, b) => b.rating - a.rating || (a.date < b.date ? 1 : -1))
+    .slice(0, LIMIT);
+
   if (reviews.length === 0) return null;
-  return <ReviewsRail reviews={reviews} />;
+
+  return (
+    <section className="container-shop mt-12">
+      <ReviewsRail reviews={reviews} />
+    </section>
+  );
 }

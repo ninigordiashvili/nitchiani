@@ -11,7 +11,7 @@ import {
 } from "@/components/brand/WhatsAppIcon";
 import { Logo } from "@/components/brand/Logo";
 import { TrustStrip } from "@/components/homepage/TrustStrip";
-import { BUSINESS, BUSINESS_DETAILS_FILLED, businessAddress } from "@/lib/business";
+import { BUSINESS, businessAddress } from "@/lib/business";
 import { CardBrandLogos } from "@/components/commerce/CardBrandLogos";
 import { useCookieConsent } from "@/lib/ui/cookie-consent";
 // import { NewsletterForm } from "./NewsletterForm";  // hidden — see the footer body
@@ -192,35 +192,7 @@ export function Footer() {
           </div>
         </div>
 
-        {/* Business identification — legal entity name, registration ID, address, contact
-            email. Required for Georgian e-commerce, so this stays in the codebase, but it is
-            hidden until `lib/business.ts` holds real values: publishing "[LEGAL ENTITY NAME]"
-            and "[REGISTRATION NUMBER]" to customers looks worse than showing nothing, and
-            reads as an unfinished site rather than a registered business.
-            `BUSINESS_DETAILS_FILLED` flips the moment the placeholders are replaced, so the
-            block returns on its own — no code change needed at incorporation. */}
-        {BUSINESS_DETAILS_FILLED ? (
-        <div className="mt-10 border-t border-white/10 pt-6 text-[11px] leading-relaxed opacity-55 sm:text-xs">
-          <p className="font-medium opacity-90">{locale === "ka" ? BUSINESS.legalName.ka : BUSINESS.legalName.en}</p>
-          <p>
-            {t("footer.regId")}: <span className="tabular-nums">{BUSINESS.registrationId}</span>
-            {BUSINESS.vatId ? (
-              <>
-                {" · "}
-                {t("footer.vatId")}: <span className="tabular-nums">{BUSINESS.vatId}</span>
-              </>
-            ) : null}
-          </p>
-          <p>{address}</p>
-          <p>
-            <a href={`mailto:${BUSINESS.email}`} className="group">
-              <span className="underline-motion">{BUSINESS.email}</span>
-            </a>
-          </p>
-        </div>
-        ) : null}
-
-        <div className="mt-6 flex flex-col items-center justify-between gap-3 border-t border-white/10 pt-6 text-center text-xs opacity-60 sm:flex-row sm:items-center sm:text-left">
+        <div className="mt-10 flex flex-col items-center justify-between gap-3 border-t border-white/10 pt-6 text-center text-xs opacity-60 sm:flex-row sm:items-center sm:text-left">
           <p>© {year} Nitchiani. {t("footer.rights")}.</p>
           {/* Card brands, not banks: the banks on offer can change in EchoDesk without a
               deploy, and the checkout names them. The logos rather than the words, because

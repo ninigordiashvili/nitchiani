@@ -2,14 +2,14 @@ import { describe, expect, it } from "vitest";
 import { BUSINESS, BUSINESS_DETAILS_FILLED, businessAddress } from "./business";
 
 /**
- * The footer's legal block renders only when this is true. These pin the two halves of that
- * contract: the flag must actually detect the placeholders, and it must flip once they're
- * replaced — otherwise the block either leaks "[LEGAL ENTITY NAME]" to customers or stays
- * hidden after incorporation, and both fail quietly.
+ * Terms §2 and Privacy §1 name the business outright, with no check that the values are real.
+ * This is that check: the flag must detect a placeholder in any of the three required fields,
+ * and it must be true for what `lib/business.ts` holds today — so a reset placeholder fails
+ * here rather than reaching a customer as "[LEGAL ENTITY NAME]".
  */
 describe("BUSINESS_DETAILS_FILLED", () => {
   it("is true now the registration details are filled in", () => {
-    // The footer's legal block and the legal pages depend on it; card acquirers check them.
+    // The legal pages depend on it; card acquirers read them during review.
     expect(BUSINESS_DETAILS_FILLED).toBe(true);
   });
 
@@ -29,7 +29,7 @@ describe("BUSINESS_DETAILS_FILLED", () => {
   });
 
   it("keeps the contact details that are real", () => {
-    // The email and phone aren't placeholders and are used elsewhere in the footer.
+    // The email and phone aren't placeholders — the footer's contact column shows them.
     expect(BUSINESS.email).not.toMatch(/^\[/);
     expect(BUSINESS.email).toContain("@");
   });

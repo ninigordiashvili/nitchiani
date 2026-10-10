@@ -33,8 +33,34 @@ export const EMPTY_FILTERS: ProductFilters = {
   attributes: {},
 };
 
-/** Preset price-tier chips shown in the toolbar. Edit here to add/remove tiers. */
-export const PRICE_TIERS = [50] as const;
+/** The tiers worth offering, if the products on screen actually straddle them. */
+const PRICE_TIER_CANDIDATES = [25, 50, 100, 200];
+
+/**
+ * Price chips for the products on screen, rather than one hardcoded "under ₾50".
+ *
+ * A tier earns its chip only when it splits the set — something at or below it and something
+ * above. A chip that selects everything filters nothing, and one that selects nothing drops
+ * the shopper into the empty state. With a single ₾50 tier and five products above it, there
+ * was no way to ask for the expensive half at all.
+ */
+export function priceTiers(products: Product[]): number[] {
+  const prices = products.map((p) => Number.parseFloat(p.priceRange.min.amount));
+  if (prices.length === 0) return [];
+  return PRICE_TIER_CANDIDATES.filter(
+    (tier) => prices.some((price) => price <= tier) && prices.some((price) => price > tier),
+  );
+}
+
+/** True when at least one product carries a struck-through price. */
+export function anyOnSale(products: Product[]): boolean {
+  return products.some(productOnSale);
+}
+
+/** True when at least one product is sold out — the only case where "in stock" filters. */
+export function anySoldOut(products: Product[]): boolean {
+  return products.some((p) => !productHasAvailableVariant(p));
+}
 
 /**
  * Returns the unique color values present across the given products. Reads the option group

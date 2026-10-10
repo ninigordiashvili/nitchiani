@@ -148,7 +148,7 @@ function UpsellCard({ product, compact }: { product: Product; compact: boolean }
       productHandle: product.handle,
       productTitle: product.title,
       variantTitle: variant.title,
-      image: product.featuredImage,
+      image: variant.image ?? product.featuredImage,
       unitPrice: variant.price,
       maxQuantity: variant.quantityAvailable,
     });
@@ -160,7 +160,7 @@ function UpsellCard({ product, compact }: { product: Product; compact: boolean }
   return (
     <li className={cn(compact && "w-28 flex-shrink-0 snap-start")}>
       <Link href={`/products/${product.handle}`} className="group block">
-        <div className="relative aspect-square overflow-hidden bg-white">
+        <div className="relative aspect-square overflow-hidden rounded-[var(--radius-md)] border border-[var(--border-card)] bg-white">
           <Image
             src={safeImageSrc(product.featuredImage.url)}
             alt={product.featuredImage.altText}
@@ -168,7 +168,7 @@ function UpsellCard({ product, compact }: { product: Product; compact: boolean }
             sizes={compact ? "112px" : "(min-width: 640px) 25vw, 50vw"}
             placeholder="blur"
             blurDataURL={BLUR_DATA_URL}
-            className="object-contain transition-transform duration-500 ease-[var(--ease-brand)] group-hover:scale-105"
+            className="object-contain transition-transform duration-500 ease-[var(--ease-brand)] group-hover:scale-[1.025]"
           />
           <button
             type="button"

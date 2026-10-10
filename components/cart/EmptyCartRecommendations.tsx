@@ -146,7 +146,7 @@ export function EmptyCartRecommendations({
 function SnapshotCard({ item }: { item: RecentlyViewedItem }) {
   return (
     <Link href={`/products/${item.handle}`} className="group block">
-      <div className="relative aspect-[4/5] overflow-hidden bg-white">
+      <div className="relative aspect-[4/5] overflow-hidden rounded-[var(--radius-lg)] border border-[var(--border-card)] bg-white">
         <Image
           src={safeImageSrc(item.image.url)}
           alt={item.image.altText}
@@ -154,7 +154,7 @@ function SnapshotCard({ item }: { item: RecentlyViewedItem }) {
           sizes="(min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw"
           placeholder="blur"
           blurDataURL={BLUR_DATA_URL}
-          className="object-contain transition-transform duration-[400ms] ease-[var(--ease-brand)] group-hover:scale-105"
+          className="object-contain transition-transform duration-[400ms] ease-[var(--ease-brand)] group-hover:scale-[1.025]"
         />
       </div>
       <p className="mt-2 line-clamp-1 text-sm font-medium leading-tight">{item.title}</p>

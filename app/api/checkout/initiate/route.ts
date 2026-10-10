@@ -516,7 +516,11 @@ async function handleEchoDeskOrder(
 
   // Fire-and-forget confirmation, same as the manual flow: the order exists in EchoDesk either
   // way, and an email-provider hiccup shouldn't block the response.
-  void sendOrderConfirmation({ ...orderInput, orderId: reference }).catch((err) => {
+  void sendOrderConfirmation({
+    ...orderInput,
+    orderId: reference,
+    trackingToken: order.publicToken,
+  }).catch((err) => {
     reportError(err, { op: "sendOrderConfirmation", orderId: reference });
   });
 

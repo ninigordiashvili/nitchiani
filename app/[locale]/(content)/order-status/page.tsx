@@ -8,6 +8,7 @@ import { localeAlternates } from "@/lib/seo";
 import type { Locale } from "@/lib/i18n/config";
 import { parseTrackingInput } from "@/lib/orders/tracking-input";
 import { OrderNumber } from "@/components/commerce/OrderNumber";
+import { ReviewInvite } from "@/components/commerce/ReviewInvite";
 
 export async function generateMetadata({
   params,
@@ -239,6 +240,10 @@ async function LiveTracking({
           ) : null}
         </div>
       ) : null}
+
+      {/* Once it is on its way, ask how it went — see ReviewInvite for why this is a
+          WhatsApp link rather than a form. */}
+      {order.step >= 4 ? <ReviewInvite orderNumber={order.name} /> : null}
 
       {/* Order summary: items + placement date */}
       <div className="rounded-md border border-black/10 p-4 sm:p-5">

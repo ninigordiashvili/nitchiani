@@ -1,18 +1,21 @@
 "use server";
 
 import { isEchoDeskConfigured, lookupProduct } from "@/lib/echodesk/client";
-import { findGoneLines, type GoneLine } from "@/lib/echodesk/cart-check";
+import { checkCartLines, type CartCheck } from "@/lib/echodesk/cart-check";
 import { getOrderByToken } from "@/lib/echodesk/orders";
 
 /**
- * Bag lines whose product the shop no longer sells, so the cart can drop them on load rather
- * than let checkout fail on them. Empty when EchoDesk isn't the backend, or when it can't be
- * reached — not knowing is never a reason to remove anything.
+ * What the shop currently says about the lines in the bag: which products it no longer sells,
+ * so the cart can drop them on load rather than let checkout fail on them, and how much is
+ * left of the rest, so the quantity limits are today's rather than the ones captured when
+ * each line was added. Empty when EchoDesk isn't the backend, or when it can't be reached —
+ * not knowing is never a reason to remove anything or to lower a limit.
  */
-export async function findGoneCartLinesAction(variantIds: string[]): Promise<GoneLine[]> {
-  if (!isEchoDeskConfigured || variantIds.length === 0) return [];
+export async function checkCartLinesAction(variantIds: string[]): Promise<CartCheck> {
+  const empty: CartCheck = { gone: [], stock: [] };
+  if (!isEchoDeskConfigured || variantIds.length === 0) return empty;
   // A bag is a handful of lines; anything larger is not a real bag.
-  return findGoneLines(variantIds.slice(0, 50), lookupProduct).catch(() => []);
+  return checkCartLines(variantIds.slice(0, 50), lookupProduct).catch(() => empty);
 }
 
 /**

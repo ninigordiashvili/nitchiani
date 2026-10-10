@@ -148,7 +148,7 @@ export function HowItWorksButton({
                 </span>
                 <div className="min-w-0 flex-1">
                   <p className="flex items-baseline gap-2 text-sm font-medium">
-                    <span className="text-[11px] tabular-nums opacity-50">
+                    <span className="text-[11px] tabular-nums opacity-60">
                       0{i + 1}
                     </span>
                     {step.title}

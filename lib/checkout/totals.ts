@@ -1,4 +1,6 @@
 import { bundleForCoupon, bundleShortfall } from "@/lib/bundles";
+import { parseEchoDeskGid } from "@/lib/echodesk/adapt";
+import { lookupProduct } from "@/lib/echodesk/client";
 import { discountFor, findCoupon, type Coupon } from "@/lib/cart/coupons";
 import { classifyPromoMessage, validatePromo } from "@/lib/echodesk/promo";
 import { quoteItems, resolveShipping, type ShippingResolution } from "@/lib/echodesk/shipping";
@@ -110,10 +112,54 @@ export function computeTotals(
  * silently dropping a discount the shopper was promised is a worse outcome than asking them to
  * try again.
  */
+/**
+ * Re-reads each line's price from EchoDesk.
+ *
+ * A cart line keeps the price it was added at, in localStorage, for as long as the shopper
+ * keeps the bag — and nothing ever re-priced it. The route's "has the cart changed?" check
+ * compared the client's subtotal against a subtotal computed from the client's own line
+ * prices, so it could only ever catch a browser contradicting itself. Raise a price in
+ * EchoDesk and a week-old bag would show the old total while EchoDesk charged the new one:
+ * the shopper sees one number on the card page and another on their statement.
+ *
+ * A line whose product can't be read is left alone — stock and availability are EchoDesk's
+ * call at order time, and refusing to price an order because a lookup timed out would turn a
+ * network blip into a lost sale.
+ */
+export async function repriceLines(lines: TotalsLine[]): Promise<TotalsLine[]> {
+  const ids = new Set<number>();
+  for (const line of lines) {
+    const ref = line.variantId ? parseEchoDeskGid(line.variantId) : null;
+    if (ref?.productId) ids.add(ref.productId);
+  }
+  if (ids.size === 0) return lines;
+
+  const found = new Map(
+    await Promise.all(
+      [...ids].map(async (id) => [id, await lookupProduct(id).catch(() => null)] as const),
+    ),
+  );
+
+  return lines.map((line) => {
+    const ref = line.variantId ? parseEchoDeskGid(line.variantId) : null;
+    const product = ref?.productId ? found.get(ref.productId) : null;
+    if (!product || product === "missing") return line;
+    const variant =
+      ref?.kind === "variant" ? product.variants?.find((v) => v.id === ref.id) : undefined;
+    const live = Number.parseFloat(variant?.price ?? product.price ?? "");
+    if (!Number.isFinite(live) || live <= 0) return line;
+    return { ...line, unitPrice: { amount: live.toFixed(2) } };
+  });
+}
+
 export async function computeTotalsWithEchoDesk(
-  lines: TotalsLine[],
+  rawLines: TotalsLine[],
   couponCode: string | null | undefined,
 ): Promise<{ ok: true; totals: ServerComputedTotals } | { ok: false; error: string }> {
+  // Today's prices, not the ones the browser has been carrying around. The route compares the
+  // subtotal that comes out of this against the client's and asks the shopper to re-confirm
+  // when they disagree.
+  const lines = await repriceLines(rawLines);
   const base = computeTotals(lines, null);
   if (!base.ok) return base;
 

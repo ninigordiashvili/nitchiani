@@ -1,5 +1,8 @@
+import { CATEGORIES } from "../categories";
+import { categoriesFor } from "./categories";
+import { distinctImages } from "../images";
 import type { Locale } from "../i18n/config";
-import type { Product, ProductAttribute, ProductVariant } from "../shopify/types";
+import type { ImageRef, Product, ProductAttribute, ProductVariant } from "../shopify/types";
 import type { EchoDeskAttributeValue, EchoDeskProduct, LocalizedText } from "./types";
 
 /**
@@ -17,10 +20,62 @@ import type { EchoDeskAttributeValue, EchoDeskProduct, LocalizedText } from "./t
 
 const CURRENCY = "GEL";
 
-/** EchoDesk sends `{en, ka}`; fall back through locale → English → any value → "". */
+/** Shown for a product EchoDesk holds no photo for — see `public/products/placeholder.png`. */
+const NO_PHOTO = "/products/placeholder.png";
+
+/**
+ * EchoDesk sends `""` for an image nobody has uploaded, not `null`, and an empty string is not
+ * a URL: `<Image src="">` renders a broken image and React reports
+ * "ReactDOM.preload(): ... The `href` argument encountered was an empty string" for every one
+ * on the page. So blank counts as absent, here at the boundary rather than in each component.
+ */
+function photoUrl(raw: string | null | undefined): string | null {
+  const trimmed = raw?.trim();
+  return trimmed ? trimmed : null;
+}
+
+/** `alt_text` is a per-locale map on new records and a plain string on older ones. */
+function altText(raw: LocalizedText | string | null | undefined, locale: Locale): string {
+  if (!raw) return "";
+  return typeof raw === "string" ? raw.trim() : pick(raw, locale).trim();
+}
+
+/**
+ * Heading above the choices when a variant carries no attribute of its own — "Colour" would
+ * be a guess, and a variant can just as easily be a size or a set.
+ */
+const OPTION_LABEL: Record<Locale, string> = { ka: "ვარიანტი", en: "Option" };
+
+/** "Soft body wave — სურათი 2". The English word leaked into Georgian alt text before. */
+const VIEW_LABEL: Record<Locale, (n: number) => string> = {
+  ka: (n) => `სურათი ${n}`,
+  en: (n) => `view ${n}`,
+};
+
+/**
+ * EchoDesk sends `{en, ka}`; fall back through locale → English → any value → "".
+ *
+ * Trimmed, because a stray space at the end of a product name is invisible in the CRM and
+ * shows up on the card as a gap before the price.
+ */
 export function pick(text: LocalizedText | undefined, locale: Locale): string {
   if (!text) return "";
-  return text[locale] || text.en || Object.values(text).find(Boolean) || "";
+  return (text[locale] || text.en || Object.values(text).find(Boolean) || "").trim();
+}
+
+/**
+ * Drops a form-field heading someone pasted along with the copy.
+ *
+ * One product's English short description opens with the line "Short Description", which the
+ * PDP printed as its first paragraph and Google used as the opening of the snippet. Only an
+ * exact heading on its own first line is removed — a sentence that happens to start with the
+ * word is the merchant's prose, not a label.
+ */
+const FIELD_HEADING = /^(short description|description|მოკლე აღწერა|აღწერა)\s*:?\s*$/i;
+
+function stripFieldHeading(text: string): string {
+  const [first, ...rest] = text.split("\n");
+  return rest.length > 0 && FIELD_HEADING.test(first.trim()) ? rest.join("\n").trim() : text;
 }
 
 function money(amount: string | null | undefined) {
@@ -33,39 +88,55 @@ export function adaptProduct(p: EchoDeskProduct, locale: Locale): Product {
     .slice()
     .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
     .map((img, i) => ({
-      url: img.image,
-      altText: img.alt_text || `${title} — view ${i + 1}`,
+      url: photoUrl(img.image),
+      altText: altText(img.alt_text, locale) || `${title} — ${VIEW_LABEL[locale](i + 1)}`,
       width: 900,
       height: 1125,
-    }));
-
-  // The list serialiser sends only a single `image`; the detail one sends `images`.
-  const featured = gallery[0] ?? {
-    url: p.image ?? "/products/gold-wax.png",
-    altText: title,
-    width: 900,
-    height: 1125,
-  };
+    }))
+    .filter((img): img is { url: string; altText: string; width: number; height: number } =>
+      img.url !== null,
+    );
 
   const inStock = p.is_in_stock ?? (p.quantity ?? 0) > 0;
 
   // A product with no variants still needs one sellable row — the storefront always adds a
   // variant to the bag, never a bare product.
   const variants: ProductVariant[] = (p.variants ?? []).length
-    ? p.variants!.map((v) => ({
-        // The parent product rides along: guest checkout and the courier quote both want
-        // `product_id`, and a variant id in that field names some other product entirely.
-        id: `gid://echodesk/Variant/${v.id}?product=${p.id}`,
-        title: pick(v.name, locale) || "One Size",
-        availableForSale: v.is_in_stock ?? (v.quantity ?? 0) > 0,
-        quantityAvailable: v.quantity ?? undefined,
-        selectedOptions: (v.attribute_values ?? []).map((a) => ({
+    ? p.variants!.map((v) => {
+        const title = pick(v.name, locale) || "One Size";
+        // A variant is a choice, and the picker is built from `selectedOptions`. EchoDesk's
+        // product editor lets a variant be created with a name and no attributes at all —
+        // "Ombre", "BLONDE" — and with nothing here the storefront concluded there was
+        // nothing to choose and hid the picker entirely. The variant's own name is the
+        // choice in that case; attributes win when the merchant has set them.
+        const attributes = (v.attribute_values ?? []).map((a) => ({
           name: pick(a.attribute?.name, locale),
           value: typeof a.value === "string" ? a.value : (a.value_text ?? ""),
-        })),
-        price: money(v.price ?? p.price),
-        compareAtPrice: v.compare_at_price ? money(v.compare_at_price) : undefined,
-      }))
+        }));
+        const named = attributes.filter((o) => o.name && o.value);
+        return {
+        // The parent product rides along: guest checkout and the courier quote both want
+        // `product_id`, and a variant id in that field names some other product entirely.
+          id: `gid://echodesk/Variant/${v.id}?product=${p.id}`,
+          title,
+          sku: v.sku?.trim() || undefined,
+          availableForSale: v.is_in_stock ?? (v.quantity ?? 0) > 0,
+          quantityAvailable: v.quantity ?? undefined,
+          selectedOptions: named.length > 0 ? named : [{ name: OPTION_LABEL[locale], value: title }],
+          // A colour is worth seeing: when a variant carries its own photo, the gallery and
+          // the bag show that rather than the product's default shot.
+          image: photoUrl(v.image)
+            ? {
+                url: photoUrl(v.image)!,
+                altText: `${title} — ${pick(p.name, locale)}`,
+                width: 900,
+                height: 1125,
+              }
+            : undefined,
+          price: money(v.price ?? p.price),
+          compareAtPrice: v.compare_at_price ? money(v.compare_at_price) : undefined,
+        };
+      })
     : [
         {
           // Tagged Product, not Variant: this row stands in for a product that has no
@@ -85,6 +156,20 @@ export function adaptProduct(p: EchoDeskProduct, locale: Locale): Product {
         },
       ];
 
+  // A merchant who sells one durag in two colours photographs the colours, not the product:
+  // EchoDesk then holds no product image at all and every variant has one. Those are the
+  // product's photos — without this the card, the search result and the cart line all showed
+  // the "no photo" placeholder for a product with two perfectly good pictures.
+  const variantShots = variants
+    .map((v) => v.image)
+    .filter((img): img is ImageRef => Boolean(img?.url));
+
+  // The list serialiser sends only a single `image`; the detail one sends `images`.
+  const featured: ImageRef = gallery[0] ??
+    (photoUrl(p.image)
+      ? { url: photoUrl(p.image)!, altText: title, width: 900, height: 1125 }
+      : variantShots[0]) ?? { url: NO_PHOTO, altText: title, width: 900, height: 1125 };
+
   const prices = variants.map((v) => Number.parseFloat(v.price.amount));
 
   // Option groups are derived from the variants' own attributes rather than read separately,
@@ -99,26 +184,49 @@ export function adaptProduct(p: EchoDeskProduct, locale: Locale): Product {
   }
 
   const attributes = adaptAttributes(p.attribute_values, locale);
-  // Deliberately blank: `productType` used to borrow the first attribute's name, which with
-  // real attributes means a filter label ("Hair type") leaking into the PDP eyebrow as if it
-  // were a category. Category membership lives in lib/echodesk/categories.ts instead.
+  // The eyebrow stays blank: `productType` used to borrow the first attribute's name, which
+  // with real attributes means a filter label ("Hair type") reading as a category.
   const productType = "";
+  // The category, though, is known — and everything that keyed on `productType` was treating
+  // every product as the same kind: the breadcrumb's middle crumb had no name, and "related
+  // products" matched "" to "" and offered a braiding-hair rail on a ₾10 durag.
+  const handles = categoriesFor(p.slug);
+  const productTypeHandle = handles[0] ?? "";
+
+  // Both languages, so the Georgian site finds "durag" and the English one finds "ბონეტი" —
+  // search only ever read the current locale's copy, and a shopper typing the other language
+  // got "nothing found" for a product sitting on the page behind the overlay.
+  const searchText = [
+    pick(p.name, "ka"),
+    pick(p.name, "en"),
+    p.slug.replace(/[_-]/g, " "),
+    ...handles,
+    ...handles.flatMap((h) => CATEGORIES.find((c) => c.handle === h)?.aliases ?? []),
+  ]
+    .join(" ")
+    .toLowerCase();
 
   return {
     id: `gid://echodesk/Product/${p.id}`,
     handle: p.slug,
     title,
-    description: pick(p.description, locale) || pick(p.short_description, locale),
-    shortDescription: pick(p.short_description, locale) || undefined,
+    description: stripFieldHeading(
+      pick(p.description, locale) || pick(p.short_description, locale),
+    ),
+    shortDescription: stripFieldHeading(pick(p.short_description, locale)) || undefined,
     seoTitle: pick(p.meta_title, locale) || undefined,
     seoDescription: pick(p.meta_description, locale) || undefined,
     tags: [],
+    sku: p.sku?.trim() || undefined,
+    searchText,
     vendor: "Nitchiani",
     productType,
     // Locale-stable slug for breadcrumb/category links, mirroring the sample catalog's rule.
-    productTypeHandle: "",
+    productTypeHandle,
     featuredImage: featured,
-    images: gallery.length ? gallery : [featured],
+    // Every colour belongs in the gallery when the product has no shots of its own, so the
+    // page and the card rail can be swiped through them.
+    images: gallery.length ? gallery : distinctImages([featured, ...variantShots]),
     options: [...optionMap].map(([name, values]) => ({ name, values: [...values] })),
     variants,
     priceRange: {

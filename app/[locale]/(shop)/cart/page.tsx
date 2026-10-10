@@ -44,7 +44,7 @@ export default function CartPage() {
         <ul className="divide-y divide-black/10">
           {cart.lines.map((line) => (
             <li key={line.variantId} className="flex gap-4 py-5">
-              <div className="relative aspect-[4/5] w-28 flex-shrink-0 overflow-hidden bg-white">
+              <div className="relative aspect-[4/5] w-28 flex-shrink-0 overflow-hidden rounded-[var(--radius-md)] border border-[var(--border-card)] bg-white">
                 <Image
                   src={safeImageSrc(line.image.url)}
                   alt={line.image.altText}
@@ -119,7 +119,7 @@ export default function CartPage() {
           ))}
         </ul>
 
-        <aside className="h-fit border border-black/10 p-6 lg:sticky lg:top-20">
+        <aside className="h-fit rounded-md border border-black/10 p-6 lg:sticky lg:top-20">
           <h2 className="font-display mb-4 text-xl">{t("cart.subtotal")}</h2>
           <CouponField />
           <div className="flex items-center justify-between text-sm">

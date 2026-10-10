@@ -144,17 +144,19 @@ export function Select<T extends string>({
         aria-expanded={open}
         aria-controls={open ? listId : undefined}
         aria-label={`${label}: ${selected?.label ?? ""}`}
+        // Filled and pill-shaped, like the Filters button beside it: a hairline outline on
+        // cream read as a label rather than a control, and shoppers were not finding the sort.
         className={cn(
-          "inline-flex cursor-pointer items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-xs transition-colors",
-          "border-black/15 hover:border-black/40",
-          open && "border-[var(--text-primary)]",
+          "inline-flex cursor-pointer items-center gap-1.5 rounded-full border bg-white/80 px-3.5 py-1.5 text-[13px] font-medium text-[var(--color-brand-ink)] shadow-sm transition-colors",
+          "border-black/25 hover:border-black/45 hover:bg-white",
+          open && "border-[var(--text-primary)] bg-white",
         )}
       >
         <span>{selected?.label}</span>
         <ChevronDown
-          size={12}
+          size={14}
           className={cn(
-            "opacity-50 transition-transform duration-200",
+            "opacity-70 transition-transform duration-200",
             open && "rotate-180",
           )}
         />

@@ -74,7 +74,7 @@ export function FrequentlyBoughtTogether({
         productHandle: p.handle,
         productTitle: p.title,
         variantTitle: v.title,
-        image: p.featuredImage,
+        image: v.image ?? p.featuredImage,
         unitPrice: v.price,
         maxQuantity: v.quantityAvailable,
       });
@@ -143,7 +143,7 @@ export function FrequentlyBoughtTogether({
                     </p>
                   </Link>
                   {isThisItem ? (
-                    <span className="text-[11px] opacity-50">{t("fbtThisItem")}</span>
+                    <span className="text-[11px] opacity-60">{t("fbtThisItem")}</span>
                   ) : null}
                 </div>
 

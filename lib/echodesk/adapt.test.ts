@@ -133,3 +133,158 @@ describe("localizeUnit", () => {
     expect(localizeUnit("კოლოფი", "en")).toBe("კოლოფი");
   });
 });
+
+describe("variants as choices", () => {
+  const withVariants = (variants: unknown[]) =>
+    adaptProduct(
+      { id: 25, name: { en: "Soft body wave" }, slug: "soft", price: "80", variants } as never,
+      "ka",
+    );
+
+  it("offers the variant's own name when EchoDesk recorded no attributes", () => {
+    // The product editor lets a variant be saved with a name and nothing else; without this
+    // the picker had no options to show and hid itself, so neither colour could be chosen.
+    const p = withVariants([
+      { id: 1, name: { ka: "Ombre" }, price: "80", quantity: 1 },
+      { id: 2, name: { ka: "BLONDE" }, price: "80", quantity: 1 },
+    ]);
+    expect(p.options).toEqual([{ name: "ვარიანტი", values: ["Ombre", "BLONDE"] }]);
+    expect(p.variants.map((v) => v.selectedOptions)).toEqual([
+      [{ name: "ვარიანტი", value: "Ombre" }],
+      [{ name: "ვარიანტი", value: "BLONDE" }],
+    ]);
+  });
+
+  it("prefers the merchant's own attribute when there is one", () => {
+    const p = withVariants([
+      {
+        id: 1,
+        name: { ka: "შავი" },
+        price: "80",
+        quantity: 1,
+        attribute_values: [{ attribute: { name: { ka: "ფერი" } }, value: "შავი" }],
+      },
+    ]);
+    expect(p.options).toEqual([{ name: "ფერი", values: ["შავი"] }]);
+  });
+});
+
+describe("variant photos", () => {
+  const withVariants = (variants: unknown[]) =>
+    adaptProduct(
+      {
+        id: 25,
+        name: { en: "Soft body wave", ka: "რბილი ტალღა" },
+        slug: "soft",
+        price: "80",
+        image: "https://cdn/default.jpg",
+        variants,
+      } as never,
+      "ka",
+    );
+
+  it("carries a variant's own photo, so the gallery and the bag can show it", () => {
+    const p = withVariants([
+      { id: 1, name: { ka: "შავი" }, price: "80", quantity: 1, image: "https://cdn/black.jpg" },
+      { id: 2, name: { ka: "ქერა" }, price: "80", quantity: 1 },
+    ]);
+    expect(p.variants[0].image).toEqual({
+      url: "https://cdn/black.jpg",
+      altText: "შავი — რბილი ტალღა",
+      width: 900,
+      height: 1125,
+    });
+    // No photo of its own: callers fall back to the product's, so this stays absent rather
+    // than becoming an <Image> with an empty src.
+    expect(p.variants[1].image).toBeUndefined();
+  });
+});
+
+describe("missing photos", () => {
+  // EchoDesk sends "" rather than null for a product nobody has photographed — product 17, the
+  // wide-strap durag, is one. Passed through, `<Image src="">` logged a ReactDOM.preload error
+  // for every card on the page and showed a broken image in each.
+  it("falls back to the placeholder when the only photo is an empty string", () => {
+    const p = adaptProduct(
+      { id: 17, name: { ka: "დურაგი" }, slug: "durag", price: "25", image: "" } as never,
+      "ka",
+    );
+    expect(p.featuredImage.url).toBe("/products/placeholder.png");
+    expect(p.images).toEqual([p.featuredImage]);
+  });
+
+  it("uses the variants' own photos when the product itself has none", () => {
+    // How the wide-strap durag is stocked: no product image, one photo per colour.
+    const p = adaptProduct(
+      {
+        id: 17,
+        name: { ka: "დურაგი" },
+        slug: "durag",
+        price: "10",
+        image: "",
+        variants: [
+          { id: 3, name: { ka: "შავი" }, price: "10", quantity: 3, image: "https://cdn/black.png" },
+          { id: 4, name: { ka: "წითელი" }, price: "10", quantity: 2, image: "https://cdn/red.png" },
+        ],
+      } as never,
+      "ka",
+    );
+    expect(p.featuredImage.url).toBe("https://cdn/black.png");
+    expect(p.images.map((i) => i.url)).toEqual(["https://cdn/black.png", "https://cdn/red.png"]);
+  });
+
+  it("drops a blank gallery entry rather than rendering it", () => {
+    const p = adaptProduct(
+      {
+        id: 17,
+        name: { ka: "დურაგი" },
+        slug: "durag",
+        price: "25",
+        images: [{ image: "  ", sort_order: 1 }, { image: "https://cdn/real.jpg", sort_order: 2 }],
+      } as never,
+      "ka",
+    );
+    expect(p.images.map((i) => i.url)).toEqual(["https://cdn/real.jpg"]);
+  });
+});
+
+describe("merchant copy arriving raw", () => {
+  it("trims a name the CRM saved with a trailing space", () => {
+    // Invisible in EchoDesk, visible on the card as a gap before the price.
+    const p = adaptProduct(
+      { id: 25, name: { ka: "ტალღოვანი თმის დაგრძელება " }, slug: "wave", price: "80" } as never,
+      "ka",
+    );
+    expect(p.title).toBe("ტალღოვანი თმის დაგრძელება");
+  });
+
+  it("drops a form-field heading pasted in with the copy", () => {
+    // One product's English short description opens with the literal line "Short Description",
+    // which the page printed as its first paragraph and Google used to open the snippet.
+    const p = adaptProduct(
+      {
+        id: 12,
+        name: { en: "Bonnets" },
+        slug: "bonnets",
+        price: "25",
+        short_description: { en: "Short Description\nProtect your hair while sleeping." },
+      } as never,
+      "en",
+    );
+    expect(p.shortDescription).toBe("Protect your hair while sleeping.");
+  });
+
+  it("keeps a sentence that merely starts with the word", () => {
+    const p = adaptProduct(
+      {
+        id: 13,
+        name: { en: "Thing" },
+        slug: "thing",
+        price: "25",
+        short_description: { en: "Description of the fabric follows.\nIt is satin." },
+      } as never,
+      "en",
+    );
+    expect(p.shortDescription?.startsWith("Description of the fabric")).toBe(true);
+  });
+});

@@ -8,7 +8,6 @@ import {
   type AttributeFacet,
   type ProductFilters,
   type SortKey,
-  PRICE_TIERS,
   isSortKey,
   serializeAttributeParam,
 } from "@/lib/products/filter";
@@ -25,6 +24,9 @@ export function CollectionToolbar({
   totalCount,
   visibleCount,
   availableColors,
+  priceTiers,
+  showOnSale,
+  showAvailable,
   attributeFacets,
   filters,
   sort,
@@ -32,6 +34,12 @@ export function CollectionToolbar({
   totalCount: number;
   visibleCount: number;
   availableColors: string[];
+  /** Price chips that actually split this set of products — see `priceTiers`. */
+  priceTiers: number[];
+  /** Only shown when something here is discounted; otherwise the chip leads to no results. */
+  showOnSale: boolean;
+  /** Only shown when something here is sold out; otherwise it filters nothing. */
+  showAvailable: boolean;
   /** Attribute groups worth filtering by, derived from the products on screen. */
   attributeFacets: AttributeFacet[];
   filters: ProductFilters;
@@ -171,7 +179,7 @@ export function CollectionToolbar({
             </Chip>
           );
         })}
-        {PRICE_TIERS.map((tier) => {
+        {priceTiers.map((tier) => {
           const active = filters.maxPrice === tier;
           return (
             <Toggle
@@ -184,18 +192,22 @@ export function CollectionToolbar({
             />
           );
         })}
-        <Toggle
-          active={filters.onSale}
-          onClick={() => updateParam({ onSale: filters.onSale ? null : "1" })}
-          label={t("filterOnSale")}
-        />
-        <Toggle
-          active={filters.availableOnly}
-          onClick={() =>
-            updateParam({ available: filters.availableOnly ? null : "1" })
-          }
-          label={t("filterAvailable")}
-        />
+        {showOnSale || filters.onSale ? (
+          <Toggle
+            active={filters.onSale}
+            onClick={() => updateParam({ onSale: filters.onSale ? null : "1" })}
+            label={t("filterOnSale")}
+          />
+        ) : null}
+        {showAvailable || filters.availableOnly ? (
+          <Toggle
+            active={filters.availableOnly}
+            onClick={() =>
+              updateParam({ available: filters.availableOnly ? null : "1" })
+            }
+            label={t("filterAvailable")}
+          />
+        ) : null}
 
         {activeFilterCount > 0 ? (
           <button

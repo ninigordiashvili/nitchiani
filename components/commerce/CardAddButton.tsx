@@ -59,7 +59,9 @@ export function CardAddButton({
     : allInBag
       ? t("inBagMax")
       : deferToSheet
-        ? t("quickView")
+        // Names what the tap does — it opens the sheet to pick a colour or size, rather than
+        // adding one the shopper never chose.
+        ? t("chooseOption")
         : t("addToCart");
 
   return (
@@ -79,7 +81,7 @@ export function CardAddButton({
           productHandle: product.handle,
           productTitle: product.title,
           variantTitle: variant.title,
-          image: product.featuredImage,
+          image: variant.image ?? product.featuredImage,
           unitPrice: variant.price,
           maxQuantity: variant.quantityAvailable,
           quantity: 1,

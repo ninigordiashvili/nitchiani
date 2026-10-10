@@ -44,7 +44,9 @@ export function CampaignView({
           blurDataURL={BLUR_DATA_URL}
           className="object-cover"
         />
-        <div className="absolute inset-0 scrim-bottom" />
+        {/* The banner is wide and short and its copy block is tall, so this one keeps the
+            long reach the category tiles no longer need. */}
+        <div className="absolute inset-0 scrim-bottom-tall" />
         <div className="absolute right-0 bottom-0 left-0 text-[var(--color-brand-cream)]">
           <div className="container-shop py-6 sm:py-10">
             {eyebrow ? (

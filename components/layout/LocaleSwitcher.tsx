@@ -127,7 +127,7 @@ function Section({
 }) {
   return (
     <div className="p-1">
-      <p className="px-3 pt-2 pb-1 text-[10px] font-medium uppercase tracking-[0.16em] opacity-50">
+      <p className="px-3 pt-2 pb-1 text-[10px] font-medium uppercase tracking-[0.16em] opacity-60">
         {label}
       </p>
       {children}
@@ -156,7 +156,7 @@ function Option({
     >
       <span className="flex flex-col">
         <span className={cn("leading-tight", active && "font-medium")}>{primary}</span>
-        <span className="text-[11px] tabular-nums opacity-50">{secondary}</span>
+        <span className="text-[11px] tabular-nums opacity-60">{secondary}</span>
       </span>
       {active ? (
         <Check

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { BLUR_DATA_URL, distinctImages } from "@/lib/images";
@@ -8,8 +8,18 @@ import type { ImageRef } from "@/lib/shopify/types";
 import { cn } from "@/lib/utils";
 import { ImageLightbox } from "./ImageLightbox";
 import { ZoomablePhoto } from "./ZoomablePhoto";
+import { showPhotoOnScreen, useVariantPhoto } from "@/lib/ui/variant-photo";
 
-export function ProductGallery({ images, title }: { images: ImageRef[]; title: string }) {
+export function ProductGallery({
+  images,
+  title,
+  variantImages = [],
+}: {
+  images: ImageRef[];
+  title: string;
+  /** Photos belonging to individual variants — see `variantPhotos`. */
+  variantImages?: ImageRef[];
+}) {
   const t = useTranslations("nav");
   const [active, setActive] = useState(0);
   const [lightbox, setLightbox] = useState(false);
@@ -17,13 +27,33 @@ export function ProductGallery({ images, title }: { images: ImageRef[]; title: s
   // differ. Placeholder galleries pad themselves by repeating one photo, and a column of
   // identical thumbnails is noise that reads as a bug. Keeping both surfaces on one rule means
   // they can't disagree about whether a product "has" multiple images.
-  const shots = useMemo(() => distinctImages(images), [images]);
+  // Variant photos join the strip after the product's own, so every colour is reachable from
+  // the rail and picking one never reorders the thumbnails under the shopper's finger.
+  const shots = useMemo(
+    () => distinctImages([...images, ...variantImages]),
+    [images, variantImages],
+  );
   const current = shots[active] ?? shots[0];
+
+  // Follow the picker: when the chosen variant has a photo of its own, show it.
+  const chosen = useVariantPhoto();
+  useEffect(() => {
+    if (!chosen) return;
+    const i = shots.findIndex((s) => s.url === chosen);
+    if (i >= 0) setActive(i);
+  }, [chosen, shots]);
+
+  // And the other way: say what is on screen, so landing on a colour's photo — by arrow,
+  // swipe or thumbnail — selects that colour in the picker.
+  useEffect(() => {
+    showPhotoOnScreen(current?.url ?? null);
+    return () => showPhotoOnScreen(null);
+  }, [current]);
 
   return (
     <div className="lg:flex lg:gap-4">
       {shots.length > 1 ? (
-        <ul className="order-2 mt-3 flex gap-2 overflow-x-auto lg:order-1 lg:mt-0 lg:flex-col">
+        <ul className="no-scrollbar order-2 mt-3 flex gap-2 overflow-x-auto lg:order-1 lg:mt-0 lg:flex-col">
           {shots.map((img, i) => (
             // Keyed by position, not URL: a gallery may legitimately repeat the same shot,
             // and duplicate keys would make React reuse the wrong thumbnail on re-render.
@@ -62,6 +92,11 @@ export function ProductGallery({ images, title }: { images: ImageRef[]; title: s
         sizes="(min-width: 1024px) 50vw, 100vw"
         priority
         onOpen={() => setLightbox(true)}
+        onNavigate={
+          shots.length > 1
+            ? (d) => setActive((i) => (i + d + shots.length) % shots.length)
+            : undefined
+        }
         className="order-1 aspect-[4/5] w-full self-start lg:order-2 lg:flex-1"
       />
 

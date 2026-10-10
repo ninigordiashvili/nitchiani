@@ -33,17 +33,28 @@ export function useUrlQuery(): URLSearchParams {
   return new URLSearchParams(search);
 }
 
-/** Merge `updates` into the query string; null or "" removes a key. Adds a history entry. */
-export function useSetUrlQuery() {
-  return useCallback((updates: Record<string, string | null>) => {
-    const params = new URLSearchParams(window.location.search);
-    for (const [key, value] of Object.entries(updates)) {
-      if (value === null || value === "") params.delete(key);
-      else params.set(key, value);
-    }
-    const qs = params.toString();
-    const url = qs ? `${window.location.pathname}?${qs}` : window.location.pathname;
-    window.history.pushState(window.history.state, "", url);
-    window.dispatchEvent(new Event(EVENT));
-  }, []);
+/**
+ * Merge `updates` into the query string; null or "" removes a key.
+ *
+ * `mode` decides what Back does afterwards. A filter is a step the shopper took and should be
+ * undoable, so it pushes. Reflecting state they can see anyway — which colour is selected —
+ * should not: pushing there makes Back walk through every colour they tried instead of
+ * leaving the page.
+ */
+export function useSetUrlQuery(mode: "push" | "replace" = "push") {
+  return useCallback(
+    (updates: Record<string, string | null>) => {
+      const params = new URLSearchParams(window.location.search);
+      for (const [key, value] of Object.entries(updates)) {
+        if (value === null || value === "") params.delete(key);
+        else params.set(key, value);
+      }
+      const qs = params.toString();
+      const url = qs ? `${window.location.pathname}?${qs}` : window.location.pathname;
+      if (mode === "replace") window.history.replaceState(window.history.state, "", url);
+      else window.history.pushState(window.history.state, "", url);
+      window.dispatchEvent(new Event(EVENT));
+    },
+    [mode],
+  );
 }

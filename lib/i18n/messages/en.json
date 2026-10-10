@@ -80,7 +80,8 @@
     "connectEyebrow": "Get in touch",
     "connectTitle": "Contact us",
     "connectDesc": "Follow us so you don't miss anything new.",
-    "h1": "Synthetic hair online shop — curls, kinky textures and braiding"
+    "h1": "Synthetic hair online shop — curls, kinky textures and braiding",
+    "popularNow": "Popular now"
   },
   "categories": {
     "hairExtensions": "Hair Extensions",
@@ -146,7 +147,9 @@
     "nextImage": "Next photo",
     "inBagMax": "Already in your bag",
     "allInBag": "All available stock is already in your bag",
-    "addedPartly": "Added {count} — that's all we have in stock"
+    "addedPartly": "Added {count} — that's all we have in stock",
+    "chooseOption": "Choose an option",
+    "skuLabel": "Code"
   },
   "cart": {
     "removedUnavailable": "{count, plural, one {{products} is no longer sold, so we removed it from your bag.} other {{products} are no longer sold, so we removed them from your bag.}}",
@@ -297,7 +300,12 @@
     "copyOrderNumber": "Copy full order number: {number}",
     "orderNumberCopied": "Full number copied",
     "copyTrackingLink": "Copy tracking link",
-    "trackingLinkCopied": "Link copied — keep it safe"
+    "trackingLinkCopied": "Link copied — keep it safe",
+    "noCourierTitle": "No courier can deliver to this address",
+    "noCourierDesc": "None of them could price it just now. Try again in a few minutes or check the address — you can also collect the order in Tbilisi, free of charge.",
+    "noCourierDescNoPickup": "None of them could price it just now. Try again in a few minutes or check the address. If it still fails, message us and we'll sort it out by hand.",
+    "retryQuote": "Try again",
+    "noCourierWrite": "Message us on WhatsApp"
   },
   "terms": {
     "eyebrow": "Legal",
@@ -329,10 +337,6 @@
     "acceptAll": "Accept all",
     "rejectAll": "Essential only"
   },
-  "policyNotice": {
-    "body": "We've updated our Privacy Policy and Terms: delivery now runs through the QuickShipper platform, and we've named every recipient your data is passed to. <link>Read it</link>",
-    "dismiss": "Dismiss"
-  },
   "privacy": {
     "eyebrow": "Legal",
     "title": "Privacy Policy",
@@ -361,8 +365,6 @@
     "newsletterConsent": "By subscribing you agree to receive emails from Nitchiani. Unsubscribe at any time. See our <link>Privacy Policy</link>.",
     "newsletterError": "Couldn't subscribe — please try again or message us.",
     "rights": "All rights reserved",
-    "regId": "ID code",
-    "vatId": "VAT ID",
     "tbilisi": "Tbilisi, Georgia",
     "contact": "Contact"
   },
@@ -443,7 +445,11 @@
     "metaTitle": "Order Status — Track Your Order Online",
     "metaDescription": "Check your order status: payment confirmation, packing, courier hand-off and delivery. Use the link from your confirmation email or your order number.",
     "looksLikeOrderNumberTitle": "That's your order number, not a tracking link",
-    "looksLikeOrderNumberDesc": "An order can't be looked up by its number. Open the link in your confirmation email, or send us {number} on WhatsApp and we'll tell you where your order is."
+    "looksLikeOrderNumberDesc": "An order can't be looked up by its number. Open the link in your confirmation email, or send us {number} on WhatsApp and we'll tell you where your order is.",
+    "reviewTitle": "How was it?",
+    "reviewDesc": "Send us a line on WhatsApp — we'll publish it under your first name and initial.",
+    "reviewCta": "Write a review",
+    "reviewPrefill": "Hi! I'd like to leave a review for order {order}:"
   },
   "welcome": {
     "eyebrow": "A gift for you",

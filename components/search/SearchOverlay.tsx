@@ -142,7 +142,10 @@ export function SearchOverlay() {
               type="search"
               autoComplete="off"
               placeholder={t("search.placeholder")}
-              className="flex-1 bg-transparent text-base placeholder:opacity-50 focus:outline-none"
+              // The form around this input carries the label; the input itself had none, so a
+              // screen reader announced "edit text, blank" on the only control on the screen.
+              aria-label={t("search.placeholder")}
+              className="flex-1 bg-transparent text-base placeholder:opacity-60 focus:outline-none"
             />
             <button
               type="button"

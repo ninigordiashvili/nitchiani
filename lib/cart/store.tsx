@@ -6,7 +6,7 @@ import { type Coupon, type CouponError, discountFor, findCoupon } from "./coupon
 import { clampToStock } from "./stock";
 import { bundleForCoupon, bundleShortfall } from "../bundles";
 import { checkPromoAction } from "@/app/actions/promo";
-import { findGoneCartLinesAction, paymentStateAction } from "@/app/actions/cart";
+import { checkCartLinesAction, paymentStateAction } from "@/app/actions/cart";
 import { forgetPendingPayment, loadPendingPayment } from "./pending-payment";
 import { isCouponUsed, markCouponUsed } from "./used-coupons";
 import { markSoldOut } from "./sold-out";
@@ -186,9 +186,24 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     const restored = linesRef.current;
     if (restored.length === 0) return;
     let cancelled = false;
-    void findGoneCartLinesAction(restored.map((l) => l.variantId))
-      .then((gone) => {
-        if (cancelled || gone.length === 0) return;
+    void checkCartLinesAction(restored.map((l) => l.variantId))
+      .then(({ gone, stock }) => {
+        if (cancelled) return;
+        // Today's limits, for the lines that survive. The bag captured `maxQuantity` when
+        // each line was added and never refreshed it, so with one or two units in stock a
+        // bag left overnight asked for more than exists — and the only place that was ever
+        // said was EchoDesk refusing the whole order at the last step.
+        if (stock.length > 0) {
+          const limits = new Map(stock.map((s) => [s.variantId, s.available]));
+          setLines((prev) =>
+            prev.map((l) => {
+              const max = limits.get(l.variantId);
+              if (max === undefined || max === l.maxQuantity) return l;
+              return { ...l, maxQuantity: max, quantity: Math.min(l.quantity, Math.max(1, max)) };
+            }),
+          );
+        }
+        if (gone.length === 0) return;
         const reasons = new Map(gone.map((g) => [g.variantId, g.reason]));
         const titlesFor = (reason: string) =>
           linesRef.current.filter((l) => reasons.get(l.variantId) === reason).map((l) => l.productTitle);

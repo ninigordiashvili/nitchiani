@@ -1,27 +1,39 @@
 "use client";
 
 import Image from "next/image";
+import { useMemo } from "react";
 import { Link } from "@/lib/i18n/routing";
 import type { Product } from "@/lib/shopify/types";
-import { BLUR_DATA_URL } from "@/lib/images";
+import { BLUR_DATA_URL, distinctImages, variantPhotos } from "@/lib/images";
 import { discountPercent } from "@/lib/money";
-import { getReviewSummary } from "@/lib/reviews";
+import { NO_REVIEWS } from "@/lib/reviews";
 import { useQuickView } from "@/lib/ui/quick-view";
 import { PriceDisplay } from "./PriceDisplay";
 import { CardAddButton } from "./CardAddButton";
+import { CardPhotos } from "./CardPhotos";
 import { LowStockBadge } from "./LowStockNotice";
 import { lowStockCount, unitsLeft } from "@/lib/cart/stock";
 import { useSoldOut } from "@/lib/cart/sold-out";
 import { StarRating } from "./StarRating";
 import { WishlistButton } from "./WishlistButton";
 
+/** Two cards per row on a phone, three on a tablet, four on a desktop grid. */
+const CARD_SIZES = "(min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw";
+
 export function ProductCard({ product, priority = false }: { product: Product; priority?: boolean }) {
   const quickView = useQuickView();
   const variant = product.variants[0];
   const compareAt = variant?.compareAtPrice;
   const offPercent = discountPercent(variant?.price ?? product.priceRange.min, compareAt);
-  const summary = product.reviewSummary ?? getReviewSummary(product.handle);
+  const summary = product.reviewSummary ?? NO_REVIEWS;
   const knownSoldOut = useSoldOut();
+  // Every shot worth showing, the product's own plus any a variant brings, with repeats of the
+  // same file dropped — a placeholder gallery pads itself, and dots under one photo shown four
+  // times read as a bug.
+  const photos = useMemo(
+    () => distinctImages([...product.images, ...variantPhotos(product)]),
+    [product],
+  );
   const lowStock = knownSoldOut(product.handle) ? null : lowStockCount(unitsLeft(product.variants));
 
   // Clicking the card (image, title, price) opens the quick view; the PDP is reached from
@@ -42,22 +54,35 @@ export function ProductCard({ product, priority = false }: { product: Product; p
       className="group block"
       aria-label={product.title}
     >
-      <div className="relative aspect-[4/5] overflow-hidden bg-white">
-        <Image
-          src={product.featuredImage.url}
-          alt={product.featuredImage.altText}
-          fill
-          sizes="(min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw"
-          priority={priority}
-          placeholder="blur"
-          blurDataURL={BLUR_DATA_URL}
-          className="object-contain transition-transform duration-[400ms] ease-[var(--ease-brand)] group-hover:scale-105"
-        />
+      {/* A warm hairline rather than a grey one — see `--border-card`. It deepens under the
+          cursor, and the shadow only appears there too: a resting grid of sixteen shadows is
+          heavier than the photography it frames. */}
+      <div className="relative aspect-[4/5] overflow-hidden rounded-[var(--radius-lg)] border border-[var(--border-card)] bg-white transition-[box-shadow,border-color] duration-300 ease-[var(--ease-brand)] group-hover:border-[var(--border-card-hover)] group-hover:shadow-[0_8px_28px_-10px_color-mix(in_oklab,var(--color-brand-maroon)_38%,transparent)]">
+        {photos.length > 1 ? (
+          // More than one shot: let them be browsed here, rather than only behind a tap.
+          <CardPhotos
+            images={photos}
+            alt={product.featuredImage.altText}
+            sizes={CARD_SIZES}
+            priority={priority}
+          />
+        ) : (
+          <Image
+            src={product.featuredImage.url}
+            alt={product.featuredImage.altText}
+            fill
+            sizes={CARD_SIZES}
+            priority={priority}
+            placeholder="blur"
+            blurDataURL={BLUR_DATA_URL}
+            className="object-contain transition-transform duration-[400ms] ease-[var(--ease-brand)] group-hover:scale-[1.025]"
+          />
+        )}
         {/* Top-left: the discount, then the stock warning beneath it when both apply. The
             column stops short of the wishlist heart in the opposite corner — the stock badge
             grew with its font size and ran underneath it. */}
         {offPercent !== null || lowStock !== null ? (
-          <div className="absolute top-2 left-2 flex max-w-[calc(100%-3.25rem)] flex-col items-start gap-1">
+          <div className="absolute top-2.5 left-2.5 flex max-w-[calc(100%-3.25rem)] flex-col items-start gap-1">
             {offPercent !== null ? (
               <div className="flex items-center gap-1">
                 <Badge tone="maroon">−{offPercent}%</Badge>
@@ -70,10 +95,10 @@ export function ProductCard({ product, priority = false }: { product: Product; p
             {lowStock !== null ? <LowStockBadge count={lowStock} /> : null}
           </div>
         ) : null}
-        <div className="absolute top-2 right-2">
+        <div className="absolute top-2.5 right-2.5">
           <WishlistButton handle={product.handle} />
         </div>
-        <div className="absolute right-2 bottom-2">
+        <div className="absolute right-2.5 bottom-2.5">
           <CardAddButton product={product} />
         </div>
       </div>

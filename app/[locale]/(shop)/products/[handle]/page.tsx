@@ -10,6 +10,7 @@ import { ProductBreadcrumb } from "@/components/commerce/ProductBreadcrumb";
 import { ProductGallery } from "@/components/commerce/ProductGallery";
 import { ProductJsonLd } from "@/components/commerce/ProductJsonLd";
 import { ShareButton } from "@/components/commerce/ShareButton";
+import { ProductLead } from "@/components/commerce/ProductLead";
 import { ProductPurchase } from "@/components/commerce/ProductPurchase";
 import { RecentlyViewedRail } from "@/components/commerce/RecentlyViewedRail";
 import { RelatedProducts } from "@/components/commerce/RelatedProducts";
@@ -17,7 +18,8 @@ import { Reviews } from "@/components/commerce/Reviews";
 import { StarRating } from "@/components/commerce/StarRating";
 import { TrackRecentlyViewed } from "@/components/commerce/TrackRecentlyViewed";
 import { getProductByHandle, getRelatedProducts } from "@/lib/shopify/client";
-import { getReviewSummary } from "@/lib/reviews";
+import { variantPhotos } from "@/lib/images";
+import { NO_REVIEWS } from "@/lib/reviews";
 import { localeAlternates, ogLocale, productSeo } from "@/lib/seo";
 import { categoriesFor } from "@/lib/echodesk/categories";
 import { CATEGORIES } from "@/lib/categories";
@@ -91,14 +93,25 @@ export default async function ProductPage({
     getTranslations("reviews"),
     getTranslations("product"),
   ]);
-  // Live catalog reports its own rating; the sample map only covers sample handles.
-  const summary = product.reviewSummary ?? getReviewSummary(handle);
+  // EchoDesk reports the rating with the product; a product nobody has reviewed has none.
+  const summary = product.reviewSummary ?? NO_REVIEWS;
+
+  // The two descriptions sit at opposite ends. What the product *is* — the merchant's feature
+  // list — leads, above the price; the blurb written to sell it waits in the tab below. When
+  // EchoDesk holds only a short description the adapter serves it as both, so it leads and the
+  // tab is left to the data sheet rather than repeating it.
+  const lead = product.description || product.shortDescription || "";
+  const blurb = product.shortDescription && product.shortDescription !== lead ? product.shortDescription : "";
 
   return (
     <article className="pb-12">
       <ProductJsonLd product={product} locale={locale} />
       <div className="container-shop sm:grid sm:grid-cols-2 sm:gap-10">
-        <ProductGallery images={product.images} title={product.title} />
+        <ProductGallery
+          images={product.images}
+          title={product.title}
+          variantImages={variantPhotos(product)}
+        />
 
         <div className="mt-6 sm:mt-0">
           <ProductBreadcrumb product={product} locale={locale} />
@@ -130,15 +143,20 @@ export default async function ProductPage({
             />
           </div>
 
-          <ProductSpecList attributes={product.attributes} />
+          {lead ? (
+            <ProductLead text={lead} />
+          ) : (
+            // Nothing written yet: the attributes are all this product can say for itself.
+            <ProductSpecList attributes={product.attributes} />
+          )}
 
           <div className="mt-5">
-            <ProductPurchase product={product} />
+            <ProductPurchase product={product} syncUrl />
           </div>
 
           {/* Description and the data sheet, as two tabs. Renders nothing when the product
               has neither, which is most of the catalogue until EchoDesk is filled in. */}
-          <ProductInfoTabs description={product.description} attributes={product.attributes} />
+          <ProductInfoTabs description={blurb} attributes={product.attributes} />
 
           <div className="mt-8">
             {/* Secondary details collapse to keep the PDP scannable. */}

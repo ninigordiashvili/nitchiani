@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 /**
  * Full-bleed brand UVP banner that appears once and is gone after the user engages.
@@ -29,6 +29,7 @@ const COLLAPSE_FROM_PX = 600;
 
 export function UvpBanner() {
   const t = useTranslations("home");
+  const locale = useLocale();
   // Two-phase lifecycle: shown, then dismissing (fades and collapses) once scrolled past,
   // then dismissed (unmounted).
   const [dismissing, setDismissing] = useState(false);
@@ -124,8 +125,28 @@ export function UvpBanner() {
         willChange: "opacity, transform, max-height",
       }}
     >
-      <div className="container-shop py-10 text-center sm:py-24">
-        <h2 className="font-display text-[32px] leading-tight tracking-wider uppercase sm:text-[54px]">
+      {/* A breath of light from the top edge, so the band reads as a lit surface rather than
+          a flat block of teal. Barely there by design — 7% of cream. */}
+      <div
+        className="container-shop relative py-9 text-center sm:py-14"
+        style={{
+          backgroundImage:
+            "radial-gradient(70% 120% at 50% -10%, color-mix(in oklab, var(--color-brand-cream) 7%, transparent), transparent 65%)",
+        }}
+      >
+        {/* One line, across the full width, at a size that reads rather than announces. It
+            used to be set at 52px in a 17-character column, which wrapped a short sentence
+            into two stacked lines and took a third of the first screen to say one thing.
+
+            Georgian has no capitals and takes letter-spacing badly — spread out, the serif
+            loses the joins that make it elegant — so neither script is tracked wide here;
+            `clamp` keeps the line proportional to the window instead of jumping at
+            breakpoints. */}
+        <h2
+          className={`font-display text-[clamp(1.2rem,2.7vw,2.15rem)] leading-[1.3] text-balance ${
+            locale === "ka" ? "tracking-[-0.005em]" : "tracking-[0.02em]"
+          }`}
+        >
           {t("uvp")}
         </h2>
       </div>

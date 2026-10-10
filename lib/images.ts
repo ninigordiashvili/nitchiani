@@ -1,3 +1,5 @@
+import type { ImageRef, Product, ProductVariant } from "./shopify/types";
+
 /**
  * Returns a safe image URL for components that render `next/image` from data sources we don't fully
  * control (e.g. localStorage cart lines, third-party APIs). If the URL host isn't in the
@@ -13,7 +15,8 @@ const ALLOWED_HOSTS = [
 ];
 const ALLOWED_HOST_SUFFIXES = ["cdninstagram.com", "fbcdn.net"];
 
-const FALLBACK = "/products/gold-wax.png";
+/** Neutral, not a product shot: a card showing some other product's photo misleads. */
+const FALLBACK = "/products/placeholder.png";
 
 /**
  * Tiny cream-toned SVG used as `blurDataURL` for every `<Image>` on the site. Solid
@@ -26,7 +29,7 @@ export const BLUR_DATA_URL =
   "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2IDQiPjxyZWN0IHdpZHRoPSI2IiBoZWlnaHQ9IjQiIGZpbGw9IiNlY2U0ZDYiLz48L3N2Zz4=";
 
 export function safeImageSrc(src: string | undefined | null): string {
-  if (!src) return FALLBACK;
+  if (!src?.trim()) return FALLBACK;
   if (src.startsWith("/")) return src;
   try {
     const { hostname } = new URL(src);
@@ -51,4 +54,32 @@ export function safeImageSrc(src: string | undefined | null): string {
 export function distinctImages<T extends { url: string }>(images: T[]): T[] {
   const seen = new Set<string>();
   return images.filter((img) => (seen.has(img.url) ? false : (seen.add(img.url), true)));
+}
+
+/**
+ * Every variant photo a product carries, in variant order.
+ *
+ * Appended after the product's own gallery rather than mixed into it, so picking a colour moves
+ * the selection along a fixed strip instead of reshuffling the thumbnails under the shopper's
+ * finger. Duplicates are left to `distinctImages`: a variant photo that is also a gallery shot
+ * should stay at its gallery position.
+ */
+export function variantPhotos(product: Product): ImageRef[] {
+  return product.variants.map((v) => v.image).filter((img): img is ImageRef => Boolean(img?.url));
+}
+
+/**
+ * The variant a photo belongs to, if any — the reverse of `variantPhotos`.
+ *
+ * Used when the shopper reaches a photo by swiping or by the arrows: landing on the blonde
+ * shot should select blonde. A shot that belongs to no variant leaves the choice alone, and so
+ * does one whose variant can't be bought — the picker greys those out, so arriving by photo
+ * must not pick them either.
+ */
+export function variantForPhoto(
+  variants: ProductVariant[],
+  url: string | null,
+): ProductVariant | undefined {
+  if (!url) return undefined;
+  return variants.find((v) => v.image?.url === url && v.availableForSale);
 }

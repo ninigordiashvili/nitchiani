@@ -6,10 +6,11 @@ import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "@/lib/i18n/routing";
 import { cn } from "@/lib/utils";
-import { BLUR_DATA_URL, distinctImages } from "@/lib/images";
+import { BLUR_DATA_URL, distinctImages, variantPhotos } from "@/lib/images";
 import { useFocusTrap } from "@/lib/ui/use-focus-trap";
 import { useOverlays } from "@/lib/ui/overlays";
 import { useQuickView } from "@/lib/ui/quick-view";
+import { showPhotoOnScreen, useVariantPhoto } from "@/lib/ui/variant-photo";
 import { useSwipeDismiss } from "@/lib/ui/use-swipe-dismiss";
 import { ImageLightbox } from "./ImageLightbox";
 import { ProductPurchase } from "./ProductPurchase";
@@ -49,8 +50,8 @@ export function QuickViewModal() {
   // compact reads as a bug rather than a feature — so the strip stays hidden until real
   // angles exist, then appears on its own. See `distinctImages`.
   const shots = useMemo(
-    () => distinctImages(product?.images ?? []),
-    [product?.images],
+    () => distinctImages([...(product?.images ?? []), ...(product ? variantPhotos(product) : [])]),
+    [product],
   );
   const [active, setActive] = useState(0);
   const [lightbox, setLightbox] = useState(false);
@@ -64,7 +65,21 @@ export function QuickViewModal() {
     setLightbox(false);
   }, [product?.handle]);
 
+  // Follow the picker, the same way the PDP gallery does.
+  const chosen = useVariantPhoto();
+  useEffect(() => {
+    if (!chosen) return;
+    const i = shots.findIndex((s) => s.url === chosen);
+    if (i >= 0) setActive(i);
+  }, [chosen, shots]);
+
   const shown = shots[active] ?? product?.featuredImage;
+
+  // The sheet's own picker is told what is on screen, exactly as on the product page.
+  useEffect(() => {
+    showPhotoOnScreen(shown?.url ?? null);
+    return () => showPhotoOnScreen(null);
+  }, [shown]);
 
   // Body scroll lock + ESC handler.
   useEffect(() => {
@@ -99,7 +114,7 @@ export function QuickViewModal() {
         role="dialog"
         aria-modal="true"
         aria-label={product?.title}
-        className="absolute right-0 bottom-0 left-0 max-h-[88dvh] overflow-y-auto rounded-t-2xl transition-transform duration-200 ease-[var(--ease-brand)] sm:right-1/2 sm:bottom-1/2 sm:left-1/2 sm:max-h-none sm:w-[min(900px,90vw)] sm:translate-x-[-50%] sm:translate-y-[50%] sm:overflow-hidden sm:rounded-2xl"
+        className="absolute right-0 bottom-0 left-0 max-h-[88dvh] overflow-y-auto rounded-t-2xl transition-transform duration-200 ease-[var(--ease-brand)] sm:right-1/2 sm:bottom-1/2 sm:left-1/2 sm:flex sm:min-h-[calc(min(900px,90vw)*0.625)] sm:flex-col sm:max-h-[88dvh] sm:w-[min(900px,90vw)] sm:translate-x-[-50%] sm:translate-y-[50%] sm:overflow-hidden sm:rounded-2xl"
         style={{
           background: "var(--surface)",
           transform: open
@@ -111,18 +126,26 @@ export function QuickViewModal() {
         }}
       >
         {product ? (
-          <div className="flex flex-col sm:grid sm:grid-cols-2 sm:items-stretch">
-            {/* Image. Square on mobile, where it stacks above the details and its own height is
-                all it has to fill. On sm+ the two sit side by side and the details column is
-                the taller of the pair, so a fixed square left a band of the sheet's cream under
-                the white photo — `h-full` lets the white run the full height of the row. */}
+          <div className="flex flex-col sm:grid sm:flex-1 sm:grid-cols-2 sm:items-stretch">
+            {/* Image. Square on mobile, where it stacks above the details and its own height
+                is all it has to fill. On sm+ the sheet is sized so this column is 4:5 — the
+                shape the product photos are shot in — and `h-full` fills it exactly. Sizing
+                the sheet from the details column instead left the photo adrift in a tall
+                white panel with empty bands above and below it. */}
             <ZoomablePhoto
               image={shown ?? product.featuredImage}
               alt={shown?.altText || product.featuredImage.altText || product.title}
               sizes="(min-width: 640px) 50vw, 100vw"
-              // Top-left: the thumbnails take the bottom edge and the close button the top-right.
-              hintPosition="top-left"
+              // No "hover to zoom" pill here: it sat over the product in a panel opened to
+              // look at the product. The photo still zooms, and the thumbnails below say it
+              // is a gallery.
+              showHint={false}
               onOpen={() => setLightbox(true)}
+              onNavigate={
+                shots.length > 1
+                  ? (d) => setActive((i) => (i + d + shots.length) % shots.length)
+                  : undefined
+              }
               className="aspect-square w-full sm:aspect-auto sm:h-full sm:rounded-l-2xl sm:rounded-tr-none"
               imageClassName="sm:rounded-l-2xl"
             >
@@ -130,8 +153,13 @@ export function QuickViewModal() {
               {/* Overlaid on the image rather than stacked beneath it: the sheet is capped at
                   88dvh on mobile and the space below the fold belongs to the variant picker and
                   Add to Bag. A strip in the flow would push those down; this costs no height. */}
+              {/* `no-scrollbar`: this strip sits on top of the photograph, and a grey system
+                  scrollbar drawn across it reads as a broken frame rather than a control.
+                  `justify-center-safe` because a product with eight colours overflows, and
+                  plain centring puts the first thumbnails past the left edge where no amount
+                  of scrolling reaches them. */}
               {shots.length > 1 ? (
-                <ul className="absolute inset-x-3 bottom-3 flex justify-center gap-2 overflow-x-auto">
+                <ul className="no-scrollbar absolute inset-x-3 bottom-3 flex snap-x snap-mandatory justify-center-safe gap-2 overflow-x-auto">
                   {shots.map((shot, i) => (
                     <li key={`${shot.url}-${i}`}>
                       <button
@@ -190,71 +218,87 @@ export function QuickViewModal() {
                 so it occupies the first 48px of this panel — more than the 28px of `sm:p-7`.
                 Without it the title row, and the heart on it, ride up underneath the X. Mobile
                 keeps p-5 because there the close button is over the image, not in here. */}
-            <div className="relative flex flex-col justify-center p-5 sm:p-7 sm:pt-14">
+            {/* Two layers: the close button stays put while the copy below it scrolls. One
+                scrolling div with the button inside would have carried the X off the top of
+                the sheet the moment a long description moved. */}
+            <div className="relative flex min-h-0 flex-col sm:h-full">
               <button
                 type="button"
                 onClick={quickView.close}
                 aria-label={t("search.closeAria")}
-                className="absolute top-3 right-3 hidden h-9 w-9 cursor-pointer items-center justify-center sm:flex"
+                className="absolute top-3 right-3 z-10 hidden h-9 w-9 cursor-pointer items-center justify-center sm:flex"
               >
                 <X size={18} />
               </button>
 
-              {product.productType ? (
-                <p className="label-eyebrow mb-2">{product.productType}</p>
-              ) : (
-                // Reserve the eyebrow's height when a product has no category. Otherwise the
-                // title row — and the heart on it — rides 24px higher for those products only,
-                // leaving 18px to the close button instead of 43px. Products from EchoDesk
-                // carry no productType today, so that was the common case, not the edge one.
-                <div aria-hidden className="mb-2 h-4" />
-              )}
-              {/* Favourites sits beside the title rather than over the artwork: the heart's
-                  translucent pill is designed for the tinted product cards and all but vanished
-                  against a white product photo. On the cream panel the maroon reads clearly, and
-                  the hairline border makes it legible as a control rather than decoration. */}
-              <div className="flex items-start justify-between gap-3">
-                {/* Smaller on a phone: a long Georgian name ran to three lines here and pushed
-                    the price and the buy button off the first screen. */}
-                <h2 className="font-display text-lg leading-snug tracking-tight sm:text-3xl sm:leading-tight">
-                  {product.title}
-                </h2>
-                <WishlistButton
-                  handle={product.handle}
-                  size={20}
-                  className="mt-0.5 shrink-0 border border-[var(--border-soft)]"
-                />
+              {/* Scrolls on its own when the copy outruns the photo's height, which is what
+                  keeps the sheet 4:5 rather than growing to fit a long product name. */}
+              {/* `justify-center-safe`, not `justify-center`: a centred flex column that
+                  overflows its scroll box pushes its first child past the top edge, where no
+                  amount of scrolling reaches it. Safe centring gives up and aligns to the
+                  start once the content no longer fits. */}
+              <div className="flex flex-col justify-center-safe p-5 sm:h-full sm:overflow-y-auto sm:p-7 sm:pt-14">
+                {product.productType ? (
+                  <p className="label-eyebrow mb-2">{product.productType}</p>
+                ) : (
+                  // Reserve the eyebrow's height when a product has no category. Otherwise the
+                  // title row — and the heart on it — rides 24px higher for those products only,
+                  // leaving 18px to the close button instead of 43px. Products from EchoDesk
+                  // carry no productType today, so that was the common case, not the edge one.
+                  <div aria-hidden className="mb-2 h-4" />
+                )}
+                {/* Favourites sits beside the title rather than over the artwork: the heart's
+                    translucent pill is designed for the tinted product cards and all but vanished
+                    against a white product photo. On the cream panel the maroon reads clearly, and
+                    the hairline border makes it legible as a control rather than decoration. */}
+                <div className="flex items-start justify-between gap-3">
+                  {/* Smaller on a phone: a long Georgian name ran to three lines here and pushed
+                      the price and the buy button off the first screen. */}
+                  <h2 className="font-display line-clamp-3 text-lg leading-snug tracking-tight sm:line-clamp-2 sm:text-2xl sm:leading-tight">
+                    {product.title}
+                  </h2>
+                  <WishlistButton
+                    handle={product.handle}
+                    size={20}
+                    className="mt-0.5 shrink-0 border border-[var(--border-soft)]"
+                  />
+                </div>
+
+                {/* `mt-auto` moves here from the link below, which pushes the purchase controls
+                    to the foot of the panel and puts the slack above them instead. The panel is
+                    as tall as the product image beside it, so on a short product the quantity
+                    stepper and Add to bag were floating in the middle with dead space under
+                    them; anchored low they sit where the eye ends up and near the thumb. */}
+                {/* The three facts that decide whether this is the right product at all. Quick
+                    view exists so a shopper can answer that without leaving the grid — without
+                    them the sheet shows a name and a price, which is what the card already
+                    showed. Capped tighter than the PDP because this panel is short. */}
+                <ProductSpecList attributes={product.attributes} limit={2} />
+
+                {/* `mt-auto` was pushing the purchase block to the foot of the panel, which on a
+                    short product opened a gap under the specs. With the spec list filling that
+                    space the slack reads as a layout bug rather than breathing room. */}
+                <div className="pt-5">
+                  <ProductPurchase
+                    product={product}
+                    showSizeGuide={false}
+                    compact
+                    onAdded={quickView.close}
+                  />
+                </div>
+
+                <Link
+                  href={`/products/${product.handle}`}
+                  onClick={() => {
+                    quickView.close();
+                    overlays.setSearchOpen(false);
+                  }}
+                  className="group inline-flex items-center gap-1 self-center pt-4 text-xs font-medium tracking-[0.16em] uppercase opacity-80 hover:opacity-100"
+                >
+                  <span className="underline-motion">{t("product.viewFullDetails")}</span>
+                  <ArrowRight size={14} />
+                </Link>
               </div>
-
-              {/* `mt-auto` moves here from the link below, which pushes the purchase controls
-                  to the foot of the panel and puts the slack above them instead. The panel is
-                  as tall as the product image beside it, so on a short product the quantity
-                  stepper and Add to bag were floating in the middle with dead space under
-                  them; anchored low they sit where the eye ends up and near the thumb. */}
-              {/* The three facts that decide whether this is the right product at all. Quick
-                  view exists so a shopper can answer that without leaving the grid — without
-                  them the sheet shows a name and a price, which is what the card already
-                  showed. Capped tighter than the PDP because this panel is short. */}
-              <ProductSpecList attributes={product.attributes} limit={3} />
-
-              {/* `mt-auto` was pushing the purchase block to the foot of the panel, which on a
-                  short product opened a gap under the specs. With the spec list filling that
-                  space the slack reads as a layout bug rather than breathing room. */}
-              <div className="pt-5">
-                <ProductPurchase product={product} showSizeGuide={false} onAdded={quickView.close} />
-              </div>
-
-              <Link
-                href={`/products/${product.handle}`}
-                onClick={() => {
-                  quickView.close();
-                  overlays.setSearchOpen(false);
-                }}
-                className="group inline-flex items-center gap-1 self-center pt-4 text-xs font-medium tracking-[0.16em] uppercase opacity-80 hover:opacity-100"
-              >
-                <span className="underline-motion">{t("product.viewFullDetails")}</span>
-                <ArrowRight size={14} />
-              </Link>
             </div>
           </div>
         ) : null}

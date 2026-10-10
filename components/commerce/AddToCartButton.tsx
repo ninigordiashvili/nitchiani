@@ -44,7 +44,7 @@ export function AddToCartButton({
           productHandle: product.handle,
           productTitle: product.title,
           variantTitle: variant.title,
-          image: product.featuredImage,
+          image: variant.image ?? product.featuredImage,
           unitPrice: variant.price,
           maxQuantity: variant.quantityAvailable,
           quantity,
