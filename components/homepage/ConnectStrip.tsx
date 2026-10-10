@@ -92,7 +92,10 @@ export async function ConnectStrip() {
                 ? { target: "_blank", rel: "noreferrer noopener" }
                 : {})}
               aria-label={`${c.label} — ${c.detail}`}
-              className="group flex h-full flex-col items-center justify-center gap-2.5 rounded-lg border border-black/10 px-2 py-7 transition-colors hover:border-black/30 sm:py-9"
+              // The same warm hairline as the product tiles, and the same radius: these are
+              // cards on the same page, and a grey edge here next to a maroon one there read
+              // as two different designs.
+              className="group flex h-full flex-col items-center justify-center gap-2.5 rounded-[var(--radius-lg)] border border-[var(--border-card)] px-2 py-7 transition-[box-shadow,border-color] duration-300 ease-[var(--ease-brand)] hover:border-[var(--border-card-hover)] hover:shadow-[0_8px_28px_-10px_color-mix(in_oklab,var(--color-brand-maroon)_38%,transparent)] sm:py-9"
               style={{ background: "var(--surface-elevated)" }}
             >
               <span className="text-[var(--text-primary)] transition-colors group-hover:text-[var(--color-brand-maroon)]">
