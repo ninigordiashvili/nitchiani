@@ -143,7 +143,7 @@ export function FrequentlyBoughtTogether({
                     </p>
                   </Link>
                   {isThisItem ? (
-                    <span className="text-[11px] opacity-50">{t("fbtThisItem")}</span>
+                    <span className="text-[11px] opacity-60">{t("fbtThisItem")}</span>
                   ) : null}
                 </div>
 
