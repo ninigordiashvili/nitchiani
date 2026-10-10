@@ -126,34 +126,26 @@ export function UvpBanner() {
       }}
     >
       {/* A breath of light from the top edge, so the band reads as a lit surface rather than
-          a flat block of teal. Barely there by design — 6% of cream. */}
+          a flat block of teal. Barely there by design — 7% of cream. */}
       <div
-        className="container-shop relative py-12 text-center sm:py-24"
+        className="container-shop relative py-9 text-center sm:py-14"
         style={{
           backgroundImage:
             "radial-gradient(70% 120% at 50% -10%, color-mix(in oklab, var(--color-brand-cream) 7%, transparent), transparent 65%)",
         }}
       >
-        <p className="text-[10px] font-medium tracking-[0.42em] uppercase opacity-55 sm:text-[11px]">
-          Nitchiani
-        </p>
-        {/* A hairline between the mark and the line it introduces: the pause that makes the
-            two read as one composition rather than two stacked sentences. */}
-        <span
-          aria-hidden
-          className="mx-auto mt-4 mb-5 block h-px w-8 sm:mt-5 sm:mb-6 sm:w-10"
-          style={{ background: "color-mix(in oklab, var(--color-brand-cream) 30%, transparent)" }}
-        />
-        {/* Georgian has no capitals and takes letter-spacing badly — spread out, the serif
-            loses the joins that make it elegant. So the wide-tracked uppercase treatment is
-            kept for the English line, and the Georgian one is set tight and large instead,
-            which is where that script looks its best. */}
+        {/* One line, across the full width, at a size that reads rather than announces. It
+            used to be set at 52px in a 17-character column, which wrapped a short sentence
+            into two stacked lines and took a third of the first screen to say one thing.
+
+            Georgian has no capitals and takes letter-spacing badly — spread out, the serif
+            loses the joins that make it elegant — so neither script is tracked wide here;
+            `clamp` keeps the line proportional to the window instead of jumping at
+            breakpoints. */}
         <h2
-          className={
-            locale === "ka"
-              ? "font-display mx-auto max-w-[17ch] text-[30px] leading-[1.16] tracking-[-0.01em] text-balance sm:text-[52px] sm:leading-[1.08]"
-              : "font-display mx-auto max-w-[20ch] text-[26px] leading-[1.2] tracking-[0.12em] uppercase text-balance sm:text-[42px] sm:leading-[1.15] sm:tracking-[0.16em]"
-          }
+          className={`font-display text-[clamp(1.2rem,2.7vw,2.15rem)] leading-[1.3] text-balance ${
+            locale === "ka" ? "tracking-[-0.005em]" : "tracking-[0.02em]"
+          }`}
         >
           {t("uvp")}
         </h2>
