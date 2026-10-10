@@ -33,6 +33,7 @@ export function ZoomablePhoto({
   className,
   imageClassName,
   hintPosition = "bottom-right",
+  showHint = true,
   onOpen,
   onNavigate,
   children,
@@ -45,6 +46,12 @@ export function ZoomablePhoto({
   imageClassName?: string;
   /** Where the "hover/tap to zoom" hint sits, clear of whatever else overlays the photo. */
   hintPosition?: "bottom-right" | "top-left";
+  /**
+   * The "hover to zoom" pill. On the product page it tells a shopper the photo does
+   * something; in the quick-view sheet it sat on top of the product, in a panel the shopper
+   * opened to look at the product.
+   */
+  showHint?: boolean;
   onOpen: () => void;
   /** Step to the next (+1) or previous (-1) shot. Omitted when there is only one. */
   onNavigate?: (delta: 1 | -1) => void;
@@ -162,16 +169,18 @@ export function ZoomablePhoto({
         />
       ) : null}
       {/* Tells a shopper the photo does something; hidden while already zoomed. */}
-      <span
-        className={cn(
-          "pointer-events-none absolute flex items-center gap-1.5 rounded-full bg-white/90 px-2.5 py-1 text-[11px] font-medium text-[var(--color-brand-ink)] shadow-sm transition-opacity",
-          hintPosition === "top-left" ? "top-3 left-3" : "right-3 bottom-3",
-          hover ? "opacity-0" : "opacity-100",
-        )}
-      >
-        <ZoomIn size={13} aria-hidden />
-        {canHover ? t("zoomHintHover") : t("zoomHintTap")}
-      </span>
+      {showHint ? (
+        <span
+          className={cn(
+            "pointer-events-none absolute flex items-center gap-1.5 rounded-full bg-white/90 px-2.5 py-1 text-[11px] font-medium text-[var(--color-brand-ink)] shadow-sm transition-opacity",
+            hintPosition === "top-left" ? "top-3 left-3" : "right-3 bottom-3",
+            hover ? "opacity-0" : "opacity-100",
+          )}
+        >
+          <ZoomIn size={13} aria-hidden />
+          {canHover ? t("zoomHintHover") : t("zoomHintTap")}
+        </span>
+      ) : null}
       {/* Pointer devices only: on a touch screen the swipe above does this, and an arrow would
           just cover the photo. */}
       {onNavigate ? (

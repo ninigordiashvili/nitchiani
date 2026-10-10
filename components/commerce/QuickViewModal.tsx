@@ -136,8 +136,10 @@ export function QuickViewModal() {
               image={shown ?? product.featuredImage}
               alt={shown?.altText || product.featuredImage.altText || product.title}
               sizes="(min-width: 640px) 50vw, 100vw"
-              // Top-left: the thumbnails take the bottom edge and the close button the top-right.
-              hintPosition="top-left"
+              // No "hover to zoom" pill here: it sat over the product in a panel opened to
+              // look at the product. The photo still zooms, and the thumbnails below say it
+              // is a gallery.
+              showHint={false}
               onOpen={() => setLightbox(true)}
               onNavigate={
                 shots.length > 1
