@@ -114,7 +114,7 @@ export function QuickViewModal() {
         role="dialog"
         aria-modal="true"
         aria-label={product?.title}
-        className="absolute right-0 bottom-0 left-0 max-h-[88dvh] overflow-y-auto rounded-t-2xl transition-transform duration-200 ease-[var(--ease-brand)] sm:right-1/2 sm:bottom-1/2 sm:left-1/2 sm:h-[calc(min(900px,90vw)*0.625)] sm:max-h-[88dvh] sm:w-[min(900px,90vw)] sm:translate-x-[-50%] sm:translate-y-[50%] sm:overflow-hidden sm:rounded-2xl"
+        className="absolute right-0 bottom-0 left-0 max-h-[88dvh] overflow-y-auto rounded-t-2xl transition-transform duration-200 ease-[var(--ease-brand)] sm:right-1/2 sm:bottom-1/2 sm:left-1/2 sm:flex sm:min-h-[calc(min(900px,90vw)*0.625)] sm:flex-col sm:max-h-[88dvh] sm:w-[min(900px,90vw)] sm:translate-x-[-50%] sm:translate-y-[50%] sm:overflow-hidden sm:rounded-2xl"
         style={{
           background: "var(--surface)",
           transform: open
@@ -126,7 +126,7 @@ export function QuickViewModal() {
         }}
       >
         {product ? (
-          <div className="flex flex-col sm:grid sm:h-full sm:grid-cols-2 sm:items-stretch">
+          <div className="flex flex-col sm:grid sm:flex-1 sm:grid-cols-2 sm:items-stretch">
             {/* Image. Square on mobile, where it stacks above the details and its own height
                 is all it has to fill. On sm+ the sheet is sized so this column is 4:5 — the
                 shape the product photos are shot in — and `h-full` fills it exactly. Sizing
@@ -247,7 +247,7 @@ export function QuickViewModal() {
                 <div className="flex items-start justify-between gap-3">
                   {/* Smaller on a phone: a long Georgian name ran to three lines here and pushed
                       the price and the buy button off the first screen. */}
-                  <h2 className="font-display text-lg leading-snug tracking-tight sm:text-3xl sm:leading-tight">
+                  <h2 className="font-display line-clamp-3 text-lg leading-snug tracking-tight sm:line-clamp-2 sm:text-2xl sm:leading-tight">
                     {product.title}
                   </h2>
                   <WishlistButton
@@ -266,13 +266,18 @@ export function QuickViewModal() {
                     view exists so a shopper can answer that without leaving the grid — without
                     them the sheet shows a name and a price, which is what the card already
                     showed. Capped tighter than the PDP because this panel is short. */}
-                <ProductSpecList attributes={product.attributes} limit={3} />
+                <ProductSpecList attributes={product.attributes} limit={2} />
 
                 {/* `mt-auto` was pushing the purchase block to the foot of the panel, which on a
                     short product opened a gap under the specs. With the spec list filling that
                     space the slack reads as a layout bug rather than breathing room. */}
                 <div className="pt-5">
-                  <ProductPurchase product={product} showSizeGuide={false} onAdded={quickView.close} />
+                  <ProductPurchase
+                    product={product}
+                    showSizeGuide={false}
+                    compact
+                    onAdded={quickView.close}
+                  />
                 </div>
 
                 <Link

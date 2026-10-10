@@ -28,10 +28,19 @@ import { VariantPicker } from "./VariantPicker";
 export function ProductPurchase({
   product,
   showSizeGuide = true,
+  compact = false,
   onAdded,
 }: {
   product: Product;
   showSizeGuide?: boolean;
+  /**
+   * Quick view: price, choice and buy button, nothing else.
+   *
+   * The sheet is sized to its photo, and the delivery card is 110px of answers to a question
+   * nobody asks before choosing a colour — it belongs on the product page, which is one tap
+   * away from the sheet. Without this the panel outgrew the photo and had to scroll.
+   */
+  compact?: boolean;
   /** Passed straight to AddToCartButton — the quick-view sheet closes on it. */
   onAdded?: () => void;
 }) {
@@ -69,7 +78,7 @@ export function ProductPurchase({
   const inlineCtaRef = useRef<HTMLDivElement>(null);
 
   return (
-    <div className="space-y-5">
+    <div className={compact ? "space-y-3.5" : "space-y-5"}>
       <PriceDisplay
         price={selected.price}
         compareAt={selected.compareAtPrice}
@@ -115,15 +124,18 @@ export function ProductPurchase({
       </div>
 
       {/* How it reaches you, right under the button — the next thing a shopper asks. A card
-          rather than a grey caption, so it's read rather than skipped. */}
-      <ul className="divide-y divide-black/10 rounded-md border border-black/10 bg-white/70 text-[13px]">
-        <DeliveryRow icon={<Truck size={16} />} title={t("deliveryTitle")} detail={t("shipsIn")} />
-        <DeliveryRow
-          icon={<Store size={16} />}
-          title={t("pickupTitle")}
-          detail={`${locale === "ka" ? BUSINESS.street.ka : BUSINESS.street.en}, ${locale === "ka" ? "თბილისი" : "Tbilisi"}`}
-        />
-      </ul>
+          rather than a grey caption, so it's read rather than skipped. Not in quick view,
+          where the sheet is sized to its photo and this is what overran it. */}
+      {compact ? null : (
+        <ul className="divide-y divide-black/10 rounded-md border border-black/10 bg-white/70 text-[13px]">
+          <DeliveryRow icon={<Truck size={16} />} title={t("deliveryTitle")} detail={t("shipsIn")} />
+          <DeliveryRow
+            icon={<Store size={16} />}
+            title={t("pickupTitle")}
+            detail={`${locale === "ka" ? BUSINESS.street.ka : BUSINESS.street.en}, ${locale === "ka" ? "თბილისი" : "Tbilisi"}`}
+          />
+        </ul>
+      )}
 
       <StickyAddToCart
         product={product}
