@@ -132,6 +132,19 @@ export function ProductPurchase({
         showSizeGuide={showSizeGuide}
       />
 
+      {/* The merchant's own code for exactly what is selected. Quiet on purpose — it is not
+          a selling point — but a lot of this shop's orders start as an Instagram or WhatsApp
+          message, and "SATIN_DURAG_RED" is a message that cannot be misread, where "the red
+          one" can. Hidden in quick view, where the panel is sized to the photo. */}
+      {!compact && (selected.sku || product.sku) ? (
+        <p className="-mt-1 text-xs opacity-55">
+          {t("skuLabel")}:{" "}
+          <span className="font-medium tracking-wide opacity-90">
+            {selected.sku || product.sku}
+          </span>
+        </p>
+      ) : null}
+
       {lowStock !== null ? <LowStockNotice count={lowStock} /> : null}
 
       <div ref={inlineCtaRef} className="flex items-stretch gap-3">

@@ -41,7 +41,11 @@ export function ProductJsonLd({
     name: product.title,
     description: product.description,
     image: product.images.map((img) => img.url),
-    sku: product.handle,
+    // The merchant's code when there is one. This used to publish the slug as the SKU,
+    // which told Google the wax was `lor-wax-08` rather than `LOR-WAX-08`; a single-variant
+    // product's own code is the better answer, and the handle remains the fallback for a
+    // catalogue that has none.
+    sku: product.sku ?? product.variants[0]?.sku ?? product.handle,
     brand: {
       "@type": "Brand",
       name: product.vendor || "Nitchiani",

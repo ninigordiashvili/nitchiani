@@ -148,7 +148,8 @@
     "inBagMax": "უკვე კალათაშია",
     "allInBag": "მარაგში არსებული ყველა ცალი უკვე კალათაშია",
     "addedPartly": "კალათაში დაემატა {count} — მეტი მარაგში აღარ არის",
-    "chooseOption": "აირჩიე ვარიანტი"
+    "chooseOption": "აირჩიე ვარიანტი",
+    "skuLabel": "კოდი"
   },
   "cart": {
     "removedUnavailable": "{count, plural, one {{products} აღარ იყიდება, ამიტომ კალათიდან ამოვიღეთ.} other {{products} აღარ იყიდება, ამიტომ კალათიდან ამოვიღეთ.}}",

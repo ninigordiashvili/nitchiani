@@ -119,6 +119,7 @@ export function adaptProduct(p: EchoDeskProduct, locale: Locale): Product {
         // `product_id`, and a variant id in that field names some other product entirely.
           id: `gid://echodesk/Variant/${v.id}?product=${p.id}`,
           title,
+          sku: v.sku?.trim() || undefined,
           availableForSale: v.is_in_stock ?? (v.quantity ?? 0) > 0,
           quantityAvailable: v.quantity ?? undefined,
           selectedOptions: named.length > 0 ? named : [{ name: OPTION_LABEL[locale], value: title }],
@@ -216,6 +217,7 @@ export function adaptProduct(p: EchoDeskProduct, locale: Locale): Product {
     seoTitle: pick(p.meta_title, locale) || undefined,
     seoDescription: pick(p.meta_description, locale) || undefined,
     tags: [],
+    sku: p.sku?.trim() || undefined,
     searchText,
     vendor: "Nitchiani",
     productType,
