@@ -891,7 +891,7 @@ export function CheckoutForm({
           <ul className="space-y-3 border-b border-black/10 pb-4">
             {cart.lines.map((l) => (
               <li key={l.variantId} className="flex gap-3">
-                <div className="relative aspect-[4/5] w-12 flex-shrink-0 overflow-hidden bg-white">
+                <div className="relative aspect-[4/5] w-12 flex-shrink-0 overflow-hidden rounded-[var(--radius-sm)] border border-[var(--border-soft)] bg-white">
                   <Image
                     src={safeImageSrc(l.image.url)}
                     alt={l.image.altText}

@@ -146,7 +146,7 @@ export function EmptyCartRecommendations({
 function SnapshotCard({ item }: { item: RecentlyViewedItem }) {
   return (
     <Link href={`/products/${item.handle}`} className="group block">
-      <div className="relative aspect-[4/5] overflow-hidden bg-white">
+      <div className="relative aspect-[4/5] overflow-hidden rounded-[var(--radius-lg)] border border-[var(--border-soft)] bg-white">
         <Image
           src={safeImageSrc(item.image.url)}
           alt={item.image.altText}

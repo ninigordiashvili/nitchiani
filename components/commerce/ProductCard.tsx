@@ -54,7 +54,11 @@ export function ProductCard({ product, priority = false }: { product: Product; p
       className="group block"
       aria-label={product.title}
     >
-      <div className="relative aspect-[4/5] overflow-hidden bg-white">
+      {/* The hairline is the brand's own `--border-soft` (ink at 8%), so the edge reads as a
+          drawn line rather than a grey box, and the radius matches the sheet and the dialogs.
+          The shadow only appears under the cursor: a resting grid of sixteen shadows is
+          heavier than the photography it frames. */}
+      <div className="relative aspect-[4/5] overflow-hidden rounded-[var(--radius-lg)] border border-[var(--border-soft)] bg-white transition-shadow duration-300 ease-[var(--ease-brand)] group-hover:shadow-[0_8px_28px_-10px_rgba(13,13,13,0.25)]">
         {photos.length > 1 ? (
           // More than one shot: let them be browsed here, rather than only behind a tap.
           <CardPhotos
@@ -79,7 +83,7 @@ export function ProductCard({ product, priority = false }: { product: Product; p
             column stops short of the wishlist heart in the opposite corner — the stock badge
             grew with its font size and ran underneath it. */}
         {offPercent !== null || lowStock !== null ? (
-          <div className="absolute top-2 left-2 flex max-w-[calc(100%-3.25rem)] flex-col items-start gap-1">
+          <div className="absolute top-2.5 left-2.5 flex max-w-[calc(100%-3.25rem)] flex-col items-start gap-1">
             {offPercent !== null ? (
               <div className="flex items-center gap-1">
                 <Badge tone="maroon">−{offPercent}%</Badge>
@@ -92,10 +96,10 @@ export function ProductCard({ product, priority = false }: { product: Product; p
             {lowStock !== null ? <LowStockBadge count={lowStock} /> : null}
           </div>
         ) : null}
-        <div className="absolute top-2 right-2">
+        <div className="absolute top-2.5 right-2.5">
           <WishlistButton handle={product.handle} />
         </div>
-        <div className="absolute right-2 bottom-2">
+        <div className="absolute right-2.5 bottom-2.5">
           <CardAddButton product={product} />
         </div>
       </div>
