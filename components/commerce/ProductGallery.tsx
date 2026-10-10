@@ -53,7 +53,7 @@ export function ProductGallery({
   return (
     <div className="lg:flex lg:gap-4">
       {shots.length > 1 ? (
-        <ul className="order-2 mt-3 flex gap-2 overflow-x-auto lg:order-1 lg:mt-0 lg:flex-col">
+        <ul className="no-scrollbar order-2 mt-3 flex gap-2 overflow-x-auto lg:order-1 lg:mt-0 lg:flex-col">
           {shots.map((img, i) => (
             // Keyed by position, not URL: a gallery may legitimately repeat the same shot,
             // and duplicate keys would make React reuse the wrong thumbnail on re-render.

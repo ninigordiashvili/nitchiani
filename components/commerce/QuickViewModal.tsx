@@ -153,8 +153,13 @@ export function QuickViewModal() {
               {/* Overlaid on the image rather than stacked beneath it: the sheet is capped at
                   88dvh on mobile and the space below the fold belongs to the variant picker and
                   Add to Bag. A strip in the flow would push those down; this costs no height. */}
+              {/* `no-scrollbar`: this strip sits on top of the photograph, and a grey system
+                  scrollbar drawn across it reads as a broken frame rather than a control.
+                  `justify-center-safe` because a product with eight colours overflows, and
+                  plain centring puts the first thumbnails past the left edge where no amount
+                  of scrolling reaches them. */}
               {shots.length > 1 ? (
-                <ul className="absolute inset-x-3 bottom-3 flex justify-center gap-2 overflow-x-auto">
+                <ul className="no-scrollbar absolute inset-x-3 bottom-3 flex snap-x snap-mandatory justify-center-safe gap-2 overflow-x-auto">
                   {shots.map((shot, i) => (
                     <li key={`${shot.url}-${i}`}>
                       <button

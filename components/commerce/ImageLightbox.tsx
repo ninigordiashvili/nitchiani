@@ -302,7 +302,7 @@ export function ImageLightbox({
       </div>
 
       {count > 1 ? (
-        <ul className="flex flex-shrink-0 justify-center gap-2 overflow-x-auto px-4 py-3">
+        <ul className="no-scrollbar flex flex-shrink-0 justify-center-safe gap-2 overflow-x-auto px-4 py-3">
           {images.map((img, i) => (
             <li key={`${img.url}-${i}`}>
               <button
