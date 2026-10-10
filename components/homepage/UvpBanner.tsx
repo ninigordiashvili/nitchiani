@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 /**
  * Full-bleed brand UVP banner that appears once and is gone after the user engages.
@@ -29,6 +29,7 @@ const COLLAPSE_FROM_PX = 600;
 
 export function UvpBanner() {
   const t = useTranslations("home");
+  const locale = useLocale();
   // Two-phase lifecycle: shown, then dismissing (fades and collapses) once scrolled past,
   // then dismissed (unmounted).
   const [dismissing, setDismissing] = useState(false);
@@ -124,8 +125,36 @@ export function UvpBanner() {
         willChange: "opacity, transform, max-height",
       }}
     >
-      <div className="container-shop py-10 text-center sm:py-24">
-        <h2 className="font-display text-[32px] leading-tight tracking-wider uppercase sm:text-[54px]">
+      {/* A breath of light from the top edge, so the band reads as a lit surface rather than
+          a flat block of teal. Barely there by design — 6% of cream. */}
+      <div
+        className="container-shop relative py-12 text-center sm:py-24"
+        style={{
+          backgroundImage:
+            "radial-gradient(70% 120% at 50% -10%, color-mix(in oklab, var(--color-brand-cream) 7%, transparent), transparent 65%)",
+        }}
+      >
+        <p className="text-[10px] font-medium tracking-[0.42em] uppercase opacity-55 sm:text-[11px]">
+          Nitchiani
+        </p>
+        {/* A hairline between the mark and the line it introduces: the pause that makes the
+            two read as one composition rather than two stacked sentences. */}
+        <span
+          aria-hidden
+          className="mx-auto mt-4 mb-5 block h-px w-8 sm:mt-5 sm:mb-6 sm:w-10"
+          style={{ background: "color-mix(in oklab, var(--color-brand-cream) 30%, transparent)" }}
+        />
+        {/* Georgian has no capitals and takes letter-spacing badly — spread out, the serif
+            loses the joins that make it elegant. So the wide-tracked uppercase treatment is
+            kept for the English line, and the Georgian one is set tight and large instead,
+            which is where that script looks its best. */}
+        <h2
+          className={
+            locale === "ka"
+              ? "font-display mx-auto max-w-[17ch] text-[30px] leading-[1.16] tracking-[-0.01em] text-balance sm:text-[52px] sm:leading-[1.08]"
+              : "font-display mx-auto max-w-[20ch] text-[26px] leading-[1.2] tracking-[0.12em] uppercase text-balance sm:text-[42px] sm:leading-[1.15] sm:tracking-[0.16em]"
+          }
+        >
           {t("uvp")}
         </h2>
       </div>
