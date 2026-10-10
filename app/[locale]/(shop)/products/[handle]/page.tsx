@@ -19,7 +19,7 @@ import { StarRating } from "@/components/commerce/StarRating";
 import { TrackRecentlyViewed } from "@/components/commerce/TrackRecentlyViewed";
 import { getProductByHandle, getRelatedProducts } from "@/lib/shopify/client";
 import { variantPhotos } from "@/lib/images";
-import { getReviewSummary } from "@/lib/reviews";
+import { NO_REVIEWS } from "@/lib/reviews";
 import { localeAlternates, ogLocale, productSeo } from "@/lib/seo";
 import { categoriesFor } from "@/lib/echodesk/categories";
 import { CATEGORIES } from "@/lib/categories";
@@ -93,8 +93,8 @@ export default async function ProductPage({
     getTranslations("reviews"),
     getTranslations("product"),
   ]);
-  // Live catalog reports its own rating; the sample map only covers sample handles.
-  const summary = product.reviewSummary ?? getReviewSummary(handle);
+  // EchoDesk reports the rating with the product; a product nobody has reviewed has none.
+  const summary = product.reviewSummary ?? NO_REVIEWS;
 
   // The two descriptions sit at opposite ends. What the product *is* — the merchant's feature
   // list — leads, above the price; the blurb written to sell it waits in the tab below. When

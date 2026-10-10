@@ -1,7 +1,7 @@
 import { getLocale, getTranslations } from "next-intl/server";
 import { Monogram } from "./Monogram";
 import { StarRating } from "./StarRating";
-import { getReviewSummary, getReviewsForProduct } from "@/lib/reviews";
+import { NO_REVIEWS, averageRating } from "@/lib/reviews";
 import type { Locale } from "@/lib/i18n/config";
 import type { Product } from "@/lib/shopify/types";
 import { getReviews } from "@/lib/echodesk/reviews";
@@ -25,13 +25,12 @@ export async function Reviews({
   // EchoDesk is the source once it's configured, even when it returns nothing: an empty
   // review list is the truth for a product nobody has reviewed yet, and falling back to the
   // sample map there would put invented testimonials under a real product.
-  const live = product ? await getReviews(product.id) : null;
-  const reviews = live ?? getReviewsForProduct(handle, locale);
+  const reviews = (product ? await getReviews(product.id) : null) ?? [];
   const summary =
     product?.reviewSummary ??
-    (live
-      ? { count: live.length, average: average(live.map((r) => r.rating)) }
-      : getReviewSummary(handle));
+    (reviews.length > 0
+      ? { count: reviews.length, average: averageRating(reviews.map((r) => r.rating)) }
+      : NO_REVIEWS);
 
   if (reviews.length === 0) return null;
 

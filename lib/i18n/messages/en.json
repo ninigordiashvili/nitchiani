@@ -439,7 +439,11 @@
     "metaTitle": "Order Status — Track Your Order Online",
     "metaDescription": "Check your order status: payment confirmation, packing, courier hand-off and delivery. Use the link from your confirmation email or your order number.",
     "looksLikeOrderNumberTitle": "That's your order number, not a tracking link",
-    "looksLikeOrderNumberDesc": "An order can't be looked up by its number. Open the link in your confirmation email, or send us {number} on WhatsApp and we'll tell you where your order is."
+    "looksLikeOrderNumberDesc": "An order can't be looked up by its number. Open the link in your confirmation email, or send us {number} on WhatsApp and we'll tell you where your order is.",
+    "reviewTitle": "How was it?",
+    "reviewDesc": "Send us a line on WhatsApp — we'll publish it under your first name and initial.",
+    "reviewCta": "Write a review",
+    "reviewPrefill": "Hi! I'd like to leave a review for order {order}:"
   },
   "welcome": {
     "eyebrow": "A gift for you",

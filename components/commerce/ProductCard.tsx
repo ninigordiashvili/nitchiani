@@ -6,7 +6,7 @@ import { Link } from "@/lib/i18n/routing";
 import type { Product } from "@/lib/shopify/types";
 import { BLUR_DATA_URL, distinctImages, variantPhotos } from "@/lib/images";
 import { discountPercent } from "@/lib/money";
-import { getReviewSummary } from "@/lib/reviews";
+import { NO_REVIEWS } from "@/lib/reviews";
 import { useQuickView } from "@/lib/ui/quick-view";
 import { PriceDisplay } from "./PriceDisplay";
 import { CardAddButton } from "./CardAddButton";
@@ -25,7 +25,7 @@ export function ProductCard({ product, priority = false }: { product: Product; p
   const variant = product.variants[0];
   const compareAt = variant?.compareAtPrice;
   const offPercent = discountPercent(variant?.price ?? product.priceRange.min, compareAt);
-  const summary = product.reviewSummary ?? getReviewSummary(product.handle);
+  const summary = product.reviewSummary ?? NO_REVIEWS;
   const knownSoldOut = useSoldOut();
   // Every shot worth showing, the product's own plus any a variant brings, with repeats of the
   // same file dropped — a placeholder gallery pads itself, and dots under one photo shown four

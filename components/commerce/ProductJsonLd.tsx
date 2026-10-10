@@ -1,5 +1,5 @@
 import type { Locale } from "@/lib/i18n/config";
-import { getReviewSummary, getReviewsForProduct } from "@/lib/reviews";
+import { NO_REVIEWS } from "@/lib/reviews";
 import type { Product } from "@/lib/shopify/types";
 
 /**
@@ -7,9 +7,10 @@ import type { Product } from "@/lib/shopify/types";
  * stock badge in the SERP snippet). Emitted as a non-rendering `<script>` — server
  * component so no client cost.
  *
- * Reviews are pulled from the same local registry the PDP renders. When we move to a
- * real review provider (Judge.me / Yotpo / Shopify Product Reviews), the `getReviewsForProduct`
- * call swaps and this component keeps working.
+ * The rating comes from EchoDesk with the product. Individual `Review` entries are not
+ * emitted: Google requires each to carry an author and a body, and the only ones we have are
+ * fetched per product on the page itself — the aggregate is what earns the stars in the
+ * snippet, and it is the half we can state truthfully from here.
  */
 export function ProductJsonLd({
   product,
@@ -23,11 +24,9 @@ export function ProductJsonLd({
     "http://localhost:3000";
 
   const url = `${baseUrl}/${locale}/products/${product.handle}`;
-  // Structured data must describe the product actually on sale. For a live product that
-  // means its own rating and no reviews unless the backend has some — publishing the sample
-  // map's invented testimonials as schema.org Review would be misrepresentation to search.
-  const summary = product.reviewSummary ?? getReviewSummary(product.handle);
-  const reviews = product.reviewSummary ? [] : getReviewsForProduct(product.handle, locale);
+  // Structured data must describe the product actually on sale: its own rating, from the
+  // backend, or none at all.
+  const summary = product.reviewSummary ?? NO_REVIEWS;
 
   const inStock = product.variants.some((v) => v.availableForSale);
   const variant = product.variants[0];
@@ -67,17 +66,6 @@ export function ProductJsonLd({
       bestRating: 5,
       worstRating: 1,
     };
-    data.review = reviews.map((r) => ({
-      "@type": "Review",
-      reviewRating: {
-        "@type": "Rating",
-        ratingValue: r.rating,
-        bestRating: 5,
-      },
-      author: { "@type": "Person", name: r.author },
-      datePublished: r.date,
-      reviewBody: r.body,
-    }));
   }
 
   return (
