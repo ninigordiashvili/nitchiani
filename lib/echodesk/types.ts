@@ -13,7 +13,8 @@ export type LocalizedText = Partial<Record<string, string>>;
 export type EchoDeskImage = {
   id: number;
   image: string;
-  alt_text?: string | null;
+  /** Per-locale, like every other label — and `{}` when nobody has written one. */
+  alt_text?: LocalizedText | string | null;
   sort_order?: number;
 };
 

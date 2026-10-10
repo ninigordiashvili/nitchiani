@@ -210,9 +210,18 @@ export async function getRelatedProducts(
   limit = 4,
 ): Promise<Product[]> {
   const all = await getProducts(locale, 50);
+  const mine = new Set(categoriesFor(product.handle));
+  // Ranked, not filtered: the durags category holds two products, and a rail with one card in
+  // it reads as a bug. Anything sharing a category comes first; the rest only fill the row.
   return all
-    .filter((p) => p.handle !== product.handle && p.productType === product.productType)
-    .slice(0, limit);
+    .filter((p) => p.handle !== product.handle)
+    .map((p) => ({
+      p,
+      shared: categoriesFor(p.handle).filter((h) => mine.has(h)).length,
+    }))
+    .sort((a, b) => b.shared - a.shared)
+    .slice(0, limit)
+    .map((x) => x.p);
 }
 
 // Cart — Phase 1 stub. Phase 2 wires Shopify Cart API for real.

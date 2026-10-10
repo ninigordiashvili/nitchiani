@@ -1,3 +1,4 @@
+import { categoriesFor } from "./categories";
 import { distinctImages } from "../images";
 import type { Locale } from "../i18n/config";
 import type { ImageRef, Product, ProductAttribute, ProductVariant } from "../shopify/types";
@@ -32,11 +33,23 @@ function photoUrl(raw: string | null | undefined): string | null {
   return trimmed ? trimmed : null;
 }
 
+/** `alt_text` is a per-locale map on new records and a plain string on older ones. */
+function altText(raw: LocalizedText | string | null | undefined, locale: Locale): string {
+  if (!raw) return "";
+  return typeof raw === "string" ? raw.trim() : pick(raw, locale).trim();
+}
+
 /**
  * Heading above the choices when a variant carries no attribute of its own — "Colour" would
  * be a guess, and a variant can just as easily be a size or a set.
  */
 const OPTION_LABEL: Record<Locale, string> = { ka: "ვარიანტი", en: "Option" };
+
+/** "Soft body wave — სურათი 2". The English word leaked into Georgian alt text before. */
+const VIEW_LABEL: Record<Locale, (n: number) => string> = {
+  ka: (n) => `სურათი ${n}`,
+  en: (n) => `view ${n}`,
+};
 
 /** EchoDesk sends `{en, ka}`; fall back through locale → English → any value → "". */
 export function pick(text: LocalizedText | undefined, locale: Locale): string {
@@ -55,7 +68,7 @@ export function adaptProduct(p: EchoDeskProduct, locale: Locale): Product {
     .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
     .map((img, i) => ({
       url: photoUrl(img.image),
-      altText: img.alt_text || `${title} — view ${i + 1}`,
+      altText: altText(img.alt_text, locale) || `${title} — ${VIEW_LABEL[locale](i + 1)}`,
       width: 900,
       height: 1125,
     }))
@@ -149,10 +162,13 @@ export function adaptProduct(p: EchoDeskProduct, locale: Locale): Product {
   }
 
   const attributes = adaptAttributes(p.attribute_values, locale);
-  // Deliberately blank: `productType` used to borrow the first attribute's name, which with
-  // real attributes means a filter label ("Hair type") leaking into the PDP eyebrow as if it
-  // were a category. Category membership lives in lib/echodesk/categories.ts instead.
+  // The eyebrow stays blank: `productType` used to borrow the first attribute's name, which
+  // with real attributes means a filter label ("Hair type") reading as a category.
   const productType = "";
+  // The category, though, is known — and everything that keyed on `productType` was treating
+  // every product as the same kind: the breadcrumb's middle crumb had no name, and "related
+  // products" matched "" to "" and offered a braiding-hair rail on a ₾10 durag.
+  const productTypeHandle = categoriesFor(p.slug)[0] ?? "";
 
   return {
     id: `gid://echodesk/Product/${p.id}`,
@@ -166,7 +182,7 @@ export function adaptProduct(p: EchoDeskProduct, locale: Locale): Product {
     vendor: "Nitchiani",
     productType,
     // Locale-stable slug for breadcrumb/category links, mirroring the sample catalog's rule.
-    productTypeHandle: "",
+    productTypeHandle,
     featuredImage: featured,
     // Every colour belongs in the gallery when the product has no shots of its own, so the
     // page and the card rail can be swiped through them.

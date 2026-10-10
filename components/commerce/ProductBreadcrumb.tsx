@@ -1,6 +1,7 @@
 import { ChevronRight } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/lib/i18n/routing";
+import { CATEGORIES } from "@/lib/categories";
 import type { Locale } from "@/lib/i18n/config";
 import type { Product } from "@/lib/shopify/types";
 
@@ -19,18 +20,31 @@ export async function ProductBreadcrumb({
   product: Product;
   locale: Locale;
 }) {
-  const t = await getTranslations("nav");
+  const [t, tCategories] = await Promise.all([
+    getTranslations("nav"),
+    getTranslations("categories"),
+  ]);
   const baseUrl =
     process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ??
     "http://localhost:3000";
 
+  // The middle crumb only exists when the product has a category. It used to be rendered
+  // unconditionally from an always-empty field, which left a nameless link between two
+  // chevrons — invisible to a shopper, and a `BreadcrumbList` Google rejects for the missing
+  // `name`.
+  const category = CATEGORIES.find((c) => c.handle === product.productTypeHandle);
+
   const items = [
     { name: t("shop"), href: "/shop", url: `${baseUrl}/${locale}/shop` },
-    {
-      name: product.productType,
-      href: `/shop/${product.productTypeHandle}`,
-      url: `${baseUrl}/${locale}/shop/${product.productTypeHandle}`,
-    },
+    ...(category
+      ? [
+          {
+            name: tCategories(category.labelKey),
+            href: `/shop/${category.handle}`,
+            url: `${baseUrl}/${locale}/shop/${category.handle}`,
+          },
+        ]
+      : []),
     {
       name: product.title,
       href: null,
