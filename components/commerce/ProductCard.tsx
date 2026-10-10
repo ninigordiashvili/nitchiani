@@ -75,7 +75,7 @@ export function ProductCard({ product, priority = false }: { product: Product; p
             priority={priority}
             placeholder="blur"
             blurDataURL={BLUR_DATA_URL}
-            className="object-contain transition-transform duration-[400ms] ease-[var(--ease-brand)] group-hover:scale-105"
+            className="object-contain transition-transform duration-[400ms] ease-[var(--ease-brand)] group-hover:scale-[1.025]"
           />
         )}
         {/* Top-left: the discount, then the stock warning beneath it when both apply. The

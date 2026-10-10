@@ -68,7 +68,7 @@ export function RecentlyViewedRail({
                   sizes="140px"
                   placeholder="blur"
                   blurDataURL={BLUR_DATA_URL}
-                  className="object-contain transition-transform duration-500 ease-[var(--ease-brand)] group-hover:scale-105"
+                  className="object-contain transition-transform duration-500 ease-[var(--ease-brand)] group-hover:scale-[1.025]"
                 />
               </div>
               <p className="mt-2 line-clamp-1 text-xs leading-tight">{item.title}</p>

@@ -168,7 +168,7 @@ function UpsellCard({ product, compact }: { product: Product; compact: boolean }
             sizes={compact ? "112px" : "(min-width: 640px) 25vw, 50vw"}
             placeholder="blur"
             blurDataURL={BLUR_DATA_URL}
-            className="object-contain transition-transform duration-500 ease-[var(--ease-brand)] group-hover:scale-105"
+            className="object-contain transition-transform duration-500 ease-[var(--ease-brand)] group-hover:scale-[1.025]"
           />
           <button
             type="button"

@@ -32,11 +32,11 @@ export function CategoryCardGrid() {
               sizes="(min-width: 1024px) 25vw, 50vw"
               placeholder="blur"
               blurDataURL={BLUR_DATA_URL}
-              className="object-cover transition-transform duration-500 ease-[var(--ease-brand)] group-hover:scale-105"
+              className="object-cover transition-transform duration-500 ease-[var(--ease-brand)] group-hover:scale-[1.025]"
             />
           ) : (
             <div
-              className="absolute inset-0 transition-transform duration-500 ease-[var(--ease-brand)] group-hover:scale-105"
+              className="absolute inset-0 transition-transform duration-500 ease-[var(--ease-brand)] group-hover:scale-[1.025]"
               style={{ background: "var(--color-brand-ink)" }}
             />
           )}
