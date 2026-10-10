@@ -23,6 +23,7 @@ import {
   RefreshCw,
   ShieldCheck,
   Trash2,
+  Truck,
   Wallet,
 } from "lucide-react";
 import Image from "next/image";
@@ -792,9 +793,13 @@ export function CheckoutForm({
                         )}
                       </div>
                     </div>
-                  ) : !isPickup && couriers.length > 1 ? (
+                  ) : !isPickup && couriers.length > 0 ? (
                     <div className="mt-2 grid gap-2">
+                      {/* One courier is not a choice, so it is shown as a statement rather
+                          than a radio — but it is shown. Hiding it left this section blank
+                          while the summary beside it named a courier and charged for it. */}
                       {couriers.map((c) => {
+                        const only = couriers.length === 1;
                         const selected = chosenCourier
                           ? chosenCourier.key === c.key
                           : c.key === `${priced?.courierId ?? ""}:${priced?.feeId ?? ""}`;
@@ -802,20 +807,26 @@ export function CheckoutForm({
                           <label
                             key={c.key}
                             className={cn(
-                              "flex cursor-pointer items-center justify-between gap-3 rounded-md border bg-white/60 px-3 py-2 text-sm transition-colors",
-                              selected
-                                ? "border-[var(--color-brand-ink)]"
-                                : "border-black/15 hover:border-black/30",
+                              "flex items-center justify-between gap-3 rounded-md border bg-white/60 px-3 py-2 text-sm transition-colors",
+                              only
+                                ? "border-black/15"
+                                : selected
+                                  ? "cursor-pointer border-[var(--color-brand-ink)]"
+                                  : "cursor-pointer border-black/15 hover:border-black/30",
                             )}
                           >
                             <span className="flex min-w-0 items-center gap-2">
-                              <input
-                                type="radio"
-                                name="courier"
-                                className="accent-[var(--color-brand-ink)]"
-                                checked={selected}
-                                onChange={() => setCourierKey(c.key)}
-                              />
+                              {only ? (
+                                <Truck size={15} className="flex-shrink-0 opacity-50" aria-hidden />
+                              ) : (
+                                <input
+                                  type="radio"
+                                  name="courier"
+                                  className="accent-[var(--color-brand-ink)]"
+                                  checked={selected}
+                                  onChange={() => setCourierKey(c.key)}
+                                />
+                              )}
                               {c.logoUrl ? (
                                 // Courier logos come from QuickShipper's own CDN, so plain
                                 // <img>: next/image would need every host allow-listed and a
