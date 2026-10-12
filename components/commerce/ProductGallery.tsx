@@ -10,10 +10,14 @@ import { ImageLightbox } from "./ImageLightbox";
 import { ZoomablePhoto } from "./ZoomablePhoto";
 import { showPhotoOnScreen, useVariantPhoto } from "@/lib/ui/variant-photo";
 
+/** One empty array for every caller that passes none — a fresh `[]` per render would make the
+ *  memo below recompute every time, and with it the photo this component announces. */
+const NO_VARIANT_IMAGES: ImageRef[] = [];
+
 export function ProductGallery({
   images,
   title,
-  variantImages = [],
+  variantImages = NO_VARIANT_IMAGES,
 }: {
   images: ImageRef[];
   title: string;
@@ -47,8 +51,12 @@ export function ProductGallery({
   // swipe or thumbnail — selects that colour in the picker.
   useEffect(() => {
     showPhotoOnScreen(current?.url ?? null);
-    return () => showPhotoOnScreen(null);
   }, [current]);
+
+  // Cleared when the gallery goes away, not on every change: clearing per change published a
+  // null between every two photos, and that null was enough to start the picker publishing
+  // back — the two sides drove each other until React cut the page off.
+  useEffect(() => () => showPhotoOnScreen(null), []);
 
   return (
     <div className="lg:flex lg:gap-4">
