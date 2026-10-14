@@ -288,3 +288,72 @@ describe("merchant copy arriving raw", () => {
     expect(p.shortDescription?.startsWith("Description of the fabric")).toBe(true);
   });
 });
+
+describe("attribute values under their several names", () => {
+  const colour = {
+    id: 3,
+    name: { ka: "ფერი", en: "Color" },
+    key: "color",
+    is_filterable: true,
+    options: [
+      { ka: "შავი", en: "Natural Black", value: "Natural Black" },
+      { ka: "მუქი ყავისფერი", en: "Dark Brown", value: "4#" },
+    ],
+  };
+
+  it("reads a variant's colour out of value_json, which is the only field it arrives in", () => {
+    // EchoDesk files a product's attribute under `value` and a variant's under `value_json`.
+    // Reading only the first two dropped every variant colour, so the picker fell back to the
+    // variant's name and the colour filter on a listing page had nothing to offer.
+    const p = adaptProduct(
+      {
+        id: 26,
+        name: { ka: "თმა" },
+        slug: "hair",
+        price: "80",
+        variants: [
+          { id: 5, name: { ka: "შავი" }, price: "80", quantity: 1,
+            attribute_values: [{ attribute: colour, value_json: "Natural Black" }] },
+          { id: 6, name: { ka: "ყავისფერი" }, price: "80", quantity: 1,
+            attribute_values: [{ attribute: colour, value_json: "4#" }] },
+        ],
+      } as never,
+      "ka",
+    );
+    // Labelled by the attribute, translated from the option key, under one group.
+    expect(p.options).toEqual([{ name: "ფერი", values: ["შავი", "მუქი ყავისფერი"] }]);
+  });
+
+  it("still falls back to the variant's own name when it carries no attribute", () => {
+    const p = adaptProduct(
+      {
+        id: 25,
+        name: { ka: "თმა" },
+        slug: "hair",
+        price: "80",
+        variants: [
+          { id: 1, name: { ka: "ყავისფერი" }, price: "80", quantity: 1, attribute_values: [] },
+          { id: 2, name: { ka: "ქერა" }, price: "80", quantity: 1 },
+        ],
+      } as never,
+      "ka",
+    );
+    expect(p.options).toEqual([{ name: "ვარიანტი", values: ["ყავისფერი", "ქერა"] }]);
+  });
+
+  it("reads a product's own attribute out of value, as before", () => {
+    const p = adaptProduct(
+      {
+        id: 23,
+        name: { ka: "თმა" },
+        slug: "hair",
+        price: "80",
+        attribute_values: [{ attribute: colour, value: ["Natural Black"] }],
+      } as never,
+      "ka",
+    );
+    expect(p.attributes).toEqual([
+      { key: "color", name: "ფერი", unit: undefined, values: ["შავი"], sortOrder: 0 },
+    ]);
+  });
+});

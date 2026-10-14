@@ -48,6 +48,12 @@ export type EchoDeskAttributeValue = {
   /** Shape depends on `attribute_type`: array for multiselect, scalar otherwise. */
   value?: unknown;
   value_text?: string;
+  /**
+   * The same thing again, under a different name. A product's attribute arrives in `value`;
+   * a *variant's* arrives only here — `{"id": 12, "value_json": "Natural Black"}` — so reading
+   * the first two alone dropped every colour a variant carried.
+   */
+  value_json?: unknown;
 };
 
 export type EchoDeskProduct = {
