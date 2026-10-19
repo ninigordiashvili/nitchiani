@@ -241,6 +241,8 @@
     "successDesc": "We'll reach out by WhatsApp or email shortly",
     "orderNumber": "Order #{id}",
     "trackOrder": "Track your order",
+    "trackingTitle": "Order status",
+    "trackingHint": "Save this link — check your order any time, no account needed.",
     "errors": {
       "rateLimited": "Too many attempts. Please wait a moment and try again.",
       "invalidRequest": "Something in the form looks wrong. Please check your details and try again.",

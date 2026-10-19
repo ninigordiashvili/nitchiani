@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, Check, Link2 } from "lucide-react";
+import { ArrowLeft, Check, Link2, Truck } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { orderNumberAction, paymentStateAction } from "@/app/actions/cart";
@@ -85,28 +85,48 @@ export function SuccessOrderDetails({ order, token }: { order?: string; token?: 
 
   return (
     <>
-      {number ? <OrderNumber number={number} /> : null}
-      {/* The link is what tracking actually needs, so it's one tap to keep — nobody should
-          have to copy a long code out of an email by hand. */}
-      {tok ? (
-        <button
-          type="button"
-          onClick={copyTrackingLink}
-          className="inline-flex cursor-pointer items-center gap-1.5 text-[13px] font-medium text-[var(--color-brand-maroon)] hover:underline hover:underline-offset-2"
-        >
-          {copied ? <Check size={14} aria-hidden /> : <Link2 size={14} aria-hidden />}
-          {copied ? t("trackingLinkCopied") : t("copyTrackingLink")}
-        </button>
-      ) : null}
-      <div className="mt-3 flex flex-wrap justify-center gap-3">
-        <Link href={trackHref} className="btn-primary">
+      {/* Tracking leads. What a shopper wants from this page is "where is it?", and the answer
+          used to sit under an order code set at display size — so the code read as the thing
+          to act on, and the link to the actual answer was a line of small text beneath it.
+          The card puts the question, the button and the reason to keep the link together, and
+          the number moves below as the reference it is. */}
+      <div className="w-full max-w-sm rounded-[var(--radius-lg)] border border-[var(--border-card)] bg-white p-5 text-left">
+        <div className="flex items-start gap-3">
+          <Truck
+            size={20}
+            className="mt-0.5 shrink-0 text-[var(--color-brand-maroon)]"
+            aria-hidden
+          />
+          <div>
+            <p className="text-sm font-medium">{t("trackingTitle")}</p>
+            {/* Only promise a keepable link when there is a token to keep. */}
+            {tok ? (
+              <p className="mt-1 text-[13px] leading-snug opacity-70">{t("trackingHint")}</p>
+            ) : null}
+          </div>
+        </div>
+        <Link href={trackHref} className="btn-primary mt-4 w-full">
           {t("trackOrder")}
         </Link>
-        <Link href="/" className="btn-ghost">
-          <ArrowLeft size={14} />
-          {tCart("continueShopping")}
-        </Link>
+        {tok ? (
+          <button
+            type="button"
+            onClick={copyTrackingLink}
+            className="mt-2 flex w-full cursor-pointer items-center justify-center gap-1.5 py-2 text-[13px] font-medium text-[var(--color-brand-maroon)] transition-opacity hover:underline hover:underline-offset-2"
+            aria-live="polite"
+          >
+            {copied ? <Check size={14} aria-hidden /> : <Link2 size={14} aria-hidden />}
+            {copied ? t("trackingLinkCopied") : t("copyTrackingLink")}
+          </button>
+        ) : null}
       </div>
+
+      {number ? <OrderNumber number={number} size="sm" /> : null}
+
+      <Link href="/" className="btn-ghost mt-1">
+        <ArrowLeft size={14} />
+        {tCart("continueShopping")}
+      </Link>
     </>
   );
 }
