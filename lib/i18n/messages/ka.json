@@ -88,7 +88,9 @@
     "hairCare": "თმის მოვლა",
     "hairAccessories": "თმის აქსესუარი",
     "bonnets": "ბონეტი",
-    "durags": "დურაგი"
+    "durags": "დურაგი",
+    "hairExtensionsHair": "თმა",
+    "hairExtensionsAccessories": "ჩასამაგრებელი აქსესუარები"
   },
   "product": {
     "outOfStock": "გაყიდულია",
@@ -398,7 +400,8 @@
     "noResultsTitle": "შედეგი ვერ მოიძებნა",
     "noResultsDesc": "სცადე ფილტრების შეცვლა ან ნახე მთლიანი კოლექცია",
     "browseAll": "ნახე ყველა",
-    "filters": "ფილტრები"
+    "filters": "ფილტრები",
+    "allTypes": "ყველა"
   },
   "reviews": {
     "title": "მიმოხილვები",

@@ -63,28 +63,65 @@ export function anySoldOut(products: Product[]): boolean {
 }
 
 /**
- * Returns the unique color values present across the given products. Reads the option group
- * named "Color" / "ფერი" — language-agnostic match by checking whichever localized name appears.
- * Order is stable (first-seen across the list).
+ * Colour is the one thing this catalogue stores two ways. Some products carry it as a
+ * product attribute (`color`, "ფერი"); others as a variant option group of the same name,
+ * because EchoDesk lets a merchant do either and both are in use.
+ *
+ * Read separately they became two chip rows driving two different filters, so "შავი" showed
+ * up twice — once under the `ფერი` label, once in the unlabelled row beside the price chips —
+ * and each copy matched only its own half of the catalogue. Tapping the attribute one hid
+ * every black product whose colour lives on its variants, and vice versa.
+ *
+ * So both shapes are read into one facet here, and `productHasColor` accepts either.
  */
-export function extractColors(products: Product[]): string[] {
-  const seen = new Set<string>();
+const COLOR_ATTRIBUTE_KEYS = new Set(["color", "colour"]);
+const COLOR_GROUP_NAMES = new Set(["Color", "Colour", "ფერი"]);
+
+/** Colour travels in the URL as `?color=`, never as `?attr=color:`. */
+export const COLOR_FACET_KEY = "color";
+
+/** Matched by key first, by localized name second: the key is stable, the name is not. */
+function isColorAttribute(attr: { key: string; name: string }): boolean {
+  return COLOR_ATTRIBUTE_KEYS.has(attr.key.toLowerCase()) || COLOR_GROUP_NAMES.has(attr.name);
+}
+
+function isColorGroup(name: string): boolean {
+  return COLOR_GROUP_NAMES.has(name);
+}
+
+/**
+ * Every colour on offer across the given products, from both places one can live.
+ *
+ * Labelled with whatever the catalogue itself calls the group in the reader's language —
+ * EchoDesk localizes the attribute and the option name alike, so this row needs no string
+ * of its own and can't drift out of step with the chips beneath it.
+ *
+ * Null below two values, for the same reason the attribute facets drop out there: one colour
+ * matches every product on screen, so the chip filters nothing and is only noise.
+ */
+export function extractColorFacet(products: Product[]): AttributeFacet | null {
+  const values = new Set<string>();
+  let name = "";
   for (const p of products) {
+    for (const attr of p.attributes ?? []) {
+      if (!isColorAttribute(attr)) continue;
+      name ||= attr.name;
+      for (const v of attr.values) values.add(v);
+    }
     for (const opt of p.options) {
-      if (opt.name === "Color" || opt.name === "ფერი") {
-        for (const v of opt.values) {
-          if (!seen.has(v)) seen.add(v);
-        }
-      }
+      if (!isColorGroup(opt.name)) continue;
+      name ||= opt.name;
+      for (const v of opt.values) values.add(v);
     }
   }
-  return Array.from(seen);
+  if (values.size < 2) return null;
+  return { key: COLOR_FACET_KEY, name, values: [...values].sort(compareFacetValues) };
 }
 
 function productHasColor(p: Product, color: string): boolean {
-  return p.options.some(
-    (opt) =>
-      (opt.name === "Color" || opt.name === "ფერი") && opt.values.includes(color),
+  return (
+    p.options.some((opt) => isColorGroup(opt.name) && opt.values.includes(color)) ||
+    (p.attributes ?? []).some((attr) => isColorAttribute(attr) && attr.values.includes(color))
   );
 }
 
@@ -153,6 +190,8 @@ export function extractAttributeFacets(products: Product[]): AttributeFacet[] {
 
   for (const p of products) {
     for (const attr of p.attributes ?? []) {
+      // Colour has a row of its own, fed from the variant options as well as from here.
+      if (isColorAttribute(attr)) continue;
       const entry = byKey.get(attr.key) ?? { name: attr.name, values: new Set<string>() };
       for (const v of attr.values) entry.values.add(v);
       byKey.set(attr.key, entry);

@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { CATEGORY_HANDLES } from "../categories";
-import { PRODUCT_CATEGORIES, categoriesFor, invalidCategoryHandles } from "./categories";
+import {
+  PRODUCT_CATEGORIES,
+  categoriesFor,
+  invalidCategoryHandles,
+  subcategoryFor,
+} from "./categories";
+import { subcategoriesFor } from "../categories";
 
 describe("product → category map", () => {
   it("only references categories that exist", () => {
@@ -26,5 +32,39 @@ describe("product → category map", () => {
       expect(handles.length, `${slug} has no categories`).toBeGreaterThan(0);
       for (const h of handles) expect(CATEGORY_HANDLES).toContain(h);
     }
+  });
+});
+
+describe("the split inside hair extensions", () => {
+  const ACCESSORIES = [
+    "long_braided_ponytail_hair_extension_black",
+    "decorative_hair_accessory",
+    "braided__metal_ring_clasps_2_piece_set",
+    "star_decorated_2_piece_set",
+    "hair_accessory_metal_decorations",
+  ];
+
+  it("files the clip-in pieces under hair extensions, not loose under All products", () => {
+    for (const slug of ACCESSORIES) expect(categoriesFor(slug)).toEqual(["hair-extensions"]);
+  });
+
+  it("tells the accessories apart from the hair", () => {
+    for (const slug of ACCESSORIES) expect(subcategoryFor(slug, "hair")).toBe("accessories");
+    expect(subcategoryFor("deep_wave_braiding_hair_extensions", "hair")).toBe("hair");
+    expect(subcategoryFor("4_kinky_curly_55_88", "hair")).toBe("hair");
+  });
+
+  it("counts an unlisted product as hair rather than dropping it from both chips", () => {
+    // The failure that matters: a new braiding hair nobody remembered to list here must
+    // still show under one of the two chips, not vanish between them.
+    expect(subcategoryFor("some-new-braiding-hair", "hair")).toBe("hair");
+  });
+
+  it("offers the split on hair extensions and nowhere else", () => {
+    expect(subcategoriesFor("hair-extensions")?.options.map((o) => o.key)).toEqual([
+      "hair",
+      "accessories",
+    ]);
+    expect(subcategoriesFor("bonnets")).toBeNull();
   });
 });

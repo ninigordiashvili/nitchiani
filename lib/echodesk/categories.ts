@@ -33,6 +33,12 @@ export const PRODUCT_CATEGORIES: Record<string, string[]> = {
   "b-h-ha4397p-24": ["hair-extensions"], // მანასი 24″
   "b-h-ha4422-24": ["hair-extensions"], // მონიკა 24″
   "b-h-ha4204p-20": ["hair-extensions"], // კრო-ალისია 20″
+  // Finished pieces braided from the same hair, clipped into the wearer's own. They sit in
+  // hair-extensions and are told apart from the hair by PRODUCT_SUBCATEGORIES below.
+  "decorative_hair_accessory": ["hair-extensions"], // დეკორატიული — ტალღოვანი თმის სამაგრი
+  "braided__metal_ring_clasps_2_piece_set": ["hair-extensions"], // მეტალის რგოლის სამაგრით — 2 ცალი
+  "star_decorated_2_piece_set": ["hair-extensions"], // ვარსკვლავის დეკორით — 2 ცალი
+  "hair_accessory_metal_decorations": ["hair-extensions"], // მეტალის დეკორით
   // Lorenti care products.
   "lor-wax-08": ["hair-care"], // Gel Wax 08
   "lor-2ph": ["hair-care"], // 2 Phase conditioner
@@ -48,8 +54,29 @@ export const PRODUCT_CATEGORIES: Record<string, string[]> = {
   "satin_durag_wave_cap_with_long_tail_wide_backstraps_6_piece_set": ["durags"], // ატლასის დურაგი — 6 ცალი
 };
 
+/**
+ * Which half of a split category a product sits in — see `subcategories` in lib/categories.ts.
+ *
+ * Only the exceptions are listed. Everything else falls to the category's `defaultKey`, so
+ * stocking another braiding hair needs no entry here and a forgotten one shows up as hair
+ * rather than vanishing from both chips.
+ */
+export const PRODUCT_SUBCATEGORIES: Record<string, string> = {
+  // Sold as an extension, worn as an accessory: it arrives already braided with an elastic
+  // loop at the end, so it clips onto the wearer's own ponytail rather than being braided in.
+  "long_braided_ponytail_hair_extension_black": "accessories",
+  "decorative_hair_accessory": "accessories",
+  "braided__metal_ring_clasps_2_piece_set": "accessories",
+  "star_decorated_2_piece_set": "accessories",
+  "hair_accessory_metal_decorations": "accessories",
+};
+
 export function categoriesFor(slug: string): string[] {
   return PRODUCT_CATEGORIES[slug] ?? [];
+}
+
+export function subcategoryFor(slug: string, defaultKey: string): string {
+  return PRODUCT_SUBCATEGORIES[slug] ?? defaultKey;
 }
 
 /** Guards against a typo silently hiding a product from its category. */

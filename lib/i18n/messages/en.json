@@ -88,7 +88,9 @@
     "hairCare": "Hair Care",
     "hairAccessories": "Hair Accessories",
     "bonnets": "Bonnets",
-    "durags": "Durags"
+    "durags": "Durags",
+    "hairExtensionsHair": "Hair",
+    "hairExtensionsAccessories": "Clip-in accessories"
   },
   "product": {
     "outOfStock": "Out of stock",
@@ -398,7 +400,8 @@
     "noResultsTitle": "No results",
     "noResultsDesc": "Try a different filter combination, or browse the whole catalog",
     "browseAll": "Browse all",
-    "filters": "Filters"
+    "filters": "Filters",
+    "allTypes": "All"
   },
   "reviews": {
     "title": "Reviews",
