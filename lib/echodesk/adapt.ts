@@ -111,7 +111,9 @@ export function adaptProduct(p: EchoDeskProduct, locale: Locale): Product {
         // choice in that case; attributes win when the merchant has set them.
         const attributes = (v.attribute_values ?? []).map((a) => ({
           name: pick(a.attribute?.name, locale),
-          value: typeof a.value === "string" ? a.value : (a.value_text ?? ""),
+          // The same reader as the product's own attributes, so a variant's colour arrives as
+          // "შავი" rather than the raw key "Natural Black" — and arrives at all.
+          value: attributeValues(a, locale)[0] ?? "",
         }));
         const named = attributes.filter((o) => o.name && o.value);
         return {
@@ -317,6 +319,30 @@ export function localizeUnit(unit: string, locale: Locale): string {
  * Multiselect values arrive as an array of option keys; each is mapped back to its localized
  * label via the attribute's own `options`, falling back to the raw key when there's no match.
  */
+/**
+ * The values of one attribute entry, as labels in the reader's language.
+ *
+ * Three fields can hold them — `value` on a product, `value_json` on a variant, `value_text`
+ * on the older records — and either as a list (multiselect) or alone. The raw contents are
+ * option keys like `4#` or `Natural Black`; the attribute carries the translations, so each
+ * key is swapped for its label and only falls back to itself when the option is unknown.
+ */
+function attributeValues(entry: EchoDeskAttributeValue, locale: Locale): string[] {
+  const attr = entry.attribute;
+  const label = (keyOrValue: unknown): string => {
+    const asKey = String(keyOrValue ?? "").trim();
+    if (!asKey) return "";
+    const match = attr?.options?.find((o) => o.value === asKey);
+    return match ? pick(match, locale) || asKey : asKey;
+  };
+
+  const raw = [entry.value, entry.value_json, entry.value_text].find(
+    (v) => v !== undefined && v !== null && v !== "" && !(Array.isArray(v) && v.length === 0),
+  );
+
+  return (Array.isArray(raw) ? raw.map(label) : [label(raw)]).filter(Boolean);
+}
+
 export function adaptAttributes(
   raw: EchoDeskAttributeValue[] | undefined,
   locale: Locale,
@@ -327,19 +353,7 @@ export function adaptAttributes(
     const attr = entry.attribute;
     if (!attr?.key || attr.is_filterable === false) continue;
 
-    const label = (keyOrValue: unknown): string => {
-      const asKey = String(keyOrValue ?? "").trim();
-      if (!asKey) return "";
-      const match = attr.options?.find((o) => o.value === asKey);
-      return match ? pick(match, locale) || asKey : asKey;
-    };
-
-    const values = (
-      Array.isArray(entry.value)
-        ? entry.value.map(label)
-        : [label(entry.value ?? entry.value_text)]
-    ).filter(Boolean);
-
+    const values = attributeValues(entry, locale);
     if (values.length === 0) continue;
 
     // "300" on its own is a number the shopper has to guess the unit for — grams? pieces?

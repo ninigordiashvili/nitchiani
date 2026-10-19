@@ -1,10 +1,14 @@
 "use client";
 
 import Image from "next/image";
+import { ShoppingBag } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useEffect, useState, type RefObject } from "react";
 import type { Product, ProductVariant } from "@/lib/shopify/types";
 import { BLUR_DATA_URL, safeImageSrc } from "@/lib/images";
+import { useCart } from "@/lib/cart/store";
 import { useOverlays } from "@/lib/ui/overlays";
+import { CountBadge } from "@/components/layout/CountBadge";
 import { AddToCartButton } from "./AddToCartButton";
 import { PriceDisplay } from "./PriceDisplay";
 
@@ -14,6 +18,11 @@ import { PriceDisplay } from "./PriceDisplay";
  *
  * While visible, it raises `pdpCtaActive` in the overlays store so BottomNav steps aside;
  * on a product page the next action is purchase, not navigation.
+ *
+ * Because it displaces that nav, it has to carry the bag itself once the bag holds something.
+ * Otherwise this bar is the only thing anchored to the bottom of a PDP, the header has
+ * scrolled away above it, and a shopper who has just added an item has nothing on screen to
+ * tap to see it — which is exactly the dead end a customer reported.
  */
 export function StickyAddToCart({
   product,
@@ -27,6 +36,8 @@ export function StickyAddToCart({
   inlineCtaRef: RefObject<HTMLDivElement | null>;
 }) {
   const { setPdpCtaActive } = useOverlays();
+  const t = useTranslations("nav");
+  const cart = useCart();
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
@@ -86,6 +97,23 @@ export function StickyAddToCart({
           </span>
           <PriceDisplay price={variant.price} compareAt={variant.compareAtPrice} size="sm" />
         </div>
+        {/* Only once there is something to look at — an empty bag here would be a dead
+            control competing with the one button that matters. */}
+        {cart.totalQuantity > 0 ? (
+          <button
+            type="button"
+            onClick={() => cart.setOpen(true)}
+            aria-label={t("cart")}
+            className="relative flex h-10 w-10 flex-shrink-0 cursor-pointer items-center justify-center rounded-full border"
+            style={{
+              borderColor: "var(--border-soft)",
+              color: "var(--color-brand-maroon)",
+            }}
+          >
+            <ShoppingBag size={18} />
+            <CountBadge count={cart.totalQuantity} className="-top-1 -right-1" motion="pulse" />
+          </button>
+        ) : null}
         <AddToCartButton
           product={product}
           variant={variant}

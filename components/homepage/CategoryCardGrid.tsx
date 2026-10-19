@@ -29,7 +29,11 @@ export function CategoryCardGrid() {
               src={c.image}
               alt={t(c.labelKey)}
               fill
-              sizes="(min-width: 1024px) 25vw, 50vw"
+              // The card, not the column: `gap-2` between two phone columns inside
+              // `container-shop`'s `px-4`, `gap-4` between three at `sm`, and at `lg` the
+              // `auto-fit` tracks settle to four 318px cards once the container reaches its
+              // 1320px max-width.
+              sizes="(min-width: 1384px) 318px, (min-width: 1024px) calc( 25vw - 28px ), (min-width: 640px) calc( 33.34vw - 26.7px ), calc( 50vw - 20px )"
               placeholder="blur"
               blurDataURL={BLUR_DATA_URL}
               className="object-cover transition-transform duration-500 ease-[var(--ease-brand)] group-hover:scale-[1.025]"

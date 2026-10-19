@@ -4,7 +4,7 @@ import { Check } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { useToast } from "@/lib/ui/toast";
+import { useAddedToast } from "@/lib/cart/use-added-toast";
 import { useCart } from "@/lib/cart/store";
 import { Link } from "@/lib/i18n/routing";
 import type { Locale } from "@/lib/i18n/config";
@@ -33,7 +33,7 @@ export function FrequentlyBoughtTogether({
   related: Product[];
 }) {
   const t = useTranslations("product");
-  const toast = useToast();
+  const addedToast = useAddedToast();
   const locale = useLocale() as Locale;
   const cart = useCart();
 
@@ -79,7 +79,7 @@ export function FrequentlyBoughtTogether({
         maxQuantity: v.quantityAvailable,
       });
     }
-    toast.show(added > 0 ? t("addedToCart") : t("allInBag"));
+    addedToast(added > 0 ? t("addedToCart") : t("allInBag"));
   };
 
   return (

@@ -13,37 +13,44 @@ import { useSyncExternalStore } from "react";
  * both read it the same way. Same pattern as `lib/cart/sold-out.ts`.
  *
  * Only URLs travel. Each side ignores a URL it doesn't recognise, which is what keeps a quick
- * view opened over a product page from disturbing the page behind it, and what makes the two
- * directions settle rather than chase each other: by the time either side reacts, it is
- * already showing what the other asked for, so nothing further changes.
+ * view opened over a product page from disturbing the page behind it.
+ *
+ * The two directions keep **separate listener sets**, which is what stops them from driving
+ * each other. Sharing one set meant publishing "this photo is on screen" woke the components
+ * listening for "this colour was chosen" — their snapshot hadn't changed, but the wake-up was
+ * enough to re-run the effect that published it, and React stopped the page with "Maximum
+ * update depth exceeded".
  */
 
 /** Picker → gallery: the photo of the chosen variant. Null when it has none of its own. */
 let chosen: string | null = null;
+const chosenListeners = new Set<() => void>();
+
 /** Gallery → picker: the photo the shopper is actually looking at. */
 let onScreen: string | null = null;
-
-const listeners = new Set<() => void>();
-
-function announce() {
-  for (const listener of listeners) listener();
-}
+const screenListeners = new Set<() => void>();
 
 export function showVariantPhoto(next: string | null): void {
   if (next === chosen) return;
   chosen = next;
-  announce();
+  for (const listener of chosenListeners) listener();
 }
 
 export function showPhotoOnScreen(next: string | null): void {
   if (next === onScreen) return;
   onScreen = next;
-  announce();
+  for (const listener of screenListeners) listener();
 }
 
-function subscribe(onChange: () => void) {
-  listeners.add(onChange);
-  return () => void listeners.delete(onChange);
+/** Exported for the test that pins the two sets apart; React reaches it via the hook. */
+export function subscribeChosen(onChange: () => void) {
+  chosenListeners.add(onChange);
+  return () => void chosenListeners.delete(onChange);
+}
+
+export function subscribeScreen(onChange: () => void) {
+  screenListeners.add(onChange);
+  return () => void screenListeners.delete(onChange);
 }
 
 const getChosen = () => chosen;
@@ -52,10 +59,10 @@ const getServerSnapshot = () => null;
 
 /** For a gallery: the photo to show, when the chosen variant has one. */
 export function useVariantPhoto(): string | null {
-  return useSyncExternalStore(subscribe, getChosen, getServerSnapshot);
+  return useSyncExternalStore(subscribeChosen, getChosen, getServerSnapshot);
 }
 
 /** For a picker: the photo on screen, which may belong to a variant it should select. */
 export function usePhotoOnScreen(): string | null {
-  return useSyncExternalStore(subscribe, getOnScreen, getServerSnapshot);
+  return useSyncExternalStore(subscribeScreen, getOnScreen, getServerSnapshot);
 }

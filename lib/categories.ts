@@ -24,6 +24,18 @@ export type CategoryDef = {
    * substring, so a stem is enough: "ნაწნავ" covers ნაწნავი/ნაწნავები/ნაწნავებისთვის.
    */
   aliases: string[];
+  /**
+   * An optional split within the category, offered as a chip row on its collection page and
+   * applied through `?type=`. Not a route: these stay one page in Google, one sitemap entry.
+   *
+   * A product's half comes from `PRODUCT_SUBCATEGORIES` in lib/echodesk/categories.ts, where
+   * only the exceptions are listed — everything else falls into `defaultKey`, so stocking
+   * another braiding hair needs no entry anywhere.
+   */
+  subcategories?: {
+    defaultKey: string;
+    options: { key: string; labelKey: string }[];
+  };
 };
 
 export const CATEGORIES: CategoryDef[] = [
@@ -31,7 +43,16 @@ export const CATEGORIES: CategoryDef[] = [
     handle: "hair-extensions",
     labelKey: "hairExtensions",
     image: "/categories/hair-extensions-cover.jpg",
-    aliases: ["თმა", "თმის", "დაგრძელებ", "ნაწნავ", "ხვეულ", "ტალღოვან", "hair", "extension", "braid", "braiding", "curl", "wave", "ponytail"],
+    aliases: ["თმა", "თმის", "დაგრძელებ", "ნაწნავ", "ხვეულ", "ტალღოვან", "აქსესუარ", "სამაგრ", "hair", "extension", "braid", "braiding", "curl", "wave", "ponytail", "accessory", "accessories", "clip"],
+    // Two things are sold here and a shopper wants one or the other: the hair itself, and
+    // the finished pieces braided from it that clip into your own hair.
+    subcategories: {
+      defaultKey: "hair",
+      options: [
+        { key: "hair", labelKey: "hairExtensionsHair" },
+        { key: "accessories", labelKey: "hairExtensionsAccessories" },
+      ],
+    },
   },
   {
     handle: "hair-care",
@@ -62,3 +83,8 @@ export const CATEGORIES: CategoryDef[] = [
 export const DERIVED_COLLECTION_HANDLES = ["all-products"] as const;
 
 export const CATEGORY_HANDLES = CATEGORIES.map((c) => c.handle);
+
+/** The split offered on a collection page, or null for the categories that don't have one. */
+export function subcategoriesFor(handle: string): CategoryDef["subcategories"] | null {
+  return CATEGORIES.find((c) => c.handle === handle)?.subcategories ?? null;
+}

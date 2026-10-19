@@ -7,6 +7,7 @@ import { CollectionDescription } from "@/components/commerce/CollectionDescripti
 import { FilteredCollection } from "@/components/commerce/FilteredCollection";
 import { CategoryChips } from "@/components/homepage/CategoryChips";
 import { getCampaignBySlug } from "@/lib/campaigns";
+import { subcategoriesFor } from "@/lib/categories";
 import { getCollectionByHandle, getProductsByHandles } from "@/lib/shopify/client";
 import { localeAlternates, metaDescription, ogLocale } from "@/lib/seo";
 import type { Locale } from "@/lib/i18n/config";
@@ -109,7 +110,10 @@ export default async function CollectionPage({
         </header>
 
         <Suspense>
-          <FilteredCollection products={collection.products} />
+          <FilteredCollection
+            products={collection.products}
+            subcategories={subcategoriesFor(handle)}
+          />
         </Suspense>
       </section>
     </div>

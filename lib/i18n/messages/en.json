@@ -88,7 +88,9 @@
     "hairCare": "Hair Care",
     "hairAccessories": "Hair Accessories",
     "bonnets": "Bonnets",
-    "durags": "Durags"
+    "durags": "Durags",
+    "hairExtensionsHair": "Hair",
+    "hairExtensionsAccessories": "Clip-in accessories"
   },
   "product": {
     "outOfStock": "Out of stock",
@@ -157,6 +159,7 @@
     "empty": "Your bag is empty",
     "emptyDesc": "Start adding pieces you love",
     "continueShopping": "Continue shopping",
+    "viewCart": "View cart",
     "clearCart": "Clear cart",
     "clearCartConfirm": "Remove everything?",
     "clearCartYes": "Yes",
@@ -209,6 +212,7 @@
   },
   "checkout": {
     "title": "Checkout",
+    "metaTitle": "Secure checkout — delivery across Georgia",
     "firstName": "First name",
     "lastName": "Last name",
     "phone": "Phone",
@@ -240,6 +244,8 @@
     "successDesc": "We'll reach out by WhatsApp or email shortly",
     "orderNumber": "Order #{id}",
     "trackOrder": "Track your order",
+    "trackingTitle": "Order status",
+    "trackingHint": "Save this link — check your order any time, no account needed.",
     "errors": {
       "rateLimited": "Too many attempts. Please wait a moment and try again.",
       "invalidRequest": "Something in the form looks wrong. Please check your details and try again.",
@@ -395,7 +401,8 @@
     "noResultsTitle": "No results",
     "noResultsDesc": "Try a different filter combination, or browse the whole catalog",
     "browseAll": "Browse all",
-    "filters": "Filters"
+    "filters": "Filters",
+    "allTypes": "All"
   },
   "reviews": {
     "title": "Reviews",

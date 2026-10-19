@@ -131,10 +131,20 @@ export default async function LocaleLayout({
                   {/* EchoDesk live chat. Injects its own fixed button (bottom-right,
                       z-index ~2.1e9) and an iframe against echodesk.ge — both origins
                       are allowlisted in the CSP in next.config.ts, so keep the two in
-                      sync if the vendor ever changes hosts. */}
+                      sync if the vendor ever changes hosts.
+
+                      `lazyOnload`, not `afterInteractive`: the latter has Next emit a
+                      `<link rel="preload" as="script">` for it, so a third-party chat loader
+                      was opening a connection to another origin and spending 18 KB at high
+                      priority, in the same breath as the two preloaded product photos the
+                      page's LCP depends on. Nobody opens a support chat in the first second
+                      of a page they have not read yet, so it waits for the load event and
+                      the browser's idle time. `ChatWidgetPlacement` below is unaffected — it
+                      flips a flag on <html> and lets CSS do the hiding, whenever the vendor's
+                      launcher turns up. */}
                   <Script
                     src="https://echodesk.ge/widget.js?t=wgt_live_uiW4-k34AQvHTgKP2hzgFVDa8sA6icAz"
-                    strategy="afterInteractive"
+                    strategy="lazyOnload"
                   />
                   {/* Retracts the vendor's button while scrolling — it otherwise parks on the
                       product grid's wishlist heart and quick-view control. */}

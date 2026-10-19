@@ -17,4 +17,23 @@
   #
   # Anything without the NEXT_PUBLIC_ prefix — GOOGLE_MAPS_SERVER_KEY, the BOG and TBC
   # secrets — stays scanned, and must never appear in client output.
-  SECRETS_SCAN_OMIT_KEYS = "NEXT_PUBLIC_ECHODESK_API_URL,NEXT_PUBLIC_GOOGLE_MAPS_API_KEY"
+  #
+  # The GA4 measurement ID joins them for the same reason: it is inlined into the browser
+  # bundle by design — it has to be, since the tag runs in the visitor's browser — and it
+  # identifies a property rather than granting access to one. Anyone can read it off any
+  # site that uses Google Analytics.
+  SECRETS_SCAN_OMIT_KEYS = "NEXT_PUBLIC_ECHODESK_API_URL,NEXT_PUBLIC_GOOGLE_MAPS_API_KEY,NEXT_PUBLIC_GA_MEASUREMENT_ID"
+
+# Optimised images are immutable in everything but name, but Netlify's Image CDN answers
+# `cache-control: max-age=86400` and ignores the `minimumCacheTTL: 31536000` in next.config —
+# so every product photo is re-fetched a day later, on a catalogue whose photos do not change.
+#
+# A transform URL names its source, width and quality, and EchoDesk's filenames carry their
+# own upload timestamp, so a given URL always means the same bytes. Deliberately without
+# `immutable`: the handful of `/public/categories/*.jpg` covers are addressed by a stable
+# filename, and leaving revalidation-on-reload available is the cheap way to keep a
+# replaced cover from being pinned for a year. If one of those is ever re-shot, rename it.
+[[headers]]
+  for = "/_next/image"
+  [headers.values]
+    cache-control = "public, max-age=31536000"

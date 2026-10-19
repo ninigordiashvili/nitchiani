@@ -152,7 +152,7 @@ export default async function HomePage({
             by category, and the real category section repeats the same words two sections
             down. */}
         <SectionHeader title={t("allProducts")} href="/shop" />
-        <ProductGrid products={gridProducts} priorityFirst={4} />
+        <ProductGrid products={gridProducts} priorityFirst={2} />
       </section>
 
       {/* 4 — Featured bundle (picked client-side to match recent browsing) */}

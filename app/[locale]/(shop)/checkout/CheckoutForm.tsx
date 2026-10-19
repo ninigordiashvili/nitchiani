@@ -583,6 +583,9 @@ export function CheckoutForm({
                           // a shop with a flat method prices fine without one, and shouting
                           // "required" there would be a lie.
                           pinRequired={!isPickup && shipping.status === "needsLocation"}
+                          // Delivery prices from a courier quote and nothing else, so the map
+                          // is the step — not an optional refinement behind a button.
+                          alwaysOpen={!isPickup}
                           onPlace={(place) => {
                             // City and postcode are only overwritten when Google actually
                             // returned them, so picking a place can't blank a value the

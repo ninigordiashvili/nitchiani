@@ -4,7 +4,7 @@ import { useTranslations } from "next-intl";
 import type { Product, ProductVariant } from "@/lib/shopify/types";
 import { useCart } from "@/lib/cart/store";
 import { useSoldOut } from "@/lib/cart/sold-out";
-import { useToast } from "@/lib/ui/toast";
+import { useAddedToast } from "@/lib/cart/use-added-toast";
 import { cn } from "@/lib/utils";
 
 export function AddToCartButton({
@@ -23,7 +23,7 @@ export function AddToCartButton({
 }) {
   const t = useTranslations("product");
   const cart = useCart();
-  const toast = useToast();
+  const addedToast = useAddedToast();
 
   // Also sold out when this visit has already found it so — see lib/cart/sold-out.ts.
   const knownSoldOut = useSoldOut();
@@ -51,12 +51,13 @@ export function AddToCartButton({
         });
         // Adding is otherwise invisible: the drawer doesn't open and, from the quick view,
         // the sheet is about to close. The toast is the only confirmation the shopper gets —
-        // so it says what really happened, never "added" when the bag was already full.
+        // so it says what really happened, never "added" when the bag was already full, and
+        // it carries a way into the bag (see use-added-toast).
         if (added === 0) {
-          toast.show(t("allInBag"));
+          addedToast(t("allInBag"));
           return;
         }
-        toast.show(added < quantity ? t("addedPartly", { count: added }) : t("addedToCart"));
+        addedToast(added < quantity ? t("addedPartly", { count: added }) : t("addedToCart"));
         onAdded?.();
       }}
       className={cn("btn-primary w-full", disabled && "opacity-50 cursor-not-allowed", className)}

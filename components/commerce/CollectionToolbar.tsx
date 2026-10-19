@@ -23,7 +23,7 @@ import { cn } from "@/lib/utils";
 export function CollectionToolbar({
   totalCount,
   visibleCount,
-  availableColors,
+  colorFacet,
   priceTiers,
   showOnSale,
   showAvailable,
@@ -33,7 +33,12 @@ export function CollectionToolbar({
 }: {
   totalCount: number;
   visibleCount: number;
-  availableColors: string[];
+  /**
+   * Every colour on offer, from the product attribute and the variant options alike, or null
+   * when there aren't two to choose between. Its own row rather than a member of
+   * `attributeFacets`: it filters through `?color=`, not `?attr=`.
+   */
+  colorFacet: AttributeFacet | null;
   /** Price chips that actually split this set of products — see `priceTiers`. */
   priceTiers: number[];
   /** Only shown when something here is discounted; otherwise the chip leads to no results. */
@@ -150,35 +155,36 @@ export function CollectionToolbar({
           nothing until the catalog actually defines a filterable attribute with more than one
           value across the products on screen. */}
       {attributeFacets.map((facet) => (
-        <div key={facet.key} className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
-          {/* A fixed column, so every group's chips start at the same line and the rows read
-              as a table rather than a ragged pile. Plain weight and no letter-spacing: the
-              tracked small caps used before were barely legible in Georgian. */}
-          <span className="text-[13px] font-semibold text-[var(--color-brand-ink)] sm:w-28 sm:flex-shrink-0">
-            {facet.name}
-          </span>
-          <div className="flex flex-wrap gap-2">
-            {facet.values.map((value) => {
-              const active = (filters.attributes[facet.key] ?? []).includes(value);
-              return (
-                <Chip key={value} active={active} onClick={() => toggleAttribute(facet.key, value)}>
-                  {value}
-                </Chip>
-              );
-            })}
-          </div>
-        </div>
+        <FacetRow key={facet.key} name={facet.name}>
+          {facet.values.map((value) => {
+            const active = (filters.attributes[facet.key] ?? []).includes(value);
+            return (
+              <Chip key={value} active={active} onClick={() => toggleAttribute(facet.key, value)}>
+                {value}
+              </Chip>
+            );
+          })}
+        </FacetRow>
       ))}
 
-      <div className="flex flex-wrap items-center gap-2">
-        {availableColors.map((color) => {
-          const active = filters.colors.includes(color);
-          return (
-            <Chip key={color} active={active} onClick={() => toggleColor(color)}>
+      {/* Last of the labelled rows, and labelled like them. Colour sat loose in the row of
+          standing toggles below, so it read as a sibling of "up to ₾25" rather than as the
+          answer to "what colours are there?". */}
+      {colorFacet ? (
+        <FacetRow name={colorFacet.name}>
+          {colorFacet.values.map((color) => (
+            <Chip
+              key={color}
+              active={filters.colors.includes(color)}
+              onClick={() => toggleColor(color)}
+            >
               {color}
             </Chip>
-          );
-        })}
+          ))}
+        </FacetRow>
+      ) : null}
+
+      <div className="flex flex-wrap items-center gap-2">
         {priceTiers.map((tier) => {
           const active = filters.maxPrice === tier;
           return (
@@ -226,6 +232,24 @@ export function CollectionToolbar({
         ) : null}
       </div>
       </div>
+    </div>
+  );
+}
+
+/**
+ * One labelled group of chips.
+ *
+ * The label sits in a fixed column, so every group's chips start at the same line and the
+ * rows read as a table rather than a ragged pile. Plain weight and no letter-spacing: the
+ * tracked small caps used before were barely legible in Georgian.
+ */
+function FacetRow({ name, children }: { name: string; children: React.ReactNode }) {
+  return (
+    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
+      <span className="text-[13px] font-semibold text-[var(--color-brand-ink)] sm:w-28 sm:flex-shrink-0">
+        {name}
+      </span>
+      <div className="flex flex-wrap gap-2">{children}</div>
     </div>
   );
 }

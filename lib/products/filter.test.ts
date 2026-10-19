@@ -3,9 +3,13 @@ import {
   DEFAULT_SORT,
   SORT_KEYS,
   anyOnSale,
+  EMPTY_FILTERS,
   anySoldOut,
+  applyFilters,
   applySort,
   compareFacetValues,
+  extractAttributeFacets,
+  extractColorFacet,
   isSortKey,
   priceTiers,
 } from "./filter";
@@ -97,5 +101,44 @@ describe("which standing filters are worth showing", () => {
   it("hides the in-stock toggle when nothing is sold out", () => {
     expect(anySoldOut([product("10.00"), product("80.00")])).toBe(false);
     expect(anySoldOut([product("10.00", { sold: true })])).toBe(true);
+  });
+});
+
+describe("colour, which the catalogue stores two ways", () => {
+  // Shapes taken from the live catalogue: the ponytail carries its colour as a product
+  // attribute, the braiding hair as a variant option group, and both call the group "ფერი".
+  const byAttribute = (...values: string[]) =>
+    ({ options: [], attributes: [{ key: "color", name: "ფერი", values }] }) as unknown as Product;
+  const byOption = (...values: string[]) =>
+    ({ options: [{ name: "ფერი", values }], attributes: [] }) as unknown as Product;
+
+  const products = [byAttribute("სტაფილოსფერი", "შავი"), byOption("შავი", "მუქი ყავისფერი")];
+
+  it("offers one row holding every colour, however each product stores it", () => {
+    const facet = extractColorFacet(products);
+    expect(facet?.key).toBe("color");
+    // Labelled with what the catalogue calls the group, so the row needs no translation.
+    expect(facet?.name).toBe("ფერი");
+    expect(facet?.values).toEqual(["მუქი ყავისფერი", "სტაფილოსფერი", "შავი"]);
+  });
+
+  it("matches a colour against both shapes, so one chip means one colour", () => {
+    // The bug this replaced: two chips both reading "შავი", each finding only its own half.
+    expect(applyFilters(products, { ...EMPTY_FILTERS, colors: ["შავი"] })).toHaveLength(2);
+    expect(applyFilters(products, { ...EMPTY_FILTERS, colors: ["სტაფილოსფერი"] })).toEqual([
+      products[0],
+    ]);
+    expect(applyFilters(products, { ...EMPTY_FILTERS, colors: ["მუქი ყავისფერი"] })).toEqual([
+      products[1],
+    ]);
+  });
+
+  it("keeps colour out of the attribute rows, so it isn't offered twice", () => {
+    expect(extractAttributeFacets(products).map((f) => f.key)).not.toContain("color");
+  });
+
+  it("stays quiet when there is nothing to choose between", () => {
+    expect(extractColorFacet([byOption("შავი"), byAttribute("შავი")])).toBeNull();
+    expect(extractColorFacet([])).toBeNull();
   });
 });

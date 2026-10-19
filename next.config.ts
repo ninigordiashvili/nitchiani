@@ -58,9 +58,40 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   images: {
-    // AVIF first, WebP for anything that can't take it. Next ships WebP-only by default, and
-    // the shop grid is 790 KB of product photos at phone size.
+    /**
+     * Both of these are honoured by `next start` and ignored in production, because Netlify
+     * serves `/_next/image` from its own Image CDN rather than through Next's optimizer.
+     * Measured against the deployed site (2026-10-15), so nobody re-litigates it from the
+     * config alone:
+     *
+     *   - `formats` has no effect. Netlify negotiates the format itself and answers WebP
+     *     even when the request's `Accept` header offers AVIF. That is the better answer
+     *     here anyway: asking its Image CDN for AVIF explicitly (`fm=avif`) produced *larger*
+     *     files than its WebP at the same quality — 25.2 KB vs 18.2 KB for a 384w product
+     *     photo, 34.4 KB vs 22.2 KB for a 640w category cover. Forcing AVIF through a custom
+     *     loader would cost bytes, not save them.
+     *   - `minimumCacheTTL` is overridden: Netlify returns `max-age=86400`. The year is
+     *     reinstated at the edge in `netlify.toml`, which is where it actually takes effect.
+     *
+     * Both are kept so the local production build and any non-Netlify host still get the
+     * intended behaviour.
+     */
     formats: ["image/avif", "image/webp"],
+    /**
+     * Next's defaults with 192 and 448 added. These are the candidate widths offered for the
+     * fixed-pixel slots — the rail thumbnails, the gallery and cart thumbs — and the default
+     * list jumps straight from 384 to 640, which is a cliff for anything a phone triples.
+     *
+     * The recently-viewed rail is the expensive case: a 140px slot on a DPR-3 phone asks for
+     * 420px, found nothing between 384 and 640, and took the 640w transform — 45.3 KB for a
+     * 140px thumbnail, eight of them directly above the product grid. At 448w the same
+     * thumbnail is 24.2 KB, so the strip costs 194 KB instead of 362 KB on an iPhone 12-15.
+     * 192 does the same job for the 48-64px thumbs, which were also reaching for 256w.
+     *
+     * Both stay below the smallest `deviceSizes` entry, as Next requires. A finer candidate
+     * can only ever reduce the overshoot, so no slot gets a larger image than it did before.
+     */
+    imageSizes: [16, 32, 48, 64, 96, 128, 192, 256, 384, 448],
     // A generated image URL names its source, width and quality, and EchoDesk's media
     // filenames carry their own timestamp — so the same URL always means the same bytes.
     minimumCacheTTL: 31536000,

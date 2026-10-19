@@ -1,6 +1,6 @@
 "use client";
 
-import { Heart, Home, ShoppingBag } from "lucide-react";
+import { Heart, Home, Search, ShoppingBag } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Link, usePathname } from "@/lib/i18n/routing";
 import { useCart } from "@/lib/cart/store";
@@ -20,17 +20,22 @@ import { CountBadge } from "./CountBadge";
  * Only exception: on a PDP, the sticky Add-to-bag bar takes over this slot via
  * `overlays.pdpCtaActive` so the user doesn't see two stacked bars.
  *
- * Three slots: Home + Wishlist are nav links (active state via current path); Bag opens the
- * cart drawer. The previous `/shop` slot was dropped — Home + the category chips on the
- * homepage + the menu drawer all cover that intent. Search was dropped too: the header keeps
- * its own search button on mobile, so the affordance is still one tap away without spending
- * a bottom slot on it.
+ * Four slots: Home + Wishlist are nav links (active state via current path); Search opens the
+ * search overlay and the bag opens the cart drawer. The previous `/shop` slot was dropped —
+ * Home + the category chips on the homepage + the menu drawer all cover that intent.
+ *
+ * The bag is here as well as in the header, which is deliberate duplication. It was briefly
+ * header-only, on the reasoning that one home for it is clearer than two — but the mobile
+ * header auto-hides on a downward scroll, and every Add-to-bag button is far enough down a
+ * page that reaching one means scrolling down. So the bag was reliably off-screen at the one
+ * moment it mattered, and a customer wrote in to say they had added a durag and couldn't find
+ * the cart. This nav never hides on scroll, so the count is always on screen.
  */
 export function BottomNav() {
   const t = useTranslations("nav");
   const pathname = usePathname();
-  const cart = useCart();
   const wishlist = useWishlist();
+  const cart = useCart();
   const overlays = useOverlays();
 
   const effectiveHidden = overlays.pdpCtaActive;
@@ -59,7 +64,7 @@ export function BottomNav() {
         willChange: "transform",
       }}
     >
-      <ul className="grid grid-cols-3">
+      <ul className="grid grid-cols-4">
         <NavItem
           href="/"
           icon={<Home size={20} />}
@@ -76,22 +81,33 @@ export function BottomNav() {
         <li>
           <button
             type="button"
-            onClick={() => cart.setOpen(true)}
+            onClick={() => overlays.setSearchOpen(true)}
             className="flex w-full cursor-pointer flex-col items-center justify-center gap-0.5 py-2 transition-colors"
+            aria-label={t("search")}
+          >
+            <span className="relative">
+              <Search size={20} />
+            </span>
+            <span className="text-[10px] tracking-[0.05em]">{t("search")}</span>
+          </button>
+        </li>
+        <li>
+          <button
+            type="button"
+            onClick={() => cart.setOpen(true)}
+            className={cn(
+              "flex w-full cursor-pointer flex-col items-center justify-center gap-0.5 py-2 transition-colors",
+              // Carrying something is a state worth showing, not just counting: the whole
+              // slot takes the brand colour so it reads at a glance, mid-scroll, without
+              // having to find and parse a 10px badge.
+              cart.totalQuantity > 0
+                ? "text-[var(--color-brand-maroon)]"
+                : "text-[var(--color-brand-ink)]",
+            )}
             aria-label={t("cart")}
           >
             <span className="relative">
-              {/* Pulses only while the bag holds something — an empty bag breathing
-                  forever would be motion with nothing to say. */}
-              <span
-                style={
-                  cart.totalQuantity > 0
-                    ? { animation: "cart-pulse 2.4s ease-in-out infinite", display: "inline-flex" }
-                    : undefined
-                }
-              >
-                <ShoppingBag size={20} />
-              </span>
+              <ShoppingBag size={20} />
               {cart.totalQuantity > 0 ? (
                 <CountBadge
                   count={cart.totalQuantity}

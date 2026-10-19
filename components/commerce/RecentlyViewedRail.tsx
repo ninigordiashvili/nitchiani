@@ -66,6 +66,12 @@ export function RecentlyViewedRail({
                   alt={item.image.altText}
                   fill
                   sizes="140px"
+                  // The rail scrolls sideways, so every thumbnail sits at the same height as
+                  // the first and `loading="lazy"` defers none of them — the browser fetches
+                  // all eight at once, immediately above the product grid whose first photo
+                  // is the LCP element. Low priority keeps the recall strip behind the thing
+                  // the page is actually judged on; at ~9 KB each they still arrive promptly.
+                  fetchPriority="low"
                   placeholder="blur"
                   blurDataURL={BLUR_DATA_URL}
                   className="object-contain transition-transform duration-500 ease-[var(--ease-brand)] group-hover:scale-[1.025]"

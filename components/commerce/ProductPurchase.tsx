@@ -92,12 +92,14 @@ export function ProductPurchase({
     // `query` is a fresh object each render; depending on it would loop.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [syncUrl, variantParam, setQuery]);
-  // Tell the gallery which photo the current choice wears, and clear it on the way out so the
-  // next product doesn't open on the last one's colour.
+  // Tell the gallery which photo the current choice wears.
   useEffect(() => {
     showVariantPhoto(selected.image?.url ?? null);
-    return () => showVariantPhoto(null);
   }, [selected]);
+
+  // And clear it on the way out, so the next product doesn't open on the last one's colour.
+  // On unmount only — see the matching note in ProductGallery.
+  useEffect(() => () => showVariantPhoto(null), []);
   // And follow it back: a shopper who swipes to the blonde photo has chosen blonde. Which
   // photos count as a choice is `variantForPhoto`'s rule.
   const onScreen = usePhotoOnScreen();

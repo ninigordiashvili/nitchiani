@@ -64,6 +64,7 @@ export function AddressPicker({
   /** The shop prices delivery from the pin alone, so an order without one cannot be placed.
    *  Drives the affordance below: a required action must not look like an optional link. */
   pinRequired = false,
+  alwaysOpen = false,
 }: {
   value: string;
   onChange: (value: string) => void;
@@ -73,6 +74,15 @@ export function AddressPicker({
   className?: string;
   ariaInvalid?: boolean;
   pinRequired?: boolean;
+  /**
+   * Show the map from the start instead of behind a "pick on map" button.
+   *
+   * This shop prices delivery from a courier quote alone, so every delivery order needs a
+   * pin — the button was a step between the shopper and the only thing that could price
+   * their order. Collection orders pass false and load no map at all, which is also what
+   * keeps the billed Maps load off the checkouts that never need one.
+   */
+  alwaysOpen?: boolean;
 }) {
   const t = useTranslations("checkout");
   const locale = useLocale();
@@ -112,15 +122,12 @@ export function AddressPicker({
     return loaded;
   }, [maps, locale]);
 
-  // Open the map on its own, but only once and only when the order genuinely cannot be
-  // priced without a pin. A map that is always open costs a billed Maps load for every
-  // visitor who reaches checkout — including the ones collecting at the store, the ones a
-  // flat rate already covers, and the ones who never finish — and on a phone it puts 224px
-  // of tiles between the address and the payment methods for no gain.
+  // Open the map on arrival. `alwaysOpen` is the delivery path, where a pin is the only
+  // thing that can price the order; `pinRequired` covers the older behaviour for any caller
+  // that still wants the map to appear only once it becomes necessary.
   //
-  // `pinRequired` goes false the moment a pin lands, so this fires once and never closes
-  // what it opened; and because it latches, a shopper who dismisses the map is not fought
-  // with by having it spring back.
+  // It latches either way, so a shopper who closes the map is not fought with by having it
+  // spring back.
   // The address text a pin wrote. The suggestions effect keys off `value`, so a reverse
   // geocode looks exactly like typing: the list refilled and dropped open over the map the
   // instant the marker landed, offering to "correct" the address the shopper had just
@@ -129,13 +136,14 @@ export function AddressPicker({
 
   const autoOpenedRef = useRef(false);
   useEffect(() => {
-    if (!pinRequired || autoOpenedRef.current || mapUnavailable || !isMapsConfigured) return;
+    if ((!pinRequired && !alwaysOpen) || autoOpenedRef.current || mapUnavailable || !isMapsConfigured)
+      return;
     autoOpenedRef.current = true;
     void (async () => {
       await ensureMaps();
       setMapOpen(true);
     })();
-  }, [pinRequired, mapUnavailable, ensureMaps]);
+  }, [pinRequired, alwaysOpen, mapUnavailable, ensureMaps]);
 
   // Debounced suggestion fetch. 250ms is long enough that a fast typist spends one request
   // per word rather than per letter — this endpoint is billed per session, and per request
@@ -520,7 +528,7 @@ export function AddressPicker({
         return (
           <div className="mt-1.5">
             <div className="flex flex-wrap items-center gap-3">
-              {mapUnavailable || mapOpen ? null : (
+              {mapUnavailable || mapOpen || alwaysOpen ? null : (
                 <button
                   type="button"
                   onClick={async () => {
