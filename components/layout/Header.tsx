@@ -114,15 +114,17 @@ export function Header({ locale }: { locale: Locale }) {
             {/* Single dropdown trigger for currency + language. Replaces the previous inline pair
                 so the centred logo actually centres on mobile. */}
             <LocaleSwitcher locale={locale} />
+            {/* Search sits in the BottomNav on mobile and here from sm+, where there is no
+                bottom nav to hold it — the mirror of the bag below. */}
             <button
               type="button"
               onClick={() => overlays.setSearchOpen(true)}
               aria-label={t("search")}
-              className="flex h-10 w-10 cursor-pointer items-center justify-center"
+              className="hidden h-10 w-10 cursor-pointer items-center justify-center sm:flex"
             >
               <Search size={18} />
             </button>
-            {/* Wishlist + bag are mobile-only in the BottomNav; show in header on sm+ where the bottom nav is hidden. */}
+            {/* Wishlist is mobile-only in the BottomNav; shown here on sm+ where that nav is hidden. */}
             <Link
               href="/wishlist"
               aria-label={t("wishlist")}
@@ -133,11 +135,14 @@ export function Header({ locale }: { locale: Locale }) {
                 <CountBadge count={wishlist.count} className="-top-0.5 -right-0.5" />
               ) : null}
             </Link>
+            {/* The bag is in the header at every width: it traded places with search, which
+                went down to the BottomNav. Keeping the count visible here matters more than
+                it did below, since this header slides away on a downward scroll. */}
             <button
               type="button"
               onClick={() => cart.setOpen(true)}
               aria-label={t("cart")}
-              className="relative -mr-2 hidden h-10 w-10 cursor-pointer items-center justify-center sm:flex"
+              className="relative -mr-2 flex h-10 w-10 cursor-pointer items-center justify-center"
             >
               {/* Pulses only while the bag holds something — an empty bag breathing
                   forever would be motion with nothing to say. */}

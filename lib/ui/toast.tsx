@@ -20,13 +20,30 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
  */
 export type ToastTone = "ink" | "maroon";
 
-type ToastState = { message: string; id: number; tone: ToastTone } | null;
+/**
+ * An optional thing to do about the message.
+ *
+ * Added for add-to-bag: a shopper on mobile taps Add, reads "added to cart", and then has to
+ * find the bag — and at that moment the header has usually scrolled away. Saying what
+ * happened without offering the next step is where a shopper gets stuck, so the confirmation
+ * now carries the step.
+ */
+export type ToastAction = { label: string; onClick: () => void };
+
+type ToastState = {
+  message: string;
+  id: number;
+  tone: ToastTone;
+  action?: ToastAction;
+} | null;
 
 const ToastContext = createContext<{
-  show: (message: string, tone?: ToastTone) => void;
+  show: (message: string, tone?: ToastTone, action?: ToastAction) => void;
 } | null>(null);
 
 const VISIBLE_MS = 2600;
+/** Long enough to notice it, read it and reach it — you can't tap what has already gone. */
+const VISIBLE_WITH_ACTION_MS = 5200;
 
 /** Gap between the header's lower edge and the toast. */
 const HEADER_GAP = 12;
@@ -52,13 +69,18 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const nextId = useRef(0);
 
-  const show = useCallback((message: string, tone: ToastTone = "ink") => {
+  const dismiss = useCallback(() => {
+    if (timer.current) clearTimeout(timer.current);
+    setToast(null);
+  }, []);
+
+  const show = useCallback((message: string, tone: ToastTone = "ink", action?: ToastAction) => {
     if (timer.current) clearTimeout(timer.current);
     setTop(toastTop());
     // A fresh id restarts the entry animation even when the text is identical, so a second
     // add still reads as a new confirmation rather than a stuck message.
-    setToast({ message, id: ++nextId.current, tone });
-    timer.current = setTimeout(() => setToast(null), VISIBLE_MS);
+    setToast({ message, id: ++nextId.current, tone, action });
+    timer.current = setTimeout(() => setToast(null), action ? VISIBLE_WITH_ACTION_MS : VISIBLE_MS);
   }, []);
 
   useEffect(() => () => {
@@ -111,7 +133,24 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
                 <path d="M20 6 9 17l-5-5" />
               )}
             </svg>
-            {toast.message}
+            <span className="whitespace-nowrap">{toast.message}</span>
+            {toast.action ? (
+              <button
+                type="button"
+                onClick={() => {
+                  toast.action?.onClick();
+                  dismiss();
+                }}
+                // Divided by a hairline rather than spacing alone: inside a single pill, a
+                // tappable half needs to look separate from the half that is just text.
+                className="-mr-1.5 cursor-pointer whitespace-nowrap border-l pl-2.5 text-sm font-semibold underline underline-offset-2"
+                style={{
+                  borderColor: "color-mix(in oklab, var(--color-brand-cream) 35%, transparent)",
+                }}
+              >
+                {toast.action.label}
+              </button>
+            ) : null}
           </div>
         ) : null}
       </div>

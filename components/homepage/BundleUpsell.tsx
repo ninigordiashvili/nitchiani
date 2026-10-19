@@ -6,7 +6,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/lib/i18n/routing";
 import type { Bundle } from "@/lib/bundles";
 import { useCart } from "@/lib/cart/store";
-import { useToast } from "@/lib/ui/toast";
+import { useAddedToast } from "@/lib/cart/use-added-toast";
 import { discountFor, findCoupon } from "@/lib/cart/coupons";
 import type { Locale } from "@/lib/i18n/config";
 import { BLUR_DATA_URL, safeImageSrc } from "@/lib/images";
@@ -33,7 +33,7 @@ export function BundleUpsell({
   const tProduct = useTranslations("product");
   const locale = useLocale() as Locale;
   const cart = useCart();
-  const toast = useToast();
+  const addedToast = useAddedToast();
 
   const title = locale === "ka" ? bundle.titleKa : bundle.titleEn;
   const tagline = locale === "ka" ? bundle.taglineKa : bundle.taglineEn;
@@ -79,7 +79,7 @@ export function BundleUpsell({
     void cart.applyCoupon(bundle.couponCode);
     // Same confirmation as every other add-to-bag. This button is furthest from the header
     // badge, so without it the offer gives no sign it did anything.
-    toast.show(added > 0 ? tProduct("addedToCart") : tProduct("allInBag"));
+    addedToast(added > 0 ? tProduct("addedToCart") : tProduct("allInBag"));
   };
 
   return (

@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 import { useCart } from "@/lib/cart/store";
 import { useSoldOut } from "@/lib/cart/sold-out";
 import { useQuickView } from "@/lib/ui/quick-view";
-import { useToast } from "@/lib/ui/toast";
+import { useAddedToast } from "@/lib/cart/use-added-toast";
 import type { Product } from "@/lib/shopify/types";
 import { cn } from "@/lib/utils";
 
@@ -35,7 +35,7 @@ export function CardAddButton({
   const t = useTranslations("product");
   const quickView = useQuickView();
   const cart = useCart();
-  const toast = useToast();
+  const addedToast = useAddedToast();
 
   // Prefer a variant that can actually be sold, so a product whose first colour is gone is
   // still buyable from the card.
@@ -88,7 +88,7 @@ export function CardAddButton({
         });
         // The drawer deliberately stays shut, so the toast is the only sign it worked — and it
         // only claims an add that happened.
-        toast.show(added > 0 ? t("addedToCart") : t("allInBag"));
+        addedToast(added > 0 ? t("addedToCart") : t("allInBag"));
       }}
       aria-label={label}
       className={cn(
