@@ -209,6 +209,7 @@
   },
   "checkout": {
     "title": "Checkout",
+    "metaTitle": "Secure checkout — delivery across Georgia",
     "firstName": "First name",
     "lastName": "Last name",
     "phone": "Phone",

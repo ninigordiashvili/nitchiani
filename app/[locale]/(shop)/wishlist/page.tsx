@@ -3,8 +3,9 @@ import { setRequestLocale, getTranslations } from "next-intl/server";
 import { WishlistList } from "@/components/wishlist/WishlistList";
 import type { Locale } from "@/lib/i18n/config";
 
-// Personal, localStorage-backed surface with no search value — robots.txt disallows it and
-// this `noindex` is defense-in-depth. The title is for the browser tab.
+// Personal, localStorage-backed surface with no search value. The `noindex` is what keeps it
+// out of the index; robots.txt deliberately leaves it crawlable so the directive can be read
+// (see `app/robots.ts`). The title is for the browser tab.
 export async function generateMetadata({
   params,
 }: {

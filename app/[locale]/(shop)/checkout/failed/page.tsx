@@ -13,7 +13,10 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "checkout" });
-  return { title: t("failedTitle") };
+  // A failed-payment page is personal and reached with `?order=` / `?token=` in the URL — it must
+  // never be indexed. This used to come from the shared checkout layout; `/checkout` itself
+  // is now indexable, so the directive lives here, on the page that actually needs it.
+  return { title: t("failedTitle"), robots: { index: false, follow: true } };
 }
 
 export default async function CheckoutFailed({

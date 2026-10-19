@@ -11,7 +11,10 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "checkout" });
-  return { title: t("successTitle") };
+  // An order confirmation is personal and reached with `?order=` / `?token=` in the URL — it must
+  // never be indexed. This used to come from the shared checkout layout; `/checkout` itself
+  // is now indexable, so the directive lives here, on the page that actually needs it.
+  return { title: t("successTitle"), robots: { index: false, follow: true } };
 }
 
 export default async function CheckoutSuccess({
