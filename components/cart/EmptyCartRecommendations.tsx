@@ -19,6 +19,18 @@ import type { Product } from "@/lib/shopify/types";
 import { cn } from "@/lib/utils";
 
 /**
+ * These cards are never the shop grid, so they must not borrow its `sizes`.
+ *
+ * The drawer is a `min(100vw, 28rem)` panel with `px-4` and two `gap-x-2` columns, so a card
+ * tops out at 204px however wide the window is. Inheriting the grid's `50vw` told a desktop
+ * browser the slot was half the window and it fetched a 1920w transform for a 204px tile.
+ * The page variant is two columns on a phone and four inside `container-shop` from `sm` up.
+ */
+const DRAWER_CARD_SIZES = "(min-width: 448px) 204px, calc( 50vw - 20px )";
+const PAGE_CARD_SIZES =
+  "(min-width: 1384px) 324px, (min-width: 1024px) calc( 25vw - 22px ), (min-width: 640px) calc( 25vw - 18px ), calc( 50vw - 20px )";
+
+/**
  * Empty-bag state. Two paths:
  *  - If the user has recently viewed products → render those snapshots ("Recently viewed").
  *    Personal, instant (no fetch), and a natural nudge to resume browsing.
@@ -53,6 +65,7 @@ export function EmptyCartRecommendations({
   }, [locale, useRecent]);
 
   const isDrawer = variant === "drawer";
+  const cardSizes = isDrawer ? DRAWER_CARD_SIZES : PAGE_CARD_SIZES;
 
   // In the drawer the empty state is the message, so it takes the middle of the panel; the
   // suggestions shrink to the compact row a full bag uses, along the bottom, instead of a
@@ -117,7 +130,7 @@ export function EmptyCartRecommendations({
         {useRecent ? (
           <div onClick={onCloseDrawer} className={gridCls}>
             {recentItems.slice(0, 4).map((item) => (
-              <SnapshotCard key={item.handle} item={item} />
+              <SnapshotCard key={item.handle} item={item} sizes={cardSizes} />
             ))}
           </div>
         ) : isPending && products.length === 0 ? (
@@ -129,7 +142,7 @@ export function EmptyCartRecommendations({
         ) : (
           <div onClick={onCloseDrawer} className={gridCls}>
             {products.map((p) => (
-              <ProductCard key={p.id} product={p} />
+              <ProductCard key={p.id} product={p} sizes={cardSizes} />
             ))}
           </div>
         )}
@@ -143,7 +156,7 @@ export function EmptyCartRecommendations({
  * affordances since those need a full `Product`. The point here is recall, not re-evaluation:
  * "you were looking at this, want to come back?".
  */
-function SnapshotCard({ item }: { item: RecentlyViewedItem }) {
+function SnapshotCard({ item, sizes }: { item: RecentlyViewedItem; sizes: string }) {
   return (
     <Link href={`/products/${item.handle}`} className="group block">
       <div className="relative aspect-[4/5] overflow-hidden rounded-[var(--radius-lg)] border border-[var(--border-card)] bg-white">
@@ -151,7 +164,7 @@ function SnapshotCard({ item }: { item: RecentlyViewedItem }) {
           src={safeImageSrc(item.image.url)}
           alt={item.image.altText}
           fill
-          sizes="(min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw"
+          sizes={sizes}
           placeholder="blur"
           blurDataURL={BLUR_DATA_URL}
           className="object-contain transition-transform duration-[400ms] ease-[var(--ease-brand)] group-hover:scale-[1.025]"

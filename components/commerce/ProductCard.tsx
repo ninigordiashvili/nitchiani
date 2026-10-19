@@ -17,10 +17,37 @@ import { useSoldOut } from "@/lib/cart/sold-out";
 import { StarRating } from "./StarRating";
 import { WishlistButton } from "./WishlistButton";
 
-/** Two cards per row on a phone, three on a tablet, four on a desktop grid. */
-const CARD_SIZES = "(min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw";
+/**
+ * Two cards per row on a phone, three on a tablet, four on a desktop grid — stated as the
+ * width a card *actually* gets, not the fraction of the window its column occupies.
+ *
+ * The gutters are the whole point. A phone card is not 50vw: the grid sits inside
+ * `container-shop` (`px-4`) and the two columns are separated by `gap-x-2`, so each card is
+ * `(100vw - 32px - 8px) / 2`. Claiming the larger figure made a DPR-2 phone around 410-430px
+ * wide resolve 50vw to just over the 384w candidate and take the 640w one instead — 45 KB
+ * of LCP image where 18 KB covers the slot. Same arithmetic per breakpoint: `sm` is `px-6`
+ * with `gap-x-4` across three columns, `lg` is `px-8` with `gap-x-4` across four, and past
+ * 1384px the container stops growing at its 1320px max-width so the card settles at 318px.
+ *
+ * The spaces inside `calc( … )` are load-bearing. next/image decides which candidate widths
+ * to put in the srcset by scanning `sizes` with `/(^|\s)(1?\d?\d)vw/`, so a `vw` written
+ * tight against the bracket is invisible to it and it falls back to emitting all sixteen
+ * configured widths — including 16w-128w thumbnails no card will ever choose, which added
+ * ~17 KB to the home page's HTML. With the spaces it emits the same ten widths as before.
+ */
+export const CARD_SIZES =
+  "(min-width: 1384px) 318px, (min-width: 1024px) calc( 25vw - 28px ), (min-width: 640px) calc( 33.34vw - 26.7px ), calc( 50vw - 20px )";
 
-export function ProductCard({ product, priority = false }: { product: Product; priority?: boolean }) {
+export function ProductCard({
+  product,
+  priority = false,
+  sizes = CARD_SIZES,
+}: {
+  product: Product;
+  priority?: boolean;
+  /** Overridden where a card is laid out somewhere narrower than the shop grid. */
+  sizes?: string;
+}) {
   const quickView = useQuickView();
   const variant = product.variants[0];
   const compareAt = variant?.compareAtPrice;
@@ -63,7 +90,7 @@ export function ProductCard({ product, priority = false }: { product: Product; p
           <CardPhotos
             images={photos}
             alt={product.featuredImage.altText}
-            sizes={CARD_SIZES}
+            sizes={sizes}
             priority={priority}
           />
         ) : (
@@ -71,7 +98,7 @@ export function ProductCard({ product, priority = false }: { product: Product; p
             src={product.featuredImage.url}
             alt={product.featuredImage.altText}
             fill
-            sizes={CARD_SIZES}
+            sizes={sizes}
             priority={priority}
             placeholder="blur"
             blurDataURL={BLUR_DATA_URL}
