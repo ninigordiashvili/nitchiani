@@ -10,8 +10,10 @@ import { cn } from "@/lib/utils";
  *
  *   variant="mark"     — circular brand stamp (square 1:1, "NITCHIANI .SHOP" on a cream disc,
  *                        transparent outside the circle). Reads on dark surfaces; on a light
- *                        one the disc edge all but disappears. Used in the footer + as the
- *                        favicon (app/icon.png).
+ *                        one the disc edge all but disappears. Used in the footer. The favicon
+ *                        (app/icon.png) and iPhone icon (app/apple-icon.png) are not this: they
+ *                        spell NITCHIANI in the header's type on cream, so the site reads as one
+ *                        brand in a tab and in a share sheet.
  *
  *   variant="wordmark" — vertical Mkhedruli wordmark only (transparent background, maroon glyphs).
  *                        Reserved for hero/splash placements where the column has room to breathe.
