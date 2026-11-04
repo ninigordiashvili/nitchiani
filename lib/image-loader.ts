@@ -8,10 +8,15 @@
  * uploaded pre-sized (about 800x1000, ~100-150 KB), so nothing is gained by re-encoding them,
  * and the transform step was the slow part.
  *
- * Everything else — local files, Instagram, placeholders — still goes through `/_next/image`
- * exactly as the built-in loader would send it.
+ * Files in /public still get resized (on Netlify) because the category covers are 270-380 KB;
+ * see the branches below.
  */
-const DIRECT_HOSTS = ["echodesk-media.fsn1.your-objectstorage.com"];
+/**
+ * Set at build time by next.config.ts when building on Netlify. A custom loader switches
+ * Next's own `/_next/image` endpoint off, so locally (dev, `next start`) there is nothing to
+ * resize with and files are served as they are.
+ */
+const ON_NETLIFY = process.env.NEXT_PUBLIC_IMAGE_CDN === "netlify";
 
 export default function imageLoader({
   src,
@@ -22,10 +27,16 @@ export default function imageLoader({
   width: number;
   quality?: number;
 }): string {
-  try {
-    if (DIRECT_HOSTS.includes(new URL(src).hostname)) return src;
-  } catch {
-    // A relative path such as /categories/x.jpg — not a URL, so not a direct host.
+  // A file in /public (the category covers, the logo): resized by Netlify's Image CDN when
+  // there is one, otherwise served as it is. Absolute URLs are never rewritten.
+  if (src.startsWith("/")) {
+    return ON_NETLIFY
+      ? `/.netlify/images?url=${encodeURIComponent(src)}&w=${width}&q=${quality || 75}`
+      : src;
   }
-  return `/_next/image?url=${encodeURIComponent(src)}&w=${width}&q=${quality || 75}`;
+  // EchoDesk photos, and anything else on another host (Instagram, placeholders): straight
+  // from the source, the same URL at every width so the browser downloads a photo once.
+  // Next's dev server warns that this loader "does not implement width"; that is the point,
+  // and the warning does not exist in a production build.
+  return src;
 }

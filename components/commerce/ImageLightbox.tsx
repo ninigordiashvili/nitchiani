@@ -2,7 +2,7 @@
 
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import Image from "next/image";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useTranslations } from "next-intl";
 import { BLUR_DATA_URL } from "@/lib/images";
@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils";
 
 const MAX_SCALE = 4;
 const DOUBLE_TAP_SCALE = 2.5;
+const SLIDE_MS = 240;
 
 type Point = { x: number; y: number };
 
@@ -58,7 +59,11 @@ export function ImageLightbox({
     startMid: Point;
     start: Point;
     moved: boolean;
+    /** Which way a one-finger drag at 1× has committed to, so a diagonal wobble can't tilt the photo. */
+    axis: "x" | "y" | null;
   } | null>(null);
+  /** True from a swipe's release until the photo has settled, so a second swipe can't pile on. */
+  const sliding = useRef(false);
   const lastTap = useRef<{ time: number; at: Point } | null>(null);
 
   const count = images.length;
@@ -70,13 +75,30 @@ export function ImageLightbox({
     setOffset({ x: 0, y: 0 });
   }, []);
 
+  /**
+   * Move to the neighbouring photo with the slide the swipe started: the strip travels one
+   * stage-width, and only then does the index change, with the strip put back at rest in the
+   * same render so nothing jumps. Without this the photo was swapped the instant a finger
+   * lifted, which read as a glitch rather than a swipe.
+   */
   const go = useCallback(
     (dir: 1 | -1) => {
-      if (count < 2) return;
-      reset();
-      onIndexChange((index + dir + count) % count);
+      if (count < 2 || sliding.current) return;
+      sliding.current = true;
+      const w = stageRef.current?.getBoundingClientRect().width ?? window.innerWidth;
+      setAnimate(true);
+      setScale(1);
+      setOffset({ x: -dir * w, y: 0 });
+      window.setTimeout(() => {
+        setAnimate(false);
+        onIndexChange((index + dir + count) % count);
+        setOffset({ x: 0, y: 0 });
+        sliding.current = false;
+        // Transitions come back on after the reset has painted, not with it.
+        requestAnimationFrame(() => requestAnimationFrame(() => setAnimate(true)));
+      }, SLIDE_MS);
     },
-    [count, index, onIndexChange, reset],
+    [count, index, onIndexChange],
   );
 
   // Keyboard, and the page behind kept still while the viewer is open.
@@ -121,6 +143,7 @@ export function ImageLightbox({
   };
 
   const onPointerDown = (e: React.PointerEvent) => {
+    if (sliding.current) return;
     (e.target as Element).setPointerCapture?.(e.pointerId);
     pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
     setAnimate(false);
@@ -133,6 +156,7 @@ export function ImageLightbox({
       startMid: mid,
       start: { x: e.clientX, y: e.clientY },
       moved: false,
+      axis: null,
     };
   };
 
@@ -153,16 +177,22 @@ export function ImageLightbox({
       return;
     }
 
+    if (sliding.current) return;
     const dx = e.clientX - g.start.x;
     const dy = e.clientY - g.start.y;
     if (Math.hypot(dx, dy) > 6) g.moved = true;
     if (scale > 1) {
       setOffset(clamp({ x: g.startOffset.x + dx, y: g.startOffset.y + dy }, scale));
-    } else if (Math.abs(dy) > Math.abs(dx) && dy > 0) {
-      // Not zoomed: a downward drag follows the finger, as a hint that letting go closes.
-      setOffset({ x: 0, y: dy });
-    } else {
-      setOffset({ x: dx, y: 0 });
+      return;
+    }
+    // Not zoomed: commit to one axis after a few pixels and stay on it.
+    if (!g.axis && Math.hypot(dx, dy) > 8) g.axis = Math.abs(dx) >= Math.abs(dy) ? "x" : "y";
+    if (g.axis === "x") {
+      // With nothing to swipe to, the photo gives a little and no more.
+      setOffset({ x: count > 1 ? dx : dx * 0.25, y: 0 });
+    } else if (g.axis === "y") {
+      // A downward drag follows the finger, as a hint that letting go closes.
+      setOffset({ x: 0, y: Math.max(0, dy) });
     }
   };
 
@@ -175,7 +205,7 @@ export function ImageLightbox({
     // A second finger lifting ends a pinch; carry on as a one-finger drag from here.
     if (pointers.current.size === 1) {
       const [rest] = [...pointers.current.values()];
-      gesture.current = { ...g, startScale: scale, startOffset: offset, startDist: 0, start: rest, moved: true };
+      gesture.current = { ...g, startScale: scale, startOffset: offset, startDist: 0, start: rest, moved: true, axis: null };
       return;
     }
     gesture.current = null;
@@ -199,8 +229,9 @@ export function ImageLightbox({
     }
 
     if (scale <= 1) {
-      if (Math.abs(dy) > Math.abs(dx) && dy > 100) return onClose();
-      if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy)) {
+      const w = stageRef.current?.getBoundingClientRect().width ?? window.innerWidth;
+      if (g.axis === "y" && dy > 100) return onClose();
+      if (g.axis === "x" && count > 1 && Math.abs(dx) > Math.min(60, w * 0.15)) {
         go(dx < 0 ? 1 : -1);
         return;
       }
@@ -264,17 +295,15 @@ export function ImageLightbox({
             willChange: "transform",
           }}
         >
-          <Image
-            src={current.url}
-            alt={current.altText || title}
-            fill
-            sizes="100vw"
-            quality={90}
-            placeholder="blur"
-            blurDataURL={BLUR_DATA_URL}
-            className="pointer-events-none object-contain select-none"
-            draggable={false}
-          />
+          {/* The neighbours wait one stage-width either side, already loaded, so a swipe
+              brings the next photo in with the finger instead of swapping it afterwards. */}
+          {count > 1 && scale <= 1 ? (
+            <>
+              <Slide image={images[(index - 1 + count) % count]} title={title} at="-100%" />
+              <Slide image={images[(index + 1) % count]} title={title} at="100%" />
+            </>
+          ) : null}
+          <Slide image={current} title={title} at="0" priority />
         </div>
 
         {count > 1 ? (
@@ -327,3 +356,34 @@ export function ImageLightbox({
     document.body,
   );
 }
+
+/** One photo in the strip, parked `at` an offset from the stage's centre position. */
+const Slide = memo(function Slide({
+  image,
+  title,
+  at,
+  priority = false,
+}: {
+  image: ImageRef;
+  title: string;
+  at: string;
+  priority?: boolean;
+}) {
+  return (
+    <div className="absolute inset-0" style={{ transform: `translateX(${at})` }} aria-hidden={at !== "0"}>
+      <Image
+        src={image.url}
+        alt={image.altText || title}
+        fill
+        sizes="100vw"
+        quality={90}
+        loading="eager"
+        priority={priority}
+        placeholder="blur"
+        blurDataURL={BLUR_DATA_URL}
+        className="pointer-events-none object-contain select-none"
+        draggable={false}
+      />
+    </div>
+  );
+});

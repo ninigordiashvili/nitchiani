@@ -57,6 +57,8 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  // Read by lib/image-loader.ts, which has to know whether Netlify's Image CDN is there.
+  env: { NEXT_PUBLIC_IMAGE_CDN: process.env.NETLIFY ? "netlify" : "" },
   images: {
     // See lib/image-loader.ts: EchoDesk photos skip the Image CDN; everything else uses it.
     loader: "custom",
