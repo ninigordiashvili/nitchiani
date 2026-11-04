@@ -35,8 +35,8 @@ export default function imageLoader({
       : src;
   }
   // EchoDesk photos, and anything else on another host (Instagram, placeholders): straight
-  // from the source. The width rides along as a URL fragment, which is never sent to the
-  // server, so the file and its cache entry are the same at every width; Next only wants to
-  // see the loader acknowledge it.
-  return `${src}#w=${width}`;
+  // from the source, the same URL at every width so the browser downloads a photo once.
+  // Next's dev server warns that this loader "does not implement width"; that is the point,
+  // and the warning does not exist in a production build.
+  return src;
 }
