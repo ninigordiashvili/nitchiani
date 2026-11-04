@@ -143,13 +143,13 @@ export function ClearCartButton({
         type="button"
         onClick={() => setOpen(true)}
         className={cn(
-          "group inline-flex cursor-pointer items-center gap-1.5 text-[11px] opacity-75 underline-offset-2 transition-all hover:opacity-100 hover:underline",
+          "group inline-flex min-h-10 flex-shrink-0 cursor-pointer items-center gap-1.5 px-2 text-[11px] whitespace-nowrap opacity-75 underline-offset-2 transition-all hover:opacity-100 hover:underline",
           isDark
             ? "text-[var(--color-brand-cream)]"
             : "text-[var(--color-brand-ink)] hover:text-[var(--color-brand-maroon)]",
         )}
       >
-        <Trash2 size={13} />
+        <Trash2 size={14} />
         {t("clearCart")}
       </button>
 

@@ -100,8 +100,13 @@ type CheckoutInput = z.infer<ReturnType<typeof buildCheckoutSchema>>;
  */
 const SHOW_BANK_TRANSFER = false;
 
-// Cash on delivery is temporarily withdrawn. Unlike the card flags above — which gate on
-// merchant credentials existing — this one is a business decision, so it defaults OFF and
+/**
+ * Cash on delivery is not offered: the Terms & Conditions (§5) say cash payment on delivery
+ * is not accepted. Unlike the card flags above — which gate on merchant credentials existing —
+ * this one is a business decision, so it defaults OFF and wins over whatever EchoDesk has
+ * switched on. Change it together with the Terms.
+ */
+const SHOW_CASH_ON_DELIVERY = false;
 
 export function CheckoutForm({
   payments,
@@ -140,11 +145,12 @@ export function CheckoutForm({
   // Bank transfer is switched off for now (SHOW_BANK_TRANSFER) but kept intact. It still
   // appears if it's the only way left to pay — cards off and no cash on delivery — so the
   // checkout never ends up with nothing to choose.
-  const showBankTransfer = SHOW_BANK_TRANSFER || (cards.length === 0 && !payments.cashOnDelivery);
+  const showCashOnDelivery = SHOW_CASH_ON_DELIVERY && payments.cashOnDelivery;
+  const showBankTransfer = SHOW_BANK_TRANSFER || (cards.length === 0 && !showCashOnDelivery);
 
   const defaultPaymentMethod: CheckoutInput["paymentMethod"] = cards[0]
     ? cards[0].method
-    : payments.cashOnDelivery
+    : showCashOnDelivery
       ? "cod"
       : "bank_transfer";
 
@@ -512,9 +518,9 @@ export function CheckoutForm({
 
       <form
         onSubmit={handleSubmit(onSubmit)}
-        className="grid gap-10 lg:grid-cols-[1fr_360px]"
+        className="grid grid-cols-1 gap-10 lg:grid-cols-[minmax(0,1fr)_360px]"
       >
-        <div>
+        <div className="min-w-0">
           {/* "Back to shipping" link — visible only on mobile step 2. */}
           {step === 2 ? (
             <button
@@ -528,7 +534,7 @@ export function CheckoutForm({
           ) : null}
 
           {/* Shipping fieldset — hidden on mobile step 2; always visible on sm+. */}
-          <fieldset className={cn("mb-8", step === 2 && "hidden sm:block")}>
+          <fieldset className={cn("mb-8 min-w-0", step === 2 && "hidden sm:block")}>
             <legend className="font-display mb-4 text-xl">{t("checkout.contactSection")}</legend>
             <div className="grid gap-3 sm:grid-cols-2">
               <Field label={t("checkout.firstName")} error={errors.firstName?.message} required>
@@ -562,7 +568,7 @@ export function CheckoutForm({
               memory; this one needs the map, and mixing them made one long block where the
               pin — the only field a courier actually navigates by — read as one more optional
               line among six. */}
-          <fieldset className={cn("mb-8", step === 2 && "hidden sm:block")}>
+          <fieldset className={cn("mb-8 min-w-0", step === 2 && "hidden sm:block")}>
             <legend className="font-display mb-4 text-xl">{t("checkout.deliverySection")}</legend>
             <div className="grid gap-3 sm:grid-cols-2">
               {/* Collection needs no address, so the fields go rather than sit there as optional
@@ -626,7 +632,7 @@ export function CheckoutForm({
 
                   Hidden entirely when there is nothing to choose between. */}
               {(pickup || delivery.length > 1) ? (
-                <fieldset className="sm:col-span-2">
+                <fieldset className="min-w-0 sm:col-span-2">
                   <legend className="mb-1.5 block text-[13px] font-medium text-[var(--color-brand-ink)]">
                     {t("checkout.receiveHow")}
                   </legend>
@@ -917,7 +923,7 @@ export function CheckoutForm({
             </button>
           ) : null}
 
-          <fieldset className={cn(step === 1 && "hidden sm:block")}>
+          <fieldset className={cn("min-w-0", step === 1 && "hidden sm:block")}>
             <legend className="font-display mb-4 text-xl">{t("checkout.paymentMethod")}</legend>
             <div className="space-y-3">
               {cards.map((c) => (
@@ -928,6 +934,7 @@ export function CheckoutForm({
                   icon={<CreditCard size={20} />}
                   title={t(c.title)}
                   desc={t(c.desc)}
+                  badges={c.method === "tbc_card" ? WALLET_BADGES : undefined}
                 />
               ))}
               {showBankTransfer ? (
@@ -939,7 +946,7 @@ export function CheckoutForm({
                   desc={t("checkout.bankTransferDesc")}
                 />
               ) : null}
-              {payments.cashOnDelivery ? (
+              {showCashOnDelivery ? (
                 <PaymentOption
                   active={paymentMethod === "cod"}
                   onSelect={() => setValue("paymentMethod", "cod")}
@@ -1332,12 +1339,16 @@ function StepBadge({
   );
 }
 
+/** Wallets TBC's payment page offers on top of cards. Brand names, so not translated. */
+const WALLET_BADGES = ["Apple Pay", "Google Pay"];
+
 function PaymentOption({
   active,
   onSelect,
   icon,
   title,
   desc,
+  badges,
   /** Rendered but not selectable — a method the shop has announced and not yet connected. */
   comingSoonLabel,
 }: {
@@ -1346,6 +1357,8 @@ function PaymentOption({
   icon: React.ReactNode;
   title: string;
   desc: string;
+  /** Short labels shown as pills under the description — wallets the method also accepts. */
+  badges?: string[];
   comingSoonLabel?: string;
 }) {
   const disabled = Boolean(comingSoonLabel);
@@ -1385,6 +1398,18 @@ function PaymentOption({
           ) : null}
         </p>
         <p className="text-xs opacity-70">{desc}</p>
+        {badges?.length ? (
+          <ul className="mt-2 flex flex-wrap gap-1.5">
+            {badges.map((b) => (
+              <li
+                key={b}
+                className="rounded-md border border-black/25 bg-white px-2.5 py-1 text-xs font-semibold text-[var(--color-brand-ink)]"
+              >
+                {b}
+              </li>
+            ))}
+          </ul>
+        ) : null}
       </div>
     </button>
   );

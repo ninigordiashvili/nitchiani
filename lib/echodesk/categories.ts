@@ -8,10 +8,12 @@ import { CATEGORY_HANDLES } from "../categories";
  * filterable — but the two attributes defined today have mismatched names, keys and types, so
  * nothing reliable can be derived from them yet.
  *
- * To place a product, add its slug with the handles it belongs to. Valid handles are the ones
- * in `lib/categories.ts`; an unlisted product still appears under All products (and Best
- * sellers when EchoDesk marks it featured) — it just won't show under a theme, which is the
- * honest default. A silent wrong guess is worse than a visible absence.
+ * A product no longer needs an entry here to be categorised: `resolveCategories` reads its name
+ * and slug and files it by keyword (see `CATEGORY_RULES`), so a new synthetic hair lands under
+ * hair extensions the moment it goes live. An entry here is an *override* — it always wins — and
+ * is only needed where the name would mislead. Valid handles are the ones in `lib/categories.ts`.
+ * A product that matches neither still appears under All products (and Best sellers when
+ * EchoDesk marks it featured) — it just won't show under a theme.
  */
 export const PRODUCT_CATEGORIES: Record<string, string[]> = {
   // Braiding hair. EchoDesk derives the slug from the SKU, so these read as product codes
@@ -57,22 +59,101 @@ export const PRODUCT_CATEGORIES: Record<string, string[]> = {
 /**
  * Which half of a split category a product sits in — see `subcategories` in lib/categories.ts.
  *
- * Only the exceptions are listed. Everything else falls to the category's `defaultKey`, so
- * stocking another braiding hair needs no entry here and a forgotten one shows up as hair
- * rather than vanishing from both chips.
+ * Overrides only. A product not listed is inferred from its name by `resolveSubcategory`
+ * (clip-in words → "clip-in", curl words → "curls"), and otherwise falls to the category's `defaultKey`, so a new
+ * braiding hair needs no entry here and never vanishes from every chip.
  */
 export const PRODUCT_SUBCATEGORIES: Record<string, string> = {
   // Sold as an extension, worn as an accessory: it arrives already braided with an elastic
   // loop at the end, so it clips onto the wearer's own ponytail rather than being braided in.
-  "long_braided_ponytail_hair_extension_black": "accessories",
-  "decorative_hair_accessory": "accessories",
-  "braided__metal_ring_clasps_2_piece_set": "accessories",
-  "star_decorated_2_piece_set": "accessories",
-  "hair_accessory_metal_decorations": "accessories",
+  "long_braided_ponytail_hair_extension_black": "clip-in",
+  "decorative_hair_accessory": "clip-in",
+  "braided__metal_ring_clasps_2_piece_set": "clip-in",
+  "star_decorated_2_piece_set": "clip-in",
+  "hair_accessory_metal_decorations": "clip-in",
+  // Curly to look at, but sold and used as braiding hair — the name's "curly" would otherwise
+  // send it to afro curls.
+  "76_2_deep_wave_ocean_wave": "braids",
+  "freedom_braid_collection_french_curl_synthetic_hair_56_cm": "braids",
+  "4_kinky_curly_55_88": "braids",
 };
 
+/**
+ * Keyword rules for products the manual map doesn't list. First matching rule wins, so the
+ * specific categories go before hair extensions, whose words ("hair", "braid") also appear in
+ * a bonnet's or a wax's name. Latin terms are matched as whole words (so "gel" doesn't fire on
+ * "angel"); Georgian terms are stems, since the language inflects ("ნაწნავებისთვის").
+ */
+const CATEGORY_RULES: { handle: string; latin: string[]; georgian: string[] }[] = [
+  { handle: "durags", latin: ["durag", "durags", "doo rag"], georgian: ["დურაგ"] },
+  { handle: "bonnets", latin: ["bonnet", "bonnets"], georgian: ["ბონეტ", "ბონნეტ", "ქუდ"] },
+  {
+    handle: "hair-care",
+    latin: ["wax", "gel", "conditioner", "shampoo", "serum", "mousse", "leave-in", "pomade"],
+    georgian: ["ცვილ", "კონდიციონერ", "შამპუნ", "სერუმ", "მოვლ", "გელ"],
+  },
+  {
+    handle: "hair-extensions",
+    latin: ["hair", "braid", "braiding", "braided", "extension", "extensions", "ponytail", "synthetic", "kanekalon"],
+    georgian: ["თმა", "თმის", "ნაწნავ", "სინთეტიკ", "ხელოვნური თმ", "დაგრძელებ"],
+  },
+];
+
+/** The category a product's own words point to, or none when they point nowhere. */
+export function inferCategories(text: string): string[] {
+  const t = text.toLowerCase();
+  const rule = CATEGORY_RULES.find(
+    (r) =>
+      r.georgian.some((w) => t.includes(w)) ||
+      r.latin.some((w) => new RegExp(`(^|[^a-z])${w}([^a-z]|$)`).test(t)),
+  );
+  return rule ? [rule.handle] : [];
+}
+
+/**
+ * A product's categories: the manual override when it has one, otherwise inferred from its
+ * names and slug. `names` is every language the product is named in.
+ */
+export function resolveCategories(slug: string, names: string[]): string[] {
+  const manual = PRODUCT_CATEGORIES[slug];
+  if (manual) return manual;
+  return inferCategories([...names, slug.replace(/[_-]/g, " ")].join(" "));
+}
+
+/** The manual override alone — used where only a slug is at hand. Prefer `product.categories`. */
 export function categoriesFor(slug: string): string[] {
   return PRODUCT_CATEGORIES[slug] ?? [];
+}
+
+const hasWord = (t: string, latin: string[], georgian: string[]) =>
+  georgian.some((w) => t.includes(w)) ||
+  latin.some((w) => new RegExp(`(^|[^a-z])${w}([^a-z]|$)`).test(t));
+
+/**
+ * Words that mark a finished clip-in piece rather than loose hair. Checked first: a clip-in
+ * is often named for its look ("Wavy Hair Extension"), which would otherwise read as curls.
+ */
+const CLIP_IN_WORDS = {
+  latin: ["accessory", "accessories", "clasp", "clasps", "clip", "clips"],
+  georgian: ["აქსესუარ", "სამაგრ"],
+};
+
+/** Curl words, checked after clip-in so "Curly Braiding Hair" still counts as curls. */
+const CURL_WORDS = {
+  latin: ["curl", "curly", "kinky", "wave", "wavy", "waves"],
+  georgian: ["ხვეულ", "ტალღ"],
+};
+
+export function inferSubcategory(text: string): string | null {
+  const t = text.toLowerCase();
+  if (hasWord(t, CLIP_IN_WORDS.latin, CLIP_IN_WORDS.georgian)) return "clip-in";
+  if (hasWord(t, CURL_WORDS.latin, CURL_WORDS.georgian)) return "curls";
+  return null;
+}
+
+/** A product's group inside its category: manual override, else inferred, else the default. */
+export function resolveSubcategory(slug: string, names: string[], defaultKey: string): string {
+  return PRODUCT_SUBCATEGORIES[slug] ?? inferSubcategory(names.join(" ")) ?? defaultKey;
 }
 
 export function subcategoryFor(slug: string, defaultKey: string): string {

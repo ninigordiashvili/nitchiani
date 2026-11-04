@@ -19,6 +19,9 @@ import { scoreForQuery } from "../products/match";
 import type { Locale } from "../i18n/config";
 import { defaultLocale } from "../i18n/config";
 
+/** Live products carry their resolved categories; the sample catalog falls back to the map. */
+const categoriesOf = (p: Product) => p.categories ?? categoriesFor(p.handle);
+
 const SHOPIFY_DOMAIN = process.env.SHOPIFY_STORE_DOMAIN;
 const SHOPIFY_TOKEN = process.env.SHOPIFY_STOREFRONT_ACCESS_TOKEN;
 const API_VERSION = process.env.SHOPIFY_API_VERSION ?? "2025-01";
@@ -159,8 +162,8 @@ function liveCollections(products: Product[], locale: Locale): Collection[] {
     const shell = localizeCollection(raw, locale);
     let members: Product[] = [];
     if (raw.handle === "all-products") members = products;
-    // Themed categories come from the manual map — the API has nothing to match on.
-    else members = products.filter((p) => categoriesFor(p.handle).includes(raw.handle));
+    // Themed categories are inferred from each product's name (manual map overrides).
+    else members = products.filter((p) => categoriesOf(p).includes(raw.handle));
     return { ...shell, products: members };
   });
 }
@@ -210,14 +213,14 @@ export async function getRelatedProducts(
   limit = 4,
 ): Promise<Product[]> {
   const all = await getProducts(locale, 50);
-  const mine = new Set(categoriesFor(product.handle));
+  const mine = new Set(categoriesOf(product));
   // Ranked, not filtered: the durags category holds two products, and a rail with one card in
   // it reads as a bug. Anything sharing a category comes first; the rest only fill the row.
   return all
     .filter((p) => p.handle !== product.handle)
     .map((p) => ({
       p,
-      shared: categoriesFor(p.handle).filter((h) => mine.has(h)).length,
+      shared: categoriesOf(p).filter((h) => mine.has(h)).length,
     }))
     .sort((a, b) => b.shared - a.shared)
     .slice(0, limit)

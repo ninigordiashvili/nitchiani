@@ -109,7 +109,7 @@ export function ProductCard({
             column stops short of the wishlist heart in the opposite corner — the stock badge
             grew with its font size and ran underneath it. */}
         {offPercent !== null || lowStock !== null ? (
-          <div className="absolute top-2.5 left-2.5 flex max-w-[calc(100%-3.25rem)] flex-col items-start gap-1">
+          <div className="absolute top-2.5 left-2.5 flex max-w-[calc(100%-4.25rem)] sm:max-w-[calc(100%-3.5rem)] flex-col items-start gap-1">
             {offPercent !== null ? (
               <div className="flex items-center gap-1">
                 <Badge tone="maroon">−{offPercent}%</Badge>

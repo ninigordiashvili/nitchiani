@@ -73,6 +73,14 @@ export type Product = {
    */
   productTypeHandle: string;
   /**
+   * Category handles (`lib/categories.ts`) this product belongs to, resolved by the live
+   * adapter: the manual override if listed, otherwise inferred from its name. Absent on the
+   * sample catalog, which declares membership in its own collection shells.
+   */
+  categories?: string[];
+  /** Group inside the category (`subcategories` in lib/categories.ts), resolved by the live adapter. */
+  subcategory?: string;
+  /**
    * Rating summary as reported by the backend. Present only when the catalog is live —
    * the sample catalog's ratings are derived from `lib/reviews.ts` instead.
    */

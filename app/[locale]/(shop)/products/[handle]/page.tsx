@@ -49,7 +49,7 @@ export async function generateMetadata({
   if (!product) notFound();
 
   // The category's name rounds out a short product name in search results.
-  const categoryHandle = categoriesFor(handle)[0];
+  const categoryHandle = (product.categories ?? categoriesFor(handle))[0];
   const categoryKey = CATEGORIES.find((c) => c.handle === categoryHandle)?.labelKey;
   const tCategories = await getTranslations({ locale, namespace: "categories" });
   const { title, description } = productSeo({

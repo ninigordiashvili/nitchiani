@@ -87,15 +87,15 @@ export function CartDrawer({
         <div className="mx-4 flex h-14 items-center justify-between gap-3 border-b border-black/10">
           {/* The count as a labelled pill ("2 ნივთი"): a bare "· 2" after the title read as
               decoration, not as how many things are in the bag. */}
-          <span className="flex items-center gap-2 text-[15px] font-semibold">
+          <span className="flex flex-shrink-0 items-center gap-2 text-[15px] font-semibold whitespace-nowrap">
             {t("nav.cart")}
             {cart.totalQuantity > 0 ? (
-              <span className="rounded-full bg-[var(--color-brand-ink)] px-2 py-0.5 text-[11px] font-medium tabular-nums text-[var(--color-brand-cream)]">
+              <span className="rounded-full bg-[var(--color-brand-ink)] px-2.5 py-1 text-[11px] leading-none whitespace-nowrap font-medium tabular-nums text-[var(--color-brand-cream)]">
                 {t("cart.itemsCount", { count: cart.totalQuantity })}
               </span>
             ) : null}
           </span>
-          <div className="flex items-center gap-3">
+          <div className="flex min-w-0 items-center gap-1">
             <ClearCartButton contained />
             <button
               type="button"

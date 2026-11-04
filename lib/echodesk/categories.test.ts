@@ -4,6 +4,8 @@ import {
   PRODUCT_CATEGORIES,
   categoriesFor,
   invalidCategoryHandles,
+  resolveCategories,
+  resolveSubcategory,
   subcategoryFor,
 } from "./categories";
 import { subcategoriesFor } from "../categories";
@@ -49,22 +51,80 @@ describe("the split inside hair extensions", () => {
   });
 
   it("tells the accessories apart from the hair", () => {
-    for (const slug of ACCESSORIES) expect(subcategoryFor(slug, "hair")).toBe("accessories");
-    expect(subcategoryFor("deep_wave_braiding_hair_extensions", "hair")).toBe("hair");
-    expect(subcategoryFor("4_kinky_curly_55_88", "hair")).toBe("hair");
+    for (const slug of ACCESSORIES) expect(subcategoryFor(slug, "braids")).toBe("clip-in");
+    expect(subcategoryFor("deep_wave_braiding_hair_extensions", "braids")).toBe("braids");
+    expect(subcategoryFor("4_kinky_curly_55_88", "braids")).toBe("braids");
   });
 
   it("counts an unlisted product as hair rather than dropping it from both chips", () => {
     // The failure that matters: a new braiding hair nobody remembered to list here must
     // still show under one of the two chips, not vanish between them.
-    expect(subcategoryFor("some-new-braiding-hair", "hair")).toBe("hair");
+    expect(subcategoryFor("some-new-braiding-hair", "braids")).toBe("braids");
   });
 
   it("offers the split on hair extensions and nowhere else", () => {
     expect(subcategoriesFor("hair-extensions")?.options.map((o) => o.key)).toEqual([
-      "hair",
-      "accessories",
+      "clip-in",
+      "braids",
+      "curls",
     ]);
     expect(subcategoriesFor("bonnets")).toBeNull();
+  });
+});
+
+describe("inferring a category from the product's name", () => {
+  const cat = (slug: string, ...names: string[]) => resolveCategories(slug, names);
+
+  it("files a new synthetic hair under hair extensions with no map entry", () => {
+    // The reported case: both are live, unmapped, and used to appear only under All products.
+    expect(cat("synthetic_braiding_hair_blue", "Synthetic Braiding Hair – Blue", "ხელოვნური თმა ნაწნავებისთვის – ლურჯი")).toEqual(["hair-extensions"]);
+    expect(cat("braiding_hair", "Synthetic Braiding Hair", "ხელოვნური თმა ნაწნავებისთვის")).toEqual(["hair-extensions"]);
+  });
+
+  it("puts the specific categories ahead of hair extensions, whose words they share", () => {
+    expect(cat("x", "Satin Bonnet for Hair")).toEqual(["bonnets"]);
+    expect(cat("x", "ატლასის ქუდი თმისთვის")).toEqual(["bonnets"]);
+    expect(cat("x", "Satin Durag Wave Cap")).toEqual(["durags"]);
+    expect(cat("x", "Hair Wax, Ultra Hold")).toEqual(["hair-care"]);
+    expect(cat("x", "თმის ცვილი")).toEqual(["hair-care"]);
+  });
+
+  it("matches Latin words whole, not inside other words", () => {
+    expect(cat("x", "Angel figurine")).toEqual([]);
+  });
+
+  it("leaves a product it can't read uncategorised rather than guessing", () => {
+    expect(cat("gift-card", "Gift card")).toEqual([]);
+  });
+
+  it("lets the manual map override what the name says", () => {
+    expect(cat("long_braided_ponytail_hair_extension_black", "Bonnet")).toEqual(["hair-extensions"]);
+  });
+});
+
+describe("telling braiding hair from afro curls", () => {
+  const sub = (slug: string, ...names: string[]) => resolveSubcategory(slug, names, "braids");
+  it("sends curl words to curls, even in a braiding hair's name", () => {
+    expect(sub("x", "Kinky Curly Hair Extensions")).toBe("curls");
+    expect(sub("x", "Curly Braiding Hair – Deep Wave")).toBe("curls");
+    expect(sub("76_2_deep_wave_ocean_wave", "76.2cm Curly Braiding Hair")).toBe("braids"); // pinned
+    expect(sub("x", "ხვეული თმა")).toBe("curls");
+  });
+  it("keeps straight braiding hair under braids, and lets the override win", () => {
+    expect(sub("x", "Synthetic Braiding Hair")).toBe("braids");
+    expect(sub("decorative_hair_accessory", "Wavy Hair Extension")).toBe("clip-in");
+  });
+});
+
+describe("telling clip-in pieces from loose hair", () => {
+  const sub = (...names: string[]) => resolveSubcategory("new-slug", names, "braids");
+  it("files a new accessory under clip-in with no map entry, even when named for its curls", () => {
+    expect(sub("Braided Hair Accessory with Metal Decorations")).toBe("clip-in");
+    expect(sub("Wavy Hair Extension Clip")).toBe("clip-in");
+    expect(sub("თმის სამაგრი — ტალღოვანი")).toBe("clip-in");
+  });
+  it("leaves loose hair alone", () => {
+    expect(sub("Synthetic Braiding Hair")).toBe("braids");
+    expect(sub("Kinky Curly Hair Extensions")).toBe("curls");
   });
 });

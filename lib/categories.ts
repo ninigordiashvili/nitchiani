@@ -28,9 +28,9 @@ export type CategoryDef = {
    * An optional split within the category, offered as a chip row on its collection page and
    * applied through `?type=`. Not a route: these stay one page in Google, one sitemap entry.
    *
-   * A product's half comes from `PRODUCT_SUBCATEGORIES` in lib/echodesk/categories.ts, where
-   * only the exceptions are listed — everything else falls into `defaultKey`, so stocking
-   * another braiding hair needs no entry anywhere.
+   * A product's group comes from `resolveSubcategory` in lib/echodesk/categories.ts: the
+   * manual `PRODUCT_SUBCATEGORIES` entry if there is one, else inferred from its name, else
+   * `defaultKey` — so stocking another braiding hair needs no entry anywhere.
    */
   subcategories?: {
     defaultKey: string;
@@ -44,13 +44,14 @@ export const CATEGORIES: CategoryDef[] = [
     labelKey: "hairExtensions",
     image: "/categories/hair-extensions-cover.jpg",
     aliases: ["თმა", "თმის", "დაგრძელებ", "ნაწნავ", "ხვეულ", "ტალღოვან", "აქსესუარ", "სამაგრ", "hair", "extension", "braid", "braiding", "curl", "wave", "ponytail", "accessory", "accessories", "clip"],
-    // Two things are sold here and a shopper wants one or the other: the hair itself, and
-    // the finished pieces braided from it that clip into your own hair.
+    // Three things are sold here and a shopper wants one of them: finished pieces that clip
+    // into your own hair, hair to braid with, and curly hair for afro textures.
     subcategories: {
-      defaultKey: "hair",
+      defaultKey: "braids",
       options: [
-        { key: "hair", labelKey: "hairExtensionsHair" },
-        { key: "accessories", labelKey: "hairExtensionsAccessories" },
+        { key: "clip-in", labelKey: "hairExtensionsClipIn" },
+        { key: "braids", labelKey: "hairExtensionsBraids" },
+        { key: "curls", labelKey: "hairExtensionsCurls" },
       ],
     },
   },

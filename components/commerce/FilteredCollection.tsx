@@ -77,7 +77,9 @@ export function FilteredCollection({
   const scoped = useMemo(
     () =>
       type && subcategories
-        ? products.filter((p) => subcategoryFor(p.handle, subcategories.defaultKey) === type)
+        ? products.filter(
+            (p) => (p.subcategory ?? subcategoryFor(p.handle, subcategories.defaultKey)) === type,
+          )
         : products,
     [products, type, subcategories],
   );

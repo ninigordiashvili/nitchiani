@@ -11,10 +11,9 @@ import { cn } from "@/lib/utils";
  * Inline "Size guide" link + modal. Self-contained — owns its own open state, scroll lock,
  * and ESC handler so it can drop in next to any variant picker label without prop-drilling.
  *
- * Single modal covers both bonnets (S/M/L by head circumference) and extension lengths
- * (inch / cm / where it falls on the body). The user reads the section that matters to them;
- * we don't try to detect product category and split the modal — keeps copy authoring simple
- * and works whether the product is a bonnet, an extension, or a future SKU we haven't named.
+ * Covers extension lengths (inch / cm / where it falls on the body). There is no bonnet
+ * table: bonnets come in one size, so a head-circumference chart would only suggest a choice
+ * the shopper doesn't have.
  */
 export function SizeGuideButton() {
   const t = useTranslations("product");
@@ -98,24 +97,6 @@ export function SizeGuideButton() {
 
           <div className="space-y-7 p-5 sm:p-6">
             <section>
-              <p className="label-eyebrow mb-3">{t("sizeGuideBonnet")}</p>
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="text-left text-[10px] tracking-[0.14em] uppercase opacity-60">
-                    <th className="pb-2 font-medium">{t("sizeGuideSize")}</th>
-                    <th className="pb-2 font-medium">{t("sizeGuideHeadCirc")}</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-black/10">
-                  <SizeRow size="S" measure={`52–55 ${cmUnit}`} />
-                  <SizeRow size="M" measure={`56–58 ${cmUnit}`} />
-                  <SizeRow size="L" measure={`59–62 ${cmUnit}`} />
-                </tbody>
-              </table>
-              <p className="mt-2 text-xs opacity-60">{t("sizeGuideBonnetHint")}</p>
-            </section>
-
-            <section>
               <p className="label-eyebrow mb-3">{t("sizeGuideLength")}</p>
               <table className="w-full text-sm">
                 <thead>
@@ -142,15 +123,6 @@ export function SizeGuideButton() {
         </div>
       </div>
     </>
-  );
-}
-
-function SizeRow({ size, measure }: { size: string; measure: string }) {
-  return (
-    <tr>
-      <td className="py-2 font-medium">{size}</td>
-      <td className="py-2 tabular-nums opacity-80">{measure}</td>
-    </tr>
   );
 }
 
