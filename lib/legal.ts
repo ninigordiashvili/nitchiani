@@ -1,34 +1,35 @@
 /**
  * Legal copy — Terms & Conditions, Privacy Policy, Refund/Returns Policy.
  *
- * IMPORTANT — all three are working drafts suitable for launch but **must be reviewed by a
- * Georgian lawyer** before being treated as binding. Lawyer should verify:
- *   - Terms §7 / Refund — confirm Right of Withdrawal wording matches the current statute
- *   - Terms §13 — confirm governing-law wording
- *   - Privacy lawful-basis claims and retention periods against the current GE data law
- *   - Privacy §10 (your rights) — confirm scope matches the GE Personal Data Protection Act
- *   - Whether any product category needs additional disclosures (cosmetics, hair tools, body
+ * Rewritten on 2026-11-03 from the owner's final text ("Nitchiani_2026-10-21.docx"). The
+ * Georgian is that document's wording; the English is a translation of it and must be kept in
+ * step with it — when the Georgian changes, change both. Neither has been reviewed by a
+ * Georgian lawyer; that review is still worth having before the pages are treated as binding.
  *
- * The Privacy Policy and Terms §7 were rewritten on 2026-10-07 for the delivery chain the
- * shop actually runs on: orders reach a courier through a delivery platform rather than going
- * to one carrier, so Privacy §4 names every recipient and §5 explains the chain. As the
- * controller we are the one who owes the customer that disclosure, so it is made at the point
- * of collection — the notice above the checkout submit button — and not only on this page.
+ * Three things the text commits the shop to, which the rest of the site has to honour:
+ *   - A 14-calendar-day right of withdrawal (it was 24 hours). Every other mention of the
+ *     return window — the cart's "how it works" sheet, the About page, page metadata — says
+ *     the same.
+ *   - Card payment only; no cash on delivery. Checkout hides cash on delivery and bank
+ *     transfer to match (see `SHOW_CASH_ON_DELIVERY` in CheckoutForm.tsx).
+ *   - The delivery chain: orders reach a courier through the QuickShipper platform, and
+ *     Privacy §5 names every recipient of the customer's data. As the controller we owe that
+ *     disclosure, so it is also made at the point of collection — the notice above the
+ *     checkout submit button — and not only on this page.
  *
- * One design decision a reviewer should know the reasoning for: the marketing tick at
- * checkout is separate from that notice, unticked by default and not a condition of buying,
- * because consent under the GE Personal Data Protection Act has to be specific and informed.
- * A single blanket "I agree" covering both the delivery transfers and marketing would be
+ * One design decision a reviewer should know the reasoning for: the marketing tick at checkout
+ * is separate from that notice, unticked by default and not a condition of buying, because
+ * consent under the Georgian Personal Data Protection Law has to be specific and informed. A
+ * single blanket "I agree" covering both the delivery transfers and marketing would be
  * neither. Keep the two apart if this file is rewritten. There is a local note on the
  * commercial background — see `docs/delivery-contract.local.md`, which is not committed.
  *
- * Entity details (legal name, registration ID, address) are NOT hardcoded here — they
- * come from `lib/business.ts` and are interpolated into the entity sections below.
- * Replace the placeholders in `business.ts` once, and every legal page + footer updates.
+ * Entity details (legal name, registration ID, address, email, phone) are NOT hardcoded
+ * here — they come from `lib/business.ts`, so one edit updates every legal page and the footer.
  *
- * Structured as an array of `{ headingEn, headingKa, bodyEn, bodyKa }` so the page can
- * render the right locale's sections without two `if` branches. Body paragraphs are split
- * by `\n\n` at render time.
+ * Structured as an array of `{ headingEn, headingKa, bodyEn, bodyKa }` so the page can render
+ * the right locale's sections without two `if` branches. Body paragraphs are split by `\n\n`
+ * at render time.
  */
 
 import { BUSINESS, businessAddress } from "./business";
@@ -40,317 +41,297 @@ export type LegalSection = {
   bodyKa: string;
 };
 
-export const TERMS_LAST_UPDATED = "2026-10-07";
+const EMAIL = BUSINESS.email;
+const PHONE = BUSINESS.phone;
+const ID = BUSINESS.registrationId;
+const NAME_KA = BUSINESS.legalName.ka;
+const NAME_EN = BUSINESS.legalName.en;
+const ADDRESS_KA = businessAddress("ka");
+const ADDRESS_EN = businessAddress("en");
+
+export const TERMS_LAST_UPDATED = "2026-11-03";
 
 export const TERMS_SECTIONS: LegalSection[] = [
   {
-    headingEn: "1. Acceptance of these terms",
-    headingKa: "1. ამ პირობების მიღება",
-    bodyEn:
-      "By browsing, placing an order on, or otherwise using nitchiani.shop (the \"Site\"), you confirm that you have read, understood and accepted these Terms & Conditions. If you do not accept them, please do not use the Site. We may update these terms from time to time; the version in force at the moment of your order is the one that applies to that order.",
-    bodyKa:
-      "nitchiani.shop-ის (\"საიტი\") გვერდის გადახედვით, შეკვეთის განთავსებით ან ნებისმიერი სხვა გამოყენებით თქვენ ადასტურებთ, რომ წაიკითხეთ, გაიგეთ და მიიღეთ წინამდებარე წესები და პირობები. თუ არ ეთანხმებით, გთხოვთ, არ ისარგებლოთ საიტით. ჩვენ შესაძლოა პერიოდულად განვაახლოთ ეს პირობები — შეკვეთის განთავსების მომენტისთვის მოქმედი ვერსია არის ის, რომელიც გავრცელდება მოცემულ შეკვეთაზე.",
+    headingEn: "1. Seller",
+    headingKa: "1. გამყიდველი",
+    bodyEn: `The Site is operated, and the goods are sold, by ${NAME_EN} (individual entrepreneur, identification code ${ID}), address: ${ADDRESS_EN} ("we"). Contact: ${EMAIL}, phone / WhatsApp ${PHONE}.`,
+    bodyKa: `საიტს მართავს და საქონელს ყიდის ${NAME_KA} (ინდივიდუალური მეწარმე, საიდენტიფიკაციო კოდი ${ID}), მისამართი: ${ADDRESS_KA} („ჩვენ“). კონტაქტი: ${EMAIL}, ტელეფონი / WhatsApp ${PHONE}.`,
   },
   {
-    headingEn: "2. About us",
-    headingKa: "2. ჩვენ შესახებ",
+    headingEn: "2. Who can order",
+    headingKa: "2. ვინ შეიძლება შეუკვეთოს",
     bodyEn:
-      `Nitchiani is an online shop based in Tbilisi, Georgia, selling synthetic hair for afro curls and braids, hair-care products and accessories. The Site is operated by ${BUSINESS.legalName.en}, an individual entrepreneur registered in Georgia (ID code ${BUSINESS.registrationId}), with its registered address at ${businessAddress("en")}. You can reach us at ${BUSINESS.email} or via WhatsApp using the number displayed in the site footer.`,
+      "Anyone aged 18 or over can place an order. A person under 18 can place an order only with the consent of a parent or other legal representative, in accordance with the Civil Code of Georgia. You are responsible for the accuracy of the details you provide (name, address, phone, email).",
     bodyKa:
-      `Nitchiani არის თბილისში დაფუძნებული ონლაინ მაღაზია, რომელიც ყიდის ხელოვნურ თმას აფრო ხვეულებისა და ნაწნავებისთვის, თმის მოვლის საშუალებებსა და აქსესუარებს. საიტს ოპერირებას უწევს ${BUSINESS.legalName.ka} (ინდივიდუალური მეწარმე, საიდენტიფიკაციო კოდი ${BUSINESS.registrationId}), იურიდიული მისამართი: ${businessAddress("ka")}. დაგვიკავშირდით — ${BUSINESS.email} ან WhatsApp ნომრით, რომელიც გამოქვეყნებულია საიტის ფუტერში.`,
+      "შეკვეთის გაფორმება შეუძლია 18 წელს მიღწეულ პირს. 18 წლამდე პირს შეკვეთის გაფორმება შეუძლია მხოლოდ მშობლის ან სხვა კანონიერი წარმომადგენლის თანხმობით, საქართველოს სამოქალაქო კოდექსის შესაბამისად. თქვენ პასუხისმგებელი ხართ მითითებული მონაცემების (სახელი, მისამართი, ტელეფონი, ელ-ფოსტა) სისწორეზე.",
   },
   {
-    headingEn: "3. Eligibility",
-    headingKa: "3. სარგებლობის უფლება",
+    headingEn: "3. Products and prices",
+    headingKa: "3. პროდუქტები და ფასები",
     bodyEn:
-      "You must be at least 18 years old to place an order, or place the order with the consent of a parent or legal guardian if you are under 18. By placing an order you confirm that the information you provide (name, address, phone, email) is accurate and that you are authorised to use the payment method you select.",
+      "Each product page shows the product's main characteristics, its price and, where relevant, the variant (colour, length). A slight difference in colour in a photo may be caused by your screen settings. Prices are in Georgian lari (₾) and include all taxes; the delivery fee is shown separately at checkout, before you confirm the order. An amount shown in another currency is for information only. The price does not change after you order. If a price was shown by an obvious technical error, we will tell you and you may cancel the order — in that case we refund what you paid in full. The conditions of a discount code (validity period, single use, etc.) are stated with the code.",
     bodyKa:
-      "შეკვეთის განთავსების უფლება გაქვთ თუ ხართ მინიმუმ 18 წლის, ან თუ ხართ 18 წლამდე — მშობლის ან კანონიერი წარმომადგენლის თანხმობით. შეკვეთის განთავსებით თქვენ ადასტურებთ, რომ მოწოდებული ინფორმაცია (სახელი, მისამართი, ტელეფონი, ფოსტა) არის სწორი და უფლებამოსილი ხართ ისარგებლოთ მითითებული გადახდის მეთოდით.",
+      "პროდუქტის გვერდზე მითითებულია მისი ძირითადი მახასიათებლები, ფასი და, საჭიროების შემთხვევაში, ვარიანტი (ფერი, სიგრძე). ფოტოზე ფერის მცირე განსხვავება შესაძლოა გამოწვეული იყოს ეკრანის პარამეტრებით. ფასები მითითებულია ლარში (₾) და მოიცავს ყველა გადასახადს; მიწოდების საფასური ცალკე ჩანს გადახდის გვერდზე, შეკვეთის დადასტურებამდე. სხვა ვალუტაში ნაჩვენები თანხა მხოლოდ საცნობაროა. შეკვეთის შემდეგ ფასი არ იცვლება. თუ ფასი აშკარა ტექნიკური შეცდომით იყო მითითებული, შეგატყობინებთ და შეგიძლიათ შეკვეთა გააუქმოთ - ასეთ შემთხვევაში გადახდილ თანხას სრულად დაგიბრუნებთ. ფასდაკლების კოდის პირობები (მოქმედების ვადა, ერთჯერადობა და სხვ.) მითითებულია კოდთან ერთად.",
   },
   {
-    headingEn: "4. Products, descriptions and prices",
-    headingKa: "4. პროდუქტები, აღწერა და ფასები",
+    headingEn: "4. Forming the contract",
+    headingKa: "4. ხელშეკრულების დადება",
     bodyEn:
-      "We make reasonable efforts to display product colours, materials and dimensions accurately, but slight variations may occur due to monitor calibration and the hand-finished nature of our items. Prices are shown in Georgian Lari (₾) by default; secondary currency display (e.g., USD) is for reference only and the GEL amount at checkout is the binding price. We reserve the right to correct pricing errors and to limit quantities per order. Promotional codes are subject to the conditions of each promotion (minimum spend, dates, single-use, etc.).",
+      "Listing a product on the Site is an invitation to make an offer. By pressing the \"Order with obligation to pay\" / payment-confirmation button you make an offer. The contract is concluded when we send you an order confirmation (the acceptance) by email or WhatsApp. If we cannot fulfil the order (for example, the stock has run out), we will tell you immediately and refund what you paid in full no later than 14 calendar days later.",
     bodyKa:
-      "ჩვენ მაქსიმალურად ვცდილობთ ფერების, მასალებისა და ზომების ზუსტ წარდგენას, თუმცა მცირე გადახრები შესაძლებელია მონიტორის კალიბრაციისა და ხელით დამზადებული ნივთების ბუნებიდან გამომდინარე. ფასები ნაჩვენებია ლარში (₾); დამატებითი ვალუტა (მაგ., USD) გამოიყენება მხოლოდ საცნობარო მიზნებისთვის — გადახდისას მოქმედი თანხა არის ლარში. ჩვენ ვიტოვებთ უფლებას, გავასწოროთ ფასებში დაშვებული შეცდომა და დავადგინოთ ერთ შეკვეთაში ერთეულთა მაქსიმალური რაოდენობა. პრომო-კოდები ექვემდებარება მათ მიერ დადგენილ პირობებს (მინიმალური თანხა, ვადები, ერთჯერადი გამოყენება და სხვ.).",
+      "საიტზე პროდუქტის განთავსება არის მოწვევა შეთავაზების გასაკეთებლად. ღილაკზე „შეკვეთა გადახდის ვალდებულებით“/გადახდის დადასტურებით თქვენ აკეთებთ შეთავაზებას (ოფერტს). ხელშეკრულება დადებულად ითვლება, როდესაც ელ-ფოსტით ან WhatsApp-ით გამოგიგზავნით შეკვეთის დადასტურებას (აქცეპტს). თუ შეკვეთას ვერ შევასრულებთ (მაგ., მარაგი ამოიწურა), შეგატყობინებთ დაუყოვნებლივ და გადახდილ თანხას სრულად დაგიბრუნებთ არაუგვიანეს 14 კალენდარული დღისა.",
   },
   {
-    headingEn: "5. Orders and acceptance",
-    headingKa: "5. შეკვეთა და მიღება",
+    headingEn: "5. Payment",
+    headingKa: "5. გადახდა",
     bodyEn:
-      "Placing an order through the Site is an offer to buy the listed items at the displayed price. We confirm receipt of your order by email or WhatsApp within a few hours. The contract is formed when we send that confirmation; until then we may, at our discretion, decline orders (e.g., out-of-stock items, suspected fraud, payment that does not settle).",
+      "Payment is made by Visa or Mastercard card, on the secure payment page of Bank of Georgia or TBC Bank. Card details are not stored on our servers. Cash payment on delivery is not accepted.",
     bodyKa:
-      "შეკვეთის განთავსება საიტის მეშვეობით წარმოადგენს ნივთის შესყიდვის შეთავაზებას მითითებული ფასით. ჩვენ ვადასტურებთ შეკვეთის მიღებას ფოსტით ან WhatsApp-ით რამდენიმე საათში. ხელშეკრულება ფორმდება ამ დადასტურების გაგზავნით; მანამდე ჩვენ შეგვიძლია, ჩვენი შეხედულებისამებრ, უარი ვთქვათ შეკვეთის შესრულებაზე (მაგ., მარაგი ამოწურულია, თაღლითობის ეჭვი, ანგარიშსწორების შეცდომა).",
+      "გადახდა ხდება Visa ან Mastercard ბარათით, საქართველოს ბანკის ან თიბისი ბანკის უსაფრთხო გადახდის გვერდზე. ბარათის მონაცემები ჩვენს სერვერებზე არ ინახება. ნაღდი ანგარიშსწორება მიწოდებისას არ ხორციელდება.",
   },
   {
-    headingEn: "6. Payment",
-    headingKa: "6. გადახდა",
+    headingEn: "6. Delivery",
+    headingKa: "6. მიწოდება",
     bodyEn:
-      "We accept the payment methods displayed at checkout, which are Visa and Mastercard cards, paid through Bank of Georgia or TBC Bank. We do not accept cash on delivery. For card payments, processing is handled by the respective payment provider and is subject to their terms.",
+      "Orders are dispatched from Tbilisi. The estimated delivery time is 1–3 working days in Tbilisi and 3–7 working days in the regions. In any case, unless we agree another time, we will deliver the goods no later than 30 calendar days after the contract is concluded. If we cannot deliver within that time, you may set us an additional reasonable period and, once it has passed, withdraw from the contract and demand a full refund of what you paid.\n\n" +
+      "Delivery is handled with the help of the platform LLC \"QuickShipper\", which passes the order to one of the courier companies available. The choice of courier does not change our responsibility to you: the risk of loss or damage passes to you only when you, or a person you name (other than the courier), take delivery of the item.\n\n" +
+      "If delivery fails because of a wrong or incomplete address or map pin that you gave, or because the recipient is not found at the address, the cost of the repeat delivery is yours; we will tell you the amount in advance.\n\n" +
+      `You can collect your order free of charge at ${BUSINESS.street.en}, Tbilisi ("I'll pick it up in Tbilisi"). In that case the risk passes to you when you collect the order.`,
     bodyKa:
-      "ჩვენ ვიღებთ გადახდის იმ მეთოდებს, რომლებიც ნაჩვენებია გადახდის გვერდზე: Visa და Mastercard ბარათები Bank of Georgia-ს ან TBC ბანკის მეშვეობით. ნაღდი ფულით გადახდა მიწოდებისას არ ხორციელდება. ბარათით გადახდა მუშავდება შესაბამისი გადახდის სერვისის მიერ და ექვემდებარება მათ პირობებს.",
+      "შეკვეთა იგზავნება თბილისიდან. მიწოდების სავარაუდო ვადაა: თბილისში 1-3 სამუშაო დღე, რეგიონებში 3-7 სამუშაო დღე. ნებისმიერ შემთხვევაში, თუ სხვა ვადაზე არ შევთანხმდით, საქონელს მოგაწვდით ხელშეკრულების დადებიდან არაუგვიანეს 30 კალენდარული დღისა. თუ ამ ვადაში ვერ მოგაწოდებთ, შეგიძლიათ განგვისაზღვროთ დამატებითი გონივრული ვადა, ხოლო მისი გასვლის შემდეგ უარი თქვათ ხელშეკრულებაზე და მოითხოვოთ გადახდილი თანხის სრულად დაბრუნება.\n\n" +
+      "მიწოდებაში გვეხმარება პლატფორმა შპს „ქვიქშიფერი“, რომელიც შეკვეთას გადასცემს ერთ-ერთ ხელმისაწვდომ კურიერ-კომპანიას. კურიერის შერჩევა არ ცვლის ჩვენს პასუხისმგებლობას თქვენ წინაშე: ნივთის დაკარგვის ან დაზიანების რისკი თქვენზე გადადის მხოლოდ მაშინ, როდესაც ნივთს თქვენ ან თქვენ მიერ მითითებული პირი (კურიერის გარდა) ჩაიბარებს.\n\n" +
+      "თუ მიწოდება ვერ შედგა თქვენ მიერ მითითებული არასწორი ან არასრული მისამართის, რუკის პინის გამო, ან, თუკი ადრესატი მისამართზე არ გვხვდება, ხელახალი მიწოდების ხარჯი თქვენ გეკისრებათ, ამ ხარჯის ოდენობას წინასწარ შეგატყობინებთ.\n\n" +
+      `შეკვეთის გატანა შესაძლებელია უფასოდ, მისამართზე ${BUSINESS.street.ka}, თბილისი („თვითონ გავიტან თბილისში“). ამ შემთხვევაში რისკი თქვენზე გადადის შეკვეთის გატანისას.`,
   },
   {
-    headingEn: "7. Shipping and delivery",
-    headingKa: "7. მიწოდება",
+    headingEn: "7. Right to withdraw from the contract (14 days)",
+    headingKa: "7. ხელშეკრულებაზე უარის თქმის უფლება (14 დღე)",
     bodyEn:
-      `Orders are packed and dispatched from Tbilisi within 1–3 business days. Standard delivery inside Tbilisi typically arrives in 1–3 business days; deliveries to the broader region of Georgia take 3–7 business days. International orders, where available, are quoted separately. Risk of loss passes to you on delivery to the address you provided. Delivery is organised through QuickShipper, a delivery platform that dispatches your order to one of the courier companies available at the time of ordering; that courier is an independent company and its own terms apply to the carriage. Those terms differ between couriers and may set limits on parcel weight, volume and packaging, and their own rules on cancellation, return and a second delivery attempt. We will tell you which courier was assigned on request. You will receive an SMS with a tracking link once the order is dispatched. If no one is available at the address, the courier will follow their own retry policy, after which the order may be returned to us. If the delivery address or map pin you supplied is wrong or incomplete — including an address you set yourself from a link we sent you — the cost of the repeat delivery is yours, since neither we nor the platform can verify an address against reality. You can also collect your order free of charge from ${businessAddress("en")}: choose "Pick up in Tbilisi" at checkout, where the address and a contact phone number are shown. For pickup orders, risk of loss passes to you when you collect the order.`,
+      "If you buy as a consumer (not for business purposes), under the Georgian Law on Consumer Rights Protection you may withdraw from the contract within 14 calendar days, without giving a reason. The period runs from the day you, or a person you name (other than the courier), received the item; where several items are delivered separately, from receipt of the last one.\n\n" +
+      `To use the right, send us a statement before the period ends by email (${EMAIL}) or WhatsApp (${PHONE}). You may use the model form at the end of these terms, but you do not have to. We will confirm receipt of your statement immediately.\n\n` +
+      "Return the item to us, or hand it to a person we name, without delay and no later than 14 calendar days after notifying us that you withdraw. You pay the direct cost of returning the item.\n\n" +
+      "We will refund what you paid, including the original standard delivery fee, in full and no later than 14 calendar days after receiving your statement, by the same means of payment you used, with no additional fee. If you chose a delivery dearer than the standard one, we do not refund the difference. We may hold the refund until we have received the item or you have shown proof that you sent it — whichever is earlier.\n\n" +
+      "You may examine the item as you would in a shop. If the item has lost value because it was handled more than needed to check its nature, characteristics and function (for example, synthetic hair that was braided, cut, washed or brushed), you are responsible for that loss in value.\n\n" +
+      "The right of withdrawal does not apply to sealed goods that cannot be returned for health or hygiene reasons if the seal was broken after delivery (for example wax, leave-in conditioner, oils, gels), nor to goods made to your individual specification. Synthetic hair is not covered by this exception: it can be returned even if the packaging has been opened, as long as it has not been used.",
     bodyKa:
-      `შეკვეთები იგზავნება თბილისიდან 1-3 სამუშაო დღეში. სტანდარტული მიწოდება თბილისში ხდება 1-3 სამუშაო დღეში; სხვა რეგიონებში მიწოდება — 3-7 სამუშაო დღეში. საერთაშორისო შეკვეთები (სადაც ხელმისაწვდომია) იანგარიშება ცალკე. დაკარგვის რისკი თქვენზე გადადის ნივთის ჩაბარების მომენტში მითითებულ მისამართზე. მიწოდება ორგანიზდება ქვიქშიფერის — მიწოდების პლატფორმის — მეშვეობით, რომელიც შეკვეთას გადასცემს შეკვეთის მომენტში ხელმისაწვდომ ერთ-ერთ კურიერ-კომპანიას; ეს კურიერი დამოუკიდებელი კომპანიაა და გადაზიდვაზე მისი პირობები მოქმედებს. ეს პირობები კურიერებს შორის განსხვავდება და შესაძლოა დააწესოს შეზღუდვები გზავნილის წონაზე, მოცულობასა და შეფუთვაზე, ასევე საკუთარი წესები გაუქმების, უკან დაბრუნებისა და ხელახალი მიტანის თაობაზე. მოთხოვნისას გეტყვით, რომელი კურიერი მიემაგრა შეკვეთას. შეკვეთის გაგზავნის შემდეგ მიიღებთ SMS-ს tracking ბმულით. თუ მისამართზე არავინ იქნება, კურიერი იმოქმედებს თავისი წესების შესაბამისად — შემდგომში შეკვეთა შესაძლოა დაბრუნდეს ჩვენთან. თუ თქვენ მიერ მითითებული მისამართი ან რუკის პინი არასწორი ან არასრულია — მათ შორის მაშინაც, როცა მისამართს ჩვენგან გამოგზავნილი ბმულით თავად მიუთითებთ — ხელახალი მიტანის ღირებულება თქვენ ეკისრებათ, რადგან არც ჩვენ, არც პლატფორმას არ გვაქვს მისამართის რეალობასთან შედარების შესაძლებლობა. შეკვეთის გატანა ასევე შეგიძლიათ უფასოდ, მისამართზე ${businessAddress("ka")} — გადახდისას აირჩიეთ „თვითონ გავიტან თბილისში“; მისამართი და საკონტაქტო ტელეფონი იქვეა მითითებული. ამ შემთხვევაში დაკარგვის რისკი თქვენზე გადადის შეკვეთის გატანის მომენტში.`,
+      "თუ ნივთს ყიდულობთ როგორც მომხმარებელი (არა სამეწარმეო მიზნით), „მომხმარებლის უფლებების დაცვის შესახებ“ საქართველოს კანონის შესაბამისად, შეგიძლიათ უარი თქვათ ხელშეკრულებაზე 14 კალენდარული დღის განმავლობაში, მიზეზის მითითების გარეშე. ვადა აითვლება იმ დღიდან, როდესაც თქვენ ან თქვენ მიერ მითითებულმა პირმა (კურიერის გარდა) ნივთი მიიღეთ; რამდენიმე ნივთის ცალ-ცალკე მიწოდებისას, ბოლო ნივთის მიღებიდან.\n\n" +
+      `უფლებით სარგებლობისთვის ვადის გასვლამდე გამოგვიგზავნეთ განცხადება ელ-ფოსტით (${EMAIL}) ან WhatsApp-ით (${PHONE}). შეგიძლიათ გამოიყენოთ ამ პირობების ბოლოს მოცემული ნიმუშის ფორმა, თუმცა ეს სავალდებულო არ არის. განცხადების მიღებას დაუყოვნებლივ დაგიდასტურებთ.\n\n` +
+      "ნივთი დაგვიბრუნეთ ან გადაეცით ჩვენ მიერ მითითებულ პირს დაუყოვნებლივ, არაუგვიანეს 14 კალენდარული დღისა უარის თქმის შესახებ შეტყობინებიდან. ნივთის დაბრუნების პირდაპირ ხარჯს იხდით თქვენ.\n\n" +
+      "გადახდილ თანხას, მათ შორის თავდაპირველი სტანდარტული მიწოდების საფასურს, დაგიბრუნებთ სრულად, არაუგვიანეს 14 კალენდარული დღისა თქვენი განცხადების მიღებიდან, იმავე გადახდის საშუალებით, რომლითაც გადაიხადეთ, დამატებითი საკომისიოს გარეშე. თუ თავად აირჩიეთ სტანდარტულზე ძვირი მიწოდება, სხვაობას არ ვანაზღაურებთ. შეგვიძლია თანხის დაბრუნება შევაჩეროთ, სანამ ნივთს არ მივიღებთ ან სანამ არ წარმოადგენთ მისი გამოგზავნის დამადასტურებელ დოკუმენტს - რომელიც უფრო ადრე მოხდება.\n\n" +
+      "ნივთის დათვალიერება შეგიძლიათ ისე, როგორც ამას მაღაზიაში გააკეთებდით. თუ ნივთის ღირებულება შემცირდა იმის გამო, რომ ის მისი ბუნების, მახასიათებლებისა და ფუნქციონირების შესამოწმებლად საჭიროზე მეტად იქნა გამოყენებული (მაგ., ხელოვნური თმა დაწნული, შეჭრილი, დაბანილი ან დავარცხნილი), ღირებულების ამ შემცირებაზე პასუხისმგებელი ხართ თქვენ.\n\n" +
+      "უარის თქმის უფლება არ ვრცელდება დალუქულ საქონელზე, რომლის დაბრუნებაც ჯანმრთელობის დაცვის ან ჰიგიენური მიზეზებით არ შეიძლება, თუ მიწოდების შემდეგ ლუქი მოიხსნა (მაგ., ცვილი, ლივ-ინ კონდიციონერი, ზეთები, გელები), აგრეთვე მომხმარებლის მითითებით ინდივიდუალურად დამზადებულ საქონელზე. ხელოვნური თმა ამ გამონაკლისს არ მიეკუთვნება და გახსნილი შეფუთვის შემთხვევაშიც ბრუნდება, თუ გამოყენებული არ არის.",
   },
   {
-    headingEn: "8. Right of withdrawal (24 hours)",
-    headingKa: "8. უარის თქმის უფლება (24 საათი)",
+    headingEn: "8. Faulty, damaged or incorrect items",
+    headingKa: "8. ნაკლიანი, დაზიანებული ან არასწორი ნივთი",
     bodyEn:
-      `Under the consumer protection legislation of Georgia, if you are a consumer (not buying for business purposes) you may withdraw from a distance-selling contract within 24 hours of receiving the goods, without giving any reason. To exercise this right, notify us by email at ${BUSINESS.email} or WhatsApp before the 24-hour window closes, and return the item in its original, unused, resaleable condition with all packaging. Return shipping is the customer's responsibility unless the item arrived defective. Once we receive the returned item we issue the refund using the original payment method within 14 days. Hair extensions can be returned even if the package has been opened, as long as the hair hasn't been used. Hygiene-sensitive items — opened hair-care products such as wax or leave-in conditioner, and used hair tools — are not eligible for return for hygiene reasons; this exception is allowed under the same legislation.`,
+      "We are obliged to deliver goods that conform to the contract and are free of defects. If an item is damaged, faulty or different from what you ordered, you may, in accordance with the law, demand that it be repaired or replaced, that the price be reduced, or that the contract be cancelled with a full refund, and also compensation for damage. In that case we cover all delivery and return costs. Please tell us within a reasonable time of finding the fault and, if you can, send a photo — this helps us settle the matter quickly, but it does not limit your statutory rights.",
     bodyKa:
-      `საქართველოს მომხმარებლის უფლებების დაცვის შესახებ კანონმდებლობის შესაბამისად, თუ თქვენ ხართ მომხმარებელი (არ ყიდულობთ კომერციული მიზნებისთვის), შეგიძლიათ უარი თქვათ დისტანციური ნასყიდობის ხელშეკრულებაზე ნივთის მიღებიდან 24 საათის განმავლობაში, მიზეზის მითითების გარეშე. ამ უფლების გამოყენებისთვის გვაცნობეთ ფოსტით ${BUSINESS.email} ან WhatsApp-ით 24-საათიანი ვადის გასვლამდე და დააბრუნეთ ნივთი თავდაპირველ, გამოუყენებელ, გასაყიდი მდგომარეობით, ყველა შესაფუთი ნივთით ერთად. დაბრუნების ღირებულება ეკისრება მომხმარებელს, გარდა იმ შემთხვევებისა, როდესაც ნივთი ჩამოვიდა დეფექტით. დაბრუნებული ნივთის მიღების შემდეგ თანხას დაგიბრუნებთ თავდაპირველი გადახდის მეთოდით 14 დღის განმავლობაში. ხელოვნური თმის დაბრუნება შესაძლებელია შეფუთვის გახსნის შემდეგაც, თუ თმა არ არის გამოყენებული. ჰიგიენისადმი მგრძნობიარე ნივთები — გახსნილი თმის მოვლის საშუალებები, მაგალითად ცვილი ან ლივ-ინ კონდიციონერი, და გამოყენებული ხელსაწყოები — არ ექვემდებარება დაბრუნებას ჰიგიენური მიზეზებიდან გამომდინარე; ეს გამონაკლისი ნებადართულია იმავე კანონმდებლობით.`,
+      "ჩვენ ვალდებული ვართ მოგაწოდოთ ხელშეკრულების შესაბამისი, უნაკლო ნივთი. თუ ნივთი დაზიანებული, ნაკლიანი ან შეკვეთისგან განსხვავებულია, შეგიძლიათ კანონის შესაბამისად მოითხოვოთ ნივთის შეკეთება ან შეცვლა, ფასის შემცირება ან ხელშეკრულებაზე უარის თქმა და თანხის სრულად დაბრუნება, ასევე ზიანის ანაზღაურება. ამ შემთხვევაში მიწოდებისა და დაბრუნების ყველა ხარჯს ვფარავთ ჩვენ. გთხოვთ, ნაკლის აღმოჩენისთანავე, გონივრულ ვადაში გვაცნობოთ და, შესაძლებლობის შემთხვევაში, ფოტოც გამოგვიგზავნოთ - ეს დაგვეხმარება საკითხის სწრაფად მოგვარებაში, თუმცა ეს თქვენს კანონით გათვალისწინებულ უფლებებს არ ზღუდავს.",
   },
   {
-    headingEn: "9. Defective or incorrect items",
-    headingKa: "9. დეფექტიანი ან არასწორი ნივთები",
+    headingEn: "9. Intellectual property",
+    headingKa: "9. ინტელექტუალური საკუთრება",
     bodyEn:
-      "If the item arrives damaged, defective or different from what you ordered, contact us within 7 days of delivery with photos. We will arrange a replacement at our cost or a full refund (including return shipping) at your choice. Your statutory rights as a consumer in Georgia are not affected by this policy.",
+      "The content on the Site, including the Nitchiani name and logo, photographs and texts, is our property or used under licence, and is protected by law. Using it for commercial purposes without our prior written permission is not allowed. Personal, non-commercial use (for example, sharing a product link) is allowed.",
     bodyKa:
-      "თუ ნივთი ჩამოვიდა დაზიანებული, დეფექტიანი ან არ ემთხვევა შეკვეთას, დაგვიკავშირდით ჩაბარებიდან 7 დღის განმავლობაში ფოტოებთან ერთად. ჩვენ მოვაგვარებთ ჩანაცვლებას ჩვენი ხარჯით ან სრულ ანაზღაურებას (დაბრუნების ხარჯის ჩათვლით) თქვენი არჩევანის შესაბამისად. ეს პოლიტიკა არ ცვლის თქვენს კანონით გათვალისწინებულ უფლებებს მომხმარებლის სტატუსით საქართველოში.",
+      "საიტზე განთავსებული შინაარსი, მათ შორის Nitchiani - ის სახელი და ლოგო, ფოტოები და ტექსტები, ჩვენი საკუთრებაა ან გამოიყენება ლიცენზიით და დაცულია კანონით. მისი კომერციული მიზნით გამოყენება ჩვენი წინასწარი წერილობითი ნებართვის გარეშე დაუშვებელია. პირადი, არაკომერციული გამოყენება (მაგ., პროდუქტის ბმულის გაზიარება) ნებადართულია.",
   },
   {
-    headingEn: "10. Intellectual property",
-    headingKa: "10. ინტელექტუალური საკუთრება",
+    headingEn: "10. Acceptable use of the Site",
+    headingKa: "10. საიტის დასაშვები გამოყენება",
     bodyEn:
-      "All content on the Site — including the Nitchiani name and logo, product photography, copy, illustrations and editorial material — is owned by us or used under licence and is protected by Georgian and international intellectual-property law. You may not reproduce, redistribute or use any of it for commercial purposes without our prior written consent. Personal, non-commercial use (sharing a product page with a friend, screenshots for personal reference, etc.) is welcome.",
+      "It is forbidden to use the Site for fraudulent orders, for using someone else's means of payment without permission, for giving false data, for disrupting the Site's operation, or for mass copying of material by automated means (scrapers, bots). In case of such a breach we may restrict access to the Site; this does not affect your lawful rights under a contract already concluded.",
     bodyKa:
-      "საიტზე განთავსებული ყველა შინაარსი — მათ შორის Nitchiani-ის სახელი და ლოგო, პროდუქტის ფოტოები, ტექსტი, ილუსტრაციები და სარედაქციო მასალა — წარმოადგენს ჩვენს საკუთრებას ან გამოიყენება ლიცენზიის საფუძველზე და დაცულია საქართველოს და საერთაშორისო ინტელექტუალური საკუთრების კანონმდებლობით. მათი გადაბეჭდვა, გავრცელება ან კომერციული მიზნებისთვის გამოყენება ჩვენი წინასწარი წერილობითი ნებართვის გარეშე აკრძალულია. პირადი, არაკომერციული გამოყენება (პროდუქტის გვერდის გაზიარება მეგობარს, სკრინშოტი პირადი მიზნით) ნებადართულია.",
+      "აკრძალულია საიტის გამოყენება თაღლითური შეკვეთის, სხვისი გადახდის საშუალების უნებართვოდ გამოყენების, ცრუ მონაცემების მითითების, საიტის მუშაობის შეფერხების ან ავტომატური საშუალებებით (სკრეიპერი, ბოტი) მასალის მასობრივი კოპირების მიზნით. ასეთი დარღვევისას შეგვიძლია შევზღუდოთ საიტზე წვდომა, ეს არ ეხება უკვე დადებული ხელშეკრულებიდან თქვენს კანონიერ უფლებებს.",
   },
   {
-    headingEn: "11. Acceptable use",
-    headingKa: "11. დასაშვები გამოყენება",
+    headingEn: "11. Liability",
+    headingKa: "11. პასუხისმგებლობა",
     bodyEn:
-      "You agree not to use the Site to: place fraudulent orders or use unauthorised payment methods; submit false personal information; attempt to interfere with the Site's operation or security; or use any automated means (scrapers, bots) to access or copy material from the Site without our prior written permission. We may suspend access for any user who breaches these terms.",
+      "We are liable as the law provides. Our liability is not limited for damage caused intentionally or by gross negligence, for injury to life, health or body, for your rights in respect of faulty goods, or in any case where the law does not permit liability to be limited. We are not liable for damage caused by circumstances beyond our control (force majeure), or for damage we could not reasonably have foreseen when the contract was concluded.",
     bodyKa:
-      "თქვენ თანხმდებით, რომ არ გამოიყენებთ საიტს: თაღლითური შეკვეთების განთავსების ან არაუფლებამოსილი გადახდის მეთოდის გამოყენების მიზნით; ცრუ პერსონალური ინფორმაციის წარდგენით; საიტის მუშაობის ან უსაფრთხოების შეფერხების მცდელობით; ან რაიმე ავტომატური საშუალებებით (სკრეიპერი, ბოტი) საიტიდან მასალის წვდომის ან კოპირების მიზნით ჩვენი წინასწარი წერილობითი ნებართვის გარეშე. ჩვენ შეგვიძლია შევაჩეროთ წვდომა იმ მომხმარებლისთვის, ვინც დაარღვევს ამ პირობებს.",
+      "ჩვენ პასუხს ვაგებთ კანონის შესაბამისად. ჩვენი პასუხისმგებლობა არ იზღუდება განზრახ ან უხეში გაუფრთხილებლობით მიყენებულ ზიანზე, სიცოცხლის, ჯანმრთელობის ან სხეულის დაზიანებაზე, ნაკლიან საქონელთან დაკავშირებულ თქვენს უფლებებზე და იმ შემთხვევებზე, როდესაც პასუხისმგებლობის შეზღუდვა კანონით დაუშვებელია. ჩვენ არ ვაგებთ პასუხს ზიანზე, რომელიც გამოწვეულია ჩვენი კონტროლის მიღმა არსებული გარემოებებით (დაუძლეველი ძალა), ან ზიანზე, რომელსაც ხელშეკრულების დადებისას გონივრულად ვერ გავითვალისწინებდით.",
   },
   {
-    headingEn: "12. Limitation of liability",
-    headingKa: "12. პასუხისმგებლობის შეზღუდვა",
+    headingEn: "12. Changes to the terms",
+    headingKa: "12. პირობების ცვლილება",
     bodyEn:
-      "To the extent permitted by Georgian law, our total liability for any claim arising out of or relating to an order or your use of the Site is limited to the amount you paid for the order in question. We are not responsible for indirect, incidental or consequential losses (e.g., loss of time, missed deadlines, third-party costs). Nothing in this clause limits liability for death, personal injury caused by negligence, fraud or any other matter that cannot lawfully be excluded.",
+      "These terms may be reviewed and updated. The version in force when you place your order applies to that order.",
     bodyKa:
-      "საქართველოს კანონმდებლობით დაშვებული ფარგლების შესაბამისად, ჩვენი მთლიანი პასუხისმგებლობა შეკვეთასთან ან საიტის გამოყენებასთან დაკავშირებული ნებისმიერი მოთხოვნისთვის შემოიფარგლება მოცემული შეკვეთისთვის გადახდილი თანხით. ჩვენ არ ვართ პასუხისმგებელი ირიბი, შემთხვევითი ან თანმდევი ზიანებისთვის (მაგ., დაკარგული დრო, გაცდენილი ვადები, მესამე მხარის ხარჯები). ეს დებულება არ ზღუდავს პასუხისმგებლობას სიკვდილზე, გაუფრთხილებლობით გამოწვეულ ჯანმრთელობის ზიანზე, თაღლითობაზე ან სხვა საკითხებზე, რომელთა გამორიცხვაც კანონით აკრძალულია.",
+      "წარმოდგენილი პირობები, შესაძლოა, დაექვემდებაროს გადახედვას და განახლებას. თქვენს შეკვეთაზე ვრცელდება ის ვერსია, რომელიც შეკვეთის გაფორმებისას მოქმედებდა.",
   },
   {
-    headingEn: "13. Governing law and jurisdiction",
-    headingKa: "13. გამოყენებადი სამართალი და იურისდიქცია",
+    headingEn: "13. Complaints and disputes",
+    headingKa: "13. საჩივრები და დავები",
     bodyEn:
-      "These terms are governed by the laws of Georgia. Any dispute that we cannot resolve in good faith through direct communication will be referred to the courts of Tbilisi, Georgia. If you are a consumer resident outside Georgia, your statutory rights under your home country's consumer law are not affected.",
+      `You can submit a complaint by email (${EMAIL}) or WhatsApp. We will confirm that we received it and answer in writing within a reasonable time, no later than 14 calendar days.\n\n` +
+      "These terms are governed by the law of Georgia. A dispute that cannot be settled by negotiation will be heard by the general courts of Georgia, under the statutory rules of jurisdiction. This provision does not take away rights you have under the mandatory consumer-protection rules of your country of residence.",
     bodyKa:
-      "ეს პირობები რეგულირდება საქართველოს კანონმდებლობით. ნებისმიერი დავა, რომელსაც ვერ მოვაგვარებთ პირდაპირი კომუნიკაციით კეთილსინდისიერი მცდელობით, განიხილება თბილისის სასამართლოში. თუ ხართ მომხმარებელი საქართველოს ფარგლებს გარეთ, თქვენი ქვეყნის მომხმარებლის უფლებების კანონით გათვალისწინებული უფლებები არ იცვლება.",
+      `საჩივარი შეგიძლიათ წარმოადგინოთ ელ-ფოსტით (${EMAIL}) ან WhatsApp-ით. საჩივრის მიღებას დაგიდასტურებთ და წერილობით გიპასუხებთ გონივრულ ვადაში, არაუგვიანეს 14 კალენდარული დღისა.\n\n` +
+      "ამ პირობებზე ვრცელდება საქართველოს კანონმდებლობა. დავა, რომელიც მოლაპარაკებით ვერ მოგვარდება, განიხილება საქართველოს საერთო სასამართლოებში, კანონით დადგენილი განსჯადობის წესების შესაბამისად. ეს დებულება არ გართმევთ იმ უფლებებს, რომლებიც თქვენი საცხოვრებელი ქვეყნის მომხმარებელთა დაცვის სავალდებულო ნორმებით გაქვთ.",
   },
   {
-    headingEn: "14. Contact",
-    headingKa: "14. კონტაქტი",
-    bodyEn:
-      `Questions about these terms or about your order are welcome at ${BUSINESS.email} or via WhatsApp using the number in the footer. We usually respond within a few hours during working days.`,
-    bodyKa:
-      `კითხვები ამ პირობებთან ან თქვენს შეკვეთასთან დაკავშირებით — ${BUSINESS.email} ან WhatsApp ფუტერში მითითებული ნომრით. ჩვეულებრივ ვპასუხობთ რამდენიმე საათში სამუშაო დღეების განმავლობაში.`,
+    headingEn: "Model form for withdrawing from the contract",
+    headingKa: "ხელშეკრულებაზე უარის თქმის ნიმუშის ფორმა",
+    bodyEn: `To: ${NAME_EN}, ${ADDRESS_EN}, ${EMAIL}. I declare that I withdraw from the contract of sale of the following item(s): ________. Order number: ______. Date ordered / date received: ______. Consumer's name and surname: ______. Address: ______. Signature (if submitted on paper): ______. Date: ______.`,
+    bodyKa: `ადრესატი: ${NAME_KA}, ${BUSINESS.street.ka}, თბილისი, ${EMAIL}. ვაცხადებ, რომ უარს ვამბობ შემდეგი ნივთის/ნივთების ნასყიდობის ხელშეკრულებაზე: ________. შეკვეთის ნომერი: ______. შეკვეთის თარიღი / მიღების თარიღი: ______. მომხმარებლის სახელი, გვარი: ______. მისამართი: ______. ხელმოწერა (ქაღალდზე წარდგენისას): ______. თარიღი: ______.`,
   },
 ];
 
-/**
- * Last updated bumps whenever the recipient chain changes — adding a processor is a material
- * change under section 12, so the date is what tells a returning customer to re-read it.
- */
-export const PRIVACY_LAST_UPDATED = "2026-10-07";
+export const PRIVACY_LAST_UPDATED = "2026-11-03";
 
 export const PRIVACY_SECTIONS: LegalSection[] = [
   {
-    headingEn: "1. Who we are",
-    headingKa: "1. ვინ ვართ",
-    bodyEn:
-      `This Privacy Policy explains how Nitchiani — operated by ${BUSINESS.legalName.en}, an individual entrepreneur registered in Georgia (ID code ${BUSINESS.registrationId}), with its registered address at ${businessAddress("en")} — collects, uses and protects the personal data you provide when you use nitchiani.shop (the "Site"). We are the data controller for the data described below. Delivery of your order involves several named companies; section 5 sets out exactly who receives what. For questions reach us at ${BUSINESS.email}.`,
-    bodyKa:
-      `ეს კონფიდენციალურობის პოლიტიკა განმარტავს, როგორ აგროვებს, იყენებს და იცავს Nitchiani იმ პერსონალურ მონაცემებს, რომელსაც გვაწვდი nitchiani.shop-ის ("საიტი") გამოყენებისას. საიტის ოპერატორია ${BUSINESS.legalName.ka} (ინდივიდუალური მეწარმე, საიდენტიფიკაციო კოდი ${BUSINESS.registrationId}, მისამართი: ${businessAddress("ka")}). ჩვენ ვართ ქვემოთ აღწერილი მონაცემების მაკონტროლებელი. შენი შეკვეთის მიწოდებაში რამდენიმე დასახელებული კომპანია მონაწილეობს — მე-5 პუნქტი ზუსტად აღწერს, ვინ რას იღებს. შეკითხვებზე — ${BUSINESS.email}.`,
+    headingEn: "1. Controller",
+    headingKa: "1. დამმუშავებელი",
+    bodyEn: `The controller of your personal data is ${NAME_EN} (individual entrepreneur, identification code ${ID}), address: ${ADDRESS_EN}. For privacy matters: ${EMAIL}.`,
+    bodyKa: `თქვენი პერსონალური მონაცემების დამმუშავებელია ${NAME_KA} (ინდივიდუალური მეწარმე, საიდენტიფიკაციო კოდი ${ID}), მისამართი: ${ADDRESS_KA}. კონფიდენციალურობის საკითხებზე: ${EMAIL}.`,
   },
   {
-    headingEn: "2. What data we collect",
-    headingKa: "2. რა მონაცემებს ვაგროვებთ",
+    headingEn: "2. What data we process",
+    headingKa: "2. რა მონაცემებს ვამუშავებთ",
     bodyEn:
-      "We collect only what we need to take your order, ship it, support you afterwards and run the Site. This includes: contact details you give us (name, email, phone, shipping address); the precise coordinates of the delivery point when you place a pin on the checkout map, or when you set the address yourself from a link we send you; order details (items, amounts, payment method, order history); communications you send us (WhatsApp messages, emails, live-chat messages); technical data automatically logged when you visit (IP address, device type, browser, pages viewed); and optional marketing data if you consent to marketing (email, phone and language preference). We do not collect special-category data (health, religion, biometrics) and we do not knowingly collect data from children under 16.",
+      "We process only the data we need: contact details (first name, surname, phone, email, address); the coordinates of the delivery point, if you place a pin on the map; order data (items, amounts, payment method, order history — card details are not stored by us); our correspondence with you (WhatsApp, email, chat); technical data (IP address, device, browser, pages viewed); and, if you consent, marketing preferences. We do not collect special-category data.",
     bodyKa:
-      "ვაგროვებთ მხოლოდ იმას, რაც გვჭირდება შენი შეკვეთის მიღების, გაგზავნის, შემდგომი მხარდაჭერისა და საიტის გასაშვებად. ეს მოიცავს: საკონტაქტო მონაცემებს, რომელსაც გვაწვდი (სახელი, ფოსტა, ტელეფონი, მისამართი); მიწოდების წერტილის ზუსტ კოორდინატებს, როდესაც გადახდის გვერდის რუკაზე პინს დასვამ, ან როდესაც მისამართს ჩვენგან გამოგზავნილი ბმულით თავად მიუთითებ; შეკვეთის დეტალებს (ნივთები, თანხები, გადახდის მეთოდი, შეკვეთის ისტორია); შენ მიერ გამოგზავნილ კომუნიკაციას (WhatsApp, ფოსტა, ონლაინ ჩატი); ვიზიტისას ავტომატურად ჩაწერილ ტექნიკურ მონაცემებს (IP, მოწყობილობის ტიპი, ბრაუზერი, ნანახი გვერდები); და მარკეტინგზე თანხმობის შემთხვევაში — ფოსტას, ტელეფონს და ენის პრეფერენციას. არ ვაგროვებთ სპეციალური კატეგორიის მონაცემებს (ჯანმრთელობა, რელიგია, ბიომეტრია) და შეგნებულად არ ვაგროვებთ 16 წლამდე ბავშვების მონაცემებს.",
+      "ვამუშავებთ მხოლოდ საჭირო მონაცემებს: საკონტაქტო მონაცემებს (სახელი, გვარი, ტელეფონი, ელ-ფოსტა, მისამართი), მიწოდების წერტილის კოორდინატებს, თუ რუკაზე პინს მიუთითებთ, შეკვეთის მონაცემებს (ნივთები, თანხები, გადახდის მეთოდი, შეკვეთების ისტორია, ბარათის მონაცემები ჩვენთან არ ინახება), ჩვენთან მიმოწერას (WhatsApp, ელ-ფოსტა, ჩატი), ტექნიკურ მონაცემებს (IP მისამართი, მოწყობილობა, ბრაუზერი, ნანახი გვერდები), და, თანხმობის შემთხვევაში, მარკეტინგულ პრეფერენციებს. განსაკუთრებული კატეგორიის მონაცემებს არ ვაგროვებთ.",
   },
   {
-    headingEn: "3. Why we use it and on what lawful basis",
-    headingKa: "3. რატომ ვიყენებთ და რა სამართლებრივი საფუძვლით",
+    headingEn: "3. Purposes and legal bases",
+    headingKa: "3. მიზნები და სამართლებრივი საფუძვლები",
     bodyEn:
-      "Performance of contract — to take, fulfil and deliver your order, to pass the delivery address and phone to the delivery platform and the courier that carries it, to send you the delivery status messages described in section 5, and to handle returns and customer support. Legitimate interest — to protect the Site against fraud and abuse, to analyse aggregated traffic patterns so we can improve the experience, and to follow up on abandoned carts in a non-intrusive way. Consent — to send marketing messages when you have ticked the marketing box at checkout or signed up in the footer, to let our delivery partner send you its own marketing, and to use non-essential cookies. Each of those is a separate, optional tick and none of them is a condition of buying; you can withdraw any of them at any time. Legal obligation — to keep records the tax and consumer-protection authorities of Georgia require us to keep.",
+      "Under the Georgian Law on Personal Data Protection, we process data: (a) to conclude and perform the contract — taking the order, delivery, returns and support, including passing your address and phone number to the delivery platform and the courier; (b) to comply with a legal obligation — accounting and tax records, and requests connected with consumer rights; (c) for our legitimate interest — preventing fraud and keeping the Site secure; (d) with your consent — direct marketing, the delivery partner's marketing offers and non-essential cookies. Each consent is separate, voluntary, not a condition of your order, and you can withdraw it at any time as easily as you gave it.",
     bodyKa:
-      "ხელშეკრულების შესრულება — შენი შეკვეთის მიღება, შესრულება და მიწოდება, მიწოდების მისამართისა და ტელეფონის გადაცემა მიწოდების პლატფორმასა და მზიდ კურიერს, მე-5 პუნქტში აღწერილი სტატუსის შეტყობინებების გაგზავნა, დაბრუნებების და მხარდაჭერის მართვა. ლეგიტიმური ინტერესი — საიტის დაცვა თაღლითობისგან, აგრეგირებული ტრაფიკის ანალიზი გამოცდილების გასაუმჯობესებლად და მიტოვებული კალათების არაინტრუზიული შეხსენებები. თანხმობა — მარკეტინგული შეტყობინებების გასაგზავნად, როდესაც გადახდის გვერდზე ან ფუტერში შესაბამის ველს მონიშნავ; იმისთვის, რომ ჩვენმა მიწოდების პარტნიორმა შენ საკუთარი მარკეტინგული შეთავაზება გამოგიგზავნოს; და არააუცილებელი ქუქი-ფაილების გამოყენებისთვის. თითოეული ეს თანხმობა ცალკეა, არჩევითია და არ არის შეკვეთის განთავსების პირობა; ნებისმიერ დროს შეგიძლია გააუქმო. სამართლებრივი ვალდებულება — საქართველოს საგადასახადო და მომხმარებლის უფლებების ორგანოების მიერ მოთხოვნილი ჩანაწერების შენახვა.",
+      "„პერსონალურ მონაცემთა დაცვის შესახებ“ საქართველოს კანონის შესაბამისად, მონაცემებს ვამუშავებთ: (ა) ხელშეკრულების დადებისა და შესრულებისთვის - შეკვეთის მიღება, მიწოდება, დაბრუნება, მხარდაჭერა, მათ შორის მისამართისა და ტელეფონის გადაცემა მიწოდების პლატფორმისა და კურიერისთვის; (ბ) კანონით დაკისრებული ვალდებულების შესასრულებლად - საბუღალტრო და საგადასახადო ჩანაწერები, მომხმარებლის უფლებებთან დაკავშირებული მოთხოვნები; (გ) ჩვენი კანონიერი ინტერესისთვის - თაღლითობის პრევენცია, საიტის უსაფრთხოება; (დ) თქვენი თანხმობით - პირდაპირი მარკეტინგი, მიწოდების პარტნიორის მარკეტინგული შეთავაზებები და არააუცილებელი ქუქი-ფაილები. თითოეული თანხმობა ცალკეულია, ნებაყოფლობითია, არ არის შეკვეთის პირობა და ნებისმიერ დროს, ისევე მარტივად შეგიძლიათ გააუქმოთ, როგორც გაეცით.",
   },
   {
-    headingEn: "4. Who we share it with",
-    headingKa: "4. ვის ვუზიარებთ",
-    bodyEn:
-      `We never sell your data. We share only what each recipient needs, and these are the recipients by name: EchoDesk (LLC EchoDesk, api.echodesk.ge) — the commerce and order-management system behind the Site, and the live chat; it holds your order record in full. LLC QuickShipper (ID code 405547877, quickshipper.app) — the delivery platform that takes your delivery address, coordinates, name and phone and dispatches the order to a courier. The courier company that actually carries your order — chosen per order from the providers available in the platform at that moment (Wolt, Glovo, Georgian Post, Go Delivery and others; the list changes without notice), each of which receives your name, phone, address and coordinates, and each of which has its own terms and its own privacy notice. Google (Maps and Places APIs) — the checkout address picker sends what you type in the address field and the pin you drop, as coordinates, to Google. Bank of Georgia and TBC Bank — to authorise and settle card payments. Resend — order confirmation emails and, with your consent, marketing emails. An SMS gateway contracted by QuickShipper — the delivery messages in section 5. Netlify — hosting and request logs. Google Analytics — only if you have consented to non-essential cookies. The tax authority of Georgia — when legally required. Each recipient has its own published privacy notice; links available on request at ${BUSINESS.email}.`,
-    bodyKa:
-      `შენს მონაცემებს არასოდეს ვყიდით. ვუზიარებთ მხოლოდ იმას, რაც თითოეულ მიმღებს სჭირდება — და ეს მიმღებები სახელდებით ასეთია: EchoDesk (შპს EchoDesk, api.echodesk.ge) — სავაჭრო და შეკვეთების მართვის სისტემა, რომელზეც საიტი დგას, ასევე ონლაინ ჩატი; შენი შეკვეთის ჩანაწერი სრულად მასთან ინახება. შპს „ქვიქშიფერი“ (ს/ნ 405547877, quickshipper.app) — მიწოდების პლატფორმა, რომელიც იღებს შენს მიწოდების მისამართს, კოორდინატებს, სახელსა და ტელეფონს და შეკვეთას კურიერს გადასცემს. კურიერ-კომპანია, რომელიც უშუალოდ ეზიდება შეკვეთას — ირჩევა ყოველ შეკვეთაზე იმ პროვაიდერებიდან, რომლებიც პლატფორმაში ხელმისაწვდომია (Wolt, Glovo, საქართველოს ფოსტა, Go Delivery და სხვები; სია იცვლება გაფრთხილების გარეშე); თითოეული იღებს შენს სახელს, ტელეფონს, მისამართსა და კოორდინატებს, და თითოეულს აქვს თავისი პირობები და თავისი კონფიდენციალურობის პოლიტიკა. Google (Maps და Places API) — გადახდის გვერდის მისამართის ამრჩევი Google-ს უგზავნის იმას, რასაც მისამართის ველში წერ, და დასმულ პინს კოორდინატების სახით. საქართველოს ბანკი და თიბისი ბანკი — ბარათით გადახდის გასატარებლად. Resend — შეკვეთის დადასტურების წერილები და, თანხმობის შემთხვევაში, მარკეტინგული წერილები. ქვიქშიფერის მიერ დაკონტრაქტებული SMS-გეითვეი — მე-5 პუნქტში აღწერილი შეტყობინებები. Netlify — ჰოსტინგი და მოთხოვნების ლოგები. Google Analytics — მხოლოდ თუ არააუცილებელ ქუქი-ფაილებს დაეთანხმე. საქართველოს საგადასახადო ორგანო — კანონით მოთხოვნისას. თითოეულ მიმღებს აქვს თავისი გამოქვეყნებული პოლიტიკა; ბმულები ხელმისაწვდომია მოთხოვნით — ${BUSINESS.email}.`,
+    headingEn: "4. Direct marketing",
+    headingKa: "4. პირდაპირი მარკეტინგი",
+    bodyEn: `We send marketing messages (email, SMS) only with your consent. Every message includes a simple, free way to unsubscribe; you can also write to us at ${EMAIL}. After your request we will stop marketing within the period set by law.`,
+    bodyKa: `მარკეტინგულ შეტყობინებებს (ელ-ფოსტა, SMS) გიგზავნით მხოლოდ თქვენი თანხმობით. თითოეულ შეტყობინებაში მითითებულია გამოწერის უფასოდ გაუქმების მარტივი საშუალება, ასევე შეგიძლიათ მოგვწეროთ ${EMAIL} - ზე. მოთხოვნის მიღებიდან მარკეტინგს შევწყვეტთ კანონით დადგენილ ვადაში.`,
   },
   {
-    headingEn: "5. Delivery, SMS and order tracking",
-    headingKa: "5. მიწოდება, SMS და შეკვეთის თვალყურის დევნება",
+    headingEn: "5. Recipients of the data",
+    headingKa: "5. მონაცემების მიმღებები",
     bodyEn:
-      "Delivery is organised through QuickShipper, which is a platform rather than a courier: it takes the order from us, prices it across the courier companies available at that moment, and hands it to the one selected. Three things follow from that, and you should know about all three before you order. First, you will receive an SMS on the number you gave us containing a link to a tracking page, so you can follow the order in real time; that message is sent through QuickShipper's SMS gateway and may arrive under our name or under QuickShipper's. Second, if we ask you to set the delivery point yourself, you will receive an SMS with a link to a map where you place the pin — the address and coordinates you enter there are yours, and neither we nor QuickShipper can verify that they are correct, so a delivery sent to a wrong pin is redelivered at your cost. Third, the tracking page is operated by QuickShipper and may show advertising alongside your order status; that advertising is served by QuickShipper, not by us, and we do not pass your order contents to any advertiser. The courier that carries your order is an independent company with its own terms, its own handling and return policy and its own privacy notice; we are responsible for what we send them, and they are responsible for how they carry it.",
+      "We share data only to the extent each recipient needs: EchoDesk (order-management system and online chat); LLC \"QuickShipper\" (ID 405547877) — the delivery platform, and the SMS gateway it contracts; the courier company that carries the particular order (for example Wolt, Glovo, Georgian Post, Go Delivery); Google (Maps/Places — choosing an address; Analytics — only with consent); Bank of Georgia and TBC Bank (payment); Resend (emails); Netlify (hosting); public authorities — only where the law provides. Support service providers (EchoDesk, Resend, Netlify, Google) process data on our instructions and under a contract with us. The delivery platform and couriers may also process data for their own purposes, under their own privacy policies.",
     bodyKa:
-      "მიწოდება ორგანიზდება ქვიქშიფერის მეშვეობით, რომელიც კურიერი არ არის, არამედ პლატფორმაა: იღებს ჩვენგან შეკვეთას, აფასებს იმ კურიერ-კომპანიებს შორის, რომლებიც იმ მომენტში ხელმისაწვდომია, და გადასცემს არჩეულს. აქედან სამი რამ გამომდინარეობს და სამივე უნდა იცოდე შეკვეთამდე. პირველი — შენ მიერ მითითებულ ნომერზე მიიღებ SMS-ს tracking გვერდის ბმულით, რომ შეკვეთას რეალურ დროში მიადევნო თვალი; ეს შეტყობინება იგზავნება ქვიქშიფერის SMS-გეითვეით და შესაძლოა მოვიდეს ჩვენი ან ქვიქშიფერის სახელით. მეორე — თუ მიწოდების წერტილის თავად მითითებას გთხოვთ, მიიღებ SMS-ს რუკის ბმულით, სადაც პინს დასვამ; იქ შეყვანილი მისამართი და კოორდინატები შენია და არც ჩვენ, არც ქვიქშიფერს არ გვაქვს მათი სისწორის გადამოწმების შესაძლებლობა, ამიტომ არასწორ პინზე გაგზავნილი შეკვეთის ხელახალი მიტანა შენი ხარჯით ხდება. მესამე — tracking გვერდს ქვიქშიფერი მართავს და შენი შეკვეთის სტატუსის გვერდზე შესაძლოა რეკლამა გამოჩნდეს; ამ რეკლამას ქვიქშიფერი ანთავსებს, არა ჩვენ, და შენი შეკვეთის შიგთავსს არცერთ რეკლამის განმთავსებელს არ გადავცემთ. კურიერი, რომელიც შეკვეთას ეზიდება, დამოუკიდებელი კომპანიაა საკუთარი პირობებით, გადაზიდვისა და დაბრუნების საკუთარი პოლიტიკით და საკუთარი კონფიდენციალურობის პოლიტიკით; ჩვენ პასუხს ვაგებთ იმაზე, რას გადავცემთ, ისინი — იმაზე, როგორ ეზიდებიან.",
+      "მონაცემებს ვაზიარებთ მხოლოდ იმ მოცულობით, რამდენიც თითოეულ მიმღებს სჭირდება: EchoDesk (შეკვეთების მართვის სისტემა და ონლაინ ჩატი); შპს „ქვიქშიფერი“ (ს/ნ 405547877) - მიწოდების პლატფორმა და მის მიერ დაკონტრაქტებული SMS-გეითვეი; საკურიერო კომპანია, რომელიც კონკრეტულ შეკვეთას ეზიდება (მაგ., Wolt, Glovo, საქართველოს ფოსტა, Go Delivery); Google (Maps/Places - მისამართის არჩევა; Analytics - მხოლოდ თანხმობით); საქართველოს ბანკი და თიბისი ბანკი (გადახდა); Resend (ელ-წერილები); Netlify (ჰოსტინგი); სახელმწიფო ორგანოები - მხოლოდ კანონით გათვალისწინებულ შემთხვევაში. დამხმარე მომსახურების გამწევები (EchoDesk, Resend, Netlify, Google) მონაცემებს ამუშავებენ ჩვენი დავალებით და ჩვენთან დადებული ხელშეკრულების საფუძველზე. მიწოდების პლატფორმა და კურიერები შესაძლოა მონაცემებს საკუთარი მიზნებითაც ამუშავებდნენ, საკუთარი კონფიდენციალურობის პოლიტიკის მიხედვით.",
   },
   {
-    headingEn: "6. International transfers",
-    headingKa: "6. საერთაშორისო გადაცემები",
+    headingEn: "6. Transfers abroad",
+    headingKa: "6. მონაცემების საზღვარგარეთ გადაცემა",
     bodyEn:
-      "Some of our processors are based outside Georgia — primarily in the EU and the United States (Google, Resend, Netlify). Where data leaves Georgia, we rely on standard contractual clauses or adequacy decisions where available, and we only use providers that publish equivalent or stronger data-protection practices than Georgian law requires. EchoDesk, QuickShipper and the courier providers operate in Georgia.",
+      "Some service providers (Google, Resend, Netlify) process data outside Georgia, including in the USA. Such a transfer takes place only on a basis permitted by the Georgian Law on Personal Data Protection and in accordance with it.",
     bodyKa:
-      "ჩვენი ზოგიერთი პროცესორი დაფუძნებულია საქართველოს გარეთ — უპირატესად ევროკავშირში და აშშ-ში (Google, Resend, Netlify). სადაც მონაცემები გადის საქართველოდან, ვეყრდნობით სტანდარტულ სახელშეკრულებო პუნქტებს ან მონაცემთა დაცვის ადეკვატურობის გადაწყვეტილებებს, სადაც ხელმისაწვდომია, და ვიყენებთ მხოლოდ ისეთ პროცესორებს, რომლებიც ქართულ კანონმდებლობასთან თანაბარ ან უფრო ძლიერ პრაქტიკას ინარჩუნებენ. EchoDesk, ქვიქშიფერი და კურიერი პროვაიდერები საქართველოში ოპერირებენ.",
+      "ზოგიერთი მომსახურების გამწევი (Google, Resend, Netlify) მონაცემებს ამუშავებს საქართველოს ფარგლებს გარეთ, მათ შორის აშშ-ში. ასეთი გადაცემა ხორციელდება მხოლოდ „პერსონალურ მონაცემთა დაცვის შესახებ“ საქართველოს კანონით დაშვებული საფუძვლით და მის შესაბამისად.",
   },
   {
-    headingEn: "7. How long we keep it",
-    headingKa: "7. რამდენ ხანს ვინახავთ",
+    headingEn: "7. Retention periods",
+    headingKa: "7. შენახვის ვადები",
     bodyEn:
-      "Order records: 7 years after the order date (Georgian tax record-keeping requirement). Marketing consents and the evidence of them: for as long as the consent stands, plus 3 years after you withdraw it, so we can show it was given. Marketing contact lists: until you unsubscribe or 24 months of inactivity, whichever is sooner. Customer-support correspondence: 24 months after the last message. Technical/server logs: 90 days. Anonymised analytics: indefinitely. EchoDesk, QuickShipper and the courier that carried your order keep their own copies of the delivery data under their own retention rules, which we do not control; where you ask us to delete data, we forward the request to them as described in section 10. After a retention period ends, data on our side is deleted or anonymised.",
+      "Order and accounting records — for the period set by Georgian tax and accounting law; the record of marketing consent — for the life of the consent and 3 years after withdrawal, to prove it; the marketing list — until you unsubscribe or 24 months of inactivity; support correspondence — 24 months from the last message; server logs — 90 days. After the period ends, the data is deleted.",
     bodyKa:
-      "შეკვეთის ჩანაწერები: შეკვეთის თარიღიდან 7 წელი (საქართველოს საგადასახადო ვალდებულება). მარკეტინგული თანხმობები და მათი დადასტურება: თანხმობის მოქმედების მანძილზე და გაუქმებიდან კიდევ 3 წელი, რომ შევძლოთ მისი არსებობის ჩვენება. მარკეტინგული საკონტაქტო სიები: გამოწერის გაუქმებამდე ან 24 თვის უმოქმედობამდე — რომელიც ადრე დადგება. მხარდაჭერის მიმოწერა: უკანასკნელი წერილიდან 24 თვე. ტექნიკური/სერვერული ლოგები: 90 დღე. ანონიმური ანალიტიკა: უსასრულოდ. EchoDesk, ქვიქშიფერი და შეკვეთის მზიდი კურიერი მიწოდების მონაცემების საკუთარ ასლებს ინახავენ საკუთარი წესებით, რასაც ჩვენ არ ვაკონტროლებთ; თუ წაშლას მოითხოვ, მოთხოვნას მათ გადავუგზავნით მე-10 პუნქტის შესაბამისად. შენახვის ვადის გასვლის შემდეგ ჩვენს მხარეს მონაცემები იშლება ან ანონიმდება.",
+      "შეკვეთისა და საბუღალტრო ჩანაწერები - საქართველოს საგადასახადო და საბუღალტრო კანონმდებლობით დადგენილი ვადით, მარკეტინგული თანხმობის ჩანაწერი, თანხმობის მოქმედების ვადით და გაუქმებიდან 3 წლით, მისი დადასტურების მიზნით, მარკეტინგული სია, გამოწერის გაუქმებამდე ან 24-თვიან უმოქმედობამდე; მხარდაჭერის მიმოწერა, ბოლო შეტყობინებიდან 24 თვე; სერვერის ლოგები, 90 დღე. ვადის გასვლის შემდეგ მონაცემები იშლება.",
   },
   {
-    headingEn: "8. Cookies and similar technologies",
-    headingKa: "8. ქუქი-ფაილები და მსგავსი ტექნოლოგიები",
+    headingEn: "8. Security",
+    headingKa: "8. უსაფრთხოება",
     bodyEn:
-      "We use a small number of strictly necessary cookies to make the cart, wishlist, language and currency settings remember themselves across pages — these don't need consent. Anything optional (analytics, marketing pixels) only loads after you've given consent through our cookie banner. The Google Maps address picker at checkout loads from Google and sets Google's own cookies when you use it; it loads because it is needed to price and dispatch a delivery, and if you prefer not to use it you can type the address instead. You can change your cookie preference at any time via the link in the footer.",
+      "We apply appropriate technical and organisational measures: data is transmitted encrypted (TLS), you enter card details directly on the bank's payment page, and access to the system is restricted. In the event of an incident we will notify the relevant authority within the periods set by law and, where necessary, you.",
     bodyKa:
-      "ვიყენებთ მცირე რაოდენობით აუცილებელ ქუქი-ფაილებს, რათა კალათამ, სასურველთა სიამ, ენისა და ვალუტის პარამეტრებმა გვერდებს შორის დაიმახსოვრონ თავი — ისინი თანხმობას არ მოითხოვს. სურვილისამებრი (ანალიტიკა, მარკეტინგული პიქსელები) იტვირთება მხოლოდ მას შემდეგ, რაც დაეთანხმები ქუქი-ფაილების ბანერის მეშვეობით. გადახდის გვერდზე Google Maps-ის მისამართის ამრჩევი Google-იდან იტვირთება და გამოყენებისას Google-ის საკუთარ ქუქი-ფაილებს აყენებს; ის იტვირთება იმიტომ, რომ მიწოდების დაფასება და გაგზავნა ამას მოითხოვს — თუ არ გსურს მისი გამოყენება, მისამართი ხელით შეგიძლია აკრიფო. ქუქი-ფაილების პრეფერენცია ნებისმიერ დროს შეგიძლია შეცვალო ფუტერში მითითებული ბმულით.",
+      "ვიყენებთ სათანადო ტექნიკურ და ორგანიზაციულ ზომებს: მონაცემები გადაიცემა დაშიფრულად (TLS), ბარათის მონაცემები შეგყავთ უშუალოდ ბანკის გადახდის გვერდზე, სისტემაზე წვდომა შეზღუდულია. ინციდენტის შემთხვევაში, კანონით დადგენილ ვადებში ვაცნობებთ შესაბამის სამსახურს და, საჭიროებისას, თქვენ.",
   },
   {
-    headingEn: "9. Security",
-    headingKa: "9. უსაფრთხოება",
+    headingEn: "9. Your rights",
+    headingKa: "9. თქვენი უფლებები",
     bodyEn:
-      "Data in transit is encrypted with TLS. Card details are never touched by our servers — they're entered directly into Bank of Georgia / TBC Bank's hosted payment forms. Access to the order system is restricted to a small number of named operators and is audit-logged. If a breach occurs that affects you, we'll notify you and the supervisory authority within the timeframe the law requires; where the breach happened at EchoDesk, QuickShipper or a courier rather than with us, we will tell you that and tell you which one.",
+      `You have the right to: receive information about how your data is processed, and a copy of it; request correction of inaccurate data; request deletion of the data or that processing stop; request restriction (blocking) of processing; receive your data in a portable format, in the cases the law sets; withdraw consent at any time; not be subject to a decision based solely on automated processing (we take no such decisions); and complain to the relevant authority or to a court. Send your request to ${EMAIL}. We will answer free of charge, within the period set by law — no later than 10 working days, which in special cases may be extended by the period the law allows. If the data is held by an independent recipient (for example a courier), we will forward your request and tell you so.`,
     bodyKa:
-      "გადაცემული მონაცემები დაშიფრულია TLS-ით. ბარათის დეტალები არასოდეს გადის ჩვენი სერვერებიდან — შეგყავ პირდაპირ საქართველოს ბანკის / თიბისის გადახდის ფორმაში. შეკვეთების სისტემაზე წვდომა შეზღუდულია ცოტა რაოდენობის სახელობით ოპერატორებზე და აქვს აუდიტ-ჟურნალი. თუ მონაცემთა გაჟონვა მოხდება, რომელიც შენ შეგეხება, შეგატყობინებთ შენ და ზედამხედველ ორგანოს კანონით განსაზღვრულ ვადებში; თუ გაჟონვა მოხდა EchoDesk-ის, ქვიქშიფერის ან კურიერის მხარეს და არა ჩვენთან, ამასაც გეტყვით და იმასაც, რომელთან.",
+      `გაქვთ უფლება: მიიღოთ ინფორმაცია თქვენი მონაცემების დამუშავების შესახებ და მათი ასლი, მოითხოვოთ არაზუსტი მონაცემების გასწორება, მოითხოვოთ მონაცემების წაშლა ან დამუშავების შეწყვეტა, მოითხოვოთ დამუშავების შეზღუდვა (დაბლოკვა), მიიღოთ მონაცემები გადატანად ფორმატში, კანონით დადგენილ შემთხვევებში, ნებისმიერ დროს გააუქმოთ თანხმობა, არ დაექვემდებაროთ მხოლოდ ავტომატიზებულ გადაწყვეტილებას (ჩვენ ასეთ გადაწყვეტილებებს არ ვიღებთ) და საჩივრით მიმართოთ შესაბამის სამსახურს ან სასამართლოს. მოთხოვნა გამოგვიგზავნეთ ${EMAIL}-ზე. გიპასუხებთ უსასყიდლოდ, კანონით დადგენილ ვადაში - არაუგვიანეს 10 სამუშაო დღისა, რომელიც განსაკუთრებულ შემთხვევაში შეიძლება გაგრძელდეს კანონით დაშვებული ვადით. თუ მონაცემები დამოუკიდებელ მიმღებთან (მაგ., კურიერთან) ინახება, მოთხოვნას გადავუგზავნით და ამის შესახებ გაცნობებთ.`,
   },
   {
-    headingEn: "10. Your rights",
-    headingKa: "10. შენი უფლებები",
+    headingEn: "10. Minors",
+    headingKa: "10. არასრულწლოვნები",
     bodyEn:
-      `Under the Georgian Personal Data Protection Act you have the right to: access the data we hold about you; correct anything that's inaccurate; ask us to delete data we no longer need; restrict or object to processing for marketing or legitimate-interest purposes; receive your data in a portable format; withdraw any consent you've given (without affecting prior processing); and lodge a complaint with the Georgian Personal Data Protection Service. To exercise any of these, email ${BUSINESS.email} — we respond within 30 days, usually much sooner. Where the data sits with EchoDesk, QuickShipper or a courier rather than with us, we forward your request to them, tell you the date we forwarded it and pass on their answer; we cannot delete records from their systems ourselves. Withdrawing consent to our delivery partner's marketing is handled the same way — tell us and we pass it on, or use the unsubscribe details in the message itself.`,
+      "The Site is intended for adults. We process the data of a person under 16, where it rests on consent, only with the consent of a parent or legal representative. If you think we have received a minor's data without such consent, contact us and we will delete it.",
     bodyKa:
-      `საქართველოს პერსონალურ მონაცემთა დაცვის შესახებ კანონის შესაბამისად, შენ გაქვს უფლება: წვდომა შენი მონაცემებზე; გაასწორო არასწორი მონაცემები; მოითხოვო წაშლა, თუ მონაცემები აღარ გვჭირდება; შეზღუდო ან გააპროტესტო დამუშავება მარკეტინგის ან ლეგიტიმური ინტერესისთვის; მიიღო შენი მონაცემები გადატანად ფორმატში; გააუქმო შენ მიერ მოცემული თანხმობა (წინა დამუშავებაზე გავლენის გარეშე); და შეიტანო საჩივარი საქართველოს პერსონალურ მონაცემთა დაცვის სამსახურში. რომელიმე უფლების გამოსაყენებლად — ${BUSINESS.email}; ვპასუხობთ 30 დღეში, ჩვეულებრივ ბევრად ადრე. თუ მონაცემები EchoDesk-თან, ქვიქშიფერთან ან კურიერთან ინახება და არა ჩვენთან, მოთხოვნას მათ გადავუგზავნით, გეტყვით გადაგზავნის თარიღს და მათ პასუხს გადმოგცემთ; მათი სისტემებიდან ჩანაწერების წაშლა ჩვენ თვითონ ვერ შეგვიძლია. მიწოდების პარტნიორის მარკეტინგზე თანხმობის გაუქმებაც ასევე ხდება — გვითხარი და გადავცემთ, ან გამოიყენე თავად შეტყობინებაში მითითებული გამოწერის გაუქმების დეტალები.`,
+      "საიტი განკუთვნილია სრულწლოვნებისთვის. 16 წლამდე პირის მონაცემებს თანხმობის საფუძველზე ვამუშავებთ მხოლოდ მშობლის ან კანონიერი წარმომადგენლის თანხმობით. თუ ფიქრობთ, რომ ასეთი თანხმობის გარეშე მივიღეთ არასრულწლოვნის მონაცემები, დაგვიკავშირდით და წავშლით.",
   },
   {
-    headingEn: "11. Children",
-    headingKa: "11. ბავშვები",
+    headingEn: "11. Changes",
+    headingKa: "11. ცვლილებები",
     bodyEn:
-      "The Site is intended for adults. We don't knowingly collect personal data from anyone under 16. If you believe we've collected data from a minor, contact us and we'll delete it.",
+      "If there is a material change we will tell you on the Site or by email. The current version of the policy is always on this page, with its date of update.",
     bodyKa:
-      "საიტი განკუთვნილია მოზრდილებისთვის. შეგნებულად არ ვაგროვებთ პერსონალურ მონაცემებს 16 წლამდე პირებისგან. თუ თვლი, რომ ჩვენ მოვაგროვეთ მონაცემები არასრულწლოვანისგან, დაგვიკავშირდი — წავშლით.",
-  },
-  {
-    headingEn: "12. Changes to this policy",
-    headingKa: "12. ცვლილებები ამ პოლიტიკაში",
-    bodyEn:
-      "If we change this policy in a way that materially affects you — for example we add a new processor, or the delivery chain in section 5 changes — we'll notify you by email if we hold your address for marketing, or by a notice on the Site. Less material updates will simply replace the previous version with the new \"Last updated\" date. The courier providers reachable through QuickShipper change without notice to us; section 4 names the ones available when this version was published and is updated as they change.",
-    bodyKa:
-      "თუ ამ პოლიტიკას შევცვლით ისე, რომ ეს არსებითად შეგეხება — მაგალითად, დავამატებთ ახალ პროცესორს, ან შეიცვლება მე-5 პუნქტში აღწერილი მიწოდების ჯაჭვი — შეგატყობინებთ ფოსტით, თუ შენი მისამართი მარკეტინგისთვის გვაქვს, ან საიტზე გამოვაქვეყნებთ შეტყობინებას. ნაკლებად არსებითი განახლებები უბრალოდ ჩაანაცვლებენ წინა ვერსიას ახალი \"ბოლო განახლების\" თარიღით. ქვიქშიფერის მეშვეობით ხელმისაწვდომი კურიერი პროვაიდერები ჩვენთვის გაფრთხილების გარეშე იცვლება; მე-4 პუნქტი ასახელებს იმათ, რომლებიც ამ ვერსიის გამოქვეყნებისას ხელმისაწვდომი იყო, და ახლდება მათი ცვლილებისას.",
-  },
-  {
-    headingEn: "13. Contact",
-    headingKa: "13. კონტაქტი",
-    bodyEn:
-      `Privacy questions and rights requests are welcome at ${BUSINESS.email} or via WhatsApp using the number in the footer. We answer most within a few hours during working days; rights requests get a written reply within 30 days.`,
-    bodyKa:
-      `კონფიდენციალურობასთან დაკავშირებული შეკითხვები და უფლებების მოთხოვნები — ${BUSINESS.email} ან WhatsApp ფუტერში მითითებული ნომრით. უმეტესობას ვპასუხობთ რამდენიმე საათში სამუშაო დღეებში; უფლებების მოთხოვნებზე — წერილობით 30 დღის განმავლობაში.`,
+      "არსებითი ცვლილების შემთხვევაში შეგატყობინებთ საიტზე ან ელ-ფოსტით. პოლიტიკის მოქმედი ვერსია ყოველთვის ამ გვერდზეა, განახლების თარიღით.",
   },
 ];
 
-export const REFUND_LAST_UPDATED = "2026-05-20";
+export const REFUND_LAST_UPDATED = "2026-11-03";
 
 export const REFUND_SECTIONS: LegalSection[] = [
   {
-    headingEn: "1. 24-hour right of withdrawal",
-    headingKa: "1. 24-საათიანი უარის თქმის უფლება",
-    bodyEn:
-      `Under the consumer protection legislation of Georgia, if you bought from us as a consumer (not for business purposes) you may return your order within 24 hours of receiving it, without giving any reason. This window starts on the day the last item in your order is delivered. To exercise this right, notify us by email at ${BUSINESS.email} or WhatsApp before the 24 hours are up — sending the package back without notifying us first slows things down on both sides.`,
-    bodyKa:
-      `საქართველოს მომხმარებლის უფლებების შესახებ კანონმდებლობის შესაბამისად, თუ მომხმარებლის სტატუსით შეიძინე ჩვენგან (არა კომერციული მიზნით), შეგიძლია დააბრუნო შეკვეთა მისი მიღებიდან 24 საათის განმავლობაში, მიზეზის მითითების გარეშე. ვადა იწყება შენი შეკვეთის უკანასკნელი ნივთის ჩაბარების დღიდან. ამ უფლების გამოყენებისთვის გვაცნობე ფოსტით ${BUSINESS.email} ან WhatsApp-ით 24 საათის გასვლამდე — გაცნობების გარეშე გამოგზავნა ანელებს პროცესს ორივე მხრიდან.`,
+    headingEn: "1. 14-day right of withdrawal",
+    headingKa: "1. 14-დღიანი უარის თქმის უფლება",
+    bodyEn: `If you bought the item as a consumer, you may withdraw from the purchase within 14 calendar days of receiving it, without giving a reason. Where several items are delivered separately, the period runs from receipt of the last one. Before the period ends, write to us by email (${EMAIL}) or WhatsApp (${PHONE}), quoting the order number; you may use the model form in the Terms & Conditions.`,
+    bodyKa: `თუ ნივთი შეიძინეთ როგორც მომხმარებელმა, შეგიძლიათ უარი თქვათ შეძენაზე ნივთის მიღებიდან 14 კალენდარული დღის განმავლობაში, მიზეზის მითითების გარეშე. რამდენიმე ნივთის ცალ-ცალკე მიწოდებისას ვადა ბოლო ნივთის მიღებიდან აითვლება. ვადის გასვლამდე მოგვწერეთ ელ-ფოსტით (${EMAIL}) ან WhatsApp-ით (${PHONE}), შეკვეთის ნომრის მითითებით, შეგიძლიათ გამოიყენოთ წესებსა და პირობებში მოცემული ნიმუშის ფორმა.`,
   },
   {
-    headingEn: "2. Items that can't be returned",
-    headingKa: "2. ნივთები, რომლებიც ვერ დაბრუნდება",
+    headingEn: "2. What can't be returned",
+    headingKa: "2. რა არ ბრუნდება",
     bodyEn:
-      "For hygiene reasons, the following are excluded from the 24-hour withdrawal right once they've been opened or used: opened hair-care products (wax, leave-in conditioners, oils, gels); used hair tools (combs, picks, brushes); and any custom or made-to-order piece. Unopened hair-care products remain returnable. Hair extensions are not on this list: they can be returned even if the package has been opened, as long as the hair hasn't been used. This exception is allowed under the same Georgian consumer-protection statute that gives you the right.",
+      "For hygiene reasons the following cannot be returned: sealed hair-care products (wax, leave-in conditioner, oils, gels) once the seal has been broken after delivery, and items made to your individual specification. Unopened care products can be returned. Synthetic hair can be returned even with the packaging opened, as long as it has not been used.",
     bodyKa:
-      "ჰიგიენური მიზეზებიდან გამომდინარე, შემდეგი ნივთები არ ექვემდებარება 24-საათიან დაბრუნებას, თუ გახსნილია ან გამოყენებულია: გახსნილი თმის მოვლის საშუალებები (ცვილი, ლივ-ინ კონდიციონერები, ზეთები, გელები); გამოყენებული ხელსაწყოები (სავარცხლები, პიკები, ფუნჯები); ნებისმიერი ინდივიდუალურად დამზადებული ნივთი. გაუხსნელი თმის მოვლის საშუალებები კვლავ ექვემდებარება დაბრუნებას. ხელოვნური თმა ამ სიაში არ შედის: მისი დაბრუნება შესაძლებელია შეფუთვის გახსნის შემდეგაც, თუ თმა არ არის გამოყენებული. ეს გამონაკლისი ნებადართულია იმავე ქართული კანონმდებლობით, რომელიც დაბრუნების უფლებას გვაძლევს.",
+      "ჰიგიენური მიზეზებით არ ბრუნდება დალუქული თმის მოვლის საშუალებები (ცვილი, ლივ-ინ კონდიციონერი, ზეთები, გელები), თუ მიწოდების შემდეგ ლუქი მოიხსნა, ასევე თქვენი მითითებით ინდივიდუალურად დამზადებული ნივთები. გაუხსნელი მოვლის საშუალებები ბრუნდება. ხელოვნური თმა ბრუნდება გახსნილი შეფუთვის შემთხვევაშიც, თუ გამოყენებული არ არის.",
   },
   {
-    headingEn: "3. Condition we need it in",
-    headingKa: "3. რა მდგომარეობით უნდა დაბრუნდეს",
+    headingEn: "3. Condition of the item",
+    headingKa: "3. ნივთის მდგომარეობა",
     bodyEn:
-      "Items should come back unused, in their original packaging, with all tags, bags and protective wrapping intact. Hair extensions, bonnets, durags and accessories may be unwrapped and inspected (the same way you'd inspect a piece in a shop) but not worn or used — for hair, that means not braided, cut, washed or styled. If the item arrives back with visible signs of use, we may offer a partial refund proportional to the loss of value.",
+      "You may examine the item as you would in a shop. Synthetic hair, bonnets, durags and accessories should not be worn or used; with hair, do not braid, cut, wash or brush it. If the item has lost value through being used more than necessary, the amount of that loss in value may be deducted from the refund, and we will tell you beforehand. Your right of withdrawal is kept in that case too.",
     bodyKa:
-      "ნივთები უნდა დაბრუნდეს გამოუყენებლად, თავდაპირველი შეფუთვით, ყველა ეტიკეტით, ჩანთით და დამცავი ბაფთით. ხელოვნური თმა, ბონეტები, დურაგები და აქსესუარები შეგიძლია გახსნა და დაათვალიერო (ისე, როგორც მაღაზიაში დაათვალიერებდი) — მაგრამ არ ატარო და არ გამოიყენო; თმის შემთხვევაში ეს ნიშნავს, რომ არ დაგიწნავს, არ შეგიჭრია, არ დაგიბანია და არ დაგივარცხნია. თუ ნივთი დაბრუნდება ხმარების აშკარა ნიშნებით, შესაძლოა შემოგთავაზოთ ნაწილობრივი ანაზღაურება ღირებულების დაკარგვის პროპორციულად.",
+      "ნივთის დათვალიერება შეგიძლიათ ისე, როგორც მაღაზიაში. ხელოვნური თმა, ბონეტი, დურაგი და აქსესუარები არ უნდა ატაროთ ან გამოიყენოთ; თმის შემთხვევაში - არ დაწნათ, შეჭრათ, დაბანოთ ან დავარცხნოთ. თუ ნივთის ღირებულება შემცირდა საჭიროზე მეტი გამოყენების გამო, დაბრუნებული თანხიდან შეიძლება გამოიქვითოს ღირებულების ამ შემცირების თანხა, რის შესახებაც წინასწარ გაცნობებთ. უარის თქმის უფლება ამ შემთხვევაშიც შენარჩუნებულია.",
   },
   {
-    headingEn: "4. How to start a return",
-    headingKa: "4. როგორ დავიწყო დაბრუნება",
+    headingEn: "4. The return process and its cost",
+    headingKa: "4. დაბრუნების პროცესი და ხარჯი",
     bodyEn:
-      `Email ${BUSINESS.email} or WhatsApp us with your order number and which items you want to return. We'll send back a confirmation and the return address within a few hours during working days. Once you've shipped the package, send us the courier tracking number so we can keep an eye on it.`,
+      "After your notice you will receive a confirmation and the return address. Send or bring the item no later than 14 calendar days after your notice. You pay the direct cost of returning the item, except for a faulty, damaged or incorrect item. We recommend a shipment with tracking.",
     bodyKa:
-      `მოგვწერე ${BUSINESS.email}-ზე ან WhatsApp-ით შეკვეთის ნომრით და მიუთითე რომელი ნივთები გსურს დააბრუნო. რამდენიმე საათში სამუშაო დღეებში მიიღებ დადასტურებას და დაბრუნების მისამართს. გაგზავნის შემდეგ გაგვიგზავნე ტრეკინგის ნომერი, რომ შევძლოთ თვალყურის დევნება.`,
+      "თქვენი შეტყობინების შემდეგ მიიღებთ დადასტურებას და დაბრუნების მისამართს. ნივთი გამოგზავნეთ ან მოიტანეთ შეტყობინებიდან არაუგვიანეს 14 კალენდარული დღისა. ნივთის დაბრუნების პირდაპირ ხარჯს იხდით თქვენ, გარდა ნაკლიანი, დაზიანებული ან არასწორი ნივთის შემთხვევისა. გირჩევთ, გამოიყენოთ tracking-ის მქონე გზავნილი.",
   },
   {
-    headingEn: "5. Return shipping",
-    headingKa: "5. დაბრუნების მიწოდება",
+    headingEn: "5. Refund",
+    headingKa: "5. თანხის დაბრუნება",
     bodyEn:
-      "Return shipping is the customer's responsibility, unless the item arrived defective, damaged or incorrect (see §7 below) — in those cases we cover the return label. We recommend a tracked courier; once a package is in the post, the risk of loss is on whichever side is paying.",
+      "We will refund the money, including the original standard delivery fee, in full and no later than 14 calendar days after receiving your notice, to the same card, with no additional fee. We may hold the refund until we have received the item or you have shown proof that you sent it. Your bank may need a few more working days to show the refund.",
     bodyKa:
-      "დაბრუნების მიწოდების ღირებულება ეკისრება მომხმარებელს, თუ ნივთი არ ჩამოვიდა დეფექტიანი, დაზიანებული ან არასწორი (იხ. §7) — ამ შემთხვევაში ჩვენ ვფარავთ ხარჯს. ვურჩევთ ტრეკინგით გადატანას; ფოსტაში გადაცემის შემდეგ დაკარგვის რისკი ეკისრება იმ მხარეს, რომელიც იხდის.",
+      "თანხას, მათ შორის თავდაპირველი სტანდარტული მიწოდების საფასურს, დაგიბრუნებთ სრულად, არაუგვიანეს 14 კალენდარული დღისა თქვენი შეტყობინების მიღებიდან, იმავე ბარათზე, დამატებითი საკომისიოს გარეშე. თანხის დაბრუნება შეიძლება შევაჩეროთ ნივთის მიღებამდე ან გამოგზავნის დამადასტურებელი დოკუმენტის წარმოდგენამდე. ბანკის მიერ თანხის ასახვას შესაძლოა დამატებით რამდენიმე სამუშაო დღე დასჭირდეს.",
   },
   {
-    headingEn: "6. Refund processing",
-    headingKa: "6. ანაზღაურების დამუშავება",
+    headingEn: "6. Faulty, damaged or incorrect items",
+    headingKa: "6. ნაკლიანი, დაზიანებული ან არასწორი ნივთი",
     bodyEn:
-      "Once we receive your returned items and confirm the condition, we issue the refund within 14 days using the same payment method you used at checkout. Card refunds typically settle in 3–10 business days depending on your bank. We refund the price of the returned items only — original shipping fees aren't refunded for change-of-mind returns. For defective items we refund shipping in both directions.",
+      "In that case you may, in accordance with the law, demand a replacement or repair, a price reduction, or a full refund; we cover the delivery and return costs. Please tell us as soon as you find the fault and, where you can, send a photo. This does not limit your statutory rights.",
     bodyKa:
-      "დაბრუნებული ნივთების მიღების და მდგომარეობის დადასტურების შემდეგ თანხას დაგიბრუნებთ 14 დღის განმავლობაში გადახდის იმავე მეთოდით, რომელიც გამოიყენე გადახდისას. ბარათით ანაზღაურება ჩვეულებრივ ხდება 3-10 სამუშაო დღეში ბანკიდან გამომდინარე. ვანაზღაურებთ მხოლოდ დაბრუნებული ნივთების ფასს — თავდაპირველი მიწოდების საფასური არ ანაზღაურდება გადაწყვეტილების შეცვლის შემთხვევაში. დეფექტიანი ნივთების შემთხვევაში ვანაზღაურებთ მიწოდების ღირებულებას ორივე მიმართულებით.",
+      "ასეთ შემთხვევაში შეგიძლიათ კანონის შესაბამისად მოითხოვოთ ნივთის შეცვლა ან შეკეთება, ფასის შემცირება ან თანხის სრულად დაბრუნება; მიწოდებისა და დაბრუნების ხარჯებს ვფარავთ ჩვენ. გთხოვთ, გვაცნობოთ ნაკლის აღმოჩენისთანავე და, შესაძლებლობისას, ფოტოც გამოგზავნოთ. ეს თქვენს კანონით გათვალისწინებულ უფლებებს არ ზღუდავს.",
   },
   {
-    headingEn: "7. Defective, damaged or incorrect items",
-    headingKa: "7. დეფექტიანი, დაზიანებული ან არასწორი ნივთები",
+    headingEn: "7. Exchanges",
+    headingKa: "7. გაცვლა",
     bodyEn:
-      "If the item arrives damaged, defective or different from what you ordered, contact us within 7 days of delivery with photos. We will arrange a replacement at our cost or a full refund (item + original shipping + return shipping) at your choice. Your statutory rights as a consumer in Georgia are not affected by this policy.",
+      "We do not carry out direct exchanges: return the item as described above and place a new order.",
     bodyKa:
-      "თუ ნივთი ჩამოვიდა დაზიანებული, დეფექტიანი ან არ ემთხვევა შეკვეთას, დაგვიკავშირდი ჩაბარებიდან 7 დღის განმავლობაში ფოტოებთან ერთად. შემოგთავაზებთ ჩანაცვლებას ჩვენი ხარჯით ან სრულ ანაზღაურებას (ნივთი + თავდაპირველი მიწოდება + დაბრუნების მიწოდება) შენი არჩევანის შესაბამისად. ეს პოლიტიკა არ ცვლის შენი მომხმარებლის უფლებებს საქართველოს კანონის შესაბამისად.",
+      "პირდაპირ გაცვლას არ ვახორციელებთ: დააბრუნეთ ნივთი ზემოაღნიშნული წესით და გააფორმეთ ახალი შეკვეთა.",
   },
   {
-    headingEn: "8. Exchanges",
-    headingKa: "8. გაცვლა",
+    headingEn: "8. Orders delivered abroad",
+    headingKa: "8. საზღვარგარეთ მიწოდებული შეკვეთები",
     bodyEn:
-      "We don't process direct exchanges — return the original item under the policy above and place a new order for the replacement. This keeps the process clean for both sides and is faster than tying the refund to a new shipment.",
+      "The 14-day period also applies to orders delivered outside Georgia. If you change your mind, you pay the cost of the return (including any taxes). In the case of a faulty item, contact us first.",
     bodyKa:
-      "პირდაპირ გაცვლას არ ვამუშავებთ — დააბრუნე თავდაპირველი ნივთი ზემოთ მითითებული წესით და განათავსე ახალი შეკვეთა საჭირო ნივთზე. ეს უფრო სუფთად მიდის ორივე მხრიდან და უფრო სწრაფია, ვიდრე ანაზღაურების ახალ მიწოდებაზე მიბმა.",
-  },
-  {
-    headingEn: "9. International returns",
-    headingKa: "9. საერთაშორისო დაბრუნებები",
-    bodyEn:
-      "International orders follow the same 24-hour window. The customer covers return shipping (including any customs duties on the return leg) for change-of-mind returns. For defective international items, contact us first — depending on the issue we may issue a refund without requiring you to ship the item back.",
-    bodyKa:
-      "საერთაშორისო შეკვეთები ექვემდებარება იმავე 24-საათიან ვადას. გადაწყვეტილების შეცვლის შემთხვევაში მომხმარებელი ფარავს დაბრუნების ხარჯს (გადასახადების ჩათვლით დაბრუნების მიმართულებით). დეფექტიანი საერთაშორისო ნივთის შემთხვევაში ჯერ დაგვიკავშირდი — შესაძლოა ანაზღაურება გავცეთ ნივთის უკან გაგზავნის გარეშე.",
-  },
-  {
-    headingEn: "10. Contact",
-    headingKa: "10. კონტაქტი",
-    bodyEn:
-      `Return questions are welcome at ${BUSINESS.email} or via WhatsApp using the number in the footer. We answer most within a few hours during working days.`,
-    bodyKa:
-      `დაბრუნებასთან დაკავშირებული შეკითხვები — ${BUSINESS.email} ან WhatsApp ფუტერში მითითებული ნომრით. უმეტესობას ვპასუხობთ რამდენიმე საათში სამუშაო დღეებში.`,
+      "საქართველოს გარეთ მიწოდებულ შეკვეთებზეც მოქმედებს 14 - დღიანი ვადა. გადაწყვეტილების შეცვლისას დაბრუნების ხარჯს (მათ შორის გადასახადებს) იხდით თქვენ. ნაკლიანი ნივთის შემთხვევაში ჯერ დაგვიკავშირდით.",
   },
 ];

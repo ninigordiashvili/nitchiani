@@ -1,7 +1,13 @@
 import type { Metadata } from "next";
 import { Check, ExternalLink } from "lucide-react";
 import { setRequestLocale, getTranslations } from "next-intl/server";
-import { WhatsAppIcon, getWhatsAppNumber } from "@/components/brand/WhatsAppIcon";
+import {
+  WhatsAppIcon,
+  formatWhatsAppNumber,
+  getWhatsAppNumber,
+} from "@/components/brand/WhatsAppIcon";
+import { BUSINESS } from "@/lib/business";
+import { Link } from "@/lib/i18n/routing";
 import { getOrderByName, type OrderTracking } from "@/lib/shopify/orders";
 import { getTrackingByToken } from "@/lib/echodesk/tracking";
 import { localeAlternates } from "@/lib/seo";
@@ -91,6 +97,17 @@ export default async function OrderStatusPage({
           {t("title")}
         </h1>
         <p className="mt-4 text-sm opacity-80 sm:text-base">{t("intro")}</p>
+        {/* Who runs the tracking page, and what that means for the customer's data. Smaller
+            and quieter than the intro: it is a disclosure, not the thing they came for. */}
+        <p className="mt-3 text-xs leading-relaxed opacity-65 sm:text-sm">
+          {t.rich("trackingNote", {
+            link: (chunks) => (
+              <Link href="/privacy" className="underline underline-offset-2">
+                {chunks}
+              </Link>
+            ),
+          })}
+        </p>
       </header>
 
       <OrderLookup t={t} defaultValue={lookup} />
@@ -134,7 +151,17 @@ export default async function OrderStatusPage({
       <div className="rounded-lg border border-black/10 p-5 sm:p-6">
         <p className="label-eyebrow mb-2">{t("contactEyebrow")}</p>
         <p className="font-display text-xl tracking-tight sm:text-2xl">{t("contactTitle")}</p>
-        <p className="mt-2 max-w-md text-sm opacity-75">{t("contactDesc")}</p>
+        <p className="mt-2 max-w-md text-sm opacity-75">
+          {t.rich("contactDesc", {
+            phone: formatWhatsAppNumber(whatsappNumber),
+            email: BUSINESS.email,
+            link: (chunks) => (
+              <Link href="/terms" className="underline underline-offset-2">
+                {chunks}
+              </Link>
+            ),
+          })}
+        </p>
         <a
           href={whatsappHref}
           target="_blank"
