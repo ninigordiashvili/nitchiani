@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { setRequestLocale } from "next-intl/server";
-import { Suspense } from "react";
 import { CampaignView } from "@/components/commerce/CampaignView";
 import { CollectionDescription } from "@/components/commerce/CollectionDescription";
 import { FilteredCollection } from "@/components/commerce/FilteredCollection";
@@ -109,12 +108,10 @@ export default async function CollectionPage({
           <CollectionDescription text={collection.description} />
         </header>
 
-        <Suspense>
-          <FilteredCollection
-            products={collection.products}
-            subcategories={subcategoriesFor(handle)}
-          />
-        </Suspense>
+        <FilteredCollection
+          products={collection.products}
+          subcategories={subcategoriesFor(handle)}
+        />
       </section>
     </div>
   );

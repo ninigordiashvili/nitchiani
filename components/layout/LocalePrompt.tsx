@@ -89,7 +89,10 @@ export function LocalePrompt() {
     <div
       role="region"
       aria-label={copy.availableIn}
-      className="relative border-b border-black/10"
+      // Laid over the top of the page rather than in the flow. It appears only after the
+      // browser's language list has been read, so an in-flow bar pushed the header and the
+      // whole page down ~37px a moment after first paint (Lighthouse: layout shift 0.075).
+      className="absolute inset-x-0 top-0 z-[60] border-b border-black/10 shadow-sm"
       style={{ background: "var(--surface)" }}
     >
       <div className="container-shop flex items-center justify-center gap-3 py-2 pr-9 text-center text-xs sm:pr-12">

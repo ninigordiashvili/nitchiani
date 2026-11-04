@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { setRequestLocale, getTranslations } from "next-intl/server";
-import { Suspense } from "react";
 import { CollectionDescription } from "@/components/commerce/CollectionDescription";
 import { FilteredCollection } from "@/components/commerce/FilteredCollection";
 import { CategoryChips } from "@/components/homepage/CategoryChips";
@@ -56,9 +55,7 @@ export default async function ShopPage({
           {/* Same intro block as the category pages, so every listing reads alike. */}
           <CollectionDescription text={t("allProductsDesc")} />
         </header>
-        <Suspense>
-          <FilteredCollection products={products} />
-        </Suspense>
+        <FilteredCollection products={products} />
       </section>
     </div>
   );
