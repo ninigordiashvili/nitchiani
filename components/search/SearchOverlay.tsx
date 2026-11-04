@@ -10,6 +10,7 @@ import { ProductGrid } from "@/components/commerce/ProductGrid";
 import type { Locale } from "@/lib/i18n/config";
 import { Link } from "@/lib/i18n/routing";
 import type { Product } from "@/lib/shopify/types";
+import { useCart } from "@/lib/cart/store";
 import { useFocusTrap } from "@/lib/ui/use-focus-trap";
 import { useOverlays } from "@/lib/ui/overlays";
 import { useSwipeDismiss } from "@/lib/ui/use-swipe-dismiss";
@@ -28,6 +29,11 @@ export function SearchOverlay() {
   // Stable identity: the ESC-key effect below lists `onClose` as a dependency, so an inline
   // arrow would tear down and re-register the keydown listener on every render.
   const onClose = useCallback(() => setSearchOpen(false), [setSearchOpen]);
+  // Opening the bag ends the search: same reason as the quick-view sheet.
+  const cartOpen = useCart().open;
+  useEffect(() => {
+    if (cartOpen) setSearchOpen(false);
+  }, [cartOpen, setSearchOpen]);
   const inputRef = useRef<HTMLInputElement>(null);
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<Product[]>([]);

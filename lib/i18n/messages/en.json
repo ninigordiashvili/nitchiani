@@ -72,7 +72,7 @@
     "trust": {
       "shipping": "Shipping in Georgia",
       "shippingDesc": "Tbilisi 1–3, rest of Georgia 3–7 working days",
-      "returns": "24-hour returns",
+      "returns": "14-day returns",
       "returnsDesc": "Hair even if opened · care products unopened",
       "payment": "Secure checkout",
       "paymentDesc": "Visa / Mastercard · secure checkout"
@@ -89,8 +89,9 @@
     "hairAccessories": "Hair Accessories",
     "bonnets": "Bonnets",
     "durags": "Durags",
-    "hairExtensionsHair": "Hair",
-    "hairExtensionsAccessories": "Clip-in accessories"
+    "hairExtensionsClipIn": "Clip-in",
+    "hairExtensionsBraids": "For braids",
+    "hairExtensionsCurls": "For afro curls"
   },
   "product": {
     "outOfStock": "Out of stock",
@@ -112,10 +113,6 @@
     "askQuestion": "Questions about this?",
     "askQuestionDesc": "Chat with us right here — we usually reply in minutes.",
     "sizeGuide": "Size guide",
-    "sizeGuideBonnet": "Bonnet sizes",
-    "sizeGuideSize": "Size",
-    "sizeGuideHeadCirc": "Head circumference",
-    "sizeGuideBonnetHint": "Measure around the widest part of your head, just above the ears.",
     "sizeGuideLength": "Length reference",
     "sizeGuideLengthIn": "Inches",
     "sizeGuideLengthCm": "Centimetres",
@@ -188,7 +185,7 @@
     "howItWorksStep2Desc": "We check your order, pack it carefully and hand it to the courier.",
     "howItWorksStep3Title": "Delivery or pickup",
     "howItWorksStep3Desc": "By courier in 1–3 working days in Tbilisi, 3–7 elsewhere. Or pick it up free in Tbilisi.",
-    "howItWorksStep4Title": "Returns within 24 hours",
+    "howItWorksStep4Title": "Returns within 14 days",
     "howItWorksStep4Desc": "Hair can be returned even if the package is opened, as long as it's unused. Care products only unopened.",
     "total": "Total",
     "checkout": "Checkout",
@@ -317,9 +314,9 @@
     "eyebrow": "Legal",
     "title": "Terms & Conditions",
     "lastUpdated": "Last updated {date}",
-    "intro": "These terms govern your use of nitchiani.shop and any order you place with us. Please read them carefully before purchasing — placing an order means you accept them.",
+    "intro": "These terms (the standard contract terms) govern the use of nitchiani.shop (the \"Site\") and the sales contracts made through it. The terms are available on this page before you place an order, and you can save or print them. An order is placed only after you confirm on the payment page that you have read and accept these terms.",
     "metaTitle": "Terms & Conditions — Orders, Delivery & Returns",
-    "metaDescription": "The terms that govern orders placed on nitchiani.shop, including delivery, returns and the 24-hour right of withdrawal."
+    "metaDescription": "The terms that govern orders placed on nitchiani.shop: payment, delivery, pickup in Tbilisi, returns and the 14-day right of withdrawal."
   },
   "whatsapp": {
     "productMessage": "Hi — I have a question about: {title}",
@@ -339,15 +336,27 @@
   },
   "cookies": {
     "title": "Cookies",
-    "body": "We use a few essential cookies to make the site work — cart, language, currency. Anything optional (analytics, marketing) only runs if you accept. <link>Read our Privacy Policy</link>.",
+    "body": "We use essential cookies to make the site work (cart, language, currency). Analytics and marketing cookies are switched on only with your consent. You can change your consent at any time with the \"Cookie preferences\" link in the footer.",
     "acceptAll": "Accept all",
-    "rejectAll": "Essential only"
+    "rejectAll": "Essential only",
+    "settings": "Settings",
+    "essentialTitle": "Essential",
+    "essentialAlways": "Always on",
+    "essentialBody": "Needed to remember your cart, wishlist, language and currency, and for the site's security. Does not need consent.",
+    "analyticsTitle": "Analytics",
+    "analyticsBody": "Google Analytics — helps us understand how the site is used. Switched on only with your consent.",
+    "thirdPartyTitle": "Third-party services",
+    "thirdPartyBody": "On the checkout page, Google Maps is loaded to pick an address, and it uses its own cookies. If you would rather not, you can type the address in by hand.",
+    "save": "Save",
+    "retention": "We keep your choice for 12 months, after which we will ask again. Details in the <link>Privacy Policy</link>.",
+    "back": "Back",
+    "privacyLink": "Privacy Policy"
   },
   "privacy": {
     "eyebrow": "Legal",
     "title": "Privacy Policy",
     "lastUpdated": "Last updated {date}",
-    "intro": "How we collect, use and protect your personal data when you use nitchiani.shop. Written so a reasonable person can actually read it.",
+    "intro": "How we collect, use and protect your personal data when you use nitchiani.shop.",
     "metaTitle": "Privacy Policy — How We Protect Your Data",
     "metaDescription": "How Nitchiani collects, uses and protects your personal data when you shop on nitchiani.shop — under the Georgian Personal Data Protection Act."
   },
@@ -355,9 +364,9 @@
     "eyebrow": "Legal",
     "title": "Refund & Returns Policy",
     "lastUpdated": "Last updated {date}",
-    "intro": "How returns and refunds work — your 24-hour right of withdrawal, what's excluded for hygiene reasons, and how to get money back into your account.",
-    "metaTitle": "Refund & Returns Policy — 24-Hour Withdrawal",
-    "metaDescription": "Return and refund terms for orders placed on nitchiani.shop, including the 24-hour right of withdrawal and hygiene exceptions."
+    "intro": "How returns and refunds work — the 14-day right of withdrawal, the exceptions for hygiene reasons, and how your money is returned.",
+    "metaTitle": "Refund & Returns Policy — 14-Day Withdrawal",
+    "metaDescription": "Return and refund terms for orders placed on nitchiani.shop, including the 14-day right of withdrawal and hygiene exceptions."
   },
   "footer": {
     "shop": "Shop",
@@ -430,7 +439,7 @@
     "eyebrow": "Order status",
     "title": "Track your order",
     "liveTitle": "Your order",
-    "intro": "Tracking goes out via WhatsApp or email within a few hours of your order. If you can't find it, message us and we'll resend.",
+    "intro": "After you place an order you will receive a confirmation by email or WhatsApp, and when it is dispatched, an SMS with a tracking link. The easiest way is to open the link in the message — it shows your order directly.",
     "liveIntro": "Your order's current status. The highlighted step is where your order is right now.",
     "step1": "Order placed",
     "step2": "Payment confirmed",
@@ -441,7 +450,7 @@
     "orderItems": "Items",
     "contactEyebrow": "Get help",
     "contactTitle": "Message us about your order",
-    "contactDesc": "We reply within working hours — usually in minutes. Mention your order number if you have it.",
+    "contactDesc": "If you cannot find the link or have a question about your order, write to us on WhatsApp ({phone}) or by email ({email}) and give the order number. We reply during working hours. How to submit a complaint is described in section 13 of the <link>Terms & Conditions</link>.",
     "openWhatsApp": "Open WhatsApp",
     "lookupLabel": "Tracking link",
     "lookupPlaceholder": "Paste the link from your confirmation email",
@@ -456,7 +465,8 @@
     "reviewTitle": "How was it?",
     "reviewDesc": "Send us a line on WhatsApp — we'll publish it under your first name and initial.",
     "reviewCta": "Write a review",
-    "reviewPrefill": "Hi! I'd like to leave a review for order {order}:"
+    "reviewPrefill": "Hi! I'd like to leave a review for order {order}:",
+    "trackingNote": "The tracking page is run by the delivery platform LLC \"QuickShipper\" and its own advertising may appear on it; we do not pass the contents of your order to advertisers. Details in the <link>Privacy Policy</link>."
   },
   "welcome": {
     "eyebrow": "A gift for you",
@@ -466,17 +476,16 @@
     "fineprint": "One per customer · cannot combine with other offers"
   },
   "about": {
-    "lead": "The Nitchiani brand has been around since 2021, and the online shop since 2026. We sell synthetic hair for afro curls and braids — and everything needed to care for it.",
-    "offerTitle": "What we sell",
-    "offerBody": "Synthetic hair for curls, kinky textures and braiding. Hair care — leave-in conditioners and styling wax. Satin bonnets and durags to protect your hair.",
+    "lead": "The Nitchiani brand has existed since 2021, and the online shop since 2026. We sell synthetic hair for afro curls and braids, hair-care products (leave-in conditioners, hair wax), satin bonnets and durags.",
     "whyTitle": "Why Nitchiani",
-    "whyBody": "These products are hard to find in Georgia — most people import them, waiting weeks and paying shipping on top. We hold stock in Tbilisi: your order arrives in 1–3 working days in Tbilisi and 3–7 elsewhere, with no wait and no customs.",
+    "whyBody": "Products like these are hard to find in Georgia — most people import them, waiting weeks and paying extra. Our stock is in Tbilisi, so an order is normally sent within 1–3 working days in Tbilisi and 3–7 working days in the regions.",
     "deliveryTitle": "Delivery and payment",
-    "deliveryBody": "Courier delivery across Georgia — 1–3 working days in Tbilisi, 3–7 to the rest of Georgia. Pay by bank card. Collection in Tbilisi is possible by arrangement — the address is shown at checkout.",
+    "deliveryBody": "We deliver across Georgia by courier. You can pay by bank card (Visa/Mastercard). You can collect your order free of charge in Tbilisi, at {address} — you choose the option you prefer when you place the order.",
     "returnsTitle": "Returns",
-    "returnsBody": "If you don't like it, the colour isn't what you expected, or you find a visual defect — return it within 24 hours. Hair can be returned even with the package opened, as long as it hasn't been used — not braided. For hygiene reasons, opened care products such as wax or conditioner can't be returned.",
-    "contactTitle": "Get in touch",
+    "returnsBody": "If you don't like a product you bought online, you can withdraw from the purchase within 14 calendar days of receiving it, without giving a reason. Synthetic hair can be returned even after the packaging has been opened, as long as it has not been used. For hygiene reasons, sealed hair-care products whose seal was broken after delivery cannot be returned. For details see the <link>Refund & Returns Policy</link>.",
+    "contactTitle": "Seller and contact",
     "metaTitle": "About Us — Online Hair Shop in Tbilisi",
-    "metaDescription": "Nitchiani — a Tbilisi brand since 2021, online shop since 2026: synthetic braiding hair, hair care, satin bonnets and durags."
+    "metaDescription": "Nitchiani — a Tbilisi brand since 2021, online shop since 2026: synthetic braiding hair, hair care, satin bonnets and durags.",
+    "sellerBody": "Seller: {name} (individual entrepreneur, identification code {id})."
   }
 }

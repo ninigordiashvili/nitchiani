@@ -58,6 +58,9 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   images: {
+    // See lib/image-loader.ts: EchoDesk photos skip the Image CDN; everything else uses it.
+    loader: "custom",
+    loaderFile: "./lib/image-loader.ts",
     /**
      * Both of these are honoured by `next start` and ignored in production, because Netlify
      * serves `/_next/image` from its own Image CDN rather than through Next's optimizer.

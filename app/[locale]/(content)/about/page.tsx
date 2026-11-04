@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Mail, MapPin, Phone } from "lucide-react";
 import { localeAlternates } from "@/lib/seo";
+import { Link } from "@/lib/i18n/routing";
 import { BUSINESS, businessAddress } from "@/lib/business";
 import { formatWhatsAppNumber, getWhatsAppNumber } from "@/components/brand/WhatsAppIcon";
 import type { Locale } from "@/lib/i18n/config";
@@ -36,11 +37,20 @@ export default async function AboutPage({ params }: { params: Promise<{ locale: 
   // you, how does it reach me, what if it's wrong, how do I ask. Each is its own `h2` — the
   // page was a single centred paragraph, which gave search engines nothing to read and a
   // shopper no reason to trust an unfamiliar shop with a card number.
+  // What the shop sells is the lead paragraph now, so it is not repeated as its own section.
   const sections = [
-    { title: t("offerTitle"), body: t("offerBody") },
     { title: t("whyTitle"), body: t("whyBody") },
-    { title: t("deliveryTitle"), body: t("deliveryBody") },
-    { title: t("returnsTitle"), body: t("returnsBody") },
+    { title: t("deliveryTitle"), body: t("deliveryBody", { address: BUSINESS.street[locale] }) },
+    {
+      title: t("returnsTitle"),
+      body: t.rich("returnsBody", {
+        link: (chunks) => (
+          <Link href="/refund" className="underline underline-offset-2">
+            {chunks}
+          </Link>
+        ),
+      }),
+    },
   ];
 
   return (
@@ -66,6 +76,9 @@ export default async function AboutPage({ params }: { params: Promise<{ locale: 
             <h2 className="font-display mb-3 text-xl tracking-tight sm:text-2xl">
               {t("contactTitle")}
             </h2>
+            <p className="mb-4 text-sm leading-relaxed opacity-85 sm:text-base">
+              {t("sellerBody", { name: BUSINESS.legalName[locale], id: BUSINESS.registrationId })}
+            </p>
             <ul className="grid gap-2 text-sm">
               {storeAddress ? (
                 <li className="flex items-center gap-2.5">

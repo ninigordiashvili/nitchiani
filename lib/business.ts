@@ -25,6 +25,9 @@ export const BUSINESS = {
   street: { ka: "სულხან ცინცაძის ქუჩა 17", en: "17 Sulkhan Tsintsadze St" },
   /** Public-facing contact email. */
   email: "Info@nitchiani.shop",
+  /** Phone / WhatsApp as printed in the legal pages. The same number the site's WhatsApp links
+   *  use (`NEXT_PUBLIC_WHATSAPP_NUMBER`, default 995579370374). */
+  phone: "+995 579 370 374",
   /** Numeric page id. Kept separate from the URL because Messenger links (`m.me/<id>`) need
    *  the id on its own — see lib/contact-channels.ts. */
   facebookPageId: "61593930928320",

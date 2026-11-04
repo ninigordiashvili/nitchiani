@@ -70,7 +70,17 @@ export async function ProductBreadcrumb({
         className="mb-3 flex items-center gap-1.5 text-[11px] opacity-70"
       >
         {items.map((it, i) => (
-          <span key={i} className="flex min-w-0 items-center gap-1.5">
+          // The ancestors keep their words on one line and never shrink; the product's own
+          // name is the one that gives, truncating with an ellipsis. Otherwise a long
+          // Georgian category name wraps to two lines and drags its chevron out of line.
+          <span
+            key={i}
+            className={
+              i < items.length - 1
+                ? "flex flex-shrink-0 items-center gap-1.5 whitespace-nowrap"
+                : "flex min-w-0 flex-1 items-center gap-1.5"
+            }
+          >
             {it.href ? (
               <Link href={it.href} className="group hover:opacity-100">
                 <span className="underline-motion">{it.name}</span>

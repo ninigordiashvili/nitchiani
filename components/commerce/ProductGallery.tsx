@@ -58,8 +58,38 @@ export function ProductGallery({
   // back — the two sides drove each other until React cut the page off.
   useEffect(() => () => showPhotoOnScreen(null), []);
 
+  // Warm the other photos once the page has settled. Picking a colour only swaps client state,
+  // so the wait a shopper feels is the new photo downloading — on a first view, Netlify
+  // fetching the original from EchoDesk's storage and resizing it. Doing that in the
+  // background, after the first photo has painted, turns the click into an instant swap.
+  const [warm, setWarm] = useState(false);
+  useEffect(() => {
+    if (shots.length < 2) return;
+    const id = window.setTimeout(() => setWarm(true), 1200);
+    return () => window.clearTimeout(id);
+  }, [shots.length]);
+
   return (
     <div className="lg:flex lg:gap-4">
+      {warm ? (
+        // Same `sizes` as the main photo, so the browser asks for the width it will display.
+        // Eager images are fetched even while invisible; lazy ones would not be.
+        <div aria-hidden className="pointer-events-none absolute h-0 w-0 overflow-hidden opacity-0">
+          {shots.slice(0, 8).map((img, i) =>
+            i === active ? null : (
+              <Image
+                key={`${img.url}-${i}`}
+                src={img.url}
+                alt=""
+                width={640}
+                height={800}
+                sizes="(min-width: 1024px) 50vw, 100vw"
+                loading="eager"
+              />
+            ),
+          )}
+        </div>
+      ) : null}
       {shots.length > 1 ? (
         <ul className="no-scrollbar order-2 mt-3 flex gap-2 overflow-x-auto lg:order-1 lg:mt-0 lg:flex-col">
           {shots.map((img, i) => (

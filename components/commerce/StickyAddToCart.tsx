@@ -79,8 +79,10 @@ export function StickyAddToCart({
         pointerEvents: visible ? "auto" : "none",
       }}
     >
-      <div className="flex items-center gap-3 px-3 py-2.5">
-        <div className="relative h-12 w-10 flex-shrink-0 overflow-hidden rounded-md bg-white">
+      <div className="flex items-center gap-2.5 px-3 py-2.5">
+        {/* The photo is the first thing to go on a narrow phone: the price, the bag and the
+            button are what the bar is for, and none of them should be squeezed to make room. */}
+        <div className="relative hidden h-12 w-10 flex-shrink-0 overflow-hidden rounded-md bg-white min-[390px]:block">
           <Image
             src={safeImageSrc(product.featuredImage.url)}
             alt={product.featuredImage.altText}
@@ -91,7 +93,7 @@ export function StickyAddToCart({
             className="object-contain"
           />
         </div>
-        <div className="flex min-w-0 flex-1 flex-col">
+        <div className="flex max-w-[6.5rem] min-w-[3.5rem] flex-shrink-0 flex-col">
           <span className="line-clamp-1 text-xs font-medium leading-tight">
             {product.title}
           </span>
@@ -118,7 +120,7 @@ export function StickyAddToCart({
           product={product}
           variant={variant}
           quantity={quantity}
-          className="w-auto flex-shrink-0 px-4 py-2.5 text-xs"
+          className="min-h-11 min-w-0 flex-1 px-3 py-2 text-center text-xs leading-tight tracking-wide"
         />
       </div>
     </div>

@@ -1,5 +1,5 @@
 import { CATEGORIES } from "../categories";
-import { categoriesFor } from "./categories";
+import { resolveCategories, resolveSubcategory } from "./categories";
 import { distinctImages } from "../images";
 import type { Locale } from "../i18n/config";
 import type { ImageRef, Product, ProductAttribute, ProductVariant } from "../shopify/types";
@@ -192,7 +192,7 @@ export function adaptProduct(p: EchoDeskProduct, locale: Locale): Product {
   // The category, though, is known — and everything that keyed on `productType` was treating
   // every product as the same kind: the breadcrumb's middle crumb had no name, and "related
   // products" matched "" to "" and offered a braiding-hair rail on a ₾10 durag.
-  const handles = categoriesFor(p.slug);
+  const handles = resolveCategories(p.slug, [pick(p.name, "ka"), pick(p.name, "en")]);
   const productTypeHandle = handles[0] ?? "";
 
   // Both languages, so the Georgian site finds "durag" and the English one finds "ბონეტი" —
@@ -225,6 +225,8 @@ export function adaptProduct(p: EchoDeskProduct, locale: Locale): Product {
     productType,
     // Locale-stable slug for breadcrumb/category links, mirroring the sample catalog's rule.
     productTypeHandle,
+    categories: handles,
+    subcategory: resolveSubcategory(p.slug, [pick(p.name, "ka"), pick(p.name, "en")], "braids"),
     featuredImage: featured,
     // Every colour belongs in the gallery when the product has no shots of its own, so the
     // page and the card rail can be swiped through them.

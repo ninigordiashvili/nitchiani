@@ -7,6 +7,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "@/lib/i18n/routing";
 import { cn } from "@/lib/utils";
 import { BLUR_DATA_URL, distinctImages, variantPhotos } from "@/lib/images";
+import { useCart } from "@/lib/cart/store";
 import { useFocusTrap } from "@/lib/ui/use-focus-trap";
 import { useOverlays } from "@/lib/ui/overlays";
 import { useQuickView } from "@/lib/ui/quick-view";
@@ -34,6 +35,7 @@ export function QuickViewModal() {
   const t = useTranslations();
   const quickView = useQuickView();
   const overlays = useOverlays();
+  const cart = useCart();
   const product = quickView.product;
   const open = product !== null;
   const { dragOffset, handlers } = useSwipeDismiss({
@@ -80,6 +82,14 @@ export function QuickViewModal() {
     showPhotoOnScreen(shown?.url ?? null);
     return () => showPhotoOnScreen(null);
   }, [shown]);
+
+  // The bag opening means the shopper has moved on to it — from the "View bag" toast, the
+  // bottom nav or the header. Left open, this sheet sat on top of the drawer, or behind it
+  // and back in view the moment the drawer shut.
+  const closeQuickView = quickView.close;
+  useEffect(() => {
+    if (cart.open) closeQuickView();
+  }, [cart.open, closeQuickView]);
 
   // Body scroll lock + ESC handler.
   useEffect(() => {
