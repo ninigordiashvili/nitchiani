@@ -1,5 +1,5 @@
 import { BUSINESS } from "@/lib/business";
-import { SITE_URL } from "@/lib/seo";
+import { RETURN_POLICY, SITE_URL } from "@/lib/seo";
 import type { Locale } from "@/lib/i18n/config";
 
 /**
@@ -42,6 +42,23 @@ export function SiteJsonLd({ locale }: { locale: Locale }) {
     // The whole country: couriers deliver nationwide, and "Tbilisi" quietly told Google not
     // to show the shop to anyone outside it.
     areaServed: "GE",
+    contactPoint: {
+      "@type": "ContactPoint",
+      contactType: "customer service",
+      telephone: `+${whatsapp}`,
+      email: BUSINESS.email,
+      availableLanguage: ["Georgian", "English"],
+      areaServed: "GE",
+    },
+    hasMerchantReturnPolicy: RETURN_POLICY,
+    knowsAbout: [
+      "synthetic braiding hair",
+      "clip-in braids",
+      "afro curls",
+      "hair care",
+      "satin bonnets",
+      "durags",
+    ],
     // The brand, not the shop: the online shop opened in 2026, the brand has traded since 2021.
     foundingDate: "2021",
     sameAs: [`https://instagram.com/${instagram}`, BUSINESS.facebookUrl],

@@ -486,6 +486,17 @@
     "contactTitle": "Seller and contact",
     "metaTitle": "About Us — Online Hair Shop in Tbilisi",
     "metaDescription": "Nitchiani — a Tbilisi brand since 2021, online shop since 2026: synthetic braiding hair, hair care, satin bonnets and durags.",
-    "sellerBody": "Seller: {name} (individual entrepreneur, identification code {id})."
+    "sellerBody": "Seller: {name} (individual entrepreneur, identification code {id}).",
+    "faqTitle": "Frequently asked questions",
+    "faq1q": "How long does delivery take?",
+    "faq1a": "An order is normally sent within 1–3 working days in Tbilisi and 3–7 working days in the regions.",
+    "faq2q": "How is my order delivered, and what does delivery cost?",
+    "faq2a": "We deliver across Georgia by courier. The delivery fee is shown at checkout before you confirm the order. Pickup in Tbilisi is free, at {address}.",
+    "faq3q": "How can I pay?",
+    "faq3a": "You can pay by bank card (Visa/Mastercard).",
+    "faq4q": "Can I return a product?",
+    "faq4a": "Yes. For products bought online you can withdraw within 14 calendar days of receiving them, without giving a reason. Synthetic hair can be returned even after the packaging is opened, as long as it has not been used. For hygiene reasons, sealed hair-care products whose seal was broken after delivery cannot be returned.",
+    "faq5q": "How do I contact you about an order?",
+    "faq5a": "Write to us on WhatsApp ({phone}) or by email ({email}) and give the order number. We reply during working hours."
   }
 }

@@ -1,5 +1,6 @@
 import type { Locale } from "@/lib/i18n/config";
 import { NO_REVIEWS } from "@/lib/reviews";
+import { RETURN_POLICY, SHIPPING_DETAILS } from "@/lib/seo";
 import type { Product } from "@/lib/shopify/types";
 
 /**
@@ -31,6 +32,8 @@ export function ProductJsonLd({
   const inStock = product.variants.some((v) => v.availableForSale);
   const variant = product.variants[0];
   const price = variant?.price.amount ?? product.priceRange.min.amount;
+  // Sorted prices of every variant: when they differ, the page sells "from X to Y", not X.
+  const prices = product.variants.map((v) => Number(v.price.amount)).filter((n) => Number.isFinite(n)).sort((a, b) => a - b);
   const currency = variant?.price.currencyCode ?? "GEL";
 
   // Schema.org Product. Optional fields are spread in conditionally so the JSON stays
@@ -51,14 +54,22 @@ export function ProductJsonLd({
       name: product.vendor || "Nitchiani",
     },
     offers: {
-      "@type": "Offer",
+      "@type": prices.length > 1 && prices[0] !== prices[prices.length - 1] ? "AggregateOffer" : "Offer",
+      ...(prices.length > 1 && prices[0] !== prices[prices.length - 1]
+        ? {
+            lowPrice: prices[0].toFixed(2),
+            highPrice: prices[prices.length - 1].toFixed(2),
+            offerCount: product.variants.length,
+          }
+        : { price }),
       url,
       priceCurrency: currency,
-      price,
       availability: inStock
         ? "https://schema.org/InStock"
         : "https://schema.org/OutOfStock",
       itemCondition: "https://schema.org/NewCondition",
+      shippingDetails: SHIPPING_DETAILS,
+      hasMerchantReturnPolicy: RETURN_POLICY,
     },
   };
 

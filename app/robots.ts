@@ -18,13 +18,27 @@ export default function robots(): MetadataRoute.Robots {
     process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ??
     "http://localhost:3000";
 
+  // AI search and assistant crawlers are welcome: being quoted by them is the point. Named
+  // explicitly so the intent is on record — and a bot that matches a named group ignores `*`,
+  // so each repeats the same disallow.
+  const AI_BOTS = [
+    "GPTBot",
+    "OAI-SearchBot",
+    "ChatGPT-User",
+    "ClaudeBot",
+    "Claude-SearchBot",
+    "Claude-User",
+    "PerplexityBot",
+    "Perplexity-User",
+    "Google-Extended",
+    "Applebot-Extended",
+  ];
+  const disallow = ["/api/", "/auth/"];
+
   return {
     rules: [
-      {
-        userAgent: "*",
-        allow: "/",
-        disallow: ["/api/", "/auth/"],
-      },
+      { userAgent: "*", allow: "/", disallow },
+      { userAgent: AI_BOTS, allow: "/", disallow },
     ],
     sitemap: `${baseUrl}/sitemap.xml`,
     host: baseUrl,

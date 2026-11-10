@@ -59,6 +59,14 @@ export async function generateMetadata({
     // child pages set `title`/`description`/`openGraph` and never `twitter`. Left out, Next
     // derives each page's card from its own title and description.
     twitter: { card: "summary_large_image" },
+    // Search Console / Bing ownership, from env so the codes can be set on the host without a
+    // deploy of new code; renders nothing while unset.
+    verification: {
+      google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION || undefined,
+      other: process.env.NEXT_PUBLIC_BING_SITE_VERIFICATION
+        ? { "msvalidate.01": process.env.NEXT_PUBLIC_BING_SITE_VERIFICATION }
+        : undefined,
+    },
   };
 }
 

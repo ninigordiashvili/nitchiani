@@ -41,6 +41,8 @@ const OG_LOCALES: Record<Locale, string> = { ka: "ka_GE", en: "en_US" };
  */
 export function ogLocale(locale: Locale) {
   return {
+    type: "website" as const,
+    siteName: "Nitchiani",
     locale: OG_LOCALES[locale],
     alternateLocale: locales.filter((l) => l !== locale).map((l) => OG_LOCALES[l]),
   };
@@ -155,3 +157,28 @@ export function productSeo(p: {
   }
   return { title, description };
 }
+
+/**
+ * Delivery and returns as the Terms state them — one copy, used by the product and the
+ * business structured data so the two cannot disagree. No `shippingRate`: the fee depends on
+ * the courier option picked at checkout, and a number here would be a guess.
+ */
+export const SHIPPING_DETAILS = {
+  "@type": "OfferShippingDetails",
+  shippingDestination: { "@type": "DefinedRegion", addressCountry: "GE" },
+  deliveryTime: {
+    "@type": "ShippingDeliveryTime",
+    handlingTime: { "@type": "QuantitativeValue", minValue: 0, maxValue: 1, unitCode: "DAY" },
+    transitTime: { "@type": "QuantitativeValue", minValue: 1, maxValue: 7, unitCode: "DAY" },
+  },
+} as const;
+
+/** 14-day withdrawal; the customer pays the return shipping (Terms §withdrawal). */
+export const RETURN_POLICY = {
+  "@type": "MerchantReturnPolicy",
+  applicableCountry: "GE",
+  returnPolicyCategory: "https://schema.org/MerchantReturnFiniteReturnWindow",
+  merchantReturnDays: 14,
+  returnMethod: "https://schema.org/ReturnByMail",
+  returnFees: "https://schema.org/ReturnShippingFees",
+} as const;
