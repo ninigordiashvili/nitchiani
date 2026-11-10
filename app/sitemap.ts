@@ -16,6 +16,9 @@ import { getProducts, getProductsByHandles } from "@/lib/shopify/client";
  * which is why each path is built with the locale segment baked in.
  */
 
+/** When the static pages' copy last changed. Bump it when the text of those pages changes. */
+const STATIC_LASTMOD = new Date("2026-11-10");
+
 const COLLECTIONS = [...CATEGORY_HANDLES];
 
 const STATIC_PATHS = [
@@ -46,15 +49,16 @@ function getBaseUrl(): string {
 function buildEntry(
   baseUrl: string,
   path: string,
-  priority = 0.7,
+  lastModified?: Date,
 ): MetadataRoute.Sitemap {
   const languages: Record<string, string> = {};
   for (const l of locales) languages[l] = `${baseUrl}/${l}${path}`;
   return locales.map((locale) => ({
     url: `${baseUrl}/${locale}${path}`,
-    lastModified: new Date(),
-    changeFrequency: "weekly" as const,
-    priority,
+    // Only a date we actually know. This used to be "now" for every URL, which tells Google
+    // nothing changed in particular and teaches it to ignore the field. `changeFrequency` and
+    // `priority` are left out: Google documents that it ignores both.
+    ...(lastModified ? { lastModified } : {}),
     alternates: { languages },
   }));
 }
@@ -67,10 +71,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const entries: MetadataRoute.Sitemap = [];
 
   for (const path of STATIC_PATHS) {
-    entries.push(...buildEntry(baseUrl, path, path === "" ? 1 : 0.8));
+    entries.push(...buildEntry(baseUrl, path, STATIC_LASTMOD));
   }
   for (const col of COLLECTIONS) {
-    entries.push(...buildEntry(baseUrl, `/shop/${col}`, 0.7));
+    entries.push(...buildEntry(baseUrl, `/shop/${col}`));
   }
   // Only campaigns that resolve to real products. The campaign page calls `notFound()` when
   // its handles match nothing, so listing one here advertised a dead URL to Google — and
@@ -79,11 +83,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   for (const c of CAMPAIGNS) {
     const live = await getProductsByHandles(c.handles, locales[0]).catch(() => []);
     if (live.length === 0) continue;
-    // Campaigns are usually time-bound and drive paid/social traffic — high priority while live.
-    entries.push(...buildEntry(baseUrl, `/shop/${c.slug}`, 0.8));
+    entries.push(...buildEntry(baseUrl, `/shop/${c.slug}`));
   }
   for (const p of products) {
-    entries.push(...buildEntry(baseUrl, `/products/${p.handle}`, 0.8));
+    entries.push(...buildEntry(baseUrl, `/products/${p.handle}`));
   }
 
   return entries;

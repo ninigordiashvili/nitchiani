@@ -20,6 +20,7 @@ export function GET() {
 - [Hair care](${SITE_URL}/en/shop/hair-care): leave-in conditioners, hair wax
 - [Satin bonnets](${SITE_URL}/en/shop/bonnets)
 - [Durags](${SITE_URL}/en/shop/durags)
+- [Product index](${SITE_URL}/llms-full.txt): every product name and link, by category
 - [Sitemap](${SITE_URL}/sitemap.xml): every product page, with Georgian and English versions
 
 ## Ordering, delivery and returns

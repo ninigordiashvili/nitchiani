@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { setRequestLocale, getTranslations } from "next-intl/server";
 import { CollectionDescription } from "@/components/commerce/CollectionDescription";
 import { FilteredCollection } from "@/components/commerce/FilteredCollection";
+import { CollectionJsonLd } from "@/components/seo/CollectionJsonLd";
 import { CategoryChips } from "@/components/homepage/CategoryChips";
 import { getProducts } from "@/lib/shopify/client";
 import { localeAlternates } from "@/lib/seo";
@@ -46,6 +47,13 @@ export default async function ShopPage({
 
   return (
     <div className="pb-12">
+      <CollectionJsonLd
+        locale={locale}
+        path="/shop"
+        name={t("allProducts")}
+        description={t("allProductsDesc")}
+        products={products}
+      />
       <CategoryChips />
       <section className="container-shop mt-4">
         <header className="mb-6">

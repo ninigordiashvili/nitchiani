@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { setRequestLocale } from "next-intl/server";
 import { CampaignView } from "@/components/commerce/CampaignView";
 import { CollectionDescription } from "@/components/commerce/CollectionDescription";
+import { CollectionJsonLd } from "@/components/seo/CollectionJsonLd";
 import { FilteredCollection } from "@/components/commerce/FilteredCollection";
 import { CategoryChips } from "@/components/homepage/CategoryChips";
 import { getCampaignBySlug } from "@/lib/campaigns";
@@ -101,6 +102,13 @@ export default async function CollectionPage({
 
   return (
     <div className="pb-12">
+      <CollectionJsonLd
+        locale={locale}
+        path={`/shop/${handle}`}
+        name={collection.title}
+        description={collection.description}
+        products={collection.products}
+      />
       <CategoryChips />
       <section className="container-shop mt-4">
         <header className="mb-6">
