@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { SearchX } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/lib/i18n/routing";
+import { defaultLocale } from "@/lib/i18n/config";
 
 /**
  * Its own title, in the page's language. Without one a missing product took the homepage
@@ -9,7 +10,12 @@ import { Link } from "@/lib/i18n/routing";
  * what a shared dead link previewed as.
  */
 export async function generateMetadata(): Promise<Metadata> {
-  const t = await getTranslations("notFound");
+  // The default locale, named outright. A not-found page is given no params, so asking
+  // next-intl for "the current locale" made it read the request headers — which a cached
+  // route may not do. In production every unknown product or collection URL answered 500
+  // ("Page changed from static to dynamic") instead of 404. A 404 title is not indexed, so
+  // the cost of not matching the visitor's language here is nil; the page body below still is.
+  const t = await getTranslations({ locale: defaultLocale, namespace: "notFound" });
   return { title: t("title") };
 }
 

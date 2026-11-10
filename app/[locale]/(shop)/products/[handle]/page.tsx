@@ -43,6 +43,12 @@ export async function generateMetadata({
   params: Promise<{ locale: Locale; handle: string }>;
 }): Promise<Metadata> {
   const { locale, handle } = await params;
+  // Before anything can call `notFound()`: the 404 page reads the locale through next-intl,
+  // and with none set for this request it falls back to the request headers, which a cached
+  // page may not read. In production that turned every unknown product URL into a 500
+  // ("Page changed from static to dynamic") instead of a 404, and Google reported them as
+  // server errors.
+  setRequestLocale(locale);
   const product = await getProductByHandle(handle, locale);
   // Unreachable in practice — layout.tsx has already 404'd an unknown handle — but it keeps
   // the lookup's null case honest if this ever renders without that layout.
