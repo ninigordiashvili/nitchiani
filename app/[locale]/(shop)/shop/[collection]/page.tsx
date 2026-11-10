@@ -30,6 +30,9 @@ export async function generateMetadata({
   params: Promise<{ locale: Locale; collection: string }>;
 }): Promise<Metadata> {
   const { locale, collection: handle } = await params;
+  // See the product page: the 404 needs a locale set before `notFound()` can run on a cached
+  // route, or an unknown collection answers 500 instead of 404.
+  setRequestLocale(locale);
   const alternates = localeAlternates(locale, `/shop/${handle}`);
 
   // Same branch order as the page: campaign first, then collection.
