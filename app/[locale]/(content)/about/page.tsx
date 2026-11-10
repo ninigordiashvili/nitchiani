@@ -6,6 +6,7 @@ import { Link } from "@/lib/i18n/routing";
 import { BUSINESS, businessAddress } from "@/lib/business";
 import { formatWhatsAppNumber, getWhatsAppNumber } from "@/components/brand/WhatsAppIcon";
 import type { Locale } from "@/lib/i18n/config";
+import { SITE_URL } from "@/lib/seo";
 
 export async function generateMetadata({
   params,
@@ -53,8 +54,33 @@ export default async function AboutPage({ params }: { params: Promise<{ locale: 
     },
   ];
 
+  // The questions a first-time buyer asks, answered once: shown on the page and published as
+  // FAQPage structured data from the same strings, so the two cannot disagree. Google only
+  // accepts FAQ markup for text that is visible on the page.
+  const faqValues = {
+    address: BUSINESS.street[locale],
+    phone: formatWhatsAppNumber(whatsappNumber),
+    email: BUSINESS.email,
+  };
+  const faqs = [1, 2, 3, 4, 5].map((i) => ({
+    q: t(`faq${i}q`),
+    a: t(`faq${i}a`, faqValues),
+  }));
+  const faqJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "@id": `${SITE_URL}/${locale}/about#faq`,
+    inLanguage: locale === "ka" ? "ka-GE" : "en-US",
+    mainEntity: faqs.map((f) => ({
+      "@type": "Question",
+      name: f.q,
+      acceptedAnswer: { "@type": "Answer", text: f.a },
+    })),
+  };
+
   return (
     <div className="container-shop pb-16">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />
       <div className="mx-auto max-w-2xl py-6 sm:py-14">
         <header className="text-center">
           <p className="label-eyebrow mb-2">{locale === "ka" ? "ჩვენ შესახებ" : "About"}</p>
@@ -71,6 +97,18 @@ export default async function AboutPage({ params }: { params: Promise<{ locale: 
               <p className="text-sm leading-relaxed opacity-85 sm:text-base">{s.body}</p>
             </section>
           ))}
+
+          <section>
+            <h2 className="font-display mb-3 text-xl tracking-tight sm:text-2xl">{t("faqTitle")}</h2>
+            <dl className="grid gap-4">
+              {faqs.map((f) => (
+                <div key={f.q}>
+                  <dt className="text-sm font-semibold sm:text-base">{f.q}</dt>
+                  <dd className="mt-1 text-sm leading-relaxed opacity-85 sm:text-base">{f.a}</dd>
+                </div>
+              ))}
+            </dl>
+          </section>
 
           <section>
             <h2 className="font-display mb-3 text-xl tracking-tight sm:text-2xl">
