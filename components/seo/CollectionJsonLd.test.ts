@@ -11,10 +11,11 @@ describe("collectionJsonLd", () => {
         { handle: "a", title: "A" },
         { handle: "b", title: "B" },
       ],
-    }) as any;
+    });
+    const items = d.mainEntity.itemListElement;
     expect(d["@type"]).toBe("CollectionPage");
     expect(d.mainEntity.numberOfItems).toBe(2);
-    expect(d.mainEntity.itemListElement[1]).toMatchObject({ position: 2, name: "B" });
-    expect(d.mainEntity.itemListElement[0].url).toMatch(/^https?:\/\/.+\/ka\/products\/a$/);
+    expect(items[1]).toMatchObject({ position: 2, name: "B" });
+    expect(items[0].url).toMatch(/^https?:\/\/.+\/ka\/products\/a$/);
   });
 });
