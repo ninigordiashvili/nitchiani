@@ -27,6 +27,7 @@ import type { EchoDeskStoreConfig } from "@/lib/echodesk/types";
 import { paymentStep } from "@/lib/checkout/payment-step";
 import { clientIp, rateLimit } from "@/lib/rate-limit";
 import { reportError } from "@/lib/observability";
+import { notifyBot } from "@/lib/orders/notify-bot";
 
 const lineSchema = z.object({
   variantId: z.string(),
@@ -492,6 +493,12 @@ async function handleEchoDeskOrder(
       : NextResponse.json({ error: "orderFailed" }, { status: 502 });
   }
   const order = outcome.order;
+
+  // Bookkeeping hook, placed BEFORE the card branch so card orders (the usual case) are included.
+  // Fire-and-forget and swallowed: it can never affect the shopper's checkout.
+  void notifyBot({ orderNumber: order.orderNumber ?? String(order.id), token: order.publicToken }, orderInput).catch(
+    (err) => reportError(err, { op: "notifyBot", orderId: String(order.id) }),
+  );
 
   const step = paymentStep(orderInput.paymentMethod, order.paymentUrl);
 
