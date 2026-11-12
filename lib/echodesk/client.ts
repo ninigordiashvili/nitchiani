@@ -64,9 +64,11 @@ export function getProductById(id: number): Promise<EchoDeskProduct | null> {
 }
 
 export async function getProductBySlug(slug: string): Promise<EchoDeskProduct | null> {
-  const page = await get<Paginated<EchoDeskProduct>>(
-    `/products/?slug=${encodeURIComponent(slug)}`,
-  );
+  // Not `?slug=`: the API ignores that filter and answers with its first page of 20, so any
+  // product beyond the twentieth — three of them, once the catalogue reached 23 — was "not
+  // found", and a shopper tapping "view full details" on one landed on a 404. The full list
+  // is the same request the catalogue already makes, so it is served from the same cache.
+  const page = await listProducts(200);
   const match = page?.results?.find((p) => p.slug === slug);
   if (!match) return null;
   // The list serialiser omits images/variants, so re-read the detail record for the PDP.
