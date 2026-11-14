@@ -207,7 +207,7 @@ export async function createGuestOrder(
         missingProductId: parseMissingProduct(message ?? raw) ?? undefined,
       };
     }
-    return { ok: false };
+    return { ok: false, error: `EchoDesk HTTP ${res.status}` };
   }
 
   const json = (await res.json()) as {
@@ -218,7 +218,7 @@ export async function createGuestOrder(
   };
   if (!json.id) {
     console.error("[echodesk/orders] guest checkout returned no order id:", JSON.stringify(json));
-    return { ok: false };
+    return { ok: false, error: "EchoDesk returned no order id" };
   }
 
   return {

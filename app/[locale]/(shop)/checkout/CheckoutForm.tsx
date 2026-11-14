@@ -407,6 +407,8 @@ export function CheckoutForm({
         stock?: { product: string; available: number };
         /** Set when a line names a product the shop no longer sells. */
         unavailable?: { product?: string };
+        /** Short backend reason, sent only when the failure is one we could not classify. */
+        detail?: string;
         orderId?: string;
         /** Public order token, when the backend issues one — used to build the tracking link. */
         trackingToken?: string;
@@ -438,7 +440,10 @@ export function CheckoutForm({
               : t("checkout.errors.itemUnavailable"),
           );
         }
-        throw new Error(translateCheckoutError(data.error));
+        const base = translateCheckoutError(data.error);
+        throw new Error(
+          typeof data.detail === "string" && data.detail ? `${base} (${data.detail})` : base,
+        );
       }
 
       // Persist the contact + shipping fields for the next checkout. We save BEFORE the
