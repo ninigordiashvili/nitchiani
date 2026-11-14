@@ -141,7 +141,9 @@ export async function createGuestOrder(
   const pickup = input.pickup === true;
 
   const body = {
-    email: input.email,
+    // Trimmed and lower-cased: the backend finds a returning customer by email, and a keyboard
+    // that capitalised the first letter made the same person look new.
+    email: input.email.trim().toLowerCase(),
     first_name: input.firstName,
     last_name: input.lastName,
     phone: input.phone,
@@ -207,7 +209,7 @@ export async function createGuestOrder(
         missingProductId: parseMissingProduct(message ?? raw) ?? undefined,
       };
     }
-    return { ok: false };
+    return { ok: false, error: `EchoDesk HTTP ${res.status}` };
   }
 
   const json = (await res.json()) as {
@@ -218,7 +220,7 @@ export async function createGuestOrder(
   };
   if (!json.id) {
     console.error("[echodesk/orders] guest checkout returned no order id:", JSON.stringify(json));
-    return { ok: false };
+    return { ok: false, error: "EchoDesk returned no order id" };
   }
 
   return {

@@ -19,7 +19,6 @@ import { BottomNav } from "@/components/layout/BottomNav";
 import { LocalePrompt } from "@/components/layout/LocalePrompt";
 import { SkipToContent } from "@/components/layout/SkipToContent";
 // import { ContactFloater } from "@/components/layout/ContactFloater";  // removed — EchoDesk chat owns the corner now
-import { WelcomePopup } from "@/components/layout/WelcomePopup";
 import { SearchOverlay } from "@/components/search/SearchOverlay";
 import { QuickViewModal } from "@/components/commerce/QuickViewModal";
 import { ChatWidgetPlacement } from "@/components/ui/ChatWidgetPlacement";
@@ -134,7 +133,6 @@ export default async function LocaleLayout({
                   {/* <ContactFloater /> — removed; the EchoDesk chat button below owns
                       the bottom-right corner. Its WhatsApp / Instagram / email links now
                       live in the footer contact column. */}
-                  <WelcomePopup />
                   <CookieConsentBanner />
                   {/* EchoDesk live chat. Injects its own fixed button (bottom-right,
                       z-index ~2.1e9) and an iframe against echodesk.ge — both origins

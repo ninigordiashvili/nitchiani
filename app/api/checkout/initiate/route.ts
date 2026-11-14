@@ -106,7 +106,7 @@ function classifyOrderError(message: string): string {
   if (/cash on delivery|pickup/i.test(message)) return "codPickupOnly";
   // A bank switched off, or its credentials removed, between page load and order.
   if (/payment provider/i.test(message)) return "cardUnavailable";
-  if (/promo|coupon/i.test(message)) return "promoInvalid";
+  if (/promo|coupon|already used|usage limit|code has/i.test(message)) return "promoInvalid";
   if (/stock|unavailable|quantity/i.test(message)) return "outOfStock";
   if (/required|missing/i.test(message)) return "missingDetails";
   console.warn("[api/checkout/initiate] unclassified backend error:", message);
@@ -462,7 +462,10 @@ async function handleEchoDeskOrder(
     });
     // Typed as the outcome union so a thrown request narrows the same way a rejected one
     // does — otherwise the `stock` branch below is unreachable to the compiler.
-    return { ok: false, error: undefined } as GuestOrderOutcome;
+    return {
+      ok: false,
+      error: `request failed: ${err instanceof Error ? err.message : String(err)}`,
+    } as GuestOrderOutcome;
   });
 
   if (!outcome.ok) {
@@ -488,9 +491,16 @@ async function handleEchoDeskOrder(
         { status: 400 },
       );
     }
-    return outcome.error
-      ? NextResponse.json({ error: classifyOrderError(outcome.error) }, { status: 400 })
-      : NextResponse.json({ error: "orderFailed" }, { status: 502 });
+    if (!outcome.error) return NextResponse.json({ error: "orderFailed" }, { status: 502 });
+    const key = classifyOrderError(outcome.error);
+    // The generic line hides the cause from the shopper and from whoever is helping them over
+    // WhatsApp, so an unclassified failure carries a short reason along for the page to show.
+    return NextResponse.json(
+      key === "orderFailed"
+        ? { error: key, detail: outcome.error.slice(0, 160) }
+        : { error: key },
+      { status: key === "orderFailed" ? 502 : 400 },
+    );
   }
   const order = outcome.order;
 
