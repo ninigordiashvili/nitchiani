@@ -141,7 +141,9 @@ export async function createGuestOrder(
   const pickup = input.pickup === true;
 
   const body = {
-    email: input.email,
+    // Trimmed and lower-cased: the backend finds a returning customer by email, and a keyboard
+    // that capitalised the first letter made the same person look new.
+    email: input.email.trim().toLowerCase(),
     first_name: input.firstName,
     last_name: input.lastName,
     phone: input.phone,

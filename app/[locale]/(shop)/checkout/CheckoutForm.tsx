@@ -564,7 +564,7 @@ export function CheckoutForm({
                 />
               </Field>
               <Field label={t("checkout.email")} error={errors.email?.message} required>
-                <input className={inputCls} type="email" aria-required {...register("email")} />
+                <input className={inputCls} type="email" autoCapitalize="none" autoCorrect="off" spellCheck={false} aria-required {...register("email")} />
               </Field>
             </div>
           </fieldset>
