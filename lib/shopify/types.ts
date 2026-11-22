@@ -18,6 +18,8 @@ export type ProductVariant = {
   id: string;
   title: string;
   availableForSale: boolean;
+  /** Switched off by the merchant, not sold out: shown, with "coming soon", but not for sale. */
+  comingSoon?: boolean;
   /**
    * Units the shop can actually ship, when the backend tracks them. `undefined` means
    * untracked — treat it as no ceiling rather than as zero, or an untracked product becomes

@@ -3,7 +3,7 @@
 import { ChevronDown, SlidersHorizontal, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useSetUrlQuery } from "@/lib/ui/use-url-query";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   type AttributeFacet,
   type ProductFilters,
@@ -51,8 +51,9 @@ export function CollectionToolbar({
   sort: SortKey;
 }) {
   const t = useTranslations("shop");
-  // Phones only: the rows below are hidden until asked for. From sm up they always show, so
-  // this state is ignored there.
+  // The whole filter panel is folded away until asked for, on every screen size: with a dozen
+  // rows of chips it pushed every product below the fold. The button carries a count, so
+  // filters that are on are never hidden without a sign.
   const [openOnMobile, setOpenOnMobile] = useState(false);
 
   const activeFilterCount =
@@ -93,6 +94,25 @@ export function CollectionToolbar({
     [updateParam],
   );
 
+  const hairFacets = attributeFacets.filter((f) => f.hair !== false);
+  const otherFacets = attributeFacets.filter((f) => f.hair === false);
+  const renderFacet = (facet: AttributeFacet) => (
+    <FacetRow
+      key={facet.key}
+      name={facet.name}
+      startOpen={(filters.attributes[facet.key] ?? []).length > 0}
+    >
+      {facet.values.map((value) => {
+        const active = (filters.attributes[facet.key] ?? []).includes(value);
+        return (
+          <Chip key={value} active={active} onClick={() => toggleAttribute(facet.key, value)}>
+            {value}
+          </Chip>
+        );
+      })}
+    </FacetRow>
+  );
+
   const sortOptions: { value: SortKey; label: string }[] = useMemo(
     () => [
       { value: "featured", label: t("sortFeatured") },
@@ -111,13 +131,12 @@ export function CollectionToolbar({
             : t("countFiltered", { visible: visibleCount, total: totalCount })}
         </p>
 
-        {/* Filters fold away on a phone, where the rows below are taller than the screen and
-            pushed every product out of sight. */}
+        {/* Opens and folds the whole panel. */}
         <button
           type="button"
           onClick={() => setOpenOnMobile((v) => !v)}
           aria-expanded={openOnMobile}
-          className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-black/25 bg-white/80 px-3.5 py-1.5 text-[13px] font-medium text-[var(--color-brand-ink)] sm:hidden"
+          className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-black/25 bg-white/80 px-3.5 py-1.5 text-[13px] font-medium text-[var(--color-brand-ink)]"
         >
           <SlidersHorizontal size={14} aria-hidden />
           {t("filters")}
@@ -149,29 +168,18 @@ export function CollectionToolbar({
         </div>
       </div>
 
-      <div className={cn("flex-col gap-4", openOnMobile ? "flex" : "hidden sm:flex")}>
+      <div className={cn("flex-col gap-4", openOnMobile ? "flex" : "hidden")}>
       {/* One row per backend attribute (hair type, length, …), each labelled with the
           attribute's own name so the chips read as a group rather than a loose pile. Renders
           nothing until the catalog actually defines a filterable attribute with more than one
           value across the products on screen. */}
-      {attributeFacets.map((facet) => (
-        <FacetRow key={facet.key} name={facet.name}>
-          {facet.values.map((value) => {
-            const active = (filters.attributes[facet.key] ?? []).includes(value);
-            return (
-              <Chip key={value} active={active} onClick={() => toggleAttribute(facet.key, value)}>
-                {value}
-              </Chip>
-            );
-          })}
-        </FacetRow>
-      ))}
+      {hairFacets.map(renderFacet)}
 
       {/* Last of the labelled rows, and labelled like them. Colour sat loose in the row of
           standing toggles below, so it read as a sibling of "up to ₾25" rather than as the
           answer to "what colours are there?". */}
       {colorFacet ? (
-        <FacetRow name={colorFacet.name}>
+        <FacetRow name={colorFacet.name} startOpen={filters.colors.length > 0}>
           {colorFacet.values.map((color) => (
             <Chip
               key={color}
@@ -183,6 +191,8 @@ export function CollectionToolbar({
           ))}
         </FacetRow>
       ) : null}
+
+      {otherFacets.map(renderFacet)}
 
       <div className="flex flex-wrap items-center gap-2">
         {priceTiers.map((tier) => {
@@ -243,13 +253,64 @@ export function CollectionToolbar({
  * rows read as a table rather than a ragged pile. Plain weight and no letter-spacing: the
  * tracked small caps used before were barely legible in Georgian.
  */
-function FacetRow({ name, children }: { name: string; children: React.ReactNode }) {
+function FacetRow({
+  name,
+  startOpen = false,
+  children,
+}: {
+  name: string;
+  /** Open from the start when a chip in the row is on, so a selection is never tucked away. */
+  startOpen?: boolean;
+  children: React.ReactNode;
+}) {
+  const t = useTranslations("shop");
+  const [expanded, setExpanded] = useState(startOpen);
+  const [overflows, setOverflows] = useState(false);
+  const chipsRef = useRef<HTMLDivElement>(null);
+
+  // A row that fits on one line needs no button; only the long ones (colour, texture) do.
+  // Measured rather than counted, since chip widths and screen widths both vary.
+  useEffect(() => {
+    const el = chipsRef.current;
+    if (!el) return;
+    const measure = () => {
+      const first = el.firstElementChild as HTMLElement | null;
+      if (!first) return setOverflows(false);
+      setOverflows(el.scrollHeight > first.offsetHeight + 4);
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [children]);
+
+  const folded = overflows && !expanded;
+
   return (
-    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
-      <span className="text-[13px] font-semibold text-[var(--color-brand-ink)] sm:w-28 sm:flex-shrink-0">
+    <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:gap-3">
+      <span className="text-[13px] font-semibold text-[var(--color-brand-ink)] sm:w-28 sm:flex-shrink-0 sm:pt-1.5">
         {name}
       </span>
-      <div className="flex flex-wrap gap-2">{children}</div>
+      <div className="flex min-w-0 flex-1 items-start gap-3">
+        <div
+          ref={chipsRef}
+          // One line while folded: the clip height is a chip's own height.
+          className={cn("flex min-w-0 flex-1 flex-wrap gap-2", folded && "max-h-[2.25rem] overflow-hidden")}
+        >
+          {children}
+        </div>
+        {overflows ? (
+          <button
+            type="button"
+            onClick={() => setExpanded((v) => !v)}
+            aria-expanded={expanded}
+            className="inline-flex flex-shrink-0 cursor-pointer items-center gap-1 whitespace-nowrap py-1.5 text-[13px] font-medium text-[var(--color-brand-maroon)] underline-offset-4 hover:underline"
+          >
+            {expanded ? t("facetShowLess") : t("facetShowAll")}
+            <ChevronDown size={14} aria-hidden className={cn("transition-transform", expanded && "rotate-180")} />
+          </button>
+        ) : null}
+      </div>
     </div>
   );
 }

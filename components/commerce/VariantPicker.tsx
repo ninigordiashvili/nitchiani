@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import type { Product, ProductVariant } from "@/lib/shopify/types";
 import { cn } from "@/lib/utils";
 import { SizeGuideButton } from "./SizeGuideButton";
@@ -11,7 +12,8 @@ const SIZE_GUIDE_OPTION_RE = /^(size|length|ზომა|სიგრძე)$/i;
 /**
  * Renders one row of pill-style chips per option group (Color / Size / Length / etc.).
  * - Selected chip is filled teal-black.
- * - Unavailable variants render strikethrough + disabled.
+ * - Sold-out variants render strikethrough + disabled; ones the merchant switched off render
+ *   selectable with a "coming soon" caption (the add button then says so too).
  * - Single-SKU products (no options or single value) render nothing — the picker self-hides.
  * - Size/Length option labels get a "Size guide" link on the right that opens a measurement modal.
  */
@@ -26,6 +28,7 @@ export function VariantPicker({
   onSelect: (variant: ProductVariant) => void;
   showSizeGuide?: boolean;
 }) {
+  const t = useTranslations("product");
   if (
     product.options.length === 0 ||
     (product.options.length === 1 && product.options[0].values.length <= 1)
@@ -68,12 +71,13 @@ export function VariantPicker({
                 );
                 const isSelected = selectedValue === value;
                 const isAvailable = variantForValue?.availableForSale ?? false;
+                const comingSoon = variantForValue?.comingSoon === true;
 
                 return (
                   <button
                     key={value}
                     type="button"
-                    disabled={!isAvailable}
+                    disabled={!isAvailable && !comingSoon}
                     onClick={() => variantForValue && onSelect(variantForValue)}
                     aria-pressed={isSelected}
                     className={cn(
@@ -81,11 +85,18 @@ export function VariantPicker({
                       isSelected
                         ? "border-[var(--text-primary)] bg-[var(--text-primary)] text-[var(--surface)]"
                         : "border-black/15 hover:border-black/40",
+                      comingSoon && "flex flex-col items-center leading-tight opacity-70",
                       !isAvailable &&
+                        !comingSoon &&
                         "cursor-not-allowed border-black/10 text-[var(--color-brand-silver-2)] line-through opacity-60 hover:border-black/10",
                     )}
                   >
                     {value}
+                    {comingSoon ? (
+                      <span className="mt-0.5 text-[10px] font-medium uppercase tracking-wide opacity-80">
+                        {t("comingSoon")}
+                      </span>
+                    ) : null}
                   </button>
                 );
               })}

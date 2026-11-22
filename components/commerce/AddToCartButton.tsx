@@ -27,7 +27,8 @@ export function AddToCartButton({
 
   // Also sold out when this visit has already found it so — see lib/cart/sold-out.ts.
   const knownSoldOut = useSoldOut();
-  const soldOut = !variant.availableForSale || knownSoldOut(product.handle);
+  const comingSoon = variant.comingSoon === true;
+  const soldOut = comingSoon || !variant.availableForSale || knownSoldOut(product.handle);
   // How many more the bag can take. When it already holds every unit in stock, the button
   // says so instead of claiming to add one more that the bag would refuse.
   const room = cart.canAdd(variant.id, variant.quantityAvailable);
@@ -62,7 +63,7 @@ export function AddToCartButton({
       }}
       className={cn("btn-primary w-full", disabled && "opacity-50 cursor-not-allowed", className)}
     >
-      {soldOut ? t("outOfStock") : allInBag ? t("inBagMax") : t("addToCart")}
+      {comingSoon ? t("comingSoon") : soldOut ? t("outOfStock") : allInBag ? t("inBagMax") : t("addToCart")}
     </button>
   );
 }

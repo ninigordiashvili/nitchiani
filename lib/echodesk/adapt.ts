@@ -101,6 +101,10 @@ export function adaptProduct(p: EchoDeskProduct, locale: Locale): Product {
 
   // A product with no variants still needs one sellable row — the storefront always adds a
   // variant to the bag, never a bare product.
+  // A variant the merchant has switched off is not for sale, however many are in stock: the API
+  // still sends it, with `is_active: false` and its quantity, and reading only the quantity
+  // showed it as available. It stays in the list, flagged `comingSoon`, so shoppers can see the
+  // model exists and will arrive — the shop's way of announcing stock it has not released.
   const variants: ProductVariant[] = (p.variants ?? []).length
     ? p.variants!.map((v) => {
         const title = pick(v.name, locale) || "One Size";
@@ -122,7 +126,8 @@ export function adaptProduct(p: EchoDeskProduct, locale: Locale): Product {
           id: `gid://echodesk/Variant/${v.id}?product=${p.id}`,
           title,
           sku: v.sku?.trim() || undefined,
-          availableForSale: v.is_in_stock ?? (v.quantity ?? 0) > 0,
+          availableForSale: v.is_active !== false && (v.is_in_stock ?? (v.quantity ?? 0) > 0),
+          comingSoon: v.is_active === false ? true : undefined,
           quantityAvailable: v.quantity ?? undefined,
           selectedOptions: named.length > 0 ? named : [{ name: OPTION_LABEL[locale], value: title }],
           // A colour is worth seeing: when a variant carries its own photo, the gallery and

@@ -13,7 +13,7 @@ import { useSetUrlQuery, useUrlQuery } from "@/lib/ui/use-url-query";
 import { parseEchoDeskGid } from "@/lib/echodesk/adapt";
 import { clampToStock, isAtStockLimit, lowStockCount } from "@/lib/cart/stock";
 import { AddToCartButton } from "./AddToCartButton";
-import { LowStockNotice } from "./LowStockNotice";
+import { ComingSoonNotice, LowStockNotice } from "./LowStockNotice";
 import { PriceDisplay } from "./PriceDisplay";
 import { StickyAddToCart } from "./StickyAddToCart";
 import { VariantPicker } from "./VariantPicker";
@@ -147,6 +147,7 @@ export function ProductPurchase({
         </p>
       ) : null}
 
+      {selected.comingSoon ? <ComingSoonNotice /> : null}
       {lowStock !== null ? <LowStockNotice count={lowStock} /> : null}
 
       <div ref={inlineCtaRef} className="flex items-stretch gap-3">

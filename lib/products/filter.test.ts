@@ -40,6 +40,27 @@ describe("sort options", () => {
     expect(applySort(items, "price-desc").map((x) => x.handle)).toEqual(["b", "c", "a"]);
   });
 
+  it("lists curls first, then other hair, then bonnets and durags, then care", () => {
+    const item = (handle: string, productTypeHandle: string, subcategory?: string) =>
+      ({ ...p(handle, "10.00"), productTypeHandle, subcategory }) as Product;
+    const items = [
+      item("wax", "hair-care"),
+      item("bonnet", "bonnets"),
+      item("braids", "hair-extensions", "braids"),
+      item("clip", "hair-extensions", "clip-in"),
+      item("curly", "hair-extensions", "curls"),
+      item("durag", "durags"),
+    ];
+    expect(applySort(items, "featured").map((x) => x.handle)).toEqual([
+      "curly",
+      "braids",
+      "clip",
+      "bonnet",
+      "durag",
+      "wax",
+    ]);
+  });
+
   it("leaves the list intact for the default sort", () => {
     const items = [p("b", "80.00"), p("a", "10.00")];
     expect(applySort(items, "featured")).toHaveLength(2);
