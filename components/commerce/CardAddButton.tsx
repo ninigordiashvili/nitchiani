@@ -55,7 +55,9 @@ export function CardAddButton({
   // Sold out expands too, to say so. A grey circle that does nothing on hover reads as a
   // broken button; "Out of stock" reads as the reason.
   const label = soldOut
-    ? t("outOfStock")
+    ? variant?.comingSoon
+      ? t("comingSoon")
+      : t("outOfStock")
     : allInBag
       ? t("inBagMax")
       : deferToSheet

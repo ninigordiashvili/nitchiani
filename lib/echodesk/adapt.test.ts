@@ -41,6 +41,24 @@ describe("adaptProduct — real tenant payload", () => {
   });
 });
 
+describe("adaptProduct — variants the merchant switched off", () => {
+  const base = { id: 7, slug: "x", name: { en: "X", ka: "X" }, price: "10.00", quantity: 9 } as EchoDeskProduct;
+  const v = (id: number, extra: Record<string, unknown>) => ({ id, name: { en: `V${id}` }, quantity: 5, ...extra });
+
+  it("keeps a switched-off variant, unsellable and flagged coming soon, even with stock", () => {
+    const p = adaptProduct({ ...base, variants: [v(1, { is_active: true }), v(2, { is_active: false })] } as EchoDeskProduct, "en");
+    expect(p.variants.map((x) => x.title)).toEqual(["V1", "V2"]);
+    expect(p.variants[1].availableForSale).toBe(false);
+    expect(p.variants[1].comingSoon).toBe(true);
+    expect(p.variants[0].comingSoon).toBeUndefined();
+  });
+
+  it("treats a variant with no flag as active", () => {
+    const p = adaptProduct({ ...base, variants: [v(1, {})] } as EchoDeskProduct, "en");
+    expect(p.variants[0].availableForSale).toBe(true);
+  });
+});
+
 describe("pick", () => {
   it("prefers the active locale, then English, then anything present", () => {
     expect(pick({ en: "Wax", ka: "ჟელე" }, "ka")).toBe("ჟელე");

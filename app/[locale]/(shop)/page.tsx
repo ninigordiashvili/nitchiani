@@ -11,7 +11,7 @@ import { BundleUpsellPicker } from "@/components/homepage/BundleUpsellPicker";
 import { UvpBanner } from "@/components/homepage/UvpBanner";
 import { BUNDLES, type Bundle } from "@/lib/bundles";
 import { getProductByHandle, getProducts } from "@/lib/shopify/client";
-import { spreadByCategory } from "@/lib/products/spread";
+import { applySort } from "@/lib/products/filter";
 import { isEchoDeskConfigured } from "@/lib/echodesk/client";
 import { validatePromo } from "@/lib/echodesk/promo";
 import type { Locale } from "@/lib/i18n/config";
@@ -45,9 +45,9 @@ export default async function HomePage({
 
   const [allProducts, t] = await Promise.all([getProducts(locale, 50), getTranslations("home")]);
 
-  // Each category takes a turn, so the first eight cards cover the shop rather than the
-  // eleven braiding-hair products EchoDesk happens to return first.
-  const orderedProducts = spreadByCategory(allProducts);
+  // The same order as the shop page: afro-curl hair, then the rest of the hair, then bonnets and
+  // durags, then care products — see `featuredRank` in lib/products/filter.ts.
+  const orderedProducts = applySort(allProducts, "featured");
   const gridProducts = orderedProducts.slice(0, 8);
 
   // The rail above the grid shows what the grid doesn't, wrapping round for a small

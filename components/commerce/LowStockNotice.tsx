@@ -48,3 +48,27 @@ export function LowStockBadge({ count }: { count: number }) {
     </span>
   );
 }
+
+/** "Coming soon" on a product card's photo — same pill as the stock badge, in the brand's quiet ink. */
+export function ComingSoonBadge() {
+  const t = useTranslations("product");
+  return (
+    <span
+      className="inline-flex max-w-full items-center gap-1 overflow-hidden rounded-full px-1.5 py-0.5 text-[10px] font-medium sm:px-2 sm:text-[11px] whitespace-nowrap shadow-sm"
+      style={{ background: "var(--color-brand-ink)", color: "var(--color-brand-cream)" }}
+    >
+      {t("comingSoon")}
+    </span>
+  );
+}
+
+/** The same fact on the product page, where the add button is switched off. */
+export function ComingSoonNotice({ className }: { className?: string }) {
+  const t = useTranslations("product");
+  return (
+    <p role="status" className={cn("text-[13px] font-semibold", className)}>
+      {t("comingSoon")}
+      <span className="ml-1.5 font-normal opacity-75">· {t("comingSoonHint")}</span>
+    </p>
+  );
+}

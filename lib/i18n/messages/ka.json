@@ -94,6 +94,8 @@
     "hairExtensionsCurls": "აფრო ხვეულებისთვის"
   },
   "product": {
+    "comingSoonHint": "ამ მოდელს მალე დავამატებთ",
+    "comingSoon": "მალე დაემატება",
     "outOfStock": "გაყიდულია",
     "selectOption": "აირჩიე ვარიანტი",
     "quantity": "რაოდენობა",
@@ -397,6 +399,8 @@
     "desc": "შეცდომა აღვრიცხეთ. სცადე გვერდის გადატვირთვა ან დაბრუნდი მთავარზე."
   },
   "shop": {
+    "facetShowAll": "სრულად ნახვა",
+    "facetShowLess": "ჩაკეცვა",
     "sortLabel": "დახარისხება",
     "sortFeatured": "რეკომენდებული",
     "sortPriceAsc": "ფასი: ზრდადობით",

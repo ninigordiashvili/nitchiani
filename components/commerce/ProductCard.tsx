@@ -11,7 +11,7 @@ import { useQuickView } from "@/lib/ui/quick-view";
 import { PriceDisplay } from "./PriceDisplay";
 import { CardAddButton } from "./CardAddButton";
 import { CardPhotos } from "./CardPhotos";
-import { LowStockBadge } from "./LowStockNotice";
+import { ComingSoonBadge, LowStockBadge } from "./LowStockNotice";
 import { lowStockCount, unitsLeft } from "@/lib/cart/stock";
 import { useSoldOut } from "@/lib/cart/sold-out";
 import { StarRating } from "./StarRating";
@@ -54,6 +54,8 @@ export function ProductCard({
   const offPercent = discountPercent(variant?.price ?? product.priceRange.min, compareAt);
   const summary = product.reviewSummary ?? NO_REVIEWS;
   const knownSoldOut = useSoldOut();
+  // Every variant switched off by the merchant: the model is announced, not yet for sale.
+  const comingSoon = product.variants.length > 0 && product.variants.every((v) => v.comingSoon);
   // Every shot worth showing, the product's own plus any a variant brings, with repeats of the
   // same file dropped — a placeholder gallery pads itself, and dots under one photo shown four
   // times read as a bug.
@@ -108,7 +110,7 @@ export function ProductCard({
         {/* Top-left: the discount, then the stock warning beneath it when both apply. The
             column stops short of the wishlist heart in the opposite corner — the stock badge
             grew with its font size and ran underneath it. */}
-        {offPercent !== null || lowStock !== null ? (
+        {offPercent !== null || lowStock !== null || comingSoon ? (
           <div className="absolute top-2.5 left-2.5 flex max-w-[calc(100%-4.25rem)] sm:max-w-[calc(100%-3.5rem)] flex-col items-start gap-1">
             {offPercent !== null ? (
               <div className="flex items-center gap-1">
@@ -119,7 +121,7 @@ export function ProductCard({
                 <Badge>SALE</Badge>
               </div>
             ) : null}
-            {lowStock !== null ? <LowStockBadge count={lowStock} /> : null}
+            {comingSoon ? <ComingSoonBadge /> : lowStock !== null ? <LowStockBadge count={lowStock} /> : null}
           </div>
         ) : null}
         <div className="absolute top-2.5 right-2.5">

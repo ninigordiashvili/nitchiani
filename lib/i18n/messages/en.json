@@ -94,6 +94,8 @@
     "hairExtensionsCurls": "For afro curls"
   },
   "product": {
+    "comingSoonHint": "we will stock this model soon",
+    "comingSoon": "Coming soon",
     "outOfStock": "Out of stock",
     "selectOption": "Select an option",
     "quantity": "Quantity",
@@ -397,6 +399,8 @@
     "desc": "We've logged it. Try reloading, or head back home and pick up where you left off."
   },
   "shop": {
+    "facetShowAll": "Show all",
+    "facetShowLess": "Show less",
     "sortLabel": "Sort",
     "sortFeatured": "Featured",
     "sortPriceAsc": "Price: low to high",

@@ -24,8 +24,20 @@ const both = p("c", [{ key: "hair-type", name: "Hair type", values: ["Curly", "W
 describe("attribute facets", () => {
   it("offers an attribute once two distinct values exist", () => {
     expect(extractAttributeFacets([curly, straight])).toEqual([
-      { key: "hair-type", name: "Hair type", values: ["Curly", "Straight"] },
+      { key: "hair-type", name: "Hair type", values: ["Curly", "Straight"], hair: false },
     ]);
+  });
+
+  it("lists the attributes hair products carry ahead of care-only ones", () => {
+    const hair = (h: string, a: Product["attributes"]) => ({ ...p(h, a), productTypeHandle: "hair-extensions" }) as Product;
+    const care = (h: string, a: Product["attributes"]) => ({ ...p(h, a), productTypeHandle: "hair-care" }) as Product;
+    const facets = extractAttributeFacets([
+      care("c1", [{ key: "volume", name: "Volume", values: ["150 ml"] }]),
+      care("c2", [{ key: "volume", name: "Volume", values: ["400 ml"] }]),
+      hair("h1", [{ key: "length", name: "Length", values: ["51 cm"] }]),
+      hair("h2", [{ key: "length", name: "Length", values: ["56 cm"] }]),
+    ]);
+    expect(facets.map((f) => f.key)).toEqual(["length", "volume"]);
   });
 
   it("hides an attribute where every product shares one value", () => {

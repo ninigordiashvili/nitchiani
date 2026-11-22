@@ -152,6 +152,18 @@ function minPrice(p: Product): number {
   return Number.parseFloat(p.priceRange.min.amount);
 }
 
+/**
+ * Where a product sits in the default listing: afro-curl hair first, then the rest of the hair,
+ * then bonnets and durags, and care products last. Only the order the shop wants shoppers to
+ * meet its range in — not a claim about what sells.
+ */
+function featuredRank(p: Product): number {
+  const category = p.productTypeHandle || p.categories?.[0] || "";
+  if (category === "hair-extensions") return p.subcategory === "curls" ? 0 : 1;
+  if (category === "hair-care") return 3;
+  return 2;
+}
+
 export function applySort(products: Product[], sort: SortKey): Product[] {
   const arr = [...products];
   switch (sort) {
@@ -161,12 +173,23 @@ export function applySort(products: Product[], sort: SortKey): Product[] {
       return arr.sort((a, b) => minPrice(b) - minPrice(a));
     case "featured":
     default:
-      // isBestSeller first, then everything else
-      return arr.sort((a, b) => Number(!!b.isBestSeller) - Number(!!a.isBestSeller));
+      // The shop's own order of categories, then best sellers within each; the sort is stable,
+      // so otherwise the API's order (newest first) holds.
+      return arr.sort(
+        (a, b) =>
+          featuredRank(a) - featuredRank(b) ||
+          Number(!!b.isBestSeller) - Number(!!a.isBestSeller),
+      );
   }
 }
 
-export type AttributeFacet = { key: string; name: string; values: string[] };
+export type AttributeFacet = {
+  key: string;
+  name: string;
+  values: string[];
+  /** Carried by at least one hair product — shown ahead of the filters that only care products use. */
+  hair?: boolean;
+};
 
 /**
  * The attribute filters worth showing for a given set of products.
@@ -186,14 +209,16 @@ export function compareFacetValues(a: string, b: string): number {
 }
 
 export function extractAttributeFacets(products: Product[]): AttributeFacet[] {
-  const byKey = new Map<string, { name: string; values: Set<string> }>();
+  const byKey = new Map<string, { name: string; values: Set<string>; hair: boolean }>();
 
   for (const p of products) {
+    const isHair = p.productTypeHandle === "hair-extensions";
     for (const attr of p.attributes ?? []) {
       // Colour has a row of its own, fed from the variant options as well as from here.
       if (isColorAttribute(attr)) continue;
-      const entry = byKey.get(attr.key) ?? { name: attr.name, values: new Set<string>() };
+      const entry = byKey.get(attr.key) ?? { name: attr.name, values: new Set<string>(), hair: false };
       for (const v of attr.values) entry.values.add(v);
+      if (isHair) entry.hair = true;
       byKey.set(attr.key, entry);
     }
   }
@@ -202,7 +227,16 @@ export function extractAttributeFacets(products: Product[]): AttributeFacet[] {
     .filter(([, v]) => v.values.size >= 2)
     // Smallest first, comparing the numbers inside the labels — "53.96 სმ" before "132 სმ",
     // "100 გრამი" before "600 გრამი" — instead of whatever order the products arrived in.
-    .map(([key, v]) => ({ key, name: v.name, values: [...v.values].sort(compareFacetValues) }));
+    .map(([key, v]) => ({
+      key,
+      name: v.name,
+      values: [...v.values].sort(compareFacetValues),
+      hair: v.hair,
+    }))
+    // The shop is about hair, so its filters come first: the ones hair products carry (texture,
+    // length, weight…) ahead of those only care products use (volume). Stable, so the order the
+    // merchant set holds inside each group.
+    .sort((a, b) => Number(!!b.hair) - Number(!!a.hair));
 }
 
 function productMatchesAttributes(p: Product, selected: Record<string, string[]>): boolean {

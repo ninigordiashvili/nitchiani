@@ -26,6 +26,9 @@ export type EchoDeskVariant = {
   compare_at_price?: string | null;
   quantity?: number;
   is_in_stock?: boolean;
+  /** The merchant's on/off switch for this variant. Off means "do not sell", whatever the
+      stock count says — the API still sends the row, with its quantity. */
+  is_active?: boolean;
   attribute_values?: EchoDeskAttributeValue[];
   /** Photo of this colour or size, when the merchant has set one. */
   image?: string | null;
