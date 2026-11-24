@@ -28,7 +28,18 @@ export type CookieDecision = "accepted" | "rejected";
 type StoredConsent = {
   decision: CookieDecision;
   decidedAt: string; // ISO timestamp
+  /** Wording version the visitor answered. Missing = 1, the Google-Analytics-only banner. */
+  version?: number;
 };
+
+/**
+ * Bumped when the banner starts describing something new, so that visitors who answered the old
+ * wording are asked again — an answer to a question that did not mention Meta cannot count as
+ * consent to Meta. Version 2 is the banner that names the Meta Pixel; it applies exactly when the
+ * pixel is switched on, so flipping `NEXT_PUBLIC_META_PIXEL_ENABLED` is what re-asks everyone,
+ * once. Anyone answering the new banner is stored at the current version and is not asked again.
+ */
+export const CONSENT_VERSION = process.env.NEXT_PUBLIC_META_PIXEL_ENABLED === "true" ? 2 : 1;
 
 const STORAGE_KEY = "nitchiani:cookie-consent";
 const MAX_AGE_MS = 1000 * 60 * 60 * 24 * 365; // 12 months
@@ -52,6 +63,9 @@ function readStored(): StoredConsent | null {
     const parsed = JSON.parse(raw) as StoredConsent;
     if (parsed.decision !== "accepted" && parsed.decision !== "rejected") return null;
     if (!parsed.decidedAt) return null;
+    // An answer to older wording is treated as no answer: nothing optional runs and the banner
+    // shows again. The old record is simply overwritten by the new choice.
+    if ((parsed.version ?? 1) !== CONSENT_VERSION) return null;
     const age = Date.now() - new Date(parsed.decidedAt).getTime();
     if (age > MAX_AGE_MS) return null;
     return parsed;
@@ -83,7 +97,11 @@ export function CookieConsentProvider({ children }: { children: React.ReactNode 
     try {
       window.localStorage.setItem(
         STORAGE_KEY,
-        JSON.stringify({ decision: d, decidedAt: new Date().toISOString() }),
+        JSON.stringify({
+          decision: d,
+          decidedAt: new Date().toISOString(),
+          version: CONSENT_VERSION,
+        } satisfies StoredConsent),
       );
     } catch {
       // private mode / quota — best-effort

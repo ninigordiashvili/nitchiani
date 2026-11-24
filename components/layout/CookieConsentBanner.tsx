@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { Link } from "@/lib/i18n/routing";
 import { cn } from "@/lib/utils";
 import { useCookieConsent } from "@/lib/ui/cookie-consent";
+import { META_ENABLED } from "@/lib/analytics/meta";
 
 /**
  * Bottom-of-viewport consent banner. Self-hides once a decision exists (or while
@@ -75,7 +76,7 @@ export function CookieConsentBanner() {
               <div className="space-y-1 py-3">
                 <div className="flex items-center justify-between gap-3">
                   <p id="cookie-analytics-label" className="text-sm font-medium">
-                    {t("analyticsTitle")}
+                    {META_ENABLED ? t("analyticsMarketingTitle") : t("analyticsTitle")}
                   </p>
                   <button
                     type="button"
@@ -99,6 +100,7 @@ export function CookieConsentBanner() {
                   </button>
                 </div>
                 <p className="opacity-80">{t("analyticsBody")}</p>
+                {META_ENABLED ? <p className="opacity-80">{t("metaBody")}</p> : null}
               </div>
 
               <div className="space-y-1 pt-3">
@@ -129,6 +131,7 @@ export function CookieConsentBanner() {
               <p className="text-sm font-medium leading-snug">{t("title")}</p>
               <p className="mt-1 text-xs leading-relaxed opacity-80">
                 {t("body")}{" "}
+                {META_ENABLED ? `${t("bodyMeta")} ` : null}
                 <Link href="/privacy" className="underline underline-offset-2">
                   {t("privacyLink")}
                 </Link>

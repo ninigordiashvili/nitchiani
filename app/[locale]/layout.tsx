@@ -7,6 +7,7 @@ import { manrope, notoSansGeorgian, notoSerifGeorgian, tenorSans } from "@/lib/f
 import { SiteJsonLd } from "@/components/seo/SiteJsonLd";
 import { seoCopy } from "@/lib/seo-copy";
 import { Analytics } from "@/components/analytics/Analytics";
+import { MetaPixel } from "@/components/analytics/MetaPixel";
 import { ogLocale } from "@/lib/seo";
 import { BackButton } from "@/components/layout/BackButton";
 import { CookieConsentBanner } from "@/components/layout/CookieConsentBanner";
@@ -99,6 +100,7 @@ export default async function LocaleLayout({
         <NextIntlClientProvider locale={locale} messages={messages}>
           <CookieConsentProvider>
             <Analytics />
+            <MetaPixel />
       <CurrencyProvider>
         <WishlistProvider>
           <RecentlyViewedProvider>
