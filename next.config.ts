@@ -27,16 +27,19 @@ const isDev = process.env.NODE_ENV === "development";
  * NOTE: when the Meta/TikTok pixels get wired (roast item #5), their origins must be added to
  * script-src + connect-src, or they'll be blocked.
  */
+// Meta Pixel origins are allowed only while the pixel is switched on, so the policy stays as
+// tight as before for as long as it is off.
+const metaOn = process.env.NEXT_PUBLIC_META_PIXEL_ENABLED === "true";
 const csp = [
   `default-src 'self'`,
-  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""} https://echodesk.ge https://maps.googleapis.com https://www.googletagmanager.com`,
+  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""} https://echodesk.ge https://maps.googleapis.com https://www.googletagmanager.com${metaOn ? " https://connect.facebook.net" : ""}`,
   // The Maps JS API injects its own stylesheet link for map controls.
   `style-src 'self' 'unsafe-inline' https://fonts.googleapis.com`,
-  `img-src 'self' data: blob: https://echodesk-media.fsn1.your-objectstorage.com https://cdn.shopify.com https://*.cdninstagram.com https://*.fbcdn.net https://picsum.photos https://fastly.picsum.photos https://maps.gstatic.com https://maps.googleapis.com https://*.googleapis.com https://*.ggpht.com https://static.quickshipper.app https://test-static.quickshipper.app https://www.google-analytics.com`,
+  `img-src 'self' data: blob: https://echodesk-media.fsn1.your-objectstorage.com https://cdn.shopify.com https://*.cdninstagram.com https://*.fbcdn.net https://picsum.photos https://fastly.picsum.photos https://maps.gstatic.com https://maps.googleapis.com https://*.googleapis.com https://*.ggpht.com https://static.quickshipper.app https://test-static.quickshipper.app https://www.google-analytics.com${metaOn ? " https://www.facebook.com" : ""}`,
   `font-src 'self' data: https://fonts.gstatic.com`,
   // `*.api.echodesk.ge` covers the tenant subdomain (nitchiani.api.echodesk.ge); the bare
   // host alone does not match it, so client-side storefront calls would be blocked.
-  `connect-src 'self' https://api.echodesk.ge https://*.api.echodesk.ge https://maps.googleapis.com https://places.googleapis.com https://www.google-analytics.com https://*.google-analytics.com https://*.analytics.google.com https://www.googletagmanager.com${isDev ? " ws:" : ""}`,
+  `connect-src 'self' https://api.echodesk.ge https://*.api.echodesk.ge https://maps.googleapis.com https://places.googleapis.com https://www.google-analytics.com https://*.google-analytics.com https://*.analytics.google.com https://www.googletagmanager.com${metaOn ? " https://www.facebook.com https://connect.facebook.net" : ""}${isDev ? " ws:" : ""}`,
   `frame-src 'self' https://echodesk.ge`,
   `frame-ancestors 'self'`,
   `base-uri 'self'`,

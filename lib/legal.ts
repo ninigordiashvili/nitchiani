@@ -180,7 +180,7 @@ export const TERMS_SECTIONS: LegalSection[] = [
   },
 ];
 
-export const PRIVACY_LAST_UPDATED = "2026-11-03";
+export const PRIVACY_LAST_UPDATED = "2026-11-24";
 
 export const PRIVACY_SECTIONS: LegalSection[] = [
   {
@@ -215,17 +215,17 @@ export const PRIVACY_SECTIONS: LegalSection[] = [
     headingEn: "5. Recipients of the data",
     headingKa: "5. მონაცემების მიმღებები",
     bodyEn:
-      "We share data only to the extent each recipient needs: EchoDesk (order-management system and online chat); LLC \"QuickShipper\" (ID 405547877) — the delivery platform, and the SMS gateway it contracts; the courier company that carries the particular order (for example Wolt, Glovo, Georgian Post, Go Delivery); Google (Maps/Places — choosing an address; Analytics — only with consent); Bank of Georgia and TBC Bank (payment); Resend (emails); Netlify (hosting); public authorities — only where the law provides. Support service providers (EchoDesk, Resend, Netlify, Google) process data on our instructions and under a contract with us. The delivery platform and couriers may also process data for their own purposes, under their own privacy policies.",
+      "We share data only to the extent each recipient needs: EchoDesk (order-management system and online chat); LLC \"QuickShipper\" (ID 405547877) — the delivery platform, and the SMS gateway it contracts; the courier company that carries the particular order (for example Wolt, Glovo, Georgian Post, Go Delivery); Google (Maps/Places — choosing an address; Analytics — only with consent); Meta Platforms Ireland Limited and Meta Platforms, Inc. (Facebook, Instagram) — With your consent, Meta Pixel shares information with Meta to measure advertising performance. This includes pages and products viewed, products added to the cart, the checkout stage, order value and currency, and technical data such as IP address and cookie identifiers. We do not send your name, phone number, email address, or street address through Meta Pixel. Bank of Georgia and TBC Bank (payment); Resend (emails); Netlify (hosting); public authorities — only where the law provides. Support service providers (EchoDesk, Resend, Netlify, Google) process data on our instructions and under a contract with us. The delivery platform and couriers may also process data for their own purposes, under their own privacy policies.",
     bodyKa:
-      "მონაცემებს ვაზიარებთ მხოლოდ იმ მოცულობით, რამდენიც თითოეულ მიმღებს სჭირდება: EchoDesk (შეკვეთების მართვის სისტემა და ონლაინ ჩატი); შპს „ქვიქშიფერი“ (ს/ნ 405547877) - მიწოდების პლატფორმა და მის მიერ დაკონტრაქტებული SMS-გეითვეი; საკურიერო კომპანია, რომელიც კონკრეტულ შეკვეთას ეზიდება (მაგ., Wolt, Glovo, საქართველოს ფოსტა, Go Delivery); Google (Maps/Places - მისამართის არჩევა; Analytics - მხოლოდ თანხმობით); საქართველოს ბანკი და თიბისი ბანკი (გადახდა); Resend (ელ-წერილები); Netlify (ჰოსტინგი); სახელმწიფო ორგანოები - მხოლოდ კანონით გათვალისწინებულ შემთხვევაში. დამხმარე მომსახურების გამწევები (EchoDesk, Resend, Netlify, Google) მონაცემებს ამუშავებენ ჩვენი დავალებით და ჩვენთან დადებული ხელშეკრულების საფუძველზე. მიწოდების პლატფორმა და კურიერები შესაძლოა მონაცემებს საკუთარი მიზნებითაც ამუშავებდნენ, საკუთარი კონფიდენციალურობის პოლიტიკის მიხედვით.",
+      "მონაცემებს ვაზიარებთ მხოლოდ იმ მოცულობით, რამდენიც თითოეულ მიმღებს სჭირდება: EchoDesk (შეკვეთების მართვის სისტემა და ონლაინ ჩატი); შპს „ქვიქშიფერი“ (ს/ნ 405547877) - მიწოდების პლატფორმა და მის მიერ დაკონტრაქტებული SMS-გეითვეი; საკურიერო კომპანია, რომელიც კონკრეტულ შეკვეთას ეზიდება (მაგ., Wolt, Glovo, საქართველოს ფოსტა, Go Delivery); Google (Maps/Places - მისამართის არჩევა; Analytics - მხოლოდ თანხმობით); Meta Platforms Ireland Limited და Meta Platforms, Inc. (Facebook, Instagram) - თანხმობის შემთხვევაში Meta Pixel რეკლამის შედეგების გასაზომად Meta-ს გადასცემს ინფორმაციას საიტზე ნანახ გვერდებზე, ნანახ და კალათაში დამატებულ პროდუქტებზე, შეკვეთის ეტაპზე, თანხასა და ვალუტაზე, ასევე ტექნიკურ მონაცემებს, მათ შორის IP მისამართსა და ქუქიების იდენტიფიკატორებს. სახელს, ტელეფონს, ელფოსტასა და მისამართს Meta Pixel-ს არ ვუგზავნით. საქართველოს ბანკი და თიბისი ბანკი (გადახდა); Resend (ელ-წერილები); Netlify (ჰოსტინგი); სახელმწიფო ორგანოები - მხოლოდ კანონით გათვალისწინებულ შემთხვევაში. დამხმარე მომსახურების გამწევები (EchoDesk, Resend, Netlify, Google) მონაცემებს ამუშავებენ ჩვენი დავალებით და ჩვენთან დადებული ხელშეკრულების საფუძველზე. მიწოდების პლატფორმა და კურიერები შესაძლოა მონაცემებს საკუთარი მიზნებითაც ამუშავებდნენ, საკუთარი კონფიდენციალურობის პოლიტიკის მიხედვით.",
   },
   {
     headingEn: "6. Transfers abroad",
     headingKa: "6. მონაცემების საზღვარგარეთ გადაცემა",
     bodyEn:
-      "Some service providers (Google, Resend, Netlify) process data outside Georgia, including in the USA. Such a transfer takes place only on a basis permitted by the Georgian Law on Personal Data Protection and in accordance with it.",
+      "Some service providers (Google, Meta, Resend, Netlify) process data outside Georgia, including in the USA. Such a transfer takes place only on a basis permitted by the Georgian Law on Personal Data Protection and in accordance with it.",
     bodyKa:
-      "ზოგიერთი მომსახურების გამწევი (Google, Resend, Netlify) მონაცემებს ამუშავებს საქართველოს ფარგლებს გარეთ, მათ შორის აშშ-ში. ასეთი გადაცემა ხორციელდება მხოლოდ „პერსონალურ მონაცემთა დაცვის შესახებ“ საქართველოს კანონით დაშვებული საფუძვლით და მის შესაბამისად.",
+      "ზოგიერთი მომსახურების გამწევი (Google, Meta, Resend, Netlify) მონაცემებს ამუშავებს საქართველოს ფარგლებს გარეთ, მათ შორის აშშ-ში. ასეთი გადაცემა ხორციელდება მხოლოდ „პერსონალურ მონაცემთა დაცვის შესახებ“ საქართველოს კანონით დაშვებული საფუძვლით და მის შესაბამისად.",
   },
   {
     headingEn: "7. Retention periods",

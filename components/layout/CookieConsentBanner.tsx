@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { Link } from "@/lib/i18n/routing";
 import { cn } from "@/lib/utils";
 import { useCookieConsent } from "@/lib/ui/cookie-consent";
+import { META_ENABLED } from "@/lib/analytics/meta";
 
 /**
  * Bottom-of-viewport consent banner. Self-hides once a decision exists (or while
@@ -45,6 +46,13 @@ export function CookieConsentBanner() {
     "bg-[var(--color-brand-ink)] text-[var(--color-brand-cream)] hover:bg-[var(--color-brand-maroon)] hover:border-[var(--color-brand-maroon)]",
   );
 
+  // "Essential only" on the first banner: the same shape and size, drawn as an outline so the
+  // filled button is the one that reads as the primary action.
+  const outlined = cn(
+    decisionButton,
+    "bg-transparent text-[var(--color-brand-ink)] hover:bg-[var(--color-brand-ink)]/5",
+  );
+
   return (
     <div
       role="dialog"
@@ -56,7 +64,12 @@ export function CookieConsentBanner() {
       className="fixed inset-x-0 bottom-[calc(5.5rem+env(safe-area-inset-bottom))] z-30 px-3 pb-3 sm:bottom-3 sm:px-4 sm:pb-4"
     >
       <div
-        className="container-shop mx-auto max-h-[75dvh] overflow-y-auto rounded-lg border border-black/10 p-4 shadow-lg sm:p-5"
+        className={cn(
+          "mx-auto max-h-[75dvh] overflow-y-auto rounded-lg border border-black/10 p-4 shadow-lg sm:p-5",
+          // Settings is a reading panel and spans the page; the three buttons alone get a card
+          // that hugs them on wide screens, and the full width on a phone.
+          panel ? "container-shop" : "sm:w-fit",
+        )}
         style={{ background: "var(--surface-elevated)" }}
       >
         {panel ? (
@@ -75,7 +88,7 @@ export function CookieConsentBanner() {
               <div className="space-y-1 py-3">
                 <div className="flex items-center justify-between gap-3">
                   <p id="cookie-analytics-label" className="text-sm font-medium">
-                    {t("analyticsTitle")}
+                    {META_ENABLED ? t("analyticsMarketingTitle") : t("analyticsTitle")}
                   </p>
                   <button
                     type="button"
@@ -99,6 +112,7 @@ export function CookieConsentBanner() {
                   </button>
                 </div>
                 <p className="opacity-80">{t("analyticsBody")}</p>
+                {META_ENABLED ? <p className="opacity-80">{t("metaBody")}</p> : null}
               </div>
 
               <div className="space-y-1 pt-3">
@@ -124,31 +138,23 @@ export function CookieConsentBanner() {
             </p>
           </div>
         ) : (
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
-            <div className="min-w-0 flex-1">
-              <p className="text-sm font-medium leading-snug">{t("title")}</p>
-              <p className="mt-1 text-xs leading-relaxed opacity-80">
-                {t("body")}{" "}
-                <Link href="/privacy" className="underline underline-offset-2">
-                  {t("privacyLink")}
-                </Link>
-              </p>
-            </div>
-            <div className="flex flex-shrink-0 flex-wrap items-center gap-2 sm:gap-3">
-              <button type="button" onClick={() => setDecision("rejected")} className={filled}>
-                {t("rejectAll")}
-              </button>
-              <button
-                type="button"
-                onClick={() => setPanel(true)}
-                className="cursor-pointer px-2 py-2.5 text-xs font-semibold tracking-wider uppercase underline underline-offset-4 opacity-80 hover:opacity-100"
-              >
-                {t("settings")}
-              </button>
-              <button type="button" onClick={() => setDecision("accepted")} className={filled}>
-                {t("acceptAll")}
-              </button>
-            </div>
+          // Buttons only: the title and wording live in "Settings". Desktop: one centred row,
+          // Essential only · Settings · Accept all. Phone: the two decisions share a row and
+          // split it evenly, with "Settings" on its own line beneath.
+          <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center sm:justify-center sm:gap-3">
+            <button type="button" onClick={() => setDecision("rejected")} className={cn(outlined, "px-2 sm:px-4")}>
+              {t("rejectAll")}
+            </button>
+            <button
+              type="button"
+              onClick={() => setPanel(true)}
+              className="order-last col-span-2 cursor-pointer px-2 py-2 text-xs font-semibold tracking-wider uppercase underline underline-offset-4 opacity-80 hover:opacity-100 sm:order-none sm:col-auto sm:py-2.5"
+            >
+              {t("settings")}
+            </button>
+            <button type="button" onClick={() => setDecision("accepted")} className={cn(filled, "px-2 sm:px-4")}>
+              {t("acceptAll")}
+            </button>
           </div>
         )}
       </div>

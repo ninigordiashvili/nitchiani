@@ -1,4 +1,5 @@
 import { hasAnalyticsConsent } from "@/lib/ui/cookie-consent";
+import { trackMeta } from "./meta";
 
 /**
  * Google Analytics 4 event helper.
@@ -48,9 +49,11 @@ export function ensureGtag(): boolean {
   return true;
 }
 
-/** Sends one GA4 event. Returns whether it was actually handed to GA. */
+/** Sends one GA4 event (and its Meta counterpart). Returns whether either received it. */
 export function trackEvent(name: string, params: Record<string, unknown> = {}): boolean {
-  if (!hasAnalyticsConsent() || !ensureGtag()) return false;
+  // Meta's counterpart, when the pixel is switched on (see ./meta) — same consent check.
+  const metaSent = trackMeta(name, params);
+  if (!hasAnalyticsConsent() || !ensureGtag()) return metaSent;
   window.gtag!("event", name, params);
   return true;
 }
