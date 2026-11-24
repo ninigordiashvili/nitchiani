@@ -1,5 +1,8 @@
 "use client";
 
+import { rememberOrderSnapshot } from "@/lib/analytics/purchase";
+import { CURRENCY, trackEvent } from "@/lib/analytics/ga";
+import { useCookieConsent } from "@/lib/ui/cookie-consent";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Controller, useForm } from "react-hook-form";
@@ -123,6 +126,25 @@ export function CheckoutForm({
   const t = useTranslations();
   const locale = useLocale() as Locale;
   const cart = useCart();
+  const { decision: cookieDecision } = useCookieConsent();
+  // GA4 `begin_checkout`: once per visit to this page, when the bag has loaded and analytics
+  // consent exists. Counts the page being opened, which is what "reached checkout" means.
+  const beganCheckout = useRef(false);
+  useEffect(() => {
+    if (beganCheckout.current || cookieDecision !== "accepted" || cart.lines.length === 0) return;
+    beganCheckout.current = true;
+    trackEvent("begin_checkout", {
+      currency: CURRENCY,
+      value: Number.parseFloat(cart.subtotal.amount),
+      items: cart.lines.map((l) => ({
+        item_id: l.productHandle,
+        item_name: l.productTitle,
+        item_variant: l.variantTitle,
+        price: Number.parseFloat(l.unitPrice.amount),
+        quantity: l.quantity,
+      })),
+    });
+  }, [cookieDecision, cart.lines, cart.subtotal.amount]);
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -451,6 +473,19 @@ export function CheckoutForm({
       // their next visit even though we never reach the success page handler here.
       // A pickup order may leave the address blank; that shouldn't erase the address saved
       // from an earlier delivery, which the next order will want back.
+      // For the success page's GA4 `purchase`: the bag is gone by then.
+      rememberOrderSnapshot({
+        value: Number.parseFloat(cart.total.amount),
+        items: cart.lines.map((l) => ({
+          item_id: l.productHandle,
+          item_name: l.productTitle,
+          item_variant: l.variantTitle,
+          price: Number.parseFloat(l.unitPrice.amount),
+          quantity: l.quantity,
+        })),
+        orderId: data.redirectUrl ? undefined : data.orderId,
+        token: data.redirectUrl ? data.trackingToken : undefined,
+      });
       const previous = loadSavedContact();
       saveContact({
         firstName: values.firstName,

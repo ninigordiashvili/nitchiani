@@ -10,6 +10,7 @@ import { checkCartLinesAction, paymentStateAction } from "@/app/actions/cart";
 import { forgetPendingPayment, loadPendingPayment } from "./pending-payment";
 import { isCouponUsed, markCouponUsed } from "./used-coupons";
 import { markSoldOut } from "./sold-out";
+import { CURRENCY, trackEvent } from "../analytics/ga";
 import type { PromoReason } from "@/lib/echodesk/promo";
 
 // Bump the version when image hosts or line shape change, so stale localStorage entries
@@ -288,6 +289,23 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         added = clamped;
         return [...prev, { ...line, quantity: clamped }];
       });
+      if (added > 0) {
+        // One place covers every way into the bag (card +, product page, sticky bar, bundles).
+        const price = Number.parseFloat(line.unitPrice.amount);
+        trackEvent("add_to_cart", {
+          currency: CURRENCY,
+          value: price * added,
+          items: [
+            {
+              item_id: line.productHandle,
+              item_name: line.productTitle,
+              item_variant: line.variantTitle,
+              price,
+              quantity: added,
+            },
+          ],
+        });
+      }
       return added;
       // Deliberately does NOT open the drawer. Interrupting the browse flow to show a
       // cart the user didn't ask for costs more than it confirms; the count badge nudging

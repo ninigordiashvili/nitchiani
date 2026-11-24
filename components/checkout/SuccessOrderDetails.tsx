@@ -9,6 +9,8 @@ import { useCart } from "@/lib/cart/store";
 import { loadPendingPayment } from "@/lib/cart/pending-payment";
 import { markCouponUsed } from "@/lib/cart/used-coupons";
 import { Link } from "@/lib/i18n/routing";
+import { loadOrderSnapshot, reportPurchase } from "@/lib/analytics/purchase";
+import { useCookieConsent } from "@/lib/ui/cookie-consent";
 
 /**
  * The order number and tracking link on the success page.
@@ -29,6 +31,34 @@ export function SuccessOrderDetails({ order, token }: { order?: string; token?: 
   const [number, setNumber] = useState(order);
   const [tok, setTok] = useState(token);
   const [copied, setCopied] = useState(false);
+  const { decision } = useCookieConsent();
+
+  // GA4 `purchase`, once per order. Cash on delivery: the order is placed, so report it. Card:
+  // only once EchoDesk says it is paid — landing here proves nothing (see below). Re-runs when
+  // consent arrives, so accepting the banner on this page still counts the order.
+  useEffect(() => {
+    if (decision !== "accepted") return;
+    // Read from the order's own record, not the pending payment: the effect below empties
+    // that one as soon as the payment is confirmed.
+    const snap = loadOrderSnapshot();
+    if (!snap) return;
+    if (snap.orderId) {
+      reportPurchase(snap.orderId);
+      return;
+    }
+    const orderToken = snap.token;
+    if (!orderToken) return;
+    let cancelled = false;
+    void paymentStateAction(orderToken).then(async (state) => {
+      if (cancelled || state !== "paid") return;
+      const n = order ?? (await orderNumberAction(orderToken));
+      if (!cancelled) reportPurchase(n ?? orderToken);
+    });
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [decision]);
 
   useEffect(() => {
     const pending = loadPendingPayment();

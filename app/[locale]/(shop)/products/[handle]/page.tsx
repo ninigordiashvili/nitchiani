@@ -16,6 +16,7 @@ import { RecentlyViewedRail } from "@/components/commerce/RecentlyViewedRail";
 import { RelatedProducts } from "@/components/commerce/RelatedProducts";
 import { Reviews } from "@/components/commerce/Reviews";
 import { StarRating } from "@/components/commerce/StarRating";
+import { TrackViewItem } from "@/components/analytics/TrackViewItem";
 import { TrackRecentlyViewed } from "@/components/commerce/TrackRecentlyViewed";
 import { getProductByHandle, getRelatedProducts } from "@/lib/shopify/client";
 import { variantPhotos } from "@/lib/images";
@@ -207,6 +208,7 @@ export default async function ProductPage({
       </div>
 
       <TrackRecentlyViewed product={product} />
+      <TrackViewItem product={product} />
     </article>
   );
 }

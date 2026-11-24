@@ -60,6 +60,14 @@ function readStored(): StoredConsent | null {
   }
 }
 
+/**
+ * The stored decision, read straight from storage rather than from React state — for code that
+ * runs outside a component (event handlers, the cart store) and must still honour the banner.
+ */
+export function hasAnalyticsConsent(): boolean {
+  return readStored()?.decision === "accepted";
+}
+
 export function CookieConsentProvider({ children }: { children: React.ReactNode }) {
   const [decision, setDecisionState] = useState<CookieDecision | null>(null);
   const [hydrating, setHydrating] = useState(true);

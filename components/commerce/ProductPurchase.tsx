@@ -10,6 +10,8 @@ import { useSoldOut } from "@/lib/cart/sold-out";
 import { variantForPhoto } from "@/lib/images";
 import { showVariantPhoto, usePhotoOnScreen } from "@/lib/ui/variant-photo";
 import { useSetUrlQuery, useUrlQuery } from "@/lib/ui/use-url-query";
+import { trackEvent } from "@/lib/analytics/ga";
+import { gaItem } from "@/lib/analytics/items";
 import { parseEchoDeskGid } from "@/lib/echodesk/adapt";
 import { clampToStock, isAtStockLimit, lowStockCount } from "@/lib/cart/stock";
 import { AddToCartButton } from "./AddToCartButton";
@@ -130,7 +132,14 @@ export function ProductPurchase({
       <VariantPicker
         product={product}
         selectedVariant={selected}
-        onSelect={setSelected}
+        onSelect={(variant) => {
+          // Only a shopper's own tap reaches here — the URL and gallery sync set `selected`
+          // directly, so they are not counted as a choice.
+          if (variant.id !== selected.id) {
+            trackEvent("select_variant", { items: [gaItem(product, variant)] });
+          }
+          setSelected(variant);
+        }}
         showSizeGuide={showSizeGuide}
       />
 
