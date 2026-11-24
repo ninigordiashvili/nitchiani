@@ -126,32 +126,23 @@ export function CookieConsentBanner() {
             </p>
           </div>
         ) : (
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
-            <div className="min-w-0 flex-1">
-              <p className="text-sm font-medium leading-snug">{t("title")}</p>
-              <p className="mt-1 text-xs leading-relaxed opacity-80">
-                {t("body")}{" "}
-                {META_ENABLED ? `${t("bodyMeta")} ` : null}
-                <Link href="/privacy" className="underline underline-offset-2">
-                  {t("privacyLink")}
-                </Link>
-              </p>
-            </div>
-            <div className="flex flex-shrink-0 flex-wrap items-center gap-2 sm:gap-3">
-              <button type="button" onClick={() => setDecision("rejected")} className={filled}>
-                {t("rejectAll")}
-              </button>
-              <button
-                type="button"
-                onClick={() => setPanel(true)}
-                className="cursor-pointer px-2 py-2.5 text-xs font-semibold tracking-wider uppercase underline underline-offset-4 opacity-80 hover:opacity-100"
-              >
-                {t("settings")}
-              </button>
-              <button type="button" onClick={() => setDecision("accepted")} className={filled}>
-                {t("acceptAll")}
-              </button>
-            </div>
+          // Buttons only: the title and wording live in "Settings". Desktop: one centred row,
+          // Essential only · Settings · Accept all. Phone: the two decisions share a row and
+          // split it evenly, with "Settings" on its own line beneath.
+          <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center sm:justify-center sm:gap-3">
+            <button type="button" onClick={() => setDecision("rejected")} className={cn(filled, "px-2 sm:px-4")}>
+              {t("rejectAll")}
+            </button>
+            <button
+              type="button"
+              onClick={() => setPanel(true)}
+              className="order-last col-span-2 cursor-pointer px-2 py-2 text-xs font-semibold tracking-wider uppercase underline underline-offset-4 opacity-80 hover:opacity-100 sm:order-none sm:col-auto sm:py-2.5"
+            >
+              {t("settings")}
+            </button>
+            <button type="button" onClick={() => setDecision("accepted")} className={cn(filled, "px-2 sm:px-4")}>
+              {t("acceptAll")}
+            </button>
           </div>
         )}
       </div>

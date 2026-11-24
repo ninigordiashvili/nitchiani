@@ -353,8 +353,7 @@
     "retention": "We keep your choice for 12 months, after which we will ask again. Details in the <link>Privacy Policy</link>.",
     "back": "Back",
     "privacyLink": "Privacy Policy",
-    "bodyMeta": "We also use the Meta Pixel (Facebook/Instagram) to measure the results of our advertising.",
-    "analyticsMarketingTitle": "Analytics and marketing",
+    "analyticsMarketingTitle": "Google Analytics and Meta Pixel (Facebook and Instagram)",
     "metaBody": "Meta Pixel (Facebook and Instagram) — to measure how our advertising performs: which pages you view, what you add to the cart and how far you get in checkout. Switched on only with your consent; this switch controls both services."
   },
   "privacy": {

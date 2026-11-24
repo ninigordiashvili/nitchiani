@@ -353,8 +353,7 @@
     "retention": "თქვენს არჩევანს ვინახავთ 12 თვით, რის შემდეგაც განმეორებით გკითხავთ. დეტალები - <link>კონფიდენციალურობის პოლიტიკაში</link>.",
     "back": "უკან",
     "privacyLink": "კონფიდენციალურობის პოლიტიკა",
-    "bodyMeta": "ასევე ვიყენებთ Meta Pixel-ს (Facebook/Instagram) რეკლამის შედეგების გასაზომად.",
-    "analyticsMarketingTitle": "ანალიტიკური და მარკეტინგული",
+    "analyticsMarketingTitle": "Google Analytics და Meta Pixel (Facebook და Instagram)",
     "metaBody": "Meta Pixel (Facebook და Instagram) - რეკლამის შედეგების გასაზომად: რომელ გვერდებს ნახულობთ, რას დაამატებთ კალათაში და რომელ ეტაპზე ასრულებთ შეკვეთას. ჩაირთვება მხოლოდ თანხმობით; ეს ჩამრთველი ორივე სერვისს მართავს."
   },
   "privacy": {
