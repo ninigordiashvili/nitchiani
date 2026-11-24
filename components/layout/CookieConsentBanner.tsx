@@ -46,6 +46,13 @@ export function CookieConsentBanner() {
     "bg-[var(--color-brand-ink)] text-[var(--color-brand-cream)] hover:bg-[var(--color-brand-maroon)] hover:border-[var(--color-brand-maroon)]",
   );
 
+  // "Essential only" on the first banner: the same shape and size, drawn as an outline so the
+  // filled button is the one that reads as the primary action.
+  const outlined = cn(
+    decisionButton,
+    "bg-transparent text-[var(--color-brand-ink)] hover:bg-[var(--color-brand-ink)]/5",
+  );
+
   return (
     <div
       role="dialog"
@@ -135,7 +142,7 @@ export function CookieConsentBanner() {
           // Essential only · Settings · Accept all. Phone: the two decisions share a row and
           // split it evenly, with "Settings" on its own line beneath.
           <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center sm:justify-center sm:gap-3">
-            <button type="button" onClick={() => setDecision("rejected")} className={cn(filled, "px-2 sm:px-4")}>
+            <button type="button" onClick={() => setDecision("rejected")} className={cn(outlined, "px-2 sm:px-4")}>
               {t("rejectAll")}
             </button>
             <button
