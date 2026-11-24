@@ -57,7 +57,12 @@ export function CookieConsentBanner() {
       className="fixed inset-x-0 bottom-[calc(5.5rem+env(safe-area-inset-bottom))] z-30 px-3 pb-3 sm:bottom-3 sm:px-4 sm:pb-4"
     >
       <div
-        className="container-shop mx-auto max-h-[75dvh] overflow-y-auto rounded-lg border border-black/10 p-4 shadow-lg sm:p-5"
+        className={cn(
+          "mx-auto max-h-[75dvh] overflow-y-auto rounded-lg border border-black/10 p-4 shadow-lg sm:p-5",
+          // Settings is a reading panel and spans the page; the three buttons alone get a card
+          // that hugs them on wide screens, and the full width on a phone.
+          panel ? "container-shop" : "sm:w-fit",
+        )}
         style={{ background: "var(--surface-elevated)" }}
       >
         {panel ? (
