@@ -39,7 +39,7 @@ const csp = [
   `font-src 'self' data: https://fonts.gstatic.com`,
   // `*.api.echodesk.ge` covers the tenant subdomain (nitchiani.api.echodesk.ge); the bare
   // host alone does not match it, so client-side storefront calls would be blocked.
-  `connect-src 'self' https://api.echodesk.ge https://*.api.echodesk.ge https://maps.googleapis.com https://places.googleapis.com https://www.google-analytics.com https://*.google-analytics.com https://*.analytics.google.com https://www.googletagmanager.com${metaOn ? " https://www.facebook.com https://connect.facebook.net" : ""}${isDev ? " ws:" : ""}`,
+  `connect-src 'self' https://api.echodesk.ge https://*.api.echodesk.ge https://maps.googleapis.com https://places.googleapis.com https://www.google-analytics.com https://*.google-analytics.com https://analytics.google.com https://*.analytics.google.com https://www.googletagmanager.com${metaOn ? " https://www.facebook.com https://connect.facebook.net" : ""}${isDev ? " ws:" : ""}`,
   `frame-src 'self' https://echodesk.ge`,
   `frame-ancestors 'self'`,
   `base-uri 'self'`,
